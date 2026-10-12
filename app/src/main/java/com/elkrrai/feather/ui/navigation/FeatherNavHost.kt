@@ -1,6 +1,7 @@
 package com.elkrrai.feather.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -10,9 +11,24 @@ import com.elkrrai.feather.feature.taskedit.TaskEditScreen
 import com.elkrrai.feather.feature.tasklist.TaskListScreen
 import com.elkrrai.feather.feature.trash.TrashScreen
 
+/**
+ * @param openTaskId a task to open straight in the editor (from a reminder notification), or null
+ * @param onOpenTaskHandled called once that request has been acted on
+ */
 @Composable
-fun FeatherNavHost(modifier: Modifier = Modifier) {
+fun FeatherNavHost(
+    modifier: Modifier = Modifier,
+    openTaskId: String? = null,
+    onOpenTaskHandled: () -> Unit = {},
+) {
     val navController = rememberNavController()
+
+    LaunchedEffect(openTaskId) {
+        if (openTaskId != null) {
+            navController.navigate(TaskEditRoute(openTaskId))
+            onOpenTaskHandled()
+        }
+    }
 
     NavHost(
         navController = navController,

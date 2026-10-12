@@ -34,6 +34,19 @@
             </intent-filter>
         </activity>
 
+        <!-- Snooze dialog opened from a reminder notification. -->
+        <activity
+            android:name=".feature.snooze.SnoozeActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Feather.Translucent" />
+
+        <!-- The Complete and Snooze buttons of a reminder notification. -->
+        <receiver
+            android:name=".reminders.ReminderActionReceiver"
+            android:exported="false" />
+
         <!-- Everything that makes reminders re-evaluate: our own alarm and test alarm, and the
              system events that clear or shift alarms. -->
         <receiver

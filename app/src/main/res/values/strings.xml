@@ -102,6 +102,24 @@
     <string name="test_notification_title">Test reminder</string>
     <string name="test_notification_text">Reminders can reach you on this phone.</string>
 
+    <!-- Notification actions and snooze -->
+    <string name="action_complete">Complete</string>
+    <string name="action_snooze">Snooze</string>
+    <string name="action_snooze_minutes">Snooze %1$d min</string>
+    <string name="action_snooze_more">More…</string>
+    <string name="snooze_title">Snooze reminder</string>
+    <string name="snooze_in_10_min">In 10 minutes</string>
+    <string name="snooze_in_30_min">In 30 minutes</string>
+    <string name="snooze_in_1_hour">In 1 hour</string>
+    <string name="snooze_in_3_hours">In 3 hours</string>
+    <string name="snooze_tomorrow_morning">Tomorrow morning</string>
+    <string name="snooze_custom">Custom…</string>
+    <string name="snooze_custom_title">Snooze for</string>
+    <string name="snooze_amount_label">Amount</string>
+    <string name="unit_minutes">Minutes</string>
+    <string name="unit_hours">Hours</string>
+    <string name="unit_days">Days</string>
+
     <!-- Trash -->
     <string name="trash_empty_title">Trash is empty</string>
     <string name="trash_empty_body">Deleted tasks stay here for %1$d days.</string>

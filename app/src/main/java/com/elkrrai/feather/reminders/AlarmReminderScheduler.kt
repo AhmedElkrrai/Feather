@@ -46,7 +46,7 @@ class AlarmReminderScheduler @Inject constructor(
         val active = tasks.getActiveTasks()
 
         val plan = planReminders(active, now, appSettings.defaultReminderTime, ZoneId.systemDefault())
-        showDue(plan.due)
+        showDue(plan.due, appSettings.snoozeMinutes)
         armAlarm(plan.next)
 
         // Notifications of tasks that were finished or deleted in the meantime go away.
@@ -54,9 +54,9 @@ class AlarmReminderScheduler @Inject constructor(
     }
 
     /** One notification per task, even if several of its reminders are due together. */
-    private suspend fun showDue(due: List<PendingReminder>) {
+    private suspend fun showDue(due: List<PendingReminder>, snoozeMinutes: Int) {
         for ((task, group) in due.groupBy { it.task }) {
-            notifier.show(task)
+            notifier.show(task, snoozeMinutes)
             for (pending in group) {
                 reminders.markFired(pending.reminder.id, pending.trigger)
                 // A snooze is a one-shot; once shown it is no longer needed.

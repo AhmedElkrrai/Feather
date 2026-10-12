@@ -9,6 +9,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.elkrrai.feather.MainActivity
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Task
+import com.elkrrai.feather.feature.snooze.SnoozeActivity
 import com.elkrrai.feather.ui.format.formatDueDate
 import com.elkrrai.feather.ui.format.formatDueTime
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,9 +27,12 @@ class ReminderNotifier @Inject constructor(
 ) {
     private val manager = NotificationManagerCompat.from(appContext)
 
-    /** Shows the reminder for [task]. Silently does nothing if notifications are turned off. */
+    /**
+     * Shows the reminder for [task] with Complete, a one-tap snooze of [snoozeMinutes], and a
+     * "More…" button for other snooze times. Silently does nothing if notifications are off.
+     */
     @SuppressLint("MissingPermission") // guarded by areNotificationsEnabled()
-    fun show(task: Task) {
+    fun show(task: Task, snoozeMinutes: Int) {
         if (!manager.areNotificationsEnabled()) return
         val context = appContext.withAppLocale()
         ReminderChannels.ensure(context)
@@ -49,6 +53,21 @@ class ReminderNotifier @Inject constructor(
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(openTaskIntent(context, task.id))
+            .addAction(
+                0,
+                context.getString(R.string.action_complete),
+                actionIntent(context, task.id, ReminderActionReceiver.ACTION_COMPLETE, minutes = null),
+            )
+            .addAction(
+                0,
+                context.getString(R.string.action_snooze_minutes, snoozeMinutes),
+                actionIntent(context, task.id, ReminderActionReceiver.ACTION_SNOOZE, minutes = snoozeMinutes),
+            )
+            .addAction(
+                0,
+                context.getString(R.string.action_snooze_more),
+                snoozeMoreIntent(context, task.id),
+            )
         if (task.notes.isNotBlank()) {
             builder.setStyle(NotificationCompat.BigTextStyle().bigText("$text\n${task.notes}"))
         }
@@ -89,6 +108,31 @@ class ReminderNotifier @Inject constructor(
                 manager.cancel(tag, NOTIFICATION_ID)
             }
         }
+    }
+
+    /** A broadcast to [ReminderActionReceiver]; the request code keeps each task's buttons apart. */
+    private fun actionIntent(context: Context, taskId: String, action: String, minutes: Int?): PendingIntent {
+        val intent = Intent(context, ReminderActionReceiver::class.java)
+            .setAction(action)
+            .putExtra(ReminderActionReceiver.EXTRA_TASK_ID, taskId)
+        if (minutes != null) intent.putExtra(ReminderActionReceiver.EXTRA_MINUTES, minutes)
+        return PendingIntent.getBroadcast(
+            context,
+            "$action:$taskId".hashCode(),
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+    }
+
+    private fun snoozeMoreIntent(context: Context, taskId: String): PendingIntent {
+        val intent = SnoozeActivity.intent(context, taskId)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return PendingIntent.getActivity(
+            context,
+            "snooze-more:$taskId".hashCode(),
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
     }
 
     private fun openTaskIntent(context: Context, taskId: String): PendingIntent {

@@ -3,4 +3,12 @@
 
     <!-- AppCompat parent is required for AppCompatDelegate per-app locales on API < 33. -->
     <style name="Theme.Feather" parent="Theme.AppCompat.DayNight.NoActionBar" />
+
+    <!-- For the snooze dialog: the activity itself is invisible, only the dialog shows. -->
+    <style name="Theme.Feather.Translucent" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
 </resources>
