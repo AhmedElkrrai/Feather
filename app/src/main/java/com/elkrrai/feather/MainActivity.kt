@@ -29,4 +29,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    companion object {
+        /** Set by a reminder notification: the id of the task to open in the editor. */
+        const val EXTRA_OPEN_TASK_ID = "com.elkrrai.feather.extra.OPEN_TASK_ID"
+    }
 }
