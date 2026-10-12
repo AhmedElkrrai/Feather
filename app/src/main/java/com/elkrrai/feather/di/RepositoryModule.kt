@@ -3,8 +3,10 @@ package com.elkrrai.feather.di
 import com.elkrrai.feather.data.db.RoomTransactionRunner
 import com.elkrrai.feather.data.db.TransactionRunner
 import com.elkrrai.feather.data.repository.ListRepositoryImpl
+import com.elkrrai.feather.data.repository.TagRepositoryImpl
 import com.elkrrai.feather.data.repository.TaskRepositoryImpl
 import com.elkrrai.feather.domain.repository.ListRepository
+import com.elkrrai.feather.domain.repository.TagRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
 import dagger.Binds
 import dagger.Module
@@ -20,6 +22,9 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindListRepository(impl: ListRepositoryImpl): ListRepository
+
+    @Binds
+    abstract fun bindTagRepository(impl: TagRepositoryImpl): TagRepository
 
     @Binds
     abstract fun bindTransactionRunner(impl: RoomTransactionRunner): TransactionRunner

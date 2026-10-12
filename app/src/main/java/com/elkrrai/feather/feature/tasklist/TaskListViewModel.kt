@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.repository.TaskRepository
+import com.elkrrai.feather.domain.view.TaskSort
+import com.elkrrai.feather.domain.view.comparator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,11 +25,16 @@ class TaskListViewModel @Inject constructor(
     private val tasks: TaskRepository,
 ) : ViewModel() {
 
-    // Milestone 1 has a single list; M2 adds list selection.
+    // Interim: shows the Inbox only. Step 3 of M2 replaces this with scope-driven views.
     private val listId = TaskList.INBOX_ID
 
-    val uiState: StateFlow<TaskListUiState> = tasks.observeTasks(listId)
-        .map { TaskListUiState(tasks = it, isLoading = false) }
+    val uiState: StateFlow<TaskListUiState> = tasks.observeTasks()
+        .map { all ->
+            TaskListUiState(
+                tasks = all.filter { it.listId == listId }.sortedWith(TaskSort.CREATED.comparator()),
+                isLoading = false,
+            )
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TaskListUiState())
 
     fun addTask(title: String) {

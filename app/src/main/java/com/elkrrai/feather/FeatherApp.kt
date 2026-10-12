@@ -2,6 +2,7 @@ package com.elkrrai.feather
 
 import android.app.Application
 import com.elkrrai.feather.domain.repository.ListRepository
+import com.elkrrai.feather.domain.repository.TaskRepository
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -13,11 +14,16 @@ import kotlinx.coroutines.launch
 class FeatherApp : Application() {
 
     @Inject lateinit var listRepository: ListRepository
+    @Inject lateinit var taskRepository: TaskRepository
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
-        appScope.launch { listRepository.ensureInbox() }
+        appScope.launch {
+            listRepository.ensureInbox()
+            // Housekeeping: tasks that stayed in the trash past the retention period go for good.
+            taskRepository.purgeTrash()
+        }
     }
 }
