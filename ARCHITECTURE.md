@@ -26,7 +26,7 @@ com.elkrrai.feather
 | Area | Choice | Why |
 |---|---|---|
 | UI | Jetpack Compose + Material 3 (Material You) | Already set up; dynamic color support |
-| Storage | Room (SQLite) + FTS for search | Relational data, fast full-text search |
+| Storage | Room (SQLite); `LIKE` search | Relational data. FTS was dropped for M2 (see MILESTONES.md); add it later only if search gets slow. |
 | Settings | DataStore | Replacement for SharedPreferences |
 | DI | Hilt | Best integration with ViewModel, WorkManager, Glance |
 | Navigation | Navigation Compose, type-safe routes | Stable, well documented |

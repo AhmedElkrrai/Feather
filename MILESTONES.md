@@ -3,59 +3,62 @@
 Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Working agreement
-- Build **step by step**, pausing for review after each step of a milestone.
-- Commit to git only when asked.
-- Test device: not yet specified (model and Android version to be confirmed before M3, reminders).
-
-## Milestone 1: Add, edit and complete tasks, in English and Arabic
-
-**Definition of done:** tasks can be created, edited, completed and deleted on a phone; they survive an app restart; the app looks right in light and dark themes; it works in English and Arabic (RTL); the logic is tested.
-
-### Steps
-1. **Project setup**
-   - `minSdk` 26; R8 on for release
-   - Version catalog entries: Room, Hilt, DataStore, Navigation Compose, kotlinx.serialization, AppCompat
-   - Verify Hilt and Room KSP work with AGP 9's built-in Kotlin (do this first; it is the likeliest source of trouble)
-   - Package skeleton; `LocaleConfig` (en, ar)
-2. **Data layer**
-   - Room schema v1 with `task` and `list` only: UUID ids, `updatedAt`, soft delete, schema export on
-   - DAOs, `TaskRepository`, Hilt modules
-   - Seed a default "Inbox" list on first launch
-   - Tests: DAO tests on an in-memory DB
-3. **App shell**
-   - Material You dynamic color, light and dark themes
-   - Edge-to-edge; type-safe navigation between list and edit screens
-4. **Screens**
-   - Task list: tap checkbox to complete, swipe to delete with undo snackbar (swipe direction mirrors in RTL), empty state with a placeholder for the future bird
-   - Quick add: bottom sheet with a title field (parser comes in M5)
-   - Task edit: title, notes, due date and time (floating local time), priority
-   - ViewModels expose `StateFlow<UiState>`
-5. **Internationalization**
-   - All strings in resources, with an Arabic translation
-   - Language setting (English, Arabic, system default) via per-app locales
-   - `start`/`end` everywhere; verify gestures and icons mirror
-6. **Tests**
-   - ViewModel unit tests
-   - One Compose test: add, complete, delete
-   - Screenshot test of the main screen in LTR and RTL
-
-### Not in M1
-Reminders, recurrence, tags, folders, subtasks, search, smart views, widgets, parser, voice, backup. The data model leaves room for them, but nothing is built.
-
-### Optional
-A throwaway exact-alarm spike at the end of M1 to learn how reminders behave on the test device before M3.
+- The **"humbug"** workflow: for each step write the code, commit, push and go straight to the next step, with no compile, tests or install in between. When the milestone is finished, build and install the app on the phone. Unit tests are not run unless asked.
+- Commit to git only as part of that workflow or when asked.
+- Test device: OnePlus/Oppo CPH2625, Android 16 (confirm vendor-specific reminder behavior in M3).
 
 ## Roadmap
 
-| # | Milestone | Main content |
-|---|---|---|
-| M1 | Foundation | See above |
-| M2 | Organization and views | Lists, one-level folders, tags, subtasks, search (FTS), Today / Upcoming / Overdue |
-| M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing |
-| M4 | Recurrence | Rule engine, repeat modes, completion history |
-| M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile |
-| M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup |
-| M7 | Polish | Accessibility pass, performance, store preparation |
-| M8 | Brand | Bird identity and animation |
+| # | Milestone | Main content | Status |
+|---|---|---|---|
+| M1 | Foundation | Tasks, Room, navigation, English and Arabic (RTL) | Done |
+| M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Planned (below) |
+| M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | |
+| M4 | Recurrence | Rule engine, repeat modes, completion history | |
+| M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | |
+| M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | |
+| M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | |
+| M8 | Brand | Bird identity and animation | |
 
-Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies), and it is better to learn about them early.
+Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
+
+## Milestone 1: Foundation (done)
+Tasks with title, notes, due date and time, priority; Room persistence with an Inbox list; task list with swipe-to-delete and undo; quick-add sheet; task editor; Material You theme; type-safe navigation; English and Arabic with a language picker and RTL-safe layouts. Verified by a clean build, an install on the phone, and 11 passing JVM unit tests.
+
+## Milestone 2: Organization and views
+
+**Definition of done:** tasks can be organized into lists (optionally inside folders), tagged, given subtasks and pinned; the user can browse Today, Upcoming, Overdue, All, Completed and No-date views, filter by list or tag, search, sort, and restore deleted tasks from a trash; existing M1 data survives the upgrade; everything works in English and Arabic.
+
+### Decisions made for M2
+- **Schema v2 with an automatic migration** (`@AutoMigration(1, 2)`), because the phone already holds real data. No destructive fallback.
+- **Search uses `LIKE`, not FTS.** Room's external-content FTS needs sync triggers that auto-migrations do not create, and a personal todo list is small. FTS can be added later if search ever feels slow.
+- **Filtering happens in memory.** The repository exposes all non-deleted tasks (with tags); smart views, list views, tag views and search are pure functions over that list in `domain/`, so they are cheap to unit test. Fine for thousands of tasks.
+- **Subtasks are checklist items**: one level, title and done state only (no due date, priority or tags of their own). Deleting or restoring a parent applies to its subtasks together.
+- **Deleting a list moves its tasks to the Inbox** (nothing is lost). Deleting a folder moves its lists out of the folder. The Inbox cannot be deleted or renamed.
+- **Pinned tasks sort first** within a view.
+- **Sort options** (created order, due date, priority) are remembered for the session only; persistent settings come later.
+
+### Steps
+1. **Schema v2 and domain models**
+   - New entities: `FolderEntity`, `TagEntity`, `TaskTagCrossRef`. New columns: `tasks.parentTaskId`, `tasks.isPinned`; `task_lists.folderId`, `task_lists.colorArgb`.
+   - `AutoMigration(1 -> 2)`; DAOs for folders, tags, and the extended task and list queries (including `@Relation` task-with-tags).
+   - Domain: `Tag`, `Folder`, extended `Task` (parentTaskId, isPinned, tags) and `TaskList` (folderId, colorArgb); mappers; DI.
+2. **Repositories and view logic**
+   - List and folder CRUD, tag CRUD, task tags, subtask replacement, pin, move to list, trash (observe, restore, delete forever, purge after 30 days at app start), `LIKE` search.
+   - `TaskScope` (Today, Upcoming, Overdue, All, Completed, NoDate, InList, WithTag) and pure selection, sorting and grouping functions.
+3. **Navigation drawer and list organization**
+   - Drawer: smart views with counts, folders and lists, tags; create, rename, recolor, move and delete lists, folders and tags.
+   - The task screen follows the selected scope; quick add uses the selected list (and today's date in Today).
+   - Upcoming grouped by day.
+4. **Task details**
+   - Editor: list picker, tag picker (create inline), subtask checklist, pin toggle.
+   - List rows: tag chips, subtask progress ("2/5"), pin marker.
+5. **Search and sort**
+   - Search screen with live results; sort menu (created, due date, priority).
+6. **Trash**
+   - Trash screen: restore, delete forever, empty trash; 30-day purge.
+7. **Translations, tests, docs**
+   - Arabic strings for everything new; unit tests for scope and sorting logic, repository tests, UI tests (written, run only when asked); update FEATURES.md and ARCHITECTURE.md.
+
+### Deferred from M2
+Drag to reorder, bulk select, duplicate task and saved custom filters (moved to M7 polish), list color picker beyond a fixed palette.
