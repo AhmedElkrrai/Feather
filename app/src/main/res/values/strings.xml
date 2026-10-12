@@ -10,6 +10,7 @@
     <string name="action_clear">Clear</string>
     <string name="action_undo">Undo</string>
     <string name="action_delete">Delete</string>
+    <string name="action_more_options">More options</string>
 
     <!-- Task list -->
     <string name="action_add_task">Add task</string>
@@ -38,4 +39,12 @@
     <string name="field_priority">Priority</string>
     <string name="set_date">Set date</string>
     <string name="set_time">Set time</string>
+
+    <!-- Language setting -->
+    <string name="menu_language">Language</string>
+    <string name="language_dialog_title">Choose language</string>
+    <string name="language_system">System default</string>
+    <!-- Language names are always shown in their own language. -->
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_arabic" translatable="false">العربية</string>
 </resources>

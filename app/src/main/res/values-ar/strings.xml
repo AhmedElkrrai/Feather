@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common actions -->
+    <string name="action_back">رجوع</string>
+    <string name="action_add">إضافة</string>
+    <string name="action_save">حفظ</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_ok">موافق</string>
+    <string name="action_clear">مسح</string>
+    <string name="action_undo">تراجع</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_more_options">المزيد من الخيارات</string>
+
+    <!-- Task list -->
+    <string name="action_add_task">إضافة مهمة</string>
+    <string name="task_deleted">تم حذف المهمة</string>
+    <string name="task_list_empty_title">لا توجد مهام بعد</string>
+    <string name="task_list_empty_body">اضغط + لإضافة أول مهمة لك.</string>
+    <string name="quick_add_hint">ما الذي تريد إنجازه؟</string>
+
+    <!-- Due dates -->
+    <string name="due_today">اليوم</string>
+    <string name="due_tomorrow">غدًا</string>
+
+    <!-- Priorities -->
+    <string name="priority_none">بدون</string>
+    <string name="priority_low">منخفضة</string>
+    <string name="priority_medium">متوسطة</string>
+    <string name="priority_high">عالية</string>
+
+    <!-- Task editor -->
+    <string name="edit_title_new">مهمة جديدة</string>
+    <string name="edit_title_existing">تعديل المهمة</string>
+    <string name="field_title">العنوان</string>
+    <string name="field_notes">ملاحظات</string>
+    <string name="field_due_date">تاريخ الاستحقاق</string>
+    <string name="field_due_time">وقت الاستحقاق</string>
+    <string name="field_priority">الأولوية</string>
+    <string name="set_date">تحديد التاريخ</string>
+    <string name="set_time">تحديد الوقت</string>
+
+    <!-- Language setting -->
+    <string name="menu_language">اللغة</string>
+    <string name="language_dialog_title">اختر اللغة</string>
+    <string name="language_system">لغة النظام</string>
+</resources>

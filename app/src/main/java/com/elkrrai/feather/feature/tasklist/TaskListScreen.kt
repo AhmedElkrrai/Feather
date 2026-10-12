@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -38,6 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Task
+import com.elkrrai.feather.feature.settings.LanguageDialog
 import com.elkrrai.feather.ui.components.EmptyState
 import java.time.LocalDate
 import kotlinx.coroutines.launch
@@ -52,6 +56,7 @@ fun TaskListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showQuickAdd by rememberSaveable { mutableStateOf(false) }
+    var showLanguageDialog by rememberSaveable { mutableStateOf(false) }
     val deletedMessage = stringResource(R.string.task_deleted)
     val undoLabel = stringResource(R.string.action_undo)
 
@@ -73,8 +78,13 @@ fun TaskListScreen(
             }
         },
         onOpenTask = onOpenTask,
+        onLanguageClick = { showLanguageDialog = true },
         modifier = modifier,
     )
+
+    if (showLanguageDialog) {
+        LanguageDialog(onDismiss = { showLanguageDialog = false })
+    }
 
     if (showQuickAdd) {
         QuickAddSheet(
@@ -94,12 +104,18 @@ fun TaskListContent(
     onToggle: (Task, Boolean) -> Unit,
     onDelete: (Task) -> Unit,
     onOpenTask: (taskId: String) -> Unit,
+    onLanguageClick: () -> Unit,
     modifier: Modifier = Modifier,
     today: LocalDate = LocalDate.now(),
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.app_name)) },
+                actions = { OverflowMenu(onLanguageClick = onLanguageClick) },
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddClick) {
@@ -139,6 +155,26 @@ fun TaskListContent(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun OverflowMenu(onLanguageClick: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    IconButton(onClick = { expanded = true }) {
+        Icon(
+            painter = painterResource(R.drawable.ic_more_vert),
+            contentDescription = stringResource(R.string.action_more_options),
+        )
+    }
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.menu_language)) },
+            onClick = {
+                expanded = false
+                onLanguageClick()
+            },
+        )
     }
 }
 
