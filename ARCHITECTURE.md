@@ -102,6 +102,15 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - [ ] Create the package skeleton above
 - [ ] Set up a unit-test baseline and an RTL screenshot test
 
+## Decisions log
+
+### M2 (organization and views)
+- **Schema v2** adds `folders`, `tags`, `task_tags`, `tasks.parentTaskId`/`isPinned` and `task_lists.folderId`/`colorArgb`, migrated with `@AutoMigration(1, 2)`. Subtasks are rows of `tasks` that point at their parent; they are grouped under it when read and are soft-deleted and restored together with it.
+- **Views are pure functions.** The repository exposes every non-deleted top-level task with its tags and subtasks; `domain/view` (`TaskScope`, `inScope`, `comparator`, `groupedByDay`, `search`, `openCountIn`) turns that into Today, Upcoming, list, tag and search results. Nothing in it touches Android or the database.
+- **Transactions** go through `TransactionRunner` (Room's `withTransaction` underneath) so repositories stay testable.
+- **Deleting** a list moves its tasks to the Inbox; deleting a folder keeps its lists; deleting a tag hides it everywhere (soft delete). The Inbox is protected.
+- **"Today"** is computed in the user's time zone (`Clock` is UTC, so the ViewModel converts).
+
 ## Open items
 - Donation mechanism (external link vs. Play flow) and Play policy implications
 - Exact-alarm permission strategy (see Reminders)

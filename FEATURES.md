@@ -9,6 +9,12 @@ Feather is an Android-only, feature-rich todo app for everyone. It is fully free
 - No Wear OS and no on-device AI.
 - Data model must be sync-friendly for later: UUID keys, `updatedAt`, soft deletes, recurrence stored as an RRULE-style rule.
 
+## Status (see MILESTONES.md)
+- **Done in M1:** tasks (title, notes, due date and time, priority), swipe to delete with undo, quick add, English and Arabic with RTL, Material You theme.
+- **Done in M2:** lists with colors and one level of folders, tags, subtasks (checklist), pin, move between lists, smart views (Today, Upcoming, Overdue, All, Completed, No date), sort (creation, due date, priority), search, trash with restore and 30-day purge.
+- **Deferred to M7:** drag to reorder, bulk select, duplicate task, saved custom filters, tappable links in notes.
+- **Not started:** recurring tasks (M4), reminders (M3), quick-add parser and voice (M5), widgets and backup (M6), bird brand and animation (M8).
+
 ## 1. Tasks
 - Title, notes (plain text and tappable links), due date and time, priority (4 levels), completion
 - Subtasks and checklists, drag to reorder

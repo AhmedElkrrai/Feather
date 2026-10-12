@@ -7,9 +7,12 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.elkrrai.feather.data.TestClock
 import com.elkrrai.feather.data.db.FeatherDatabase
+import com.elkrrai.feather.data.db.RoomTransactionRunner
 import com.elkrrai.feather.data.repository.ListRepositoryImpl
+import com.elkrrai.feather.data.repository.TagRepositoryImpl
 import com.elkrrai.feather.data.repository.TaskRepositoryImpl
 import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.testutil.MainDispatcherRule
 import java.time.LocalDate
@@ -28,7 +31,7 @@ import org.junit.runner.RunWith
 
 /**
  * Runs on a device because `SavedStateHandle.toRoute` needs the Android `Bundle`.
- * Uses a real in-memory Room database instead of a fake repository.
+ * Uses a real in-memory Room database instead of fake repositories.
  */
 @RunWith(AndroidJUnit4::class)
 class TaskEditViewModelTest {
@@ -38,6 +41,8 @@ class TaskEditViewModelTest {
 
     private lateinit var db: FeatherDatabase
     private lateinit var tasks: TaskRepositoryImpl
+    private lateinit var lists: ListRepositoryImpl
+    private lateinit var tags: TagRepositoryImpl
     private val inbox = TaskList.INBOX_ID
 
     @Before
@@ -45,8 +50,11 @@ class TaskEditViewModelTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = Room.inMemoryDatabaseBuilder(context, FeatherDatabase::class.java).build()
         val clock = TestClock()
-        tasks = TaskRepositoryImpl(db.taskDao(), clock)
-        ListRepositoryImpl(db.listDao(), clock).ensureInbox()
+        val tx = RoomTransactionRunner(db)
+        tasks = TaskRepositoryImpl(db.taskDao(), tx, clock)
+        lists = ListRepositoryImpl(db.listDao(), db.folderDao(), db.taskDao(), tx, clock)
+        tags = TagRepositoryImpl(db.tagDao(), clock)
+        lists.ensureInbox()
     }
 
     @After
@@ -55,10 +63,10 @@ class TaskEditViewModelTest {
     }
 
     private fun newTaskViewModel() =
-        TaskEditViewModel(SavedStateHandle(mapOf<String, Any?>("taskId" to null)), tasks)
+        TaskEditViewModel(SavedStateHandle(mapOf<String, Any?>("taskId" to null)), tasks, lists, tags)
 
     private fun editViewModel(taskId: String) =
-        TaskEditViewModel(SavedStateHandle(mapOf<String, Any?>("taskId" to taskId)), tasks)
+        TaskEditViewModel(SavedStateHandle(mapOf<String, Any?>("taskId" to taskId)), tasks, lists, tags)
 
     @Test
     fun newTaskStartsEmptyAndCannotBeSaved() {
@@ -81,7 +89,8 @@ class TaskEditViewModelTest {
         viewModel.save()
 
         assertTrue(viewModel.uiState.value.finished)
-        val saved = tasks.observeTasks(inbox).first().single()
+        val saved = tasks.observeTasks().first().single()
+        assertEquals(inbox, saved.listId)
         assertEquals("Dentist", saved.title)
         assertEquals("Bring insurance card", saved.notes)
         assertEquals(LocalDate.of(2026, 10, 20), saved.dueDate)
@@ -97,13 +106,22 @@ class TaskEditViewModelTest {
         viewModel.save()
 
         assertFalse(viewModel.uiState.value.finished)
-        assertTrue(tasks.observeTasks(inbox).first().isEmpty())
+        assertTrue(tasks.observeTasks().first().isEmpty())
     }
 
     @Test
-    fun editingLoadsTheExistingTask() = runTest {
+    fun editingLoadsTheExistingTaskWithItsDetails() = runTest {
+        val work = tags.createTag("work")
         val existing = tasks.addTask(inbox, "Existing")
-        tasks.saveTask(existing.copy(notes = "n", priority = Priority.LOW))
+        tasks.saveTaskDetails(
+            existing.copy(
+                notes = "n",
+                priority = Priority.LOW,
+                isPinned = true,
+                tags = listOf(work),
+                subtasks = listOf(Subtask("s1", "Step one")),
+            )
+        )
 
         val state = editViewModel(existing.id).uiState.value
 
@@ -112,6 +130,9 @@ class TaskEditViewModelTest {
         assertEquals("Existing", state.title)
         assertEquals("n", state.notes)
         assertEquals(Priority.LOW, state.priority)
+        assertTrue(state.isPinned)
+        assertEquals(listOf("work"), state.tags.map { it.name })
+        assertEquals(listOf("Step one"), state.subtasks.map { it.title })
     }
 
     @Test
@@ -122,10 +143,61 @@ class TaskEditViewModelTest {
         viewModel.onTitleChange("New title")
         viewModel.save()
 
-        val all = tasks.observeTasks(inbox).first()
+        val all = tasks.observeTasks().first()
         assertEquals(1, all.size)
         assertEquals(existing.id, all.single().id)
         assertEquals("New title", all.single().title)
+    }
+
+    @Test
+    fun subtasksCanBeAddedToggledEditedAndRemovedThenSaved() = runTest {
+        val viewModel = newTaskViewModel()
+        viewModel.onTitleChange("Trip")
+        viewModel.onAddSubtask("Passport")
+        viewModel.onAddSubtask("  ")
+        viewModel.onAddSubtask("Tickets")
+        val (passport, tickets) = viewModel.uiState.value.subtasks
+
+        viewModel.onSubtaskToggle(passport.id)
+        viewModel.onSubtaskTitleChange(tickets.id, "Train tickets")
+        viewModel.onAddSubtask("Remove me")
+        viewModel.onSubtaskRemove(viewModel.uiState.value.subtasks.last().id)
+        viewModel.save()
+
+        val saved = tasks.observeTasks().first().single()
+        assertEquals(listOf("Passport", "Train tickets"), saved.subtasks.map { it.title })
+        assertEquals(listOf(true, false), saved.subtasks.map { it.isCompleted })
+    }
+
+    @Test
+    fun tagsCanBeToggledAndCreatedInline() = runTest {
+        val work = tags.createTag("work")
+        val viewModel = newTaskViewModel()
+        viewModel.onTitleChange("Task")
+
+        viewModel.onTagToggle(work)
+        viewModel.onCreateTag("#errands")
+        viewModel.onCreateTag("Errands") // same tag, must not be attached twice
+        viewModel.save()
+
+        val saved = tasks.observeTasks().first().single()
+        assertEquals(setOf("work", "errands"), saved.tags.map { it.name }.toSet())
+        assertEquals(2, saved.tags.size)
+    }
+
+    @Test
+    fun theTaskCanBeMovedToAnotherListAndPinned() = runTest {
+        val work = lists.createList("Work")
+        val existing = tasks.addTask(inbox, "Task")
+        val viewModel = editViewModel(existing.id)
+
+        viewModel.onListChange(work.id)
+        viewModel.onPinnedChange(true)
+        viewModel.save()
+
+        val saved = tasks.getTask(existing.id)!!
+        assertEquals(work.id, saved.listId)
+        assertTrue(saved.isPinned)
     }
 
     @Test

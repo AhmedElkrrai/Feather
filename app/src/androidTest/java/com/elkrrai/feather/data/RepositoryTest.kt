@@ -5,11 +5,14 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.elkrrai.feather.data.db.FeatherDatabase
-import com.elkrrai.feather.data.db.ListEntity
+import com.elkrrai.feather.data.db.RoomTransactionRunner
 import com.elkrrai.feather.data.repository.ListRepositoryImpl
+import com.elkrrai.feather.data.repository.TagRepositoryImpl
 import com.elkrrai.feather.data.repository.TaskRepositoryImpl
 import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.TaskList
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.flow.first
@@ -31,14 +34,17 @@ class RepositoryTest {
     private lateinit var clock: TestClock
     private lateinit var tasks: TaskRepositoryImpl
     private lateinit var lists: ListRepositoryImpl
+    private lateinit var tags: TagRepositoryImpl
 
     @Before
     fun setUp() = runTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = Room.inMemoryDatabaseBuilder(context, FeatherDatabase::class.java).build()
         clock = TestClock()
-        tasks = TaskRepositoryImpl(db.taskDao(), clock)
-        lists = ListRepositoryImpl(db.listDao(), clock)
+        val tx = RoomTransactionRunner(db)
+        tasks = TaskRepositoryImpl(db.taskDao(), tx, clock)
+        lists = ListRepositoryImpl(db.listDao(), db.folderDao(), db.taskDao(), tx, clock)
+        tags = TagRepositoryImpl(db.tagDao(), clock)
         lists.ensureInbox()
     }
 
@@ -49,24 +55,18 @@ class RepositoryTest {
 
     private val inbox = TaskList.INBOX_ID
 
-    @Test
-    fun ensureInboxIsIdempotent() = runTest {
-        lists.ensureInbox()
-        lists.ensureInbox()
+    private suspend fun allTasks() = tasks.observeTasks().first()
 
-        val all = lists.observeLists().first()
-        assertEquals(1, all.size)
-        assertEquals(TaskList.INBOX_ID, all.single().id)
-        assertTrue(all.single().isInbox)
-    }
+    // --- Tasks ---
 
     @Test
-    fun addTaskPersistsTrimmedTitleInTheList() = runTest {
-        val added = tasks.addTask(inbox, "  Buy milk  ")
+    fun addTaskPersistsTrimmedTitleAndDueDate() = runTest {
+        val added = tasks.addTask(inbox, "  Buy milk  ", LocalDate.of(2026, 10, 20))
 
-        val stored = tasks.observeTasks(inbox).first().single()
+        val stored = allTasks().single()
         assertEquals(added.id, stored.id)
         assertEquals("Buy milk", stored.title)
+        assertEquals(LocalDate.of(2026, 10, 20), stored.dueDate)
         assertFalse(stored.isCompleted)
         assertEquals(Priority.NONE, stored.priority)
     }
@@ -77,23 +77,7 @@ class RepositoryTest {
     }
 
     @Test
-    fun openTasksComeBeforeCompletedOnes() = runTest {
-        val a = tasks.addTask(inbox, "A")
-        clock.advance()
-        val b = tasks.addTask(inbox, "B")
-        clock.advance()
-
-        assertEquals(listOf(a.id, b.id), tasks.observeTasks(inbox).first().map { it.id })
-
-        tasks.setCompleted(a.id, true)
-
-        val ordered = tasks.observeTasks(inbox).first()
-        assertEquals(listOf(b.id, a.id), ordered.map { it.id })
-        assertTrue(ordered.last().isCompleted)
-    }
-
-    @Test
-    fun completingAndReopeningATaskStampsAndClearsCompletedAt() = runTest {
+    fun completingAndReopeningStampsAndClearsCompletedAt() = runTest {
         val t = tasks.addTask(inbox, "Task")
         clock.advance()
 
@@ -102,19 +86,6 @@ class RepositoryTest {
 
         tasks.setCompleted(t.id, false)
         assertNull(tasks.getTask(t.id)!!.completedAt)
-    }
-
-    @Test
-    fun deletedTasksAreHiddenAndRestoreBringsThemBack() = runTest {
-        val t = tasks.addTask(inbox, "Task")
-
-        tasks.deleteTask(t.id)
-        assertTrue(tasks.observeTasks(inbox).first().isEmpty())
-        assertNull(tasks.getTask(t.id))
-        assertNull(tasks.observeTask(t.id).first())
-
-        tasks.restoreTask(t.id)
-        assertEquals(listOf(t.id), tasks.observeTasks(inbox).first().map { it.id })
     }
 
     @Test
@@ -143,40 +114,261 @@ class RepositoryTest {
     }
 
     @Test
-    fun saveTaskDoesNotResurrectADeletedTask() = runTest {
-        val created = tasks.addTask(inbox, "Task")
-        tasks.deleteTask(created.id)
+    fun tasksKnowTheirList() = runTest {
+        val work = lists.createList("Work")
+        tasks.addTask(inbox, "In inbox")
+        tasks.addTask(work.id, "At work")
 
-        tasks.saveTask(created.copy(title = "Edited while deleted"))
+        val byList = allTasks().groupBy({ it.listId }, { it.title })
 
-        assertNull(tasks.getTask(created.id))
-        tasks.restoreTask(created.id)
-        assertEquals("Edited while deleted", tasks.getTask(created.id)!!.title)
+        assertEquals(listOf("In inbox"), byList[inbox])
+        assertEquals(listOf("At work"), byList[work.id])
     }
 
     @Test
-    fun tasksAreScopedToTheirList() = runTest {
-        db.listDao().insertIgnore(
-            ListEntity(
-                id = "other",
-                name = "Other",
-                isInbox = false,
-                sortOrder = 1,
-                createdAt = clock.millis,
-                updatedAt = clock.millis,
-                deletedAt = null,
+    fun pinningIsStored() = runTest {
+        val t = tasks.addTask(inbox, "Task")
+
+        tasks.setPinned(t.id, true)
+
+        assertTrue(tasks.getTask(t.id)!!.isPinned)
+    }
+
+    // --- Subtasks and tags ---
+
+    @Test
+    fun saveTaskDetailsStoresSubtasksInOrderAndDropsBlankOnes() = runTest {
+        val t = tasks.addTask(inbox, "Trip")
+
+        tasks.saveTaskDetails(
+            t.copy(
+                subtasks = listOf(
+                    Subtask("s1", "Passport"),
+                    Subtask("s2", "   "),
+                    Subtask("s3", "Tickets", isCompleted = true),
+                )
             )
         )
-        tasks.addTask(inbox, "In inbox")
-        tasks.addTask("other", "In other")
 
-        assertEquals(listOf("In inbox"), tasks.observeTasks(inbox).first().map { it.title })
-        assertEquals(listOf("In other"), tasks.observeTasks("other").first().map { it.title })
+        val stored = tasks.getTask(t.id)!!
+        assertEquals(listOf("Passport", "Tickets"), stored.subtasks.map { it.title })
+        assertEquals(listOf(false, true), stored.subtasks.map { it.isCompleted })
+        assertEquals(1, allTasks().size) // subtasks are not separate top-level tasks
     }
 
     @Test
-    fun observeTaskEmitsNullForUnknownId() = runTest {
-        assertNull(tasks.observeTask("missing").first())
-        assertNotNull(tasks.addTask(inbox, "x").id)
+    fun removedSubtasksAreDeletedAndEditsAreKept() = runTest {
+        val t = tasks.addTask(inbox, "Trip")
+        tasks.saveTaskDetails(t.copy(subtasks = listOf(Subtask("s1", "A"), Subtask("s2", "B"))))
+
+        tasks.saveTaskDetails(t.copy(subtasks = listOf(Subtask("s2", "B edited", isCompleted = true))))
+
+        val stored = tasks.getTask(t.id)!!
+        assertEquals(listOf("s2"), stored.subtasks.map { it.id })
+        assertEquals("B edited", stored.subtasks.single().title)
+        assertTrue(stored.subtasks.single().isCompleted)
+    }
+
+    @Test
+    fun deletingATaskHidesItsSubtasksAndRestoreBringsThemBack() = runTest {
+        val t = tasks.addTask(inbox, "Trip")
+        tasks.saveTaskDetails(t.copy(subtasks = listOf(Subtask("s1", "A"), Subtask("s2", "B"))))
+        // "B" was removed on its own earlier, so it must stay deleted after the restore.
+        tasks.saveTaskDetails(t.copy(subtasks = listOf(Subtask("s1", "A"))))
+        clock.advance()
+
+        tasks.deleteTask(t.id)
+        assertTrue(allTasks().isEmpty())
+        assertEquals(listOf(t.id), tasks.observeTrash().first().map { it.id })
+
+        clock.advance()
+        tasks.restoreTask(t.id)
+
+        assertEquals(listOf("A"), tasks.getTask(t.id)!!.subtasks.map { it.title })
+        assertTrue(tasks.observeTrash().first().isEmpty())
+    }
+
+    @Test
+    fun saveTaskDetailsReplacesTags() = runTest {
+        val work = tags.createTag("work")
+        val home = tags.createTag("home")
+        val t = tasks.addTask(inbox, "Task")
+
+        tasks.saveTaskDetails(t.copy(tags = listOf(work, home)))
+        assertEquals(setOf("work", "home"), tasks.getTask(t.id)!!.tags.map { it.name }.toSet())
+
+        tasks.saveTaskDetails(t.copy(tags = listOf(home)))
+        assertEquals(listOf("home"), tasks.getTask(t.id)!!.tags.map { it.name })
+    }
+
+    @Test
+    fun saveTaskDetailsDoesNotResurrectADeletedTask() = runTest {
+        val t = tasks.addTask(inbox, "Task")
+        tasks.deleteTask(t.id)
+
+        tasks.saveTaskDetails(t.copy(title = "Edited while deleted", subtasks = listOf(Subtask("s1", "A"))))
+
+        assertNull(tasks.getTask(t.id))
+        assertTrue(allTasks().isEmpty())
+    }
+
+    // --- Trash ---
+
+    @Test
+    fun deletedTasksAreHiddenAndRestoreBringsThemBack() = runTest {
+        val t = tasks.addTask(inbox, "Task")
+
+        tasks.deleteTask(t.id)
+        assertTrue(allTasks().isEmpty())
+        assertNull(tasks.getTask(t.id))
+        assertEquals(clock.millis, tasks.observeTrash().first().single().deletedAt!!.toEpochMilli())
+
+        tasks.restoreTask(t.id)
+        assertEquals(listOf(t.id), allTasks().map { it.id })
+    }
+
+    @Test
+    fun deleteForeverOnlyRemovesTasksAlreadyInTheTrash() = runTest {
+        val live = tasks.addTask(inbox, "Live")
+        val trashed = tasks.addTask(inbox, "Trashed")
+        tasks.deleteTask(trashed.id)
+
+        tasks.deleteForever(live.id) // not in the trash: ignored
+        tasks.deleteForever(trashed.id)
+
+        assertEquals(listOf(live.id), allTasks().map { it.id })
+        assertTrue(tasks.observeTrash().first().isEmpty())
+    }
+
+    @Test
+    fun emptyTrashRemovesEveryDeletedTask() = runTest {
+        val a = tasks.addTask(inbox, "A")
+        val b = tasks.addTask(inbox, "B")
+        tasks.addTask(inbox, "Keep")
+        tasks.deleteTask(a.id)
+        tasks.deleteTask(b.id)
+
+        tasks.emptyTrash()
+
+        assertTrue(tasks.observeTrash().first().isEmpty())
+        assertEquals(listOf("Keep"), allTasks().map { it.title })
+    }
+
+    @Test
+    fun purgeRemovesOnlyTasksDeletedLongAgo() = runTest {
+        val old = tasks.addTask(inbox, "Old")
+        tasks.deleteTask(old.id)
+        clock.advance(Duration.ofDays(31).toMillis())
+        val recent = tasks.addTask(inbox, "Recent")
+        tasks.deleteTask(recent.id)
+
+        tasks.purgeTrash(Duration.ofDays(30))
+
+        assertEquals(listOf(recent.id), tasks.observeTrash().first().map { it.id })
+    }
+
+    // --- Lists and folders ---
+
+    @Test
+    fun ensureInboxIsIdempotent() = runTest {
+        lists.ensureInbox()
+        lists.ensureInbox()
+
+        val all = lists.observeLists().first()
+        assertEquals(1, all.size)
+        assertEquals(TaskList.INBOX_ID, all.single().id)
+        assertTrue(all.single().isInbox)
+    }
+
+    @Test
+    fun listsCanBeCreatedUpdatedAndMovedIntoFolders() = runTest {
+        val folder = lists.createFolder("Areas")
+        val list = lists.createList("Work", colorArgb = 0xFF64B5F6.toInt())
+
+        lists.updateList(list.id, "Work stuff", colorArgb = null, folderId = folder.id)
+
+        val stored = lists.observeLists().first().single { it.id == list.id }
+        assertEquals("Work stuff", stored.name)
+        assertNull(stored.colorArgb)
+        assertEquals(folder.id, stored.folderId)
+    }
+
+    @Test
+    fun theInboxKeepsItsNameAndStaysOutOfFolders() = runTest {
+        val folder = lists.createFolder("Areas")
+
+        lists.updateList(inbox, "Renamed", colorArgb = null, folderId = folder.id)
+
+        val stored = lists.observeLists().first().single { it.id == inbox }
+        assertEquals("Inbox", stored.name)
+        assertNull(stored.folderId)
+    }
+
+    @Test
+    fun deletingAListMovesItsTasksToTheInbox() = runTest {
+        val work = lists.createList("Work")
+        val task = tasks.addTask(work.id, "At work")
+
+        lists.deleteList(work.id)
+
+        assertTrue(lists.observeLists().first().none { it.id == work.id })
+        assertEquals(inbox, tasks.getTask(task.id)!!.listId)
+    }
+
+    @Test
+    fun theInboxCannotBeDeleted() = runTest {
+        lists.deleteList(inbox)
+
+        assertTrue(lists.observeLists().first().any { it.id == inbox })
+    }
+
+    @Test
+    fun deletingAFolderKeepsItsLists() = runTest {
+        val folder = lists.createFolder("Areas")
+        val list = lists.createList("Work", folderId = folder.id)
+
+        lists.deleteFolder(folder.id)
+
+        assertTrue(lists.observeFolders().first().isEmpty())
+        assertNull(lists.observeLists().first().single { it.id == list.id }.folderId)
+    }
+
+    // --- Tags ---
+
+    @Test
+    fun createTagReturnsTheExistingTagForTheSameNameIgnoringCaseAndHash() = runTest {
+        val first = tags.createTag("Work")
+        val again = tags.createTag("#work")
+
+        assertEquals(first.id, again.id)
+        assertEquals(1, tags.observeTags().first().size)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun createTagRejectsBlankNames() = runTest {
+        tags.createTag("  #  ")
+    }
+
+    @Test
+    fun renameTagRefusesNamesUsedByAnotherTag() = runTest {
+        val work = tags.createTag("work")
+        tags.createTag("home")
+
+        assertFalse(tags.renameTag(work.id, "HOME"))
+        assertTrue(tags.renameTag(work.id, "job"))
+        assertEquals(setOf("job", "home"), tags.observeTags().first().map { it.name }.toSet())
+    }
+
+    @Test
+    fun deletingATagRemovesItFromTasks() = runTest {
+        val work = tags.createTag("work")
+        val task = tasks.addTask(inbox, "Task")
+        tasks.saveTaskDetails(task.copy(tags = listOf(work)))
+
+        tags.deleteTag(work.id)
+
+        assertTrue(tags.observeTags().first().isEmpty())
+        assertTrue(tasks.getTask(task.id)!!.tags.isEmpty())
+        assertNotNull(allTasks().single())
     }
 }

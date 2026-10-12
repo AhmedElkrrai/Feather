@@ -7,6 +7,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MappersTest {
@@ -23,7 +24,33 @@ class MappersTest {
         sortOrder = 10,
         createdAt = Instant.ofEpochMilli(1_000),
         updatedAt = Instant.ofEpochMilli(2_000),
+        isPinned = true,
     )
+
+    private fun entity(
+        id: String,
+        parentTaskId: String? = null,
+        title: String = id,
+        sortOrder: Long = 0,
+        completedAt: Long? = null,
+    ) = TaskEntity(
+        id = id,
+        listId = "l1",
+        title = title,
+        notes = "",
+        dueDate = null,
+        dueTime = null,
+        priority = 0,
+        completedAt = completedAt,
+        sortOrder = sortOrder,
+        createdAt = 0,
+        updatedAt = 0,
+        deletedAt = null,
+        parentTaskId = parentTaskId,
+    )
+
+    private fun tag(id: String, name: String, deletedAt: Long? = null) =
+        TagEntity(id = id, name = name, createdAt = 0, updatedAt = 0, deletedAt = deletedAt)
 
     @Test
     fun taskRoundTripsThroughEntity() {
@@ -53,7 +80,50 @@ class MappersTest {
     }
 
     @Test
-    fun deletedAtIsOnlyOnTheEntity() {
-        assertEquals(42L, task.toEntity(deletedAt = 42L).deletedAt)
+    fun deletedAtIsWrittenToTheEntityAndReadBackAsAnInstant() {
+        val entity = task.toEntity(deletedAt = 42L)
+
+        assertEquals(42L, entity.deletedAt)
+        assertEquals(Instant.ofEpochMilli(42L), entity.toDomain().deletedAt)
+    }
+
+    @Test
+    fun taskEntitiesAreTopLevelAndKeepThePinFlag() {
+        val entity = task.toEntity()
+
+        assertNull(entity.parentTaskId)
+        assertTrue(entity.isPinned)
+    }
+
+    @Test
+    fun subtaskRowsGroupUnderTheirParentInOrder() {
+        val rows = listOf(
+            TaskWithTags(entity("parent"), emptyList()),
+            TaskWithTags(entity("s2", parentTaskId = "parent", title = "Second", sortOrder = 2), emptyList()),
+            TaskWithTags(entity("s1", parentTaskId = "parent", title = "First", sortOrder = 1, completedAt = 9), emptyList()),
+            TaskWithTags(entity("other"), emptyList()),
+        )
+
+        val tasks = rows.toDomainTasks()
+
+        assertEquals(listOf("parent", "other"), tasks.map { it.id })
+        val subtasks = tasks.first().subtasks
+        assertEquals(listOf("First", "Second"), subtasks.map { it.title })
+        assertEquals(listOf(true, false), subtasks.map { it.isCompleted })
+        assertTrue(tasks.last().subtasks.isEmpty())
+    }
+
+    @Test
+    fun deletedTagsAreDroppedAndTagsAreSortedByName() {
+        val rows = listOf(
+            TaskWithTags(
+                entity("t"),
+                listOf(tag("b", "Zebra"), tag("a", "apple"), tag("c", "gone", deletedAt = 5)),
+            ),
+        )
+
+        val tags = rows.toDomainTasks().single().tags
+
+        assertEquals(listOf("apple", "Zebra"), tags.map { it.name })
     }
 }

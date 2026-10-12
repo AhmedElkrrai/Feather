@@ -12,7 +12,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | # | Milestone | Main content | Status |
 |---|---|---|---|
 | M1 | Foundation | Tasks, Room, navigation, English and Arabic (RTL) | Done |
-| M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Planned (below) |
+| M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Code complete, awaiting build and install on the phone |
 | M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | |
 | M4 | Recurrence | Rule engine, repeat modes, completion history | |
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | |
@@ -31,7 +31,7 @@ Tasks with title, notes, due date and time, priority; Room persistence with an I
 
 ### Decisions made for M2
 - **Schema v2 with an automatic migration** (`@AutoMigration(1, 2)`), because the phone already holds real data. No destructive fallback.
-- **Search uses `LIKE`, not FTS.** Room's external-content FTS needs sync triggers that auto-migrations do not create, and a personal todo list is small. FTS can be added later if search ever feels slow.
+- **Search is an in-memory, case-insensitive "contains"** over title, notes, tag names and subtask titles, not FTS. Room's external-content FTS needs sync triggers that auto-migrations do not create, and a personal todo list is small. FTS can be added later if search ever feels slow.
 - **Filtering happens in memory.** The repository exposes all non-deleted tasks (with tags); smart views, list views, tag views and search are pure functions over that list in `domain/`, so they are cheap to unit test. Fine for thousands of tasks.
 - **Subtasks are checklist items**: one level, title and done state only (no due date, priority or tags of their own). Deleting or restoring a parent applies to its subtasks together.
 - **Deleting a list moves its tasks to the Inbox** (nothing is lost). Deleting a folder moves its lists out of the folder. The Inbox cannot be deleted or renamed.
@@ -59,6 +59,10 @@ Tasks with title, notes, due date and time, priority; Room persistence with an I
    - Trash screen: restore, delete forever, empty trash; 30-day purge.
 7. **Translations, tests, docs**
    - Arabic strings for everything new; unit tests for scope and sorting logic, repository tests, UI tests (written, run only when asked); update FEATURES.md and ARCHITECTURE.md.
+
+### Known gaps after M2
+- There is no automated test for the 1 -> 2 migration yet. It needs the exported schemas (`app/schemas`) added to the instrumented-test assets; until then the migration is verified by installing over the M1 database on the phone.
+- The new unit and instrumented tests were written but not run (the humbug workflow runs neither).
 
 ### Deferred from M2
 Drag to reorder, bulk select, duplicate task and saved custom filters (moved to M7 polish), list color picker beyond a fixed palette.
