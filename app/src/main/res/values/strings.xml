@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Feather</string>
+    <string name="action_back">Back</string>
+
+    <!-- Placeholder shell strings, replaced by the real screens in step 4. -->
+    <string name="placeholder_task_list">Your tasks will appear here</string>
+    <string name="placeholder_open_editor">Open editor</string>
+    <string name="placeholder_editor_title">Task</string>
+    <string name="placeholder_new_task">New task</string>
 </resources>
