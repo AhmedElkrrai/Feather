@@ -28,6 +28,7 @@ fun TaskEntity.toDomain(
     isPinned = isPinned,
     tags = tags,
     subtasks = subtasks,
+    deletedAt = deletedAt?.let(Instant::ofEpochMilli),
 )
 
 /** Tags and subtasks live in their own rows and are written separately. */

@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import com.elkrrai.feather.feature.search.SearchScreen
 import com.elkrrai.feather.feature.taskedit.TaskEditScreen
 import com.elkrrai.feather.feature.tasklist.TaskListScreen
+import com.elkrrai.feather.feature.trash.TrashScreen
 
 @Composable
 fun FeatherNavHost(modifier: Modifier = Modifier) {
@@ -22,8 +23,7 @@ fun FeatherNavHost(modifier: Modifier = Modifier) {
             TaskListScreen(
                 onOpenTask = { taskId -> navController.navigate(TaskEditRoute(taskId)) },
                 onOpenSearch = { navController.navigate(SearchRoute) },
-                // The trash screen arrives in M2 step 6.
-                onOpenTrash = {},
+                onOpenTrash = { navController.navigate(TrashRoute) },
             )
         }
         // The editor's ViewModel reads the task id from the route itself.
@@ -35,6 +35,9 @@ fun FeatherNavHost(modifier: Modifier = Modifier) {
                 onOpenTask = { taskId -> navController.navigate(TaskEditRoute(taskId)) },
                 onBack = { navController.popBackStack() },
             )
+        }
+        composable<TrashRoute> {
+            TrashScreen(onBack = { navController.popBackStack() })
         }
     }
 }

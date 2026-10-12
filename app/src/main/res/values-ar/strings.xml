@@ -88,6 +88,18 @@
     <string name="delete_tag_title">حذف الوسم؟</string>
     <string name="delete_tag_message">ستتم إزالة «%1$s» من جميع المهام.</string>
 
+    <!-- Trash -->
+    <string name="trash_empty_title">سلة المحذوفات فارغة</string>
+    <string name="trash_empty_body">تبقى المهام المحذوفة هنا لمدة %1$d يومًا.</string>
+    <string name="trash_deleted_ago">حُذفت %1$s</string>
+    <string name="action_restore">استعادة</string>
+    <string name="action_delete_forever">حذف نهائي</string>
+    <string name="action_empty_trash">إفراغ السلة</string>
+    <string name="empty_trash_title">إفراغ السلة؟</string>
+    <string name="empty_trash_message">ستتم إزالة جميع المهام المحذوفة نهائيًا.</string>
+    <string name="delete_forever_title">حذف نهائي؟</string>
+    <string name="delete_forever_message">سيتم حذف «%1$s» نهائيًا.</string>
+
     <!-- Search -->
     <string name="action_search">بحث</string>
     <string name="search_hint">ابحث في المهام</string>

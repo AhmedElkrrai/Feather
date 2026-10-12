@@ -12,3 +12,6 @@ data class TaskEditRoute(val taskId: String? = null)
 
 @Serializable
 data object SearchRoute
+
+@Serializable
+data object TrashRoute

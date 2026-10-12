@@ -92,6 +92,18 @@
     <string name="delete_tag_title">Delete tag?</string>
     <string name="delete_tag_message">“%1$s” will be removed from all tasks.</string>
 
+    <!-- Trash -->
+    <string name="trash_empty_title">Trash is empty</string>
+    <string name="trash_empty_body">Deleted tasks stay here for %1$d days.</string>
+    <string name="trash_deleted_ago">Deleted %1$s</string>
+    <string name="action_restore">Restore</string>
+    <string name="action_delete_forever">Delete permanently</string>
+    <string name="action_empty_trash">Empty trash</string>
+    <string name="empty_trash_title">Empty trash?</string>
+    <string name="empty_trash_message">All deleted tasks will be permanently removed.</string>
+    <string name="delete_forever_title">Delete permanently?</string>
+    <string name="delete_forever_message">“%1$s” will be permanently deleted.</string>
+
     <!-- Search -->
     <string name="action_search">Search</string>
     <string name="search_hint">Search tasks</string>

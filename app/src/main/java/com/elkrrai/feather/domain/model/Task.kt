@@ -25,6 +25,8 @@ data class Task(
     val isPinned: Boolean = false,
     val tags: List<Tag> = emptyList(),
     val subtasks: List<Subtask> = emptyList(),
+    /** Only set for tasks read from the trash; live tasks are never deleted. */
+    val deletedAt: Instant? = null,
 ) {
     val isCompleted: Boolean get() = completedAt != null
 }
