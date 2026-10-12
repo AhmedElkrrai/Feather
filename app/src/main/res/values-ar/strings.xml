@@ -88,6 +88,14 @@
     <string name="delete_tag_title">حذف الوسم؟</string>
     <string name="delete_tag_message">ستتم إزالة «%1$s» من جميع المهام.</string>
 
+    <!-- Search -->
+    <string name="action_search">بحث</string>
+    <string name="search_hint">ابحث في المهام</string>
+    <string name="search_prompt_title">ابحث في مهامك</string>
+    <string name="search_prompt_body">ابحث في العناوين والملاحظات والوسوم والمهام الفرعية.</string>
+    <string name="search_no_results">لم يتم العثور على مهام</string>
+    <string name="search_no_results_body">جرّب كلمة أخرى.</string>
+
     <!-- Task details: list, tags, subtasks, pin -->
     <string name="field_list">القائمة</string>
     <string name="choose_list">اختر القائمة</string>

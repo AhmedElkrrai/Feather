@@ -60,6 +60,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TaskListScreen(
     onOpenTask: (taskId: String) -> Unit,
+    onOpenSearch: () -> Unit,
     onOpenTrash: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TaskListViewModel = hiltViewModel(),
@@ -140,6 +141,7 @@ fun TaskListScreen(
                 }
             },
             onOpenTask = onOpenTask,
+            onSearchClick = onOpenSearch,
             onSortChange = viewModel::setSort,
         )
     }
@@ -174,6 +176,7 @@ fun TaskListContent(
     onToggle: (Task, Boolean) -> Unit,
     onDelete: (Task) -> Unit,
     onOpenTask: (taskId: String) -> Unit,
+    onSearchClick: () -> Unit,
     onSortChange: (TaskSort) -> Unit,
     modifier: Modifier = Modifier,
     today: LocalDate = LocalDate.now(),
@@ -209,7 +212,15 @@ fun TaskListContent(
                         )
                     }
                 },
-                actions = { OverflowButton(actions = sortActions) },
+                actions = {
+                    IconButton(onClick = onSearchClick) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_search),
+                            contentDescription = stringResource(R.string.action_search),
+                        )
+                    }
+                    OverflowButton(actions = sortActions)
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
