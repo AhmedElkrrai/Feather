@@ -2,17 +2,21 @@ package com.elkrrai.feather.data.db
 
 import com.elkrrai.feather.domain.model.Folder
 import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.domain.model.Reminder
+import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.model.TaskList
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 fun TaskEntity.toDomain(
     tags: List<Tag> = emptyList(),
     subtasks: List<Subtask> = emptyList(),
+    reminders: List<Reminder> = emptyList(),
 ): Task = Task(
     id = id,
     listId = listId,
@@ -28,6 +32,7 @@ fun TaskEntity.toDomain(
     isPinned = isPinned,
     tags = tags,
     subtasks = subtasks,
+    reminders = reminders,
     deletedAt = deletedAt?.let(Instant::ofEpochMilli),
 )
 
@@ -56,6 +61,33 @@ fun TaskEntity.toSubtask(): Subtask = Subtask(
 )
 
 fun TagEntity.toDomain(): Tag = Tag(id = id, name = name)
+
+fun ReminderEntity.toDomain(): Reminder = Reminder(
+    id = id,
+    kind = ReminderKind.fromCode(kind),
+    offsetMinutes = offsetMinutes,
+    at = if (atDate != null && atTime != null) {
+        LocalDateTime.of(LocalDate.parse(atDate), LocalTime.parse(atTime))
+    } else {
+        null
+    },
+    firedForTrigger = firedForTrigger?.let(Instant::ofEpochMilli),
+    updatedAt = Instant.ofEpochMilli(updatedAt),
+)
+
+/** Bookkeeping ([createdAt], [updatedAt]) is decided by the repository, not the editor. */
+fun Reminder.toEntity(taskId: String, createdAt: Long, updatedAt: Long): ReminderEntity = ReminderEntity(
+    id = id,
+    taskId = taskId,
+    kind = kind.code,
+    offsetMinutes = offsetMinutes,
+    atDate = at?.toLocalDate()?.toString(),
+    atTime = at?.toLocalTime()?.toString(),
+    firedForTrigger = firedForTrigger?.toEpochMilli(),
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    deletedAt = null,
+)
 
 fun FolderEntity.toDomain(): Folder = Folder(id = id, name = name, sortOrder = sortOrder)
 
@@ -86,6 +118,10 @@ fun List<TaskWithTags>.toDomainTasks(): List<Task> {
                 .filter { it.deletedAt == null }
                 .sortedBy { it.name.lowercase() }
                 .map(TagEntity::toDomain)
-            row.task.toDomain(tags = tags, subtasks = subtasks)
+            val reminders = row.reminders
+                .filter { it.deletedAt == null }
+                .sortedWith(compareBy({ it.createdAt }, { it.id }))
+                .map(ReminderEntity::toDomain)
+            row.task.toDomain(tags = tags, subtasks = subtasks, reminders = reminders)
         }
 }

@@ -4,7 +4,10 @@ import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
 
-/** A task row plus its tags. May include soft-deleted tags; filter on `deletedAt` when mapping. */
+/**
+ * A task row plus its tags and reminders. May include soft-deleted tags and reminders; filter
+ * on `deletedAt` when mapping.
+ */
 data class TaskWithTags(
     @Embedded val task: TaskEntity,
     @Relation(
@@ -17,4 +20,6 @@ data class TaskWithTags(
         ),
     )
     val tags: List<TagEntity>,
+    @Relation(parentColumn = "id", entityColumn = "taskId")
+    val reminders: List<ReminderEntity> = emptyList(),
 )

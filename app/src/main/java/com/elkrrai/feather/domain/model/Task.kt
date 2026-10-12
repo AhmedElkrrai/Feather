@@ -25,6 +25,8 @@ data class Task(
     val isPinned: Boolean = false,
     val tags: List<Tag> = emptyList(),
     val subtasks: List<Subtask> = emptyList(),
+    /** Editable reminders plus any pending snooze; the editor works with the former only. */
+    val reminders: List<Reminder> = emptyList(),
     /** Only set for tasks read from the trash; live tasks are never deleted. */
     val deletedAt: Instant? = null,
 ) {

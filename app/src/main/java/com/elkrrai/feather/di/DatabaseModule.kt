@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.elkrrai.feather.data.db.FeatherDatabase
 import com.elkrrai.feather.data.db.FolderDao
 import com.elkrrai.feather.data.db.ListDao
+import com.elkrrai.feather.data.db.ReminderDao
 import com.elkrrai.feather.data.db.TagDao
 import com.elkrrai.feather.data.db.TaskDao
 import dagger.Module
@@ -35,6 +36,9 @@ object DatabaseModule {
 
     @Provides
     fun provideTagDao(db: FeatherDatabase): TagDao = db.tagDao()
+
+    @Provides
+    fun provideReminderDao(db: FeatherDatabase): ReminderDao = db.reminderDao()
 
     @Provides
     fun provideClock(): Clock = Clock.systemUTC()
