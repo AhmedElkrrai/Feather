@@ -102,6 +102,50 @@
     <string name="test_notification_title">Test reminder</string>
     <string name="test_notification_text">Reminders can reach you on this phone.</string>
 
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="settings_section_reminders">Reminders</string>
+    <string name="settings_section_general">General</string>
+    <string name="settings_default_time">Default reminder time</string>
+    <string name="settings_default_time_summary">Used as the due time for tasks that have a date but no time.</string>
+    <string name="settings_snooze_length">Snooze length</string>
+    <string name="settings_snooze_summary">How long the Snooze button on a reminder waits.</string>
+    <string name="settings_daily_summary">Daily summary</string>
+    <string name="settings_daily_summary_summary">A morning notification with what is due today.</string>
+    <string name="settings_daily_summary_time">Summary time</string>
+    <string name="settings_reliability">Reminder reliability</string>
+    <string name="settings_reliability_ok">Everything looks good</string>
+    <string name="settings_reliability_attention">Needs attention</string>
+    <string name="settings_language">Language</string>
+    <plurals name="duration_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+
+    <!-- Reliability helper -->
+    <string name="reliability_title">Reminder reliability</string>
+    <string name="reliability_intro">Phones often hold back notifications to save battery. Check these items so reminders reach you on time.</string>
+    <string name="reliability_all_good">Everything looks good. Send a test reminder below to be sure.</string>
+    <string name="reliability_status_ok">OK</string>
+    <string name="reliability_status_attention">Needs attention</string>
+    <string name="reliability_fix">Fix</string>
+    <string name="reliability_notifications_title">Notifications</string>
+    <string name="reliability_notifications_body">Reminders appear as notifications, so Feather must be allowed to show them.</string>
+    <string name="reliability_channel_title">Reminder notifications</string>
+    <string name="reliability_channel_body">Make sure the Reminders category is switched on and allowed to make sound or pop up.</string>
+    <string name="reliability_exact_title">Alarms &amp; reminders</string>
+    <string name="reliability_exact_body">Lets reminders fire at the exact minute. Without it they can arrive several minutes late.</string>
+    <string name="reliability_battery_title">Battery optimization</string>
+    <string name="reliability_battery_body">Set Feather to “Don’t optimize” so the phone does not delay or skip reminders.</string>
+    <string name="reliability_vendor_title">%1$s phones</string>
+    <string name="reliability_vendor_body">%1$s phones often have their own auto-launch and background limits that no app can check. Open the app settings and allow background activity and auto-launch for Feather.</string>
+    <string name="reliability_open_settings">App settings</string>
+    <string name="reliability_open_guide">Step-by-step guide</string>
+    <string name="reliability_test_title">Try it</string>
+    <string name="reliability_test_body">Send a test reminder in 10 seconds. Lock the screen or leave the app to see whether it arrives.</string>
+    <string name="reliability_test_button">Send test reminder</string>
+    <string name="reliability_test_scheduled">A test reminder will arrive in about 10 seconds.</string>
+
     <!-- Reminders in the editor -->
     <string name="field_reminders">Reminders</string>
     <string name="add_reminder">Add reminder</string>

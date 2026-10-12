@@ -7,6 +7,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.elkrrai.feather.feature.search.SearchScreen
+import com.elkrrai.feather.feature.settings.ReliabilityScreen
+import com.elkrrai.feather.feature.settings.SettingsScreen
 import com.elkrrai.feather.feature.taskedit.TaskEditScreen
 import com.elkrrai.feather.feature.tasklist.TaskListScreen
 import com.elkrrai.feather.feature.trash.TrashScreen
@@ -40,14 +42,14 @@ fun FeatherNavHost(
                 onOpenTask = { taskId -> navController.navigate(TaskEditRoute(taskId)) },
                 onOpenSearch = { navController.navigate(SearchRoute) },
                 onOpenTrash = { navController.navigate(TrashRoute) },
+                onOpenSettings = { navController.navigate(SettingsRoute) },
             )
         }
         // The editor's ViewModel reads the task id from the route itself.
         composable<TaskEditRoute> {
             TaskEditScreen(
                 onBack = { navController.popBackStack() },
-                // The reliability helper arrives in M3 step 6.
-                onOpenReliability = {},
+                onOpenReliability = { navController.navigate(ReliabilityRoute) },
             )
         }
         composable<SearchRoute> {
@@ -58,6 +60,15 @@ fun FeatherNavHost(
         }
         composable<TrashRoute> {
             TrashScreen(onBack = { navController.popBackStack() })
+        }
+        composable<SettingsRoute> {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenReliability = { navController.navigate(ReliabilityRoute) },
+            )
+        }
+        composable<ReliabilityRoute> {
+            ReliabilityScreen(onBack = { navController.popBackStack() })
         }
     }
 }

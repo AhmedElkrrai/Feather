@@ -47,7 +47,6 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.TaskSort
-import com.elkrrai.feather.feature.settings.LanguageDialog
 import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
@@ -62,6 +61,7 @@ fun TaskListScreen(
     onOpenTask: (taskId: String) -> Unit,
     onOpenSearch: () -> Unit,
     onOpenTrash: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TaskListViewModel = hiltViewModel(),
 ) {
@@ -70,7 +70,6 @@ fun TaskListScreen(
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
     var showQuickAdd by rememberSaveable { mutableStateOf(false) }
-    var showLanguageDialog by rememberSaveable { mutableStateOf(false) }
     var organizeDialog by remember { mutableStateOf<OrganizeDialog?>(null) }
     val deletedMessage = stringResource(R.string.task_deleted)
     val undoLabel = stringResource(R.string.action_undo)
@@ -96,9 +95,9 @@ fun TaskListScreen(
             closeDrawer()
             onOpenTrash()
         },
-        onOpenLanguage = {
+        onOpenSettings = {
             closeDrawer()
-            showLanguageDialog = true
+            onOpenSettings()
         },
     )
 
@@ -152,10 +151,6 @@ fun TaskListScreen(
         actions = organizeActions,
         onDismiss = { organizeDialog = null },
     )
-
-    if (showLanguageDialog) {
-        LanguageDialog(onDismiss = { showLanguageDialog = false })
-    }
 
     if (showQuickAdd) {
         QuickAddSheet(

@@ -44,7 +44,7 @@ class DrawerActions(
     val onRenameTag: (Tag) -> Unit,
     val onDeleteTag: (Tag) -> Unit,
     val onOpenTrash: () -> Unit,
-    val onOpenLanguage: () -> Unit,
+    val onOpenSettings: () -> Unit,
 )
 
 private val smartViews: List<Pair<Int, TaskScope>> = listOf(
@@ -146,9 +146,9 @@ fun TaskDrawerContent(
             modifier = Modifier.padding(itemPadding),
         )
         NavigationDrawerItem(
-            label = { Text(stringResource(R.string.menu_language)) },
+            label = { Text(stringResource(R.string.settings)) },
             selected = false,
-            onClick = actions.onOpenLanguage,
+            onClick = actions.onOpenSettings,
             modifier = Modifier.padding(itemPadding),
         )
     }

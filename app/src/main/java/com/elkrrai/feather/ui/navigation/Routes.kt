@@ -15,3 +15,9 @@ data object SearchRoute
 
 @Serializable
 data object TrashRoute
+
+@Serializable
+data object SettingsRoute
+
+@Serializable
+data object ReliabilityRoute

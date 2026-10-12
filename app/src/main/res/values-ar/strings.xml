@@ -98,6 +98,54 @@
     <string name="test_notification_title">تذكير تجريبي</string>
     <string name="test_notification_text">يمكن للتذكيرات الوصول إليك على هذا الهاتف.</string>
 
+    <!-- Settings -->
+    <string name="settings">الإعدادات</string>
+    <string name="settings_section_reminders">التذكيرات</string>
+    <string name="settings_section_general">عام</string>
+    <string name="settings_default_time">وقت التذكير الافتراضي</string>
+    <string name="settings_default_time_summary">يُستخدم موعدًا للمهام التي لها تاريخ بدون وقت.</string>
+    <string name="settings_snooze_length">مدة الغفوة</string>
+    <string name="settings_snooze_summary">المدة التي ينتظرها زر الغفوة في التذكير.</string>
+    <string name="settings_daily_summary">الملخص اليومي</string>
+    <string name="settings_daily_summary_summary">إشعار صباحي بما يستحق اليوم.</string>
+    <string name="settings_daily_summary_time">وقت الملخص</string>
+    <string name="settings_reliability">موثوقية التذكيرات</string>
+    <string name="settings_reliability_ok">كل شيء يبدو جيدًا</string>
+    <string name="settings_reliability_attention">يحتاج إلى انتباه</string>
+    <string name="settings_language">اللغة</string>
+    <plurals name="duration_minutes">
+        <item quantity="zero">%d دقيقة</item>
+        <item quantity="one">دقيقة واحدة</item>
+        <item quantity="two">دقيقتان</item>
+        <item quantity="few">%d دقائق</item>
+        <item quantity="many">%d دقيقة</item>
+        <item quantity="other">%d دقيقة</item>
+    </plurals>
+
+    <!-- Reliability helper -->
+    <string name="reliability_title">موثوقية التذكيرات</string>
+    <string name="reliability_intro">كثيرًا ما تؤخر الهواتف الإشعارات لتوفير البطارية. راجع هذه البنود لتصلك التذكيرات في وقتها.</string>
+    <string name="reliability_all_good">كل شيء يبدو جيدًا. أرسل تذكيرًا تجريبيًا أدناه للتأكد.</string>
+    <string name="reliability_status_ok">جيد</string>
+    <string name="reliability_status_attention">يحتاج إلى انتباه</string>
+    <string name="reliability_fix">إصلاح</string>
+    <string name="reliability_notifications_title">الإشعارات</string>
+    <string name="reliability_notifications_body">تظهر التذكيرات على شكل إشعارات، لذا يجب السماح لـ Feather بعرضها.</string>
+    <string name="reliability_channel_title">إشعارات التذكير</string>
+    <string name="reliability_channel_body">تأكد من تشغيل فئة «التذكيرات» والسماح لها بإصدار صوت أو الظهور على الشاشة.</string>
+    <string name="reliability_exact_title">المنبّهات والتذكيرات</string>
+    <string name="reliability_exact_body">يسمح بإطلاق التذكيرات في الدقيقة المحددة. بدونه قد تتأخر عدة دقائق.</string>
+    <string name="reliability_battery_title">تحسين البطارية</string>
+    <string name="reliability_battery_body">اضبط Feather على «عدم التحسين» حتى لا يؤخر الهاتف التذكيرات أو يتجاهلها.</string>
+    <string name="reliability_vendor_title">هواتف %1$s</string>
+    <string name="reliability_vendor_body">كثيرًا ما تضع هواتف %1$s قيودها الخاصة على التشغيل التلقائي والعمل في الخلفية، ولا يمكن لأي تطبيق فحصها. افتح إعدادات التطبيق واسمح لـ Feather بالعمل في الخلفية وبالتشغيل التلقائي.</string>
+    <string name="reliability_open_settings">إعدادات التطبيق</string>
+    <string name="reliability_open_guide">دليل خطوة بخطوة</string>
+    <string name="reliability_test_title">جرّبها</string>
+    <string name="reliability_test_body">أرسل تذكيرًا تجريبيًا بعد 10 ثوانٍ. اقفل الشاشة أو اترك التطبيق لترى هل يصل.</string>
+    <string name="reliability_test_button">إرسال تذكير تجريبي</string>
+    <string name="reliability_test_scheduled">سيصل تذكير تجريبي بعد نحو 10 ثوانٍ.</string>
+
     <!-- Reminders in the editor -->
     <string name="field_reminders">التذكيرات</string>
     <string name="add_reminder">إضافة تذكير</string>

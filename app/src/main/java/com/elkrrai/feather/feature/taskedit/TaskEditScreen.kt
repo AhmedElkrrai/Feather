@@ -75,6 +75,7 @@ import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.feature.tasklist.NameDialog
 import com.elkrrai.feather.reminders.ReminderHealth
 import com.elkrrai.feather.ui.components.DurationDialog
+import com.elkrrai.feather.ui.components.TimeOfDayDialog
 import com.elkrrai.feather.ui.components.rememberReminderHealth
 import com.elkrrai.feather.ui.format.displayName
 import com.elkrrai.feather.ui.format.formatDueDate
@@ -387,7 +388,7 @@ fun TaskEditContent(
     }
 
     if (showTimePicker) {
-        DueTimePickerDialog(
+        TimeOfDayDialog(
             initial = state.dueTime ?: LocalTime.of(9, 0),
             onConfirm = {
                 actions.onDueTimeChange(it)
@@ -571,33 +572,6 @@ private fun DueDatePickerDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DueTimePickerDialog(
-    initial: LocalTime,
-    onConfirm: (LocalTime) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val context = LocalContext.current
-    val timeState = rememberTimePickerState(
-        initialHour = initial.hour,
-        initialMinute = initial.minute,
-        is24Hour = DateFormat.is24HourFormat(context),
-    )
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = { onConfirm(LocalTime.of(timeState.hour, timeState.minute)) }) {
-                Text(stringResource(R.string.action_ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-        },
-        text = { TimePicker(state = timeState) },
-    )
-}
-
 /** Where the "add reminder" flow currently is. */
 private sealed interface ReminderStep {
     data object None : ReminderStep
@@ -671,7 +645,7 @@ private fun ReminderDialogs(
             onDismiss = close,
         )
 
-        is ReminderStep.PickTime -> DueTimePickerDialog(
+        is ReminderStep.PickTime -> TimeOfDayDialog(
             initial = LocalTime.of(9, 0),
             onConfirm = {
                 onAddAtTime(LocalDateTime.of(step.date, it))
