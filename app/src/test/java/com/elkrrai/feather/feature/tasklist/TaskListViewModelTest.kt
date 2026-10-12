@@ -6,6 +6,7 @@ import com.elkrrai.feather.testutil.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -22,10 +23,15 @@ class TaskListViewModelTest {
     private val repo = FakeTaskRepository()
     private val inbox = TaskList.INBOX_ID
 
-    /** `uiState` is `WhileSubscribed`, so something has to collect it for the test. */
+    /**
+     * `uiState` is `WhileSubscribed`, so something has to collect it for the test. The collector
+     * must run on an unconfined dispatcher: on `runTest`'s default one it would never start.
+     */
     private fun TestScope.newViewModel(): TaskListViewModel {
         val viewModel = TaskListViewModel(repo)
-        backgroundScope.launch { viewModel.uiState.collect {} }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect {}
+        }
         return viewModel
     }
 
