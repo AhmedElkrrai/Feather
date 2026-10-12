@@ -7,12 +7,17 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.elkrrai.feather.data.db.FeatherDatabase
 import com.elkrrai.feather.data.db.RoomTransactionRunner
 import com.elkrrai.feather.data.repository.ListRepositoryImpl
+import com.elkrrai.feather.data.repository.ReminderRepositoryImpl
 import com.elkrrai.feather.data.repository.TagRepositoryImpl
 import com.elkrrai.feather.data.repository.TaskRepositoryImpl
 import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.domain.model.Reminder
+import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.TaskList
 import java.time.Duration
+import java.time.Instant
+import java.time.LocalDateTime
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.flow.first
@@ -35,6 +40,7 @@ class RepositoryTest {
     private lateinit var tasks: TaskRepositoryImpl
     private lateinit var lists: ListRepositoryImpl
     private lateinit var tags: TagRepositoryImpl
+    private lateinit var reminderRepo: ReminderRepositoryImpl
 
     @Before
     fun setUp() = runTest {
@@ -42,7 +48,8 @@ class RepositoryTest {
         db = Room.inMemoryDatabaseBuilder(context, FeatherDatabase::class.java).build()
         clock = TestClock()
         val tx = RoomTransactionRunner(db)
-        tasks = TaskRepositoryImpl(db.taskDao(), tx, clock)
+        tasks = TaskRepositoryImpl(db.taskDao(), db.reminderDao(), tx, clock)
+        reminderRepo = ReminderRepositoryImpl(db.reminderDao(), tx, clock)
         lists = ListRepositoryImpl(db.listDao(), db.folderDao(), db.taskDao(), tx, clock)
         tags = TagRepositoryImpl(db.tagDao(), clock)
         lists.ensureInbox()
@@ -370,5 +377,126 @@ class RepositoryTest {
         assertTrue(tags.observeTags().first().isEmpty())
         assertTrue(tasks.getTask(task.id)!!.tags.isEmpty())
         assertNotNull(allTasks().single())
+    }
+
+    // --- Reminders ---
+
+    private fun beforeDue(id: String, minutes: Int = 0) =
+        Reminder(id = id, kind = ReminderKind.BEFORE_DUE, offsetMinutes = minutes)
+
+    private suspend fun taskDueOn20th() = tasks.addTask(inbox, "Task", LocalDate.of(2026, 10, 20))
+
+    @Test
+    fun saveTaskDetailsStoresRemindersAndRemovesMissingOnes() = runTest {
+        val t = taskDueOn20th()
+
+        tasks.saveTaskDetails(t.copy(reminders = listOf(beforeDue("r1", 0), beforeDue("r2", 30))))
+        assertEquals(setOf(0, 30), tasks.getTask(t.id)!!.reminders.map { it.offsetMinutes }.toSet())
+
+        tasks.saveTaskDetails(t.copy(reminders = listOf(beforeDue("r2", 30))))
+        assertEquals(listOf("r2"), tasks.getTask(t.id)!!.reminders.map { it.id })
+    }
+
+    @Test
+    fun specificTimeRemindersKeepTheirMoment() = runTest {
+        val t = tasks.addTask(inbox, "Task")
+        val moment = LocalDateTime.of(2026, 10, 21, 8, 15)
+
+        tasks.saveTaskDetails(t.copy(reminders = listOf(Reminder("a", ReminderKind.AT_TIME, at = moment))))
+
+        val stored = tasks.getTask(t.id)!!.reminders.single()
+        assertEquals(ReminderKind.AT_TIME, stored.kind)
+        assertEquals(moment, stored.at)
+    }
+
+    @Test
+    fun remindersAlsoComeWithTheFullTaskList() = runTest {
+        val t = taskDueOn20th()
+        tasks.saveTaskDetails(t.copy(reminders = listOf(beforeDue("r1", 10))))
+
+        assertEquals(listOf("r1"), allTasks().single().reminders.map { it.id })
+        assertEquals(listOf("r1"), tasks.getActiveTasks().single().reminders.map { it.id })
+    }
+
+    @Test
+    fun aShownReminderKeepsItsStateAcrossAnUnrelatedEdit() = runTest {
+        val t = taskDueOn20th()
+        tasks.saveTaskDetails(t.copy(reminders = listOf(beforeDue("r1", 10))))
+        val before = tasks.getTask(t.id)!!.reminders.single()
+        reminderRepo.markFired("r1", Instant.ofEpochMilli(5_000))
+        clock.advance()
+
+        tasks.saveTaskDetails(t.copy(title = "Renamed", reminders = listOf(beforeDue("r1", 10))))
+
+        val after = tasks.getTask(t.id)!!.reminders.single()
+        assertEquals(Instant.ofEpochMilli(5_000), after.firedForTrigger)
+        assertEquals(before.updatedAt, after.updatedAt) // nothing about its schedule changed
+    }
+
+    @Test
+    fun markingAReminderShownLeavesItsAgeAlone() = runTest {
+        val t = taskDueOn20th()
+        tasks.saveTaskDetails(t.copy(reminders = listOf(beforeDue("r1", 10))))
+        val before = tasks.getTask(t.id)!!.reminders.single()
+        clock.advance()
+
+        reminderRepo.markFired("r1", Instant.ofEpochMilli(7_000))
+
+        assertEquals(before.updatedAt, tasks.getTask(t.id)!!.reminders.single().updatedAt)
+    }
+
+    @Test
+    fun movingTheDueTimeRefreshesOnlyBeforeDueReminders() = runTest {
+        val t = taskDueOn20th()
+        val moment = LocalDateTime.of(2026, 10, 21, 8, 0)
+        val reminders = listOf(beforeDue("r1", 10), Reminder("r2", ReminderKind.AT_TIME, at = moment))
+        tasks.saveTaskDetails(t.copy(reminders = reminders))
+        val created = tasks.getTask(t.id)!!.reminders.associateBy { it.id }
+        clock.advance()
+
+        tasks.saveTaskDetails(t.copy(dueTime = LocalTime.of(18, 0), reminders = reminders))
+
+        val after = tasks.getTask(t.id)!!.reminders.associateBy { it.id }
+        assertEquals(clock.millis, after.getValue("r1").updatedAt.toEpochMilli())
+        assertEquals(created.getValue("r2").updatedAt, after.getValue("r2").updatedAt)
+    }
+
+    @Test
+    fun aNewSnoozeReplacesTheEarlierOneAndSurvivesEditing() = runTest {
+        val t = taskDueOn20th()
+        reminderRepo.snooze(t.id, LocalDateTime.of(2026, 10, 20, 9, 0))
+        reminderRepo.snooze(t.id, LocalDateTime.of(2026, 10, 20, 9, 30, 15))
+
+        val snoozes = tasks.getTask(t.id)!!.reminders
+        assertEquals(1, snoozes.size)
+        assertEquals(ReminderKind.SNOOZE, snoozes.single().kind)
+        assertEquals(LocalDateTime.of(2026, 10, 20, 9, 30, 15), snoozes.single().at)
+
+        // The editor never sees the snooze, so saving without reminders must not remove it.
+        tasks.saveTaskDetails(t.copy(reminders = emptyList()))
+        assertEquals(1, tasks.getTask(t.id)!!.reminders.size)
+    }
+
+    @Test
+    fun deletingASnoozeRemovesIt() = runTest {
+        val t = taskDueOn20th()
+        reminderRepo.snooze(t.id, LocalDateTime.of(2026, 10, 20, 9, 0))
+        val id = tasks.getTask(t.id)!!.reminders.single().id
+
+        reminderRepo.delete(id)
+
+        assertTrue(tasks.getTask(t.id)!!.reminders.isEmpty())
+    }
+
+    @Test
+    fun remindersGoWhenTheirTaskIsDeletedForever() = runTest {
+        val t = taskDueOn20th()
+        tasks.saveTaskDetails(t.copy(reminders = listOf(beforeDue("r1", 10))))
+        tasks.deleteTask(t.id)
+
+        tasks.deleteForever(t.id)
+
+        assertTrue(tasks.getActiveTasks().isEmpty())
+        assertTrue(tasks.observeTrash().first().isEmpty())
     }
 }

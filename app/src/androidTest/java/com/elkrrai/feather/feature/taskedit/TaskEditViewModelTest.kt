@@ -9,13 +9,16 @@ import com.elkrrai.feather.data.TestClock
 import com.elkrrai.feather.data.db.FeatherDatabase
 import com.elkrrai.feather.data.db.RoomTransactionRunner
 import com.elkrrai.feather.data.repository.ListRepositoryImpl
+import com.elkrrai.feather.data.repository.ReminderRepositoryImpl
 import com.elkrrai.feather.data.repository.TagRepositoryImpl
 import com.elkrrai.feather.data.repository.TaskRepositoryImpl
 import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.testutil.MainDispatcherRule
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -43,6 +46,7 @@ class TaskEditViewModelTest {
     private lateinit var tasks: TaskRepositoryImpl
     private lateinit var lists: ListRepositoryImpl
     private lateinit var tags: TagRepositoryImpl
+    private lateinit var reminderRepo: ReminderRepositoryImpl
     private val inbox = TaskList.INBOX_ID
 
     @Before
@@ -51,7 +55,8 @@ class TaskEditViewModelTest {
         db = Room.inMemoryDatabaseBuilder(context, FeatherDatabase::class.java).build()
         val clock = TestClock()
         val tx = RoomTransactionRunner(db)
-        tasks = TaskRepositoryImpl(db.taskDao(), tx, clock)
+        tasks = TaskRepositoryImpl(db.taskDao(), db.reminderDao(), tx, clock)
+        reminderRepo = ReminderRepositoryImpl(db.reminderDao(), tx, clock)
         lists = ListRepositoryImpl(db.listDao(), db.folderDao(), db.taskDao(), tx, clock)
         tags = TagRepositoryImpl(db.tagDao(), clock)
         lists.ensureInbox()
@@ -217,5 +222,50 @@ class TaskEditViewModelTest {
         val viewModel = editViewModel("does-not-exist")
 
         assertTrue(viewModel.uiState.value.finished)
+    }
+
+    @Test
+    fun remindersCanBeAddedRemovedAndSaved() = runTest {
+        val viewModel = newTaskViewModel()
+        viewModel.onTitleChange("Dentist")
+        viewModel.onDueDateChange(LocalDate.of(2026, 10, 20))
+
+        viewModel.onAddBeforeDue(30)
+        viewModel.onAddBeforeDue(30) // the same schedule is not added twice
+        viewModel.onAddBeforeDue(0)
+        viewModel.onAddAtTime(LocalDateTime.of(2026, 10, 19, 20, 0))
+        assertEquals(3, viewModel.uiState.value.reminders.size)
+
+        viewModel.onRemoveReminder(viewModel.uiState.value.reminders.first { it.offsetMinutes == 0 && it.kind == ReminderKind.BEFORE_DUE }.id)
+        viewModel.save()
+
+        val saved = tasks.observeTasks().first().single().reminders
+        assertEquals(2, saved.size)
+        assertEquals(setOf(ReminderKind.BEFORE_DUE, ReminderKind.AT_TIME), saved.map { it.kind }.toSet())
+    }
+
+    @Test
+    fun clearingTheDueDateDropsBeforeDueRemindersButKeepsSpecificOnes() {
+        val viewModel = newTaskViewModel()
+        viewModel.onDueDateChange(LocalDate.of(2026, 10, 20))
+        viewModel.onAddBeforeDue(10)
+        viewModel.onAddAtTime(LocalDateTime.of(2026, 10, 19, 20, 0))
+
+        viewModel.onDueDateChange(null)
+
+        assertEquals(listOf(ReminderKind.AT_TIME), viewModel.uiState.value.reminders.map { it.kind })
+    }
+
+    @Test
+    fun aPendingSnoozeIsNotShownInTheEditorAndSurvivesSaving() = runTest {
+        val existing = tasks.addTask(inbox, "Task")
+        reminderRepo.snooze(existing.id, LocalDateTime.of(2026, 10, 20, 9, 0))
+        val viewModel = editViewModel(existing.id)
+        assertTrue(viewModel.uiState.value.reminders.isEmpty())
+
+        viewModel.onTitleChange("Edited")
+        viewModel.save()
+
+        assertEquals(1, tasks.getTask(existing.id)!!.reminders.size)
     }
 }

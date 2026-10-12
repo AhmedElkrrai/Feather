@@ -111,6 +111,14 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Deleting** a list moves its tasks to the Inbox; deleting a folder keeps its lists; deleting a tag hides it everywhere (soft delete). The Inbox is protected.
 - **"Today"** is computed in the user's time zone (`Clock` is UTC, so the ViewModel converts).
 
+### M3 (reminders)
+- **Schema v3** adds `reminders` (kind: before due, at a time, snooze; offset or local date and time; `firedForTrigger`; bookkeeping), migrated with `@AutoMigration(2, 3)`. Reminders hang off a task and are saved with it in `saveTaskDetails`; a pending snooze is never touched by the editor.
+- **All timing decisions are pure functions** in `domain/reminders` (`triggerAt`, `planReminders`, `nextDailySummary`); the Android side only arms alarms and posts notifications. Local times are interpreted in the user's current zone each time, so a time zone change just needs a re-evaluation.
+- **One alarm for reminders, one for the daily summary.** `AlarmReminderScheduler.reschedule()` is the single entry point and is serialized with a mutex; it re-reads the tasks, shows what is due (including catch-up within 24 hours), marks it fired, and arms the next alarm. It is called by the alarm, by `ReminderSyncer` (on every task or settings change), by the system-event receiver (boot, app update, time, time zone, exact-alarm permission) and by a 12-hour WorkManager job.
+- **Receivers and the worker get their dependencies through a Hilt entry point**, not `@AndroidEntryPoint`, because Kotlin cannot call the abstract `BroadcastReceiver.onReceive` that Hilt's generated base class relies on.
+- **Notifications** are one per task (task id as the tag), built with the app language even before Android 13 (`withAppLocale`), and cleaned up when the task is finished elsewhere.
+- **The reliability helper reads real state** (notification permission and channel, exact-alarm permission, battery optimization) and links to the matching system screens; for phone makers with their own limits it explains the manual steps and links to dontkillmyapp.com. It deliberately does not use the restricted `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` permission.
+
 ## Open items
 - Donation mechanism (external link vs. Play flow) and Play policy implications
 - Exact-alarm permission strategy (see Reminders)

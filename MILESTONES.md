@@ -13,7 +13,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 |---|---|---|---|
 | M1 | Foundation | Tasks, Room, navigation, English and Arabic (RTL) | Done |
 | M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Done (built and installed; the 1 -> 2 database upgrade kept existing data) |
-| M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | Planned (below) |
+| M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | Code complete, awaiting build, install and real-device testing |
 | M4 | Recurrence | Rule engine, repeat modes, completion history | |
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | |
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | |
@@ -95,3 +95,10 @@ Drag to reorder, bulk select, duplicate task and saved custom filters (moved to 
 
 ### Deferred from M3
 Per-task custom notification sounds, repeating reminders ("every 10 minutes until done"), reminders for subtasks, location reminders, and a calendar view.
+
+### Known gaps after M3
+- **Needs real-device testing, which only a person with the phone can do:** a reminder firing with the screen off, after a reboot, and after changing the time zone; the Complete, Snooze and More buttons; the notification tap opening the right task; the daily summary at its time; and how OPPO/OnePlus background rules treat the alarms. Use the reliability helper's test reminder first.
+- The Play policy for exact alarms is still to be confirmed before publishing (see decisions above).
+- There is no per-task choice of notification sound, and reminders do not repeat until the task is done (deferred).
+- Reminders for a task that is marked complete and then reopened after their time can show as a catch-up within 24 hours.
+- Unit and instrumented tests for M3 are written but not run (humbug).
