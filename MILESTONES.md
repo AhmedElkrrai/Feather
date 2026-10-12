@@ -12,7 +12,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | # | Milestone | Main content | Status |
 |---|---|---|---|
 | M1 | Foundation | Tasks, Room, navigation, English and Arabic (RTL) | Done |
-| M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Code complete, awaiting build and install on the phone |
+| M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Done (built and installed; the 1 -> 2 database upgrade kept existing data) |
 | M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | |
 | M4 | Recurrence | Rule engine, repeat modes, completion history | |
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | |
@@ -61,7 +61,7 @@ Tasks with title, notes, due date and time, priority; Room persistence with an I
    - Arabic strings for everything new; unit tests for scope and sorting logic, repository tests, UI tests (written, run only when asked); update FEATURES.md and ARCHITECTURE.md.
 
 ### Known gaps after M2
-- There is no automated test for the 1 -> 2 migration yet. It needs the exported schemas (`app/schemas`) added to the instrumented-test assets; until then the migration is verified by installing over the M1 database on the phone.
+- There is no automated test for the 1 -> 2 migration yet. It needs the exported schemas (`app/schemas`) added to the instrumented-test assets. The migration was verified manually on 2026-10-12 by installing over the M1 database on the phone (version 2, new tables and columns present, existing task kept).
 - The new unit and instrumented tests were written but not run (the humbug workflow runs neither).
 
 ### Deferred from M2
