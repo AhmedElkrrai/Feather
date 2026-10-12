@@ -13,7 +13,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 |---|---|---|---|
 | M1 | Foundation | Tasks, Room, navigation, English and Arabic (RTL) | Done |
 | M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Done (built and installed; the 1 -> 2 database upgrade kept existing data) |
-| M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | |
+| M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | Planned (below) |
 | M4 | Recurrence | Rule engine, repeat modes, completion history | |
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | |
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | |
@@ -66,3 +66,32 @@ Tasks with title, notes, due date and time, priority; Room persistence with an I
 
 ### Deferred from M2
 Drag to reorder, bulk select, duplicate task and saved custom filters (moved to M7 polish), list color picker beyond a fixed palette.
+
+## Milestone 3: Reminders
+
+**Definition of done:** a task can have several reminders; each one shows a notification on time (including after a reboot, a time or timezone change, or an app update); the notification offers Complete, Snooze and Open; the user can snooze for a preset or custom time; a settings screen and a "reliability helper" show what is blocking reminders on the phone (notifications, exact alarms, battery optimization, vendor auto-launch) and can send a test reminder; an optional daily summary works; everything works in English and Arabic.
+
+### Decisions made for M3
+- **Reminder kinds.** `BEFORE_DUE` (minutes before the due moment, 0 = at due time; needs a due date), `AT_TIME` (a specific local date and time), and a hidden `SNOOZE` (a one-shot local time created by snoozing; never shown in the editor and deleted after it fires). Date-only tasks use the **default reminder time** (setting, 09:00) as their due moment.
+- **Floating time.** Reminders store local dates and times; the trigger instant is computed when scheduling, in the user's current time zone, and recomputed on a time zone change.
+- **One alarm at a time.** The scheduler keeps a single alarm for the earliest pending reminder. When it fires, every due reminder is shown, marked as fired, and the next alarm is set. This stays far below the system alarm limit. Safety nets: a receiver for boot, app update, time change, time zone change and exact-alarm permission change, a daily WorkManager job, and a re-schedule at app start and on every task change.
+- **Fired state** is stored per reminder (`firedForTrigger`), so a reminder fires once per trigger time. Reminders missed while the phone was off fire as a catch-up (within 24 hours) when the phone is back, but a reminder the user just created or edited into the past does not fire.
+- **Exact alarms.** Use the user-granted `SCHEDULE_EXACT_ALARM` (not `USE_EXACT_ALARM`, which Play restricts to alarm and calendar apps) with `setExactAndAllowWhileIdle`; without the permission fall back to `setAndAllowWhileIdle` (may be late) and nudge the user through the reliability helper. **Open item:** confirm the current Play policy and Permissions Declaration requirements before publishing.
+- **No `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`** (restricted on Play); the helper opens the system battery-optimization list instead, plus app settings and a vendor guide link for Oppo, OnePlus, Xiaomi, Huawei, Samsung and others.
+- **No INTERNET permission** is added.
+- **Snooze** uses a transparent activity with presets (10 min, 30 min, 1 hour, 3 hours, tomorrow morning) and a custom amount; the notification also has a one-tap snooze using the default snooze setting.
+- **Reminders are hard-coded to one notification per task**, even when several reminders of that task fire together.
+- WorkManager is used only as a safety net, through a Hilt entry point (no WorkManager Hilt integration needed).
+
+### Steps
+1. **Schema v3 and trigger logic.** `reminders` table (auto-migration 2 -> 3), `ReminderDao`, domain `Reminder` and `ReminderKind`, `Task.reminders`, and pure functions in `domain/reminders` that compute trigger instants and sort pending, due and catch-up reminders.
+2. **Settings and reminder repository.** DataStore-backed settings (default reminder time, snooze minutes, daily summary on/off and time); `saveTaskDetails` saves reminders; `getActiveTasks`, `snoozeTask`, `markReminderFired`, `deleteReminder`.
+3. **Scheduling engine.** Notification channels, notifier, `ReminderScheduler` (single next alarm, serialized, catch-up), alarm, boot, time and package receivers, task-change syncer, WorkManager safety net, manifest permissions.
+4. **Notification actions.** Complete, quick snooze and Snooze-for-longer (transparent activity with presets and custom); tapping a notification opens that task in the editor.
+5. **Editor and rows.** Reminders section in the editor (presets, custom offset, specific date and time, remove), notification permission request when adding the first reminder, a warning banner when reminders may not fire, a bell on rows with reminders, and localized (plural-aware) descriptions.
+6. **Settings and reliability helper.** Settings screen (reminders, language) and the reliability helper with live status, fix buttons, vendor hints and "send test reminder".
+7. **Daily summary.** Optional morning notification with the number of tasks due today and overdue.
+8. **Tests and docs.** Unit tests for the trigger logic; instrumented tests for the reminder repository; Arabic strings with plurals; FEATURES, ARCHITECTURE and MILESTONES updates.
+
+### Deferred from M3
+Per-task custom notification sounds, repeating reminders ("every 10 minutes until done"), reminders for subtasks, location reminders, and a calendar view.
