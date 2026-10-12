@@ -2,7 +2,9 @@ package com.elkrrai.feather.data.repository
 
 import com.elkrrai.feather.data.db.TaskDao
 import com.elkrrai.feather.data.db.toDomain
+import com.elkrrai.feather.data.db.toDomainTasks
 import com.elkrrai.feather.data.db.toEntity
+import com.elkrrai.feather.data.db.toSubtask
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.repository.TaskRepository
 import java.time.Clock
@@ -18,13 +20,24 @@ class TaskRepositoryImpl @Inject constructor(
 ) : TaskRepository {
 
     override fun observeTasks(listId: String): Flow<List<Task>> =
-        taskDao.observeByList(listId).map { rows -> rows.map { it.toDomain() } }
+        taskDao.observeAllActive().map { rows ->
+            rows.toDomainTasks()
+                .filter { it.listId == listId }
+                .sortedWith(compareBy({ it.isCompleted }, { it.sortOrder }, { it.createdAt }))
+        }
 
     override fun observeTask(id: String): Flow<Task?> =
-        taskDao.observeById(id).map { it?.toDomain() }
+        taskDao.observeAllActive().map { rows -> rows.toDomainTasks().firstOrNull { it.id == id } }
 
-    override suspend fun getTask(id: String): Task? =
-        taskDao.getById(id)?.takeIf { it.deletedAt == null }?.toDomain()
+    override suspend fun getTask(id: String): Task? {
+        val row = taskDao.getWithTags(id) ?: return null
+        if (row.task.deletedAt != null || row.task.parentTaskId != null) return null
+        val subtasks = taskDao.getActiveSubtasks(id).map { it.toSubtask() }
+        return row.task.toDomain(
+            tags = row.tags.filter { it.deletedAt == null }.map { it.toDomain() },
+            subtasks = subtasks,
+        )
+    }
 
     override suspend fun addTask(listId: String, title: String): Task {
         require(title.isNotBlank()) { "Task title must not be blank" }
@@ -53,11 +66,10 @@ class TaskRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteTask(id: String) {
-        val now = clock.millis()
-        taskDao.setDeletedAt(id, deletedAt = now, updatedAt = now)
+        taskDao.softDelete(id, deletedAt = clock.millis())
     }
 
     override suspend fun restoreTask(id: String) {
-        taskDao.setDeletedAt(id, deletedAt = null, updatedAt = clock.millis())
+        taskDao.restore(id, updatedAt = clock.millis())
     }
 }

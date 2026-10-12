@@ -3,7 +3,9 @@ package com.elkrrai.feather.di
 import android.content.Context
 import androidx.room.Room
 import com.elkrrai.feather.data.db.FeatherDatabase
+import com.elkrrai.feather.data.db.FolderDao
 import com.elkrrai.feather.data.db.ListDao
+import com.elkrrai.feather.data.db.TagDao
 import com.elkrrai.feather.data.db.TaskDao
 import dagger.Module
 import dagger.Provides
@@ -27,6 +29,12 @@ object DatabaseModule {
 
     @Provides
     fun provideListDao(db: FeatherDatabase): ListDao = db.listDao()
+
+    @Provides
+    fun provideFolderDao(db: FeatherDatabase): FolderDao = db.folderDao()
+
+    @Provides
+    fun provideTagDao(db: FeatherDatabase): TagDao = db.tagDao()
 
     @Provides
     fun provideClock(): Clock = Clock.systemUTC()

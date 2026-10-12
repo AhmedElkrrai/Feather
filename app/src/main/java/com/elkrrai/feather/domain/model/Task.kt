@@ -7,6 +7,8 @@ import java.time.LocalTime
 /**
  * A todo item. Due date and time are floating local values (not instants), so a task due at
  * 17:00 stays at 17:00 when the user changes timezone.
+ *
+ * Only top-level tasks are modeled as [Task]; their checklist items are [subtasks].
  */
 data class Task(
     val id: String,
@@ -20,6 +22,9 @@ data class Task(
     val sortOrder: Long,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val isPinned: Boolean = false,
+    val tags: List<Tag> = emptyList(),
+    val subtasks: List<Subtask> = emptyList(),
 ) {
     val isCompleted: Boolean get() = completedAt != null
 }
