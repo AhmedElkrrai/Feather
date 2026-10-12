@@ -101,6 +101,15 @@
     <string name="reminder_generic">Task reminder</string>
     <string name="test_notification_title">Test reminder</string>
     <string name="test_notification_text">Reminders can reach you on this phone.</string>
+    <string name="summary_title">Your day</string>
+    <plurals name="summary_due_today">
+        <item quantity="one">%d task due today</item>
+        <item quantity="other">%d tasks due today</item>
+    </plurals>
+    <plurals name="summary_overdue">
+        <item quantity="one">%d task overdue</item>
+        <item quantity="other">%d tasks overdue</item>
+    </plurals>
 
     <!-- Settings -->
     <string name="settings">Settings</string>

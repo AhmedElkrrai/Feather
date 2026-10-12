@@ -38,6 +38,11 @@ class ReminderReceiver : BroadcastReceiver() {
         )
         when (intent.action) {
             ACTION_TEST -> entry.notifier().showTest()
+            ACTION_SUMMARY -> runAsync {
+                entry.scheduler().showDailySummary()
+                // Arms tomorrow's summary (and re-checks reminders while we are awake anyway).
+                entry.scheduler().reschedule()
+            }
             else -> runAsync { entry.scheduler().reschedule() }
         }
     }
@@ -45,5 +50,6 @@ class ReminderReceiver : BroadcastReceiver() {
     companion object {
         const val ACTION_ALARM = "com.elkrrai.feather.action.REMINDER_ALARM"
         const val ACTION_TEST = "com.elkrrai.feather.action.REMINDER_TEST"
+        const val ACTION_SUMMARY = "com.elkrrai.feather.action.DAILY_SUMMARY"
     }
 }

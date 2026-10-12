@@ -7,13 +7,18 @@ import android.content.Intent
 import android.os.Build
 import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.reminders.PendingReminder
+import com.elkrrai.feather.domain.reminders.nextDailySummary
 import com.elkrrai.feather.domain.reminders.planReminders
 import com.elkrrai.feather.domain.repository.ReminderRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
+import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.SettingsRepository
+import com.elkrrai.feather.domain.view.TaskScope
+import com.elkrrai.feather.domain.view.openCountIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -48,6 +53,7 @@ class AlarmReminderScheduler @Inject constructor(
         val plan = planReminders(active, now, appSettings.defaultReminderTime, ZoneId.systemDefault())
         showDue(plan.due, appSettings.snoozeMinutes)
         armAlarm(plan.next)
+        armSummaryAlarm(appSettings, now)
 
         // Notifications of tasks that were finished or deleted in the meantime go away.
         notifier.cancelStale(active.filter { !it.isCompleted }.map { it.id }.toSet())
@@ -72,6 +78,26 @@ class AlarmReminderScheduler @Inject constructor(
         } else {
             setAlarm(next.toEpochMilli(), intent)
         }
+    }
+
+    override suspend fun showDailySummary() = mutex.withLock {
+        val today = LocalDate.now(clock.withZone(ZoneId.systemDefault()))
+        val active = tasks.getActiveTasks()
+        val overdue = active.openCountIn(TaskScope.Overdue, today)
+        // "Today" includes overdue tasks; the summary reports the two separately.
+        val dueToday = active.openCountIn(TaskScope.Today, today) - overdue
+        notifier.showSummary(dueToday = dueToday, overdue = overdue)
+    }
+
+    /** One alarm for the next morning summary, or none if the summary is switched off. */
+    private fun armSummaryAlarm(settings: AppSettings, now: Instant) {
+        val intent = alarmIntent(ReminderReceiver.ACTION_SUMMARY, REQUEST_SUMMARY)
+        if (!settings.dailySummaryEnabled) {
+            alarmManager.cancel(intent)
+            return
+        }
+        val next = nextDailySummary(now, settings.dailySummaryTime, ZoneId.systemDefault())
+        setAlarm(next.toEpochMilli(), intent)
     }
 
     override fun scheduleTest(delayMillis: Long) {
@@ -111,5 +137,6 @@ class AlarmReminderScheduler @Inject constructor(
     private companion object {
         const val REQUEST_ALARM = 1
         const val REQUEST_TEST = 2
+        const val REQUEST_SUMMARY = 3
     }
 }

@@ -84,3 +84,13 @@ fun planReminders(
     }
     return ReminderPlan(due = due.sortedBy { it.trigger }, next = next)
 }
+
+/**
+ * The next moment at local [time] in [zone] that is after [now]: today if it has not passed yet,
+ * otherwise tomorrow. Used to arm the daily summary alarm.
+ */
+fun nextDailySummary(now: Instant, time: LocalTime, zone: ZoneId): Instant {
+    val today = now.atZone(zone).toLocalDate()
+    val todayAt = LocalDateTime.of(today, time).atZone(zone).toInstant()
+    return if (todayAt.isAfter(now)) todayAt else LocalDateTime.of(today.plusDays(1), time).atZone(zone).toInstant()
+}

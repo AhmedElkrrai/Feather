@@ -245,4 +245,44 @@ class ReminderTriggersTest {
         assertTrue(a.sameSchedule(b))
         assertTrue(!a.sameSchedule(b.copy(offsetMinutes = 31)))
     }
+
+    // --- nextDailySummary ---
+
+    @Test
+    fun theSummaryIsTodayWhenItsTimeHasNotPassed() {
+        val morning = instant(day, LocalTime.of(6, 30), cairo)
+
+        val next = nextDailySummary(morning, LocalTime.of(8, 0), cairo)
+
+        assertEquals(instant(day, LocalTime.of(8, 0), cairo), next)
+    }
+
+    @Test
+    fun theSummaryIsTomorrowOnceItsTimeHasPassed() {
+        val afternoon = instant(day, LocalTime.of(15, 0), cairo)
+
+        val next = nextDailySummary(afternoon, LocalTime.of(8, 0), cairo)
+
+        assertEquals(instant(day.plusDays(1), LocalTime.of(8, 0), cairo), next)
+    }
+
+    @Test
+    fun theSummaryExactlyAtItsTimeWaitsForTomorrow() {
+        val exactly = instant(day, LocalTime.of(8, 0), cairo)
+
+        val next = nextDailySummary(exactly, LocalTime.of(8, 0), cairo)
+
+        assertEquals(instant(day.plusDays(1), LocalTime.of(8, 0), cairo), next)
+    }
+
+    @Test
+    fun theSummaryFollowsTheTimeZone() {
+        val now = instant(day, LocalTime.of(6, 30), cairo)
+
+        val inCairo = nextDailySummary(now, LocalTime.of(8, 0), cairo)
+        val inUtc = nextDailySummary(now, LocalTime.of(8, 0), utc)
+
+        // 08:00 in Cairo (UTC+3) is 05:00 UTC, which already passed, so UTC waits for 08:00 tomorrow.
+        assertTrue(inUtc.isAfter(inCairo))
+    }
 }

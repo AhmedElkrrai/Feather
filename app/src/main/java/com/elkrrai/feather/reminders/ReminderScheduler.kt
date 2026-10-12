@@ -10,6 +10,9 @@ interface ReminderScheduler {
      */
     suspend fun reschedule()
 
+    /** Posts the morning overview (tasks due today and overdue), if there is anything to say. */
+    suspend fun showDailySummary()
+
     /** Posts a test notification after [delayMillis], through the same alarm path as real reminders. */
     fun scheduleTest(delayMillis: Long)
 

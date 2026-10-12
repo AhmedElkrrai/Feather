@@ -92,6 +92,37 @@ class ReminderNotifier @Inject constructor(
         manager.notify(TEST_TAG, NOTIFICATION_ID, notification)
     }
 
+    /**
+     * The morning overview. Says nothing when no task is due today or overdue, and does nothing
+     * if notifications are turned off.
+     */
+    @SuppressLint("MissingPermission") // guarded by areNotificationsEnabled()
+    fun showSummary(dueToday: Int, overdue: Int) {
+        if (!manager.areNotificationsEnabled() || (dueToday == 0 && overdue == 0)) return
+        val context = appContext.withAppLocale()
+        ReminderChannels.ensure(context)
+        val resources = context.resources
+        val parts = buildList {
+            if (dueToday > 0) add(resources.getQuantityString(R.plurals.summary_due_today, dueToday, dueToday))
+            if (overdue > 0) add(resources.getQuantityString(R.plurals.summary_overdue, overdue, overdue))
+        }
+        val openApp = PendingIntent.getActivity(
+            context,
+            0,
+            Intent(context, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        val notification = NotificationCompat.Builder(context, ReminderChannels.SUMMARY)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(context.getString(R.string.summary_title))
+            .setContentText(parts.joinToString(" · "))
+            .setAutoCancel(true)
+            .setContentIntent(openApp)
+            .build()
+        manager.notify(SUMMARY_TAG, NOTIFICATION_ID, notification)
+    }
+
     fun cancel(taskId: String) {
         manager.cancel(taskId, NOTIFICATION_ID)
     }
@@ -104,7 +135,8 @@ class ReminderNotifier @Inject constructor(
     fun cancelStale(openTaskIds: Set<String>) {
         for (posted in manager.activeNotifications) {
             val tag = posted.tag ?: continue
-            if (posted.id == NOTIFICATION_ID && tag != TEST_TAG && tag !in openTaskIds) {
+            val isTaskReminder = tag != TEST_TAG && tag != SUMMARY_TAG
+            if (posted.id == NOTIFICATION_ID && isTaskReminder && tag !in openTaskIds) {
                 manager.cancel(tag, NOTIFICATION_ID)
             }
         }
@@ -151,5 +183,6 @@ class ReminderNotifier @Inject constructor(
         /** All reminder notifications share this id and differ by tag (the task id). */
         const val NOTIFICATION_ID = 1001
         private const val TEST_TAG = "test"
+        private const val SUMMARY_TAG = "summary"
     }
 }
