@@ -1,10 +1,41 @@
 <resources>
     <string name="app_name">Feather</string>
-    <string name="action_back">Back</string>
 
-    <!-- Placeholder shell strings, replaced by the real screens in step 4. -->
-    <string name="placeholder_task_list">Your tasks will appear here</string>
-    <string name="placeholder_open_editor">Open editor</string>
-    <string name="placeholder_editor_title">Task</string>
-    <string name="placeholder_new_task">New task</string>
+    <!-- Common actions -->
+    <string name="action_back">Back</string>
+    <string name="action_add">Add</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_delete">Delete</string>
+
+    <!-- Task list -->
+    <string name="action_add_task">Add task</string>
+    <string name="task_deleted">Task deleted</string>
+    <string name="task_list_empty_title">No tasks yet</string>
+    <string name="task_list_empty_body">Tap + to add your first task.</string>
+    <string name="quick_add_hint">What needs doing?</string>
+
+    <!-- Due dates -->
+    <string name="due_today">Today</string>
+    <string name="due_tomorrow">Tomorrow</string>
+
+    <!-- Priorities -->
+    <string name="priority_none">None</string>
+    <string name="priority_low">Low</string>
+    <string name="priority_medium">Medium</string>
+    <string name="priority_high">High</string>
+
+    <!-- Task editor -->
+    <string name="edit_title_new">New task</string>
+    <string name="edit_title_existing">Edit task</string>
+    <string name="field_title">Title</string>
+    <string name="field_notes">Notes</string>
+    <string name="field_due_date">Due date</string>
+    <string name="field_due_time">Due time</string>
+    <string name="field_priority">Priority</string>
+    <string name="set_date">Set date</string>
+    <string name="set_time">Set time</string>
 </resources>
