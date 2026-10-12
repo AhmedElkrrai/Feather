@@ -16,6 +16,11 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE deletedAt IS NULL ORDER BY sortOrder, createdAt")
     fun observeAllActive(): Flow<List<TaskWithTags>>
 
+    /** One-shot version of [observeAllActive], for background work such as scheduling reminders. */
+    @Transaction
+    @Query("SELECT * FROM tasks WHERE deletedAt IS NULL ORDER BY sortOrder, createdAt")
+    suspend fun getAllActive(): List<TaskWithTags>
+
     /** Deleted top-level tasks, newest deletion first. Subtasks are shown through their parent. */
     @Transaction
     @Query(

@@ -1,5 +1,6 @@
 package com.elkrrai.feather.data.repository
 
+import com.elkrrai.feather.data.db.ReminderDao
 import com.elkrrai.feather.data.db.TaskDao
 import com.elkrrai.feather.data.db.TaskEntity
 import com.elkrrai.feather.data.db.TaskTagCrossRef
@@ -8,6 +9,7 @@ import com.elkrrai.feather.data.db.toDomain
 import com.elkrrai.feather.data.db.toDomainTasks
 import com.elkrrai.feather.data.db.toEntity
 import com.elkrrai.feather.data.db.toSubtask
+import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.repository.TaskRepository
 import java.time.Clock
@@ -21,12 +23,15 @@ import kotlinx.coroutines.flow.map
 
 class TaskRepositoryImpl @Inject constructor(
     private val taskDao: TaskDao,
+    private val reminderDao: ReminderDao,
     private val tx: TransactionRunner,
     private val clock: Clock,
 ) : TaskRepository {
 
     override fun observeTasks(): Flow<List<Task>> =
         taskDao.observeAllActive().map { it.toDomainTasks() }
+
+    override suspend fun getActiveTasks(): List<Task> = taskDao.getAllActive().toDomainTasks()
 
     override fun observeTrash(): Flow<List<Task>> =
         taskDao.observeTrash().map { it.toDomainTasks() }
@@ -37,6 +42,10 @@ class TaskRepositoryImpl @Inject constructor(
         return row.task.toDomain(
             tags = row.tags.filter { it.deletedAt == null }.map { it.toDomain() },
             subtasks = taskDao.getActiveSubtasks(id).map { it.toSubtask() },
+            reminders = row.reminders
+                .filter { it.deletedAt == null }
+                .sortedWith(compareBy({ it.createdAt }, { it.id }))
+                .map { it.toDomain() },
         )
     }
 
@@ -64,9 +73,11 @@ class TaskRepositoryImpl @Inject constructor(
 
     override suspend fun saveTaskDetails(task: Task) {
         tx.run {
+            val before = taskDao.getById(task.id)
             saveTask(task)
             replaceTags(task)
             replaceSubtasks(task)
+            replaceReminders(task, before)
         }
     }
 
@@ -105,6 +116,37 @@ class TaskRepositoryImpl @Inject constructor(
             )
         }
         if (rows.isNotEmpty()) taskDao.upsertAll(rows)
+    }
+
+    /**
+     * Saves the editable reminders (a pending snooze is left alone). A reminder keeps its
+     * "already shown" state and age unless its schedule changed, or the task's due moment
+     * changed under a "before due" reminder; in those cases `updatedAt` moves to now, which
+     * stops it from being replayed as a catch-up for a time in the past.
+     */
+    private suspend fun replaceReminders(task: Task, before: TaskEntity?) {
+        val now = clock.millis()
+        val kept = task.reminders.filter { it.kind != ReminderKind.SNOOZE }
+        val existing = reminderDao.getActiveForTask(task.id)
+            .filter { it.kind != ReminderKind.SNOOZE.code }
+            .associateBy { it.id }
+        val dueMomentChanged = before == null ||
+            before.dueDate != task.dueDate?.toString() ||
+            before.dueTime != task.dueTime?.toString()
+
+        val rows = kept.map { reminder ->
+            val old = existing[reminder.id]
+            val scheduleChanged = old == null || !old.toDomain().sameSchedule(reminder)
+            val touched = scheduleChanged || (reminder.kind == ReminderKind.BEFORE_DUE && dueMomentChanged)
+            reminder.toEntity(
+                taskId = task.id,
+                createdAt = old?.createdAt ?: now,
+                updatedAt = if (touched || old == null) now else old.updatedAt,
+            ).copy(firedForTrigger = old?.firedForTrigger)
+        }
+
+        reminderDao.softDeleteRegularExcept(task.id, kept.map { it.id }, deletedAt = now)
+        if (rows.isNotEmpty()) reminderDao.upsertAll(rows)
     }
 
     override suspend fun setCompleted(id: String, completed: Boolean) {

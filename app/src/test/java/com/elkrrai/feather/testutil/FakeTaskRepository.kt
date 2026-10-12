@@ -22,6 +22,9 @@ class FakeTaskRepository : TaskRepository {
         all.filter { it.deletedAt == null }.map { it.task }.sortedBy { it.sortOrder }
     }
 
+    override suspend fun getActiveTasks(): List<Task> =
+        rows.value.filter { it.deletedAt == null }.map { it.task }.sortedBy { it.sortOrder }
+
     override fun observeTrash(): Flow<List<Task>> = rows.map { all ->
         all.filter { it.deletedAt != null }.sortedByDescending { it.deletedAt }.map { it.task }
     }

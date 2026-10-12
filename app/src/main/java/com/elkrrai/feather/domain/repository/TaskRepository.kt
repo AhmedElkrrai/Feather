@@ -15,6 +15,9 @@ interface TaskRepository {
      */
     fun observeTasks(): Flow<List<Task>>
 
+    /** One-shot snapshot of [observeTasks], for background work such as scheduling reminders. */
+    suspend fun getActiveTasks(): List<Task>
+
     /** Deleted top-level tasks, most recently deleted first. */
     fun observeTrash(): Flow<List<Task>>
 
@@ -28,8 +31,9 @@ interface TaskRepository {
     suspend fun saveTask(task: Task)
 
     /**
-     * Saves the task's own fields together with its tags and subtasks in one transaction. Tags
-     * and subtasks missing from [task] are removed. Does not resurrect a deleted task.
+     * Saves the task's own fields together with its tags, subtasks and reminders in one
+     * transaction. Tags, subtasks and editable reminders missing from [task] are removed; a
+     * pending snooze is left alone. Does not resurrect a deleted task.
      */
     suspend fun saveTaskDetails(task: Task)
 
