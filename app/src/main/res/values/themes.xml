@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Feather" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- AppCompat parent is required for AppCompatDelegate per-app locales on API < 33. -->
+    <style name="Theme.Feather" parent="Theme.AppCompat.DayNight.NoActionBar" />
 </resources>
