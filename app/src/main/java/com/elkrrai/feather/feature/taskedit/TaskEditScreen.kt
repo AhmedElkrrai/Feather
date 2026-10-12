@@ -1,6 +1,12 @@
 package com.elkrrai.feather.feature.taskedit
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.text.format.DateFormat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +27,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -44,6 +51,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -56,6 +64,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
@@ -64,12 +73,17 @@ import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.feature.tasklist.NameDialog
+import com.elkrrai.feather.reminders.ReminderHealth
+import com.elkrrai.feather.ui.components.DurationDialog
+import com.elkrrai.feather.ui.components.rememberReminderHealth
 import com.elkrrai.feather.ui.format.displayName
 import com.elkrrai.feather.ui.format.formatDueDate
 import com.elkrrai.feather.ui.format.formatDueTime
 import com.elkrrai.feather.ui.format.label
+import com.elkrrai.feather.ui.format.offsetLabel
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
 
@@ -90,15 +104,35 @@ class TaskEditActions(
     val onSubtaskToggle: (String) -> Unit,
     val onSubtaskTitleChange: (id: String, title: String) -> Unit,
     val onSubtaskRemove: (String) -> Unit,
+    val onAddBeforeDue: (minutes: Int) -> Unit,
+    val onAddAtTime: (LocalDateTime) -> Unit,
+    val onRemoveReminder: (String) -> Unit,
+    val onOpenReliability: () -> Unit,
 )
 
 @Composable
 fun TaskEditScreen(
     onBack: () -> Unit,
+    onOpenReliability: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TaskEditViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val health by rememberReminderHealth()
+    val context = LocalContext.current
+
+    // Asked for when the user starts adding a reminder; the answer shows up in [health] on return.
+    val notificationPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { }
+    val requestNotificationPermission = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     LaunchedEffect(state.finished) {
         if (state.finished) onBack()
@@ -122,7 +156,13 @@ fun TaskEditScreen(
             onSubtaskToggle = viewModel::onSubtaskToggle,
             onSubtaskTitleChange = viewModel::onSubtaskTitleChange,
             onSubtaskRemove = viewModel::onSubtaskRemove,
+            onAddBeforeDue = viewModel::onAddBeforeDue,
+            onAddAtTime = viewModel::onAddAtTime,
+            onRemoveReminder = viewModel::onRemoveReminder,
+            onOpenReliability = onOpenReliability,
         ),
+        health = health,
+        onRequestNotificationPermission = requestNotificationPermission,
         modifier = modifier,
     )
 }
@@ -134,6 +174,8 @@ fun TaskEditContent(
     state: TaskEditUiState,
     actions: TaskEditActions,
     modifier: Modifier = Modifier,
+    health: ReminderHealth = ReminderHealth(),
+    onRequestNotificationPermission: () -> Unit = {},
     today: LocalDate = LocalDate.now(),
 ) {
     val context = LocalContext.current
@@ -142,6 +184,7 @@ fun TaskEditContent(
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
     var showListPicker by rememberSaveable { mutableStateOf(false) }
     var showNewTag by rememberSaveable { mutableStateOf(false) }
+    var reminderStep by remember { mutableStateOf<ReminderStep>(ReminderStep.None) }
 
     Scaffold(
         modifier = modifier,
@@ -256,6 +299,36 @@ fun TaskEditContent(
                 }
             }
 
+            FieldSection(label = stringResource(R.string.field_reminders)) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (state.reminders.isNotEmpty() && !health.canDeliverOnTime) {
+                        ReminderWarning(onFix = actions.onOpenReliability)
+                    }
+                    state.reminders.forEach { reminder ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(reminder.label(today), style = MaterialTheme.typography.bodyLarge)
+                            IconButton(onClick = { actions.onRemoveReminder(reminder.id) }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_close),
+                                    contentDescription = stringResource(R.string.remove_reminder),
+                                )
+                            }
+                        }
+                    }
+                    AssistChip(
+                        onClick = {
+                            onRequestNotificationPermission()
+                            reminderStep = ReminderStep.Picker
+                        },
+                        label = { Text(stringResource(R.string.add_reminder)) },
+                    )
+                }
+            }
+
             FieldSection(label = stringResource(R.string.field_priority)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Priority.entries.forEach { priority ->
@@ -323,6 +396,15 @@ fun TaskEditContent(
             onDismiss = { showTimePicker = false },
         )
     }
+
+    ReminderDialogs(
+        step = reminderStep,
+        hasDueDate = state.dueDate != null,
+        today = today,
+        onStepChange = { reminderStep = it },
+        onAddBeforeDue = actions.onAddBeforeDue,
+        onAddAtTime = actions.onAddAtTime,
+    )
 
     if (showListPicker) {
         ListPickerDialog(
@@ -514,4 +596,126 @@ private fun DueTimePickerDialog(
         },
         text = { TimePicker(state = timeState) },
     )
+}
+
+/** Where the "add reminder" flow currently is. */
+private sealed interface ReminderStep {
+    data object None : ReminderStep
+    data object Picker : ReminderStep
+    data object CustomOffset : ReminderStep
+    data object PickDate : ReminderStep
+    data class PickTime(val date: LocalDate) : ReminderStep
+}
+
+/** Offsets offered as one-tap choices, in minutes before the due moment. */
+private val offsetPresets = listOf(0, 10, 30, 60, 24 * 60)
+
+@Composable
+private fun ReminderDialogs(
+    step: ReminderStep,
+    hasDueDate: Boolean,
+    today: LocalDate,
+    onStepChange: (ReminderStep) -> Unit,
+    onAddBeforeDue: (Int) -> Unit,
+    onAddAtTime: (LocalDateTime) -> Unit,
+) {
+    val close = { onStepChange(ReminderStep.None) }
+    when (step) {
+        ReminderStep.None -> Unit
+
+        ReminderStep.Picker -> AlertDialog(
+            onDismissRequest = close,
+            title = { Text(stringResource(R.string.add_reminder)) },
+            text = {
+                Column {
+                    if (!hasDueDate) {
+                        Text(
+                            text = stringResource(R.string.reminder_needs_due_date),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+                    }
+                    offsetPresets.forEach { minutes ->
+                        PickerRow(offsetLabel(minutes), enabled = hasDueDate) {
+                            onAddBeforeDue(minutes)
+                            close()
+                        }
+                    }
+                    PickerRow(stringResource(R.string.reminder_custom_before), enabled = hasDueDate) {
+                        onStepChange(ReminderStep.CustomOffset)
+                    }
+                    PickerRow(stringResource(R.string.reminder_at_specific_time), enabled = true) {
+                        onStepChange(ReminderStep.PickDate)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = close) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+
+        ReminderStep.CustomOffset -> DurationDialog(
+            title = stringResource(R.string.reminder_custom_title),
+            confirmLabel = stringResource(R.string.action_add),
+            onConfirm = { minutes ->
+                onAddBeforeDue(minutes.toInt())
+                close()
+            },
+            onDismiss = close,
+        )
+
+        ReminderStep.PickDate -> DueDatePickerDialog(
+            initial = today,
+            onConfirm = { onStepChange(ReminderStep.PickTime(it)) },
+            onDismiss = close,
+        )
+
+        is ReminderStep.PickTime -> DueTimePickerDialog(
+            initial = LocalTime.of(9, 0),
+            onConfirm = {
+                onAddAtTime(LocalDateTime.of(step.date, it))
+                close()
+            },
+            onDismiss = close,
+        )
+    }
+}
+
+@Composable
+private fun PickerRow(label: String, enabled: Boolean, onClick: () -> Unit) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.bodyLarge,
+        color = if (enabled) {
+            MaterialTheme.colorScheme.onSurface
+        } else {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = 14.dp),
+    )
+}
+
+/** Shown above the reminders when the phone is set up so that they might not arrive on time. */
+@Composable
+private fun ReminderWarning(onFix: () -> Unit) {
+    Card {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = stringResource(R.string.reminder_warning),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onFix) { Text(stringResource(R.string.reminder_warning_fix)) }
+        }
+    }
 }

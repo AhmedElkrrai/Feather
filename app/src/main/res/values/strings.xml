@@ -102,6 +102,31 @@
     <string name="test_notification_title">Test reminder</string>
     <string name="test_notification_text">Reminders can reach you on this phone.</string>
 
+    <!-- Reminders in the editor -->
+    <string name="field_reminders">Reminders</string>
+    <string name="add_reminder">Add reminder</string>
+    <string name="remove_reminder">Remove reminder</string>
+    <string name="has_reminder">Has a reminder</string>
+    <string name="reminder_at_due_time">At due time</string>
+    <string name="reminder_custom_before">Custom time before…</string>
+    <string name="reminder_custom_title">Remind me before</string>
+    <string name="reminder_at_specific_time">At a specific date and time…</string>
+    <string name="reminder_needs_due_date">Set a due date to remind relative to it. You can still pick a specific date and time.</string>
+    <string name="reminder_warning">Reminders might arrive late or not at all on this phone.</string>
+    <string name="reminder_warning_fix">Fix</string>
+    <plurals name="reminder_minutes_before">
+        <item quantity="one">%d minute before</item>
+        <item quantity="other">%d minutes before</item>
+    </plurals>
+    <plurals name="reminder_hours_before">
+        <item quantity="one">%d hour before</item>
+        <item quantity="other">%d hours before</item>
+    </plurals>
+    <plurals name="reminder_days_before">
+        <item quantity="one">%d day before</item>
+        <item quantity="other">%d days before</item>
+    </plurals>
+
     <!-- Notification actions and snooze -->
     <string name="action_complete">Complete</string>
     <string name="action_snooze">Snooze</string>

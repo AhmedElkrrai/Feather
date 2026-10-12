@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.domain.model.Reminder
+import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
@@ -15,6 +17,7 @@ import com.elkrrai.feather.domain.repository.TaskRepository
 import com.elkrrai.feather.ui.navigation.TaskEditRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
 import javax.inject.Inject
@@ -38,6 +41,8 @@ data class TaskEditUiState(
     val tags: List<Tag> = emptyList(),
     /** The checklist, in order. Blank items are dropped when saving. */
     val subtasks: List<Subtask> = emptyList(),
+    /** The editable reminders (a pending snooze is not shown and is left untouched). */
+    val reminders: List<Reminder> = emptyList(),
     val availableLists: List<TaskList> = emptyList(),
     val availableTags: List<Tag> = emptyList(),
     val isSaving: Boolean = false,
@@ -96,6 +101,7 @@ class TaskEditViewModel @Inject constructor(
                     isPinned = task.isPinned,
                     tags = task.tags,
                     subtasks = task.subtasks,
+                    reminders = task.reminders.filter { r -> r.kind != ReminderKind.SNOOZE },
                 )
             }
         }
@@ -107,7 +113,12 @@ class TaskEditViewModel @Inject constructor(
 
     /** Clearing the date also clears the time, since a time without a date is meaningless. */
     fun onDueDateChange(date: LocalDate?) = _uiState.update {
-        it.copy(dueDate = date, dueTime = if (date == null) null else it.dueTime)
+        it.copy(
+            dueDate = date,
+            dueTime = if (date == null) null else it.dueTime,
+            // "Before due" reminders need a due date to count from.
+            reminders = if (date == null) it.reminders.filter { r -> r.kind != ReminderKind.BEFORE_DUE } else it.reminders,
+        )
     }
 
     fun onDueTimeChange(time: LocalTime?) = _uiState.update { it.copy(dueTime = time) }
@@ -135,6 +146,23 @@ class TaskEditViewModel @Inject constructor(
                 if (state.tags.any { it.id == tag.id }) state else state.copy(tags = state.tags + tag)
             }
         }
+    }
+
+    /** Adds a reminder [minutes] before the due moment (0 = at the due moment), once per schedule. */
+    fun onAddBeforeDue(minutes: Int) = addReminder(
+        Reminder(id = UUID.randomUUID().toString(), kind = ReminderKind.BEFORE_DUE, offsetMinutes = minutes.coerceAtLeast(0))
+    )
+
+    fun onAddAtTime(at: LocalDateTime) = addReminder(
+        Reminder(id = UUID.randomUUID().toString(), kind = ReminderKind.AT_TIME, at = at)
+    )
+
+    private fun addReminder(reminder: Reminder) = _uiState.update { state ->
+        if (state.reminders.any { it.sameSchedule(reminder) }) state else state.copy(reminders = state.reminders + reminder)
+    }
+
+    fun onRemoveReminder(id: String) = _uiState.update { state ->
+        state.copy(reminders = state.reminders.filterNot { it.id == id })
     }
 
     fun onAddSubtask(title: String) {
@@ -176,6 +204,7 @@ class TaskEditViewModel @Inject constructor(
                     isPinned = state.isPinned,
                     tags = state.tags,
                     subtasks = state.subtasks,
+                    reminders = state.reminders,
                 )
             )
             _uiState.update { it.copy(isSaving = false, finished = true) }

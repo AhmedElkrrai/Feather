@@ -44,7 +44,11 @@ fun FeatherNavHost(
         }
         // The editor's ViewModel reads the task id from the route itself.
         composable<TaskEditRoute> {
-            TaskEditScreen(onBack = { navController.popBackStack() })
+            TaskEditScreen(
+                onBack = { navController.popBackStack() },
+                // The reliability helper arrives in M3 step 6.
+                onOpenReliability = {},
+            )
         }
         composable<SearchRoute> {
             SearchScreen(

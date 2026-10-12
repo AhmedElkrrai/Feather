@@ -98,6 +98,43 @@
     <string name="test_notification_title">تذكير تجريبي</string>
     <string name="test_notification_text">يمكن للتذكيرات الوصول إليك على هذا الهاتف.</string>
 
+    <!-- Reminders in the editor -->
+    <string name="field_reminders">التذكيرات</string>
+    <string name="add_reminder">إضافة تذكير</string>
+    <string name="remove_reminder">إزالة التذكير</string>
+    <string name="has_reminder">لديها تذكير</string>
+    <string name="reminder_at_due_time">عند موعد الاستحقاق</string>
+    <string name="reminder_custom_before">وقت مخصص قبل الموعد…</string>
+    <string name="reminder_custom_title">ذكّرني قبل</string>
+    <string name="reminder_at_specific_time">في تاريخ ووقت محددين…</string>
+    <string name="reminder_needs_due_date">حدّد تاريخ استحقاق للتذكير نسبةً إليه. ما زال بإمكانك اختيار تاريخ ووقت محددين.</string>
+    <string name="reminder_warning">قد تصل التذكيرات متأخرة أو لا تصل على هذا الهاتف.</string>
+    <string name="reminder_warning_fix">إصلاح</string>
+    <plurals name="reminder_minutes_before">
+        <item quantity="zero">قبل %d دقيقة</item>
+        <item quantity="one">قبل دقيقة</item>
+        <item quantity="two">قبل دقيقتين</item>
+        <item quantity="few">قبل %d دقائق</item>
+        <item quantity="many">قبل %d دقيقة</item>
+        <item quantity="other">قبل %d دقيقة</item>
+    </plurals>
+    <plurals name="reminder_hours_before">
+        <item quantity="zero">قبل %d ساعة</item>
+        <item quantity="one">قبل ساعة</item>
+        <item quantity="two">قبل ساعتين</item>
+        <item quantity="few">قبل %d ساعات</item>
+        <item quantity="many">قبل %d ساعة</item>
+        <item quantity="other">قبل %d ساعة</item>
+    </plurals>
+    <plurals name="reminder_days_before">
+        <item quantity="zero">قبل %d يوم</item>
+        <item quantity="one">قبل يوم</item>
+        <item quantity="two">قبل يومين</item>
+        <item quantity="few">قبل %d أيام</item>
+        <item quantity="many">قبل %d يومًا</item>
+        <item quantity="other">قبل %d يوم</item>
+    </plurals>
+
     <!-- Notification actions and snooze -->
     <string name="action_complete">إكمال</string>
     <string name="action_snooze">غفوة</string>
