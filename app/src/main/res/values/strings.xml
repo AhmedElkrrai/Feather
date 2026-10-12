@@ -47,4 +47,48 @@
     <!-- Language names are always shown in their own language. -->
     <string name="language_english" translatable="false">English</string>
     <string name="language_arabic" translatable="false">العربية</string>
+
+    <!-- Views and drawer -->
+    <string name="inbox">Inbox</string>
+    <string name="scope_today">Today</string>
+    <string name="scope_upcoming">Upcoming</string>
+    <string name="scope_overdue">Overdue</string>
+    <string name="scope_all">All tasks</string>
+    <string name="scope_completed">Completed</string>
+    <string name="scope_no_date">No date</string>
+    <string name="drawer_section_views">Views</string>
+    <string name="drawer_section_lists">Lists</string>
+    <string name="drawer_section_tags">Tags</string>
+    <string name="action_open_menu">Open menu</string>
+    <string name="trash">Trash</string>
+    <string name="empty_view_title">Nothing here</string>
+    <string name="empty_view_body">No tasks match this view right now.</string>
+
+    <!-- Sorting -->
+    <string name="sort_created">Sort by creation order</string>
+    <string name="sort_due_date">Sort by due date</string>
+    <string name="sort_priority">Sort by priority</string>
+
+    <!-- Lists, folders and tags -->
+    <string name="action_edit">Edit</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_create">Create</string>
+    <string name="new_list">New list</string>
+    <string name="edit_list">Edit list</string>
+    <string name="list_name">List name</string>
+    <string name="list_color">Color</string>
+    <string name="color_none">No color</string>
+    <string name="list_folder">Folder</string>
+    <string name="no_folder">No folder</string>
+    <string name="new_folder">New folder</string>
+    <string name="rename_folder">Rename folder</string>
+    <string name="folder_name">Folder name</string>
+    <string name="rename_tag">Rename tag</string>
+    <string name="tag_name">Tag name</string>
+    <string name="delete_list_title">Delete list?</string>
+    <string name="delete_list_message">Tasks in “%1$s” will move to the Inbox.</string>
+    <string name="delete_folder_title">Delete folder?</string>
+    <string name="delete_folder_message">Lists in “%1$s” are kept and moved out of the folder.</string>
+    <string name="delete_tag_title">Delete tag?</string>
+    <string name="delete_tag_message">“%1$s” will be removed from all tasks.</string>
 </resources>

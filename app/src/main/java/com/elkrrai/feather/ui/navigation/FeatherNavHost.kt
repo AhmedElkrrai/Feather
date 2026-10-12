@@ -20,6 +20,8 @@ fun FeatherNavHost(modifier: Modifier = Modifier) {
         composable<TaskListRoute> {
             TaskListScreen(
                 onOpenTask = { taskId -> navController.navigate(TaskEditRoute(taskId)) },
+                // The trash screen arrives in M2 step 6.
+                onOpenTrash = {},
             )
         }
         // The editor's ViewModel reads the task id from the route itself.

@@ -16,5 +16,13 @@ fun formatDueDate(context: Context, date: LocalDate, today: LocalDate, locale: L
         else -> DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale).format(date)
     }
 
+/** Header for a day group (Upcoming view): "Today", "Tomorrow", or a full date with weekday. */
+fun formatDayHeader(context: Context, date: LocalDate, today: LocalDate, locale: Locale): String =
+    when (date) {
+        today -> context.getString(R.string.due_today)
+        today.plusDays(1) -> context.getString(R.string.due_tomorrow)
+        else -> DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(date)
+    }
+
 fun formatDueTime(time: LocalTime, locale: Locale): String =
     DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(time)

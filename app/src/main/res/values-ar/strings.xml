@@ -43,4 +43,48 @@
     <string name="menu_language">اللغة</string>
     <string name="language_dialog_title">اختر اللغة</string>
     <string name="language_system">لغة النظام</string>
+
+    <!-- Views and drawer -->
+    <string name="inbox">الوارد</string>
+    <string name="scope_today">اليوم</string>
+    <string name="scope_upcoming">القادمة</string>
+    <string name="scope_overdue">المتأخرة</string>
+    <string name="scope_all">كل المهام</string>
+    <string name="scope_completed">المكتملة</string>
+    <string name="scope_no_date">بدون تاريخ</string>
+    <string name="drawer_section_views">العروض</string>
+    <string name="drawer_section_lists">القوائم</string>
+    <string name="drawer_section_tags">الوسوم</string>
+    <string name="action_open_menu">فتح القائمة</string>
+    <string name="trash">سلة المحذوفات</string>
+    <string name="empty_view_title">لا شيء هنا</string>
+    <string name="empty_view_body">لا توجد مهام تطابق هذا العرض الآن.</string>
+
+    <!-- Sorting -->
+    <string name="sort_created">الترتيب حسب الإنشاء</string>
+    <string name="sort_due_date">الترتيب حسب تاريخ الاستحقاق</string>
+    <string name="sort_priority">الترتيب حسب الأولوية</string>
+
+    <!-- Lists, folders and tags -->
+    <string name="action_edit">تعديل</string>
+    <string name="action_rename">إعادة تسمية</string>
+    <string name="action_create">إنشاء</string>
+    <string name="new_list">قائمة جديدة</string>
+    <string name="edit_list">تعديل القائمة</string>
+    <string name="list_name">اسم القائمة</string>
+    <string name="list_color">اللون</string>
+    <string name="color_none">بدون لون</string>
+    <string name="list_folder">المجلد</string>
+    <string name="no_folder">بدون مجلد</string>
+    <string name="new_folder">مجلد جديد</string>
+    <string name="rename_folder">إعادة تسمية المجلد</string>
+    <string name="folder_name">اسم المجلد</string>
+    <string name="rename_tag">إعادة تسمية الوسم</string>
+    <string name="tag_name">اسم الوسم</string>
+    <string name="delete_list_title">حذف القائمة؟</string>
+    <string name="delete_list_message">ستنتقل المهام في «%1$s» إلى الوارد.</string>
+    <string name="delete_folder_title">حذف المجلد؟</string>
+    <string name="delete_folder_message">ستبقى القوائم في «%1$s» وستخرج من المجلد.</string>
+    <string name="delete_tag_title">حذف الوسم؟</string>
+    <string name="delete_tag_message">ستتم إزالة «%1$s» من جميع المهام.</string>
 </resources>
