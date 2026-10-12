@@ -51,6 +51,7 @@ import com.elkrrai.feather.feature.settings.LanguageDialog
 import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
+import com.elkrrai.feather.ui.format.displayName
 import com.elkrrai.feather.ui.format.formatDayHeader
 import com.elkrrai.feather.ui.format.title
 import java.time.LocalDate
@@ -180,6 +181,13 @@ fun TaskListContent(
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
 
+    // Only mixed views (smart views, tags) show which list a task belongs to.
+    val listNames: Map<String, String> = if (state.scope is TaskScope.InList) {
+        emptyMap()
+    } else {
+        state.lists.associate { it.id to it.displayName() }
+    }
+
     val sortActions = TaskSort.entries.map { sort ->
         MenuAction(
             label = stringResource(sort.labelRes()),
@@ -258,6 +266,7 @@ fun TaskListContent(
                                 today = today,
                                 onToggle = { onToggle(task, it) },
                                 onClick = { onOpenTask(task.id) },
+                                listName = listNames[task.listId],
                             )
                         }
                     }

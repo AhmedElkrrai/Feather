@@ -91,4 +91,16 @@
     <string name="delete_folder_message">Lists in “%1$s” are kept and moved out of the folder.</string>
     <string name="delete_tag_title">Delete tag?</string>
     <string name="delete_tag_message">“%1$s” will be removed from all tasks.</string>
+
+    <!-- Task details: list, tags, subtasks, pin -->
+    <string name="field_list">List</string>
+    <string name="choose_list">Choose list</string>
+    <string name="field_tags">Tags</string>
+    <string name="new_tag">New tag</string>
+    <string name="field_subtasks">Subtasks</string>
+    <string name="add_subtask">Add subtask</string>
+    <string name="remove_subtask">Remove subtask</string>
+    <string name="pin_to_top">Pin to top</string>
+    <string name="pinned">Pinned</string>
+    <string name="subtask_progress">Subtasks %1$d/%2$d</string>
 </resources>

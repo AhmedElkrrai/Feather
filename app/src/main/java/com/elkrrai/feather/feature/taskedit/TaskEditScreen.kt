@@ -7,14 +7,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,7 +31,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -43,6 +52,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -50,6 +60,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.domain.model.Subtask
+import com.elkrrai.feather.domain.model.Tag
+import com.elkrrai.feather.domain.model.TaskList
+import com.elkrrai.feather.feature.tasklist.NameDialog
+import com.elkrrai.feather.ui.format.displayName
 import com.elkrrai.feather.ui.format.formatDueDate
 import com.elkrrai.feather.ui.format.formatDueTime
 import com.elkrrai.feather.ui.format.label
@@ -57,6 +72,25 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
+
+/** Everything the editor can ask its ViewModel to do. */
+class TaskEditActions(
+    val onBack: () -> Unit,
+    val onSave: () -> Unit,
+    val onTitleChange: (String) -> Unit,
+    val onNotesChange: (String) -> Unit,
+    val onDueDateChange: (LocalDate?) -> Unit,
+    val onDueTimeChange: (LocalTime?) -> Unit,
+    val onPriorityChange: (Priority) -> Unit,
+    val onListChange: (String) -> Unit,
+    val onTagToggle: (Tag) -> Unit,
+    val onCreateTag: (String) -> Unit,
+    val onPinnedChange: (Boolean) -> Unit,
+    val onAddSubtask: (String) -> Unit,
+    val onSubtaskToggle: (String) -> Unit,
+    val onSubtaskTitleChange: (id: String, title: String) -> Unit,
+    val onSubtaskRemove: (String) -> Unit,
+)
 
 @Composable
 fun TaskEditScreen(
@@ -72,13 +106,23 @@ fun TaskEditScreen(
 
     TaskEditContent(
         state = state,
-        onBack = onBack,
-        onSave = viewModel::save,
-        onTitleChange = viewModel::onTitleChange,
-        onNotesChange = viewModel::onNotesChange,
-        onDueDateChange = viewModel::onDueDateChange,
-        onDueTimeChange = viewModel::onDueTimeChange,
-        onPriorityChange = viewModel::onPriorityChange,
+        actions = TaskEditActions(
+            onBack = onBack,
+            onSave = viewModel::save,
+            onTitleChange = viewModel::onTitleChange,
+            onNotesChange = viewModel::onNotesChange,
+            onDueDateChange = viewModel::onDueDateChange,
+            onDueTimeChange = viewModel::onDueTimeChange,
+            onPriorityChange = viewModel::onPriorityChange,
+            onListChange = viewModel::onListChange,
+            onTagToggle = viewModel::onTagToggle,
+            onCreateTag = viewModel::onCreateTag,
+            onPinnedChange = viewModel::onPinnedChange,
+            onAddSubtask = viewModel::onAddSubtask,
+            onSubtaskToggle = viewModel::onSubtaskToggle,
+            onSubtaskTitleChange = viewModel::onSubtaskTitleChange,
+            onSubtaskRemove = viewModel::onSubtaskRemove,
+        ),
         modifier = modifier,
     )
 }
@@ -88,13 +132,7 @@ fun TaskEditScreen(
 @Composable
 fun TaskEditContent(
     state: TaskEditUiState,
-    onBack: () -> Unit,
-    onSave: () -> Unit,
-    onTitleChange: (String) -> Unit,
-    onNotesChange: (String) -> Unit,
-    onDueDateChange: (LocalDate?) -> Unit,
-    onDueTimeChange: (LocalTime?) -> Unit,
-    onPriorityChange: (Priority) -> Unit,
+    actions: TaskEditActions,
     modifier: Modifier = Modifier,
     today: LocalDate = LocalDate.now(),
 ) {
@@ -102,6 +140,8 @@ fun TaskEditContent(
     val locale = LocalConfiguration.current.locales[0]
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
+    var showListPicker by rememberSaveable { mutableStateOf(false) }
+    var showNewTag by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -115,7 +155,7 @@ fun TaskEditContent(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = actions.onBack) {
                         // The drawable is autoMirrored, so the arrow flips in RTL languages.
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_back),
@@ -124,7 +164,7 @@ fun TaskEditContent(
                     }
                 },
                 actions = {
-                    TextButton(onClick = onSave, enabled = state.canSave) {
+                    TextButton(onClick = actions.onSave, enabled = state.canSave) {
                         Text(stringResource(R.string.action_save))
                     }
                 },
@@ -147,7 +187,7 @@ fun TaskEditContent(
         ) {
             OutlinedTextField(
                 value = state.title,
-                onValueChange = onTitleChange,
+                onValueChange = actions.onTitleChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_title)) },
                 keyboardOptions = KeyboardOptions(
@@ -158,12 +198,21 @@ fun TaskEditContent(
 
             OutlinedTextField(
                 value = state.notes,
-                onValueChange = onNotesChange,
+                onValueChange = actions.onNotesChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_notes)) },
                 minLines = 3,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             )
+
+            FieldSection(label = stringResource(R.string.field_list)) {
+                OutlinedButton(onClick = { showListPicker = true }) {
+                    Text(
+                        state.availableLists.firstOrNull { it.id == state.listId }?.displayName()
+                            ?: stringResource(R.string.inbox)
+                    )
+                }
+            }
 
             FieldSection(label = stringResource(R.string.field_due_date)) {
                 Row(
@@ -177,7 +226,7 @@ fun TaskEditContent(
                         )
                     }
                     if (state.dueDate != null) {
-                        TextButton(onClick = { onDueDateChange(null) }) {
+                        TextButton(onClick = { actions.onDueDateChange(null) }) {
                             Text(stringResource(R.string.action_clear))
                         }
                     }
@@ -200,7 +249,7 @@ fun TaskEditContent(
                         )
                     }
                     if (state.dueTime != null) {
-                        TextButton(onClick = { onDueTimeChange(null) }) {
+                        TextButton(onClick = { actions.onDueTimeChange(null) }) {
                             Text(stringResource(R.string.action_clear))
                         }
                     }
@@ -212,11 +261,43 @@ fun TaskEditContent(
                     Priority.entries.forEach { priority ->
                         FilterChip(
                             selected = state.priority == priority,
-                            onClick = { onPriorityChange(priority) },
+                            onClick = { actions.onPriorityChange(priority) },
                             label = { Text(priority.label()) },
                         )
                     }
                 }
+            }
+
+            FieldSection(label = stringResource(R.string.field_tags)) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    state.availableTags.forEach { tag ->
+                        FilterChip(
+                            selected = state.tags.any { it.id == tag.id },
+                            onClick = { actions.onTagToggle(tag) },
+                            label = { Text("#${tag.name}") },
+                        )
+                    }
+                    AssistChip(
+                        onClick = { showNewTag = true },
+                        label = { Text(stringResource(R.string.new_tag)) },
+                    )
+                }
+            }
+
+            FieldSection(label = stringResource(R.string.field_subtasks)) {
+                SubtasksEditor(state.subtasks, actions)
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(stringResource(R.string.pin_to_top), style = MaterialTheme.typography.bodyLarge)
+                Switch(checked = state.isPinned, onCheckedChange = actions.onPinnedChange)
             }
         }
     }
@@ -225,7 +306,7 @@ fun TaskEditContent(
         DueDatePickerDialog(
             initial = state.dueDate ?: today,
             onConfirm = {
-                onDueDateChange(it)
+                actions.onDueDateChange(it)
                 showDatePicker = false
             },
             onDismiss = { showDatePicker = false },
@@ -236,10 +317,36 @@ fun TaskEditContent(
         DueTimePickerDialog(
             initial = state.dueTime ?: LocalTime.of(9, 0),
             onConfirm = {
-                onDueTimeChange(it)
+                actions.onDueTimeChange(it)
                 showTimePicker = false
             },
             onDismiss = { showTimePicker = false },
+        )
+    }
+
+    if (showListPicker) {
+        ListPickerDialog(
+            lists = state.availableLists,
+            selectedId = state.listId,
+            onSelect = {
+                actions.onListChange(it)
+                showListPicker = false
+            },
+            onDismiss = { showListPicker = false },
+        )
+    }
+
+    if (showNewTag) {
+        NameDialog(
+            title = stringResource(R.string.new_tag),
+            label = stringResource(R.string.tag_name),
+            initial = "",
+            confirmLabel = stringResource(R.string.action_create),
+            onConfirm = {
+                actions.onCreateTag(it)
+                showNewTag = false
+            },
+            onDismiss = { showNewTag = false },
         )
     }
 }
@@ -254,6 +361,101 @@ private fun FieldSection(label: String, content: @Composable () -> Unit) {
         )
         content()
     }
+}
+
+/** The checklist: existing items (editable, removable) plus a field to add another. */
+@Composable
+private fun SubtasksEditor(subtasks: List<Subtask>, actions: TaskEditActions) {
+    var newTitle by rememberSaveable { mutableStateOf("") }
+
+    fun addNew() {
+        if (newTitle.isBlank()) return
+        actions.onAddSubtask(newTitle)
+        newTitle = ""
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        subtasks.forEach { subtask ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = subtask.isCompleted,
+                    onCheckedChange = { actions.onSubtaskToggle(subtask.id) },
+                )
+                OutlinedTextField(
+                    value = subtask.title,
+                    onValueChange = { actions.onSubtaskTitleChange(subtask.id, it) },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                )
+                IconButton(onClick = { actions.onSubtaskRemove(subtask.id) }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_close),
+                        contentDescription = stringResource(R.string.remove_subtask),
+                    )
+                }
+            }
+        }
+        OutlinedTextField(
+            value = newTitle,
+            onValueChange = { newTitle = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.add_subtask)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences,
+                imeAction = ImeAction.Done,
+            ),
+            keyboardActions = KeyboardActions(onDone = { addNew() }),
+            trailingIcon = {
+                if (newTitle.isNotBlank()) {
+                    IconButton(onClick = ::addNew) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_add),
+                            contentDescription = stringResource(R.string.add_subtask),
+                        )
+                    }
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun ListPickerDialog(
+    lists: List<TaskList>,
+    selectedId: String,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.choose_list)) },
+        text = {
+            Column(Modifier.selectableGroup().verticalScroll(rememberScrollState())) {
+                lists.forEach { list ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .selectable(
+                                selected = list.id == selectedId,
+                                onClick = { onSelect(list.id) },
+                                role = Role.RadioButton,
+                            )
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = list.id == selectedId, onClick = null)
+                        Spacer(Modifier.width(16.dp))
+                        Text(list.displayName())
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
 }
 
 /** The Material date picker works in UTC millis; a due date is a plain local date. */
