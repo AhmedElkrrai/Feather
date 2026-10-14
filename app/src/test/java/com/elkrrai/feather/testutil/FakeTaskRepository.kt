@@ -68,6 +68,22 @@ class FakeTaskRepository : TaskRepository {
         row.copy(task = row.task.copy(completedAt = if (completed) Instant.ofEpochSecond(1_000) else null))
     }
 
+    override suspend fun duplicateTask(id: String, title: String): Task? {
+        val source = getTask(id) ?: return null
+        val copy = addTask(source.listId, title, source.dueDate)
+        val detailed = copy.copy(
+            notes = source.notes,
+            dueTime = source.dueTime,
+            priority = source.priority,
+            isPinned = source.isPinned,
+            tags = source.tags,
+            subtasks = source.subtasks.map { it.copy(id = "copy-${it.id}", isCompleted = false) },
+            recurrence = source.recurrence,
+        )
+        upsert(detailed)
+        return detailed
+    }
+
     override suspend fun reorderTasks(orderedIds: List<String>) {
         val slots = orderedIds.mapNotNull { id -> rows.value.firstOrNull { it.task.id == id } }
             .map { it.task.sortOrder }

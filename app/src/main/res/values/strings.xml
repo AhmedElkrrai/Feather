@@ -403,4 +403,9 @@
     <string name="reorder_handle">Drag to reorder</string>
     <string name="action_move_up">Move up</string>
     <string name="action_move_down">Move down</string>
+
+    <!-- Duplicate and links -->
+    <string name="action_duplicate">Duplicate</string>
+    <string name="duplicate_title">%1$s (copy)</string>
+    <string name="open_link">Open link %1$s</string>
 </resources>

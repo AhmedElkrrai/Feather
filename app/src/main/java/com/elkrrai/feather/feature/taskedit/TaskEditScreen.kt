@@ -1,6 +1,8 @@
 package com.elkrrai.feather.feature.taskedit
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
 import android.content.pm.PackageManager
 import android.os.Build
 import android.text.format.DateFormat
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -64,6 +67,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -76,7 +80,11 @@ import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.feature.tasklist.NameDialog
+import com.elkrrai.feather.domain.text.findLinks
 import com.elkrrai.feather.reminders.ReminderHealth
+import com.elkrrai.feather.reminders.startActivitySafely
+import com.elkrrai.feather.ui.components.MenuAction
+import com.elkrrai.feather.ui.components.OverflowButton
 import com.elkrrai.feather.ui.components.DurationDialog
 import com.elkrrai.feather.ui.components.TimeOfDayDialog
 import com.elkrrai.feather.ui.components.rememberReminderHealth
@@ -113,6 +121,7 @@ class TaskEditActions(
     val onRemoveReminder: (String) -> Unit,
     val onOpenReliability: () -> Unit,
     val onRecurrenceChange: (Recurrence?) -> Unit = {},
+    val onDuplicate: () -> Unit = {},
 )
 
 @Composable
@@ -120,6 +129,7 @@ fun TaskEditScreen(
     onBack: () -> Unit,
     onOpenReliability: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenTask: (taskId: String) -> Unit = {},
     viewModel: TaskEditViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -142,6 +152,10 @@ fun TaskEditScreen(
     LaunchedEffect(state.finished) {
         if (state.finished) onBack()
     }
+    LaunchedEffect(state.duplicatedId) {
+        state.duplicatedId?.let(onOpenTask)
+    }
+    val copyTitle = stringResource(R.string.duplicate_title, state.title)
 
     TaskEditContent(
         state = state,
@@ -166,6 +180,7 @@ fun TaskEditScreen(
             onRemoveReminder = viewModel::onRemoveReminder,
             onOpenReliability = onOpenReliability,
             onRecurrenceChange = viewModel::onRecurrenceChange,
+            onDuplicate = { viewModel.duplicate(copyTitle) },
         ),
         health = health,
         onRequestNotificationPermission = requestNotificationPermission,
@@ -214,6 +229,13 @@ fun TaskEditContent(
                     }
                 },
                 actions = {
+                    if (!state.isNew) {
+                        OverflowButton(
+                            actions = listOf(
+                                MenuAction(stringResource(R.string.action_duplicate)) { actions.onDuplicate() },
+                            ),
+                        )
+                    }
                     TextButton(onClick = actions.onSave, enabled = state.canSave) {
                         Text(stringResource(R.string.action_save))
                     }
@@ -254,6 +276,31 @@ fun TaskEditContent(
                 minLines = 3,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             )
+
+            // Web addresses in the notes can be opened from here; the field itself stays plain text.
+            val links = remember(state.notes) { findLinks(state.notes) }
+            if (links.isNotEmpty()) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    links.forEach { link ->
+                        AssistChip(
+                            onClick = {
+                                context.startActivitySafely(Intent(Intent.ACTION_VIEW, Uri.parse(link.url)))
+                            },
+                            label = { Text(link.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                            leadingIcon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_link),
+                                    contentDescription = stringResource(R.string.open_link, link.label),
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            },
+                        )
+                    }
+                }
+            }
 
             FieldSection(label = stringResource(R.string.field_list)) {
                 OutlinedButton(onClick = { showListPicker = true }) {

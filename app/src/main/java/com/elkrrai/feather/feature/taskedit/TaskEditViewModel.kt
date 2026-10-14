@@ -49,6 +49,8 @@ data class TaskEditUiState(
     val availableLists: List<TaskList> = emptyList(),
     val availableTags: List<Tag> = emptyList(),
     val isSaving: Boolean = false,
+    /** Set once the task was duplicated; the screen then opens the copy. */
+    val duplicatedId: String? = null,
     /** Set once the task was saved (or turned out not to exist); the screen then navigates back. */
     val finished: Boolean = false,
 ) {
@@ -201,6 +203,15 @@ class TaskEditViewModel @Inject constructor(
 
     fun onSubtaskRemove(id: String) = _uiState.update { state ->
         state.copy(subtasks = state.subtasks.filterNot { it.id == id })
+    }
+
+    /** Copies the saved version of this task under [copyTitle] and asks the screen to open the copy. */
+    fun duplicate(copyTitle: String) {
+        val id = taskId ?: return
+        viewModelScope.launch {
+            val copy = tasks.duplicateTask(id, copyTitle) ?: return@launch
+            _uiState.update { it.copy(duplicatedId = copy.id) }
+        }
     }
 
     fun save() {

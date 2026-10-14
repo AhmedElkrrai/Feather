@@ -39,6 +39,13 @@ interface TaskRepository {
 
     suspend fun setCompleted(id: String, completed: Boolean)
 
+    /**
+     * Copies a task under the title [title]: notes, date and time, priority, pin, list, tags,
+     * repeat rule, reminders and a fresh, unchecked checklist. The copy is open and new, its
+     * reminders have not fired. Returns the copy, or null if [id] is not an existing task.
+     */
+    suspend fun duplicateTask(id: String, title: String): Task?
+
     suspend fun setPinned(id: String, pinned: Boolean)
 
     /**

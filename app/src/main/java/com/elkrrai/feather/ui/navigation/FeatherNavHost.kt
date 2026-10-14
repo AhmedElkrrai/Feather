@@ -50,6 +50,12 @@ fun FeatherNavHost(
             TaskEditScreen(
                 onBack = { navController.popBackStack() },
                 onOpenReliability = { navController.navigate(ReliabilityRoute) },
+                // Replace the editor with the copy so Back returns to the list, not to the original.
+                onOpenTask = { taskId ->
+                    navController.navigate(TaskEditRoute(taskId)) {
+                        popUpTo<TaskEditRoute> { inclusive = true }
+                    }
+                },
             )
         }
         composable<SearchRoute> {

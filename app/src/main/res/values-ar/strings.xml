@@ -471,4 +471,9 @@
     <string name="reorder_handle">اسحب لإعادة الترتيب</string>
     <string name="action_move_up">تحريك للأعلى</string>
     <string name="action_move_down">تحريك للأسفل</string>
+
+    <!-- Duplicate and links -->
+    <string name="action_duplicate">نسخ المهمة</string>
+    <string name="duplicate_title">%1$s (نسخة)</string>
+    <string name="open_link">فتح الرابط %1$s</string>
 </resources>

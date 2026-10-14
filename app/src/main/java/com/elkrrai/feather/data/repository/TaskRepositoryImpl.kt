@@ -12,6 +12,7 @@ import com.elkrrai.feather.data.db.toDomainTasks
 import com.elkrrai.feather.data.db.toEntity
 import com.elkrrai.feather.data.db.toSubtask
 import com.elkrrai.feather.domain.model.ReminderKind
+import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.domain.recurrence.RepeatMode
@@ -226,6 +227,29 @@ class TaskRepositoryImpl @Inject constructor(
                 row.copy(atDate = atDate, firedForTrigger = null, updatedAt = now)
             }
         if (moved.isNotEmpty()) reminderDao.upsertAll(moved)
+    }
+
+    override suspend fun duplicateTask(id: String, title: String): Task? {
+        val source = getTask(id) ?: return null
+        val copyId = tx.run {
+            val created = addTask(source.listId, title, source.dueDate)
+            saveTaskDetails(
+                created.copy(
+                    notes = source.notes,
+                    dueTime = source.dueTime,
+                    priority = source.priority,
+                    isPinned = source.isPinned,
+                    tags = source.tags,
+                    subtasks = source.subtasks.map { Subtask(UUID.randomUUID().toString(), it.title) },
+                    reminders = source.reminders
+                        .filter { it.kind != ReminderKind.SNOOZE }
+                        .map { it.copy(id = UUID.randomUUID().toString(), firedForTrigger = null) },
+                    recurrence = source.recurrence,
+                )
+            )
+            created.id
+        }
+        return getTask(copyId)
     }
 
     override suspend fun reorderTasks(orderedIds: List<String>) {
