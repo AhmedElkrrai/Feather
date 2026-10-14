@@ -30,6 +30,7 @@ import com.elkrrai.feather.ui.brand.rememberBirdMotionAllowed
 import com.elkrrai.feather.ui.rememberReduceMotion
 import com.elkrrai.feather.ui.theme.Ease
 import kotlinx.coroutines.delay
+import com.elkrrai.feather.ui.brand.rememberAmbientPhase
 
 /** The scenes of the illustration kit (see `Illustration`). */
 enum class SceneKind {
@@ -82,16 +83,8 @@ internal fun SceneFrame(
         entrance.animateTo(1f, tween(if (reduceMotion) 160 else ENTRANCE_MILLIS, easing = Ease.Settle))
     }
 
-    val swayPhase: State<Float>? = if (moving) {
-        rememberInfiniteTransition(label = "sway").animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(tween(SWAY_MILLIS, easing = LinearEasing), RepeatMode.Restart),
-            label = "swayPhase",
-        )
-    } else {
-        null
-    }
+    // The sway, like the bird, comes to rest after ten seconds.
+    val swayPhase = rememberAmbientPhase(SWAY_MILLIS, enabled = moving)
 
     val sunProgress = remember { Animatable(if (risingSun) 0f else 1f) }
     LaunchedEffect(risingSun, reduceMotion) {
@@ -108,7 +101,7 @@ internal fun SceneFrame(
         SceneScope(
             unit = size / SCENE_BOARD,
             palette = palette,
-            sway = { swayDegrees(swayPhase?.value ?: 0f) },
+            sway = { swayDegrees(swayPhase.value) },
             sunRise = { sunRise(sunProgress.value) },
         )
     }

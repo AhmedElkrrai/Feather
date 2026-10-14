@@ -34,6 +34,8 @@ import com.elkrrai.feather.ui.rememberReduceMotion
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.min
+import android.os.SystemClock
+import androidx.compose.animation.core.AnimationVector1D
 
 /** The bird's shapes, parsed once from the path data. */
 private class BirdPaths {
@@ -55,6 +57,39 @@ private class BirdPaths {
 @Composable
 fun rememberBirdMotionAllowed(): Boolean = DisplayPrefs.birdAnimations && !rememberReduceMotion()
 
+/** Ambient movement (the idle bird, a swaying leaf) runs for this long at most, then comes to rest. */
+internal const val AMBIENT_MAX_MILLIS = 10_000L
+
+/**
+ * Whether an ambient loop that started at [startMillis] should begin another cycle at [nowMillis]:
+ * it stops starting new cycles after [AMBIENT_MAX_MILLIS], and the cycle in progress is finished, so
+ * the movement ends at rest instead of freezing in mid-motion.
+ */
+internal fun ambientShouldContinue(startMillis: Long, nowMillis: Long): Boolean =
+    nowMillis - startMillis < AMBIENT_MAX_MILLIS
+
+/**
+ * A phase that runs from 0 to 1 over [periodMillis], again and again, for at most 10 seconds
+ * after the screen appears (and for good only while [enabled]); then it stays at 0, the calm
+ * pose. Nothing that is only decoration should keep waking the screen for as long as someone
+ * looks at it. Read its value while drawing so a running loop redraws without recomposing.
+ */
+@Composable
+internal fun rememberAmbientPhase(periodMillis: Int, enabled: Boolean): Animatable<Float, AnimationVector1D> {
+    val phase = remember { Animatable(0f) }
+    LaunchedEffect(periodMillis, enabled) {
+        phase.snapTo(0f)
+        if (!enabled) return@LaunchedEffect
+        val start = SystemClock.elapsedRealtime()
+        do {
+            phase.snapTo(0f)
+            phase.animateTo(1f, tween(durationMillis = periodMillis, easing = LinearEasing))
+        } while (ambientShouldContinue(start, SystemClock.elapsedRealtime()))
+        // 1 and 0 are the same pose: it comes to rest where a cycle begins.
+    }
+    return phase
+}
+
 /**
  * The Feather bird. It moves on its own in a loop while movement is allowed
  * ([rememberBirdMotionAllowed]) and is a still picture otherwise. Pass a [contentDescription]
@@ -66,23 +101,11 @@ fun BirdIllustration(
     mood: BirdMood = BirdMood.IDLE,
     contentDescription: String? = null,
 ) {
-    val animatedPhase: State<Float>? = if (rememberBirdMotionAllowed()) {
-        rememberInfiniteTransition(label = "bird").animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = periodMillis(mood), easing = LinearEasing),
-                repeatMode = RepeatMode.Restart,
-            ),
-            label = "phase",
-        )
-    } else {
-        null
-    }
+    val phase = rememberAmbientPhase(periodMillis(mood), enabled = rememberBirdMotionAllowed())
     BirdCanvas(
         mood = mood,
         // Read inside the drawing, so each frame redraws the picture and recomposes nothing.
-        phase = { animatedPhase?.value ?: 0f },
+        phase = { phase.value },
         modifier = modifier.describedAs(contentDescription),
     )
 }

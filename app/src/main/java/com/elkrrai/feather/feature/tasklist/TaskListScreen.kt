@@ -228,6 +228,8 @@ fun TaskListScreen(
             onCelebrate = { origin ->
                 if (DisplayPrefs.celebrations && !reduceMotion) confetti = ConfettiBurst(++confettiCount, origin)
             },
+            onAddSubtask = viewModel::addSubtask,
+            onToggleSubtask = viewModel::toggleSubtask,
         )
         FeatherConfettiOverlay(confetti)
         CompletionBird(
@@ -343,6 +345,8 @@ fun TaskListContent(
     selectionActions: SelectionActions = SelectionActions(),
     onReorder: (List<String>) -> Unit = {},
     onCelebrate: (Offset) -> Unit = {},
+    onAddSubtask: (taskId: String, title: String) -> Unit = { _, _ -> },
+    onToggleSubtask: (taskId: String, subtaskId: String) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
@@ -527,6 +531,8 @@ fun TaskListContent(
                                 selected = task.id in state.selection,
                                 highlighted = task.id == state.justAddedId,
                                 onCelebrate = onCelebrate,
+                                onAddSubtask = { title -> onAddSubtask(task.id, title) },
+                                onToggleSubtask = { subtaskId -> onToggleSubtask(task.id, subtaskId) },
                                 dragHandle = if (reorderable) ({ DragHandle(reorder, task.id) }) else null,
                                 onMoveUp = if (reorderable) ({ reorder.moveBy(task.id, -1) }) else null,
                                 onMoveDown = if (reorderable) ({ reorder.moveBy(task.id, 1) }) else null,

@@ -35,6 +35,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.elkrrai.feather.domain.model.Subtask
+import java.util.UUID
 
 /** How long a task that was just added keeps its tint before it starts to fade. */
 private const val JUST_ADDED_MILLIS = 1_000L
@@ -215,6 +217,28 @@ class TaskListViewModel @Inject constructor(
             justAdded.value = added.id
             delay(JUST_ADDED_MILLIS)
             if (justAdded.value == added.id) justAdded.value = null
+        }
+    }
+
+    // --- Subtasks, straight from the list ---
+
+    /** Adds a subtask to the task [taskId] without opening the editor. */
+    fun addSubtask(taskId: String, title: String) {
+        val clean = title.trim()
+        if (clean.isEmpty()) return
+        viewModelScope.launch {
+            val task = taskRepository.getTask(taskId) ?: return@launch
+            val added = Subtask(id = UUID.randomUUID().toString(), title = clean)
+            taskRepository.saveTaskDetails(task.copy(subtasks = task.subtasks + added))
+        }
+    }
+
+    /** Ticks or unticks a subtask of the task [taskId]. */
+    fun toggleSubtask(taskId: String, subtaskId: String) {
+        viewModelScope.launch {
+            val task = taskRepository.getTask(taskId) ?: return@launch
+            val updated = task.subtasks.map { if (it.id == subtaskId) it.copy(isCompleted = !it.isCompleted) else it }
+            taskRepository.saveTaskDetails(task.copy(subtasks = updated))
         }
     }
 

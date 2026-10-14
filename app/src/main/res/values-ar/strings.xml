@@ -248,6 +248,8 @@
     <string name="new_tag">وسم جديد</string>
     <string name="field_subtasks">المهام الفرعية</string>
     <string name="add_subtask">إضافة مهمة فرعية</string>
+    <string name="subtasks_show">إظهار المهام الفرعية</string>
+    <string name="subtasks_hide">إخفاء المهام الفرعية</string>
     <string name="remove_subtask">إزالة المهمة الفرعية</string>
     <string name="pin_to_top">تثبيت في الأعلى</string>
     <string name="pinned">مثبتة</string>

@@ -471,4 +471,66 @@ class TaskListViewModelTest {
         assertEquals(work.id, added.listId)
         assertEquals(listOf("urgent"), added.tags.map { it.name })
     }
+
+    @Test
+    fun aSubtaskAddedFromTheListIsSavedOnTheTask() = runTest {
+        val task = tasks.addTask(inbox, "Plan trip")
+        val viewModel = newViewModel()
+
+        viewModel.addSubtask(task.id, "  Book flights ")
+        viewModel.addSubtask(task.id, "Pack")
+
+        val subtasks = tasks.getTask(task.id)!!.subtasks
+        assertEquals(listOf("Book flights", "Pack"), subtasks.map { it.title })
+        assertTrue(subtasks.none { it.isCompleted })
+    }
+
+    @Test
+    fun aBlankSubtaskIsIgnored() = runTest {
+        val task = tasks.addTask(inbox, "Plan trip")
+        val viewModel = newViewModel()
+
+        viewModel.addSubtask(task.id, "   ")
+
+        assertTrue(tasks.getTask(task.id)!!.subtasks.isEmpty())
+    }
+
+    @Test
+    fun tickingASubtaskFlipsOnlyThatOne() = runTest {
+        val task = tasks.addTask(inbox, "Plan trip")
+        val viewModel = newViewModel()
+        viewModel.addSubtask(task.id, "Book flights")
+        viewModel.addSubtask(task.id, "Pack")
+        val first = tasks.getTask(task.id)!!.subtasks.first()
+
+        viewModel.toggleSubtask(task.id, first.id)
+
+        val after = tasks.getTask(task.id)!!.subtasks
+        assertEquals(listOf(true, false), after.map { it.isCompleted })
+        viewModel.toggleSubtask(task.id, first.id)
+        assertEquals(listOf(false, false), tasks.getTask(task.id)!!.subtasks.map { it.isCompleted })
+    }
+
+    @Test
+    fun aListWithOnlyFinishedTasksHasNothingOpenAndAllOfThemInTheDoneSection() = runTest {
+        val done = tasks.addTask(inbox, "Done")
+        tasks.setCompleted(done.id, true)
+        val viewModel = newViewModel()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.isEmpty)
+        assertEquals(listOf("Done"), state.doneTasks.map { it.title })
+    }
+
+    @Test
+    fun theCompletedViewStillListsFinishedTasksInTheMainList() = runTest {
+        val done = tasks.addTask(inbox, "Done")
+        tasks.setCompleted(done.id, true)
+        val viewModel = newViewModel()
+
+        viewModel.selectScope(TaskScope.Completed)
+
+        assertEquals(listOf("Done"), viewModel.titles())
+        assertTrue(viewModel.uiState.value.doneTasks.isEmpty())
+    }
 }

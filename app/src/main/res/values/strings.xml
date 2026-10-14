@@ -228,6 +228,8 @@
     <string name="new_tag">New tag</string>
     <string name="field_subtasks">Subtasks</string>
     <string name="add_subtask">Add subtask</string>
+    <string name="subtasks_show">Show subtasks</string>
+    <string name="subtasks_hide">Hide subtasks</string>
     <string name="remove_subtask">Remove subtask</string>
     <string name="pin_to_top">Pin to top</string>
     <string name="pinned">Pinned</string>

@@ -81,4 +81,20 @@ class RowPiecesTest {
         assertEquals(LeafProgress(3, 3), leafProgress(total = 3, done = 9))
         assertEquals(LeafProgress(3, 0), leafProgress(total = 3, done = -2))
     }
+
+    // --- the subtask bar ---
+
+    @Test
+    fun theBarIsFilledByTheShareOfSubtasksThatAreDone() {
+        assertEquals(0f, subtaskFraction(done = 0, total = 4), 0.0001f)
+        assertEquals(0.5f, subtaskFraction(done = 2, total = 4), 0.0001f)
+        assertEquals(1f, subtaskFraction(done = 4, total = 4), 0.0001f)
+    }
+
+    @Test
+    fun theBarIsEmptyWithoutSubtasksAndNeverOverfull() {
+        assertEquals(0f, subtaskFraction(done = 0, total = 0), 0.0001f)
+        assertEquals(1f, subtaskFraction(done = 9, total = 4), 0.0001f)
+        assertEquals(0f, subtaskFraction(done = -3, total = 4), 0.0001f)
+    }
 }

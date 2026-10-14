@@ -89,4 +89,19 @@ class BirdPoseTest {
         assertEquals(0.4f, fade(0.9f), tolerance)
         assertEquals(0f, fade(1f), tolerance)
     }
+
+    // --- ambient movement stops after ten seconds ---
+
+    @Test
+    fun ambientMovementStartsAnotherCycleOnlyInsideTheFirstTenSeconds() {
+        assertTrue(ambientShouldContinue(startMillis = 1_000L, nowMillis = 1_000L))
+        assertTrue(ambientShouldContinue(startMillis = 1_000L, nowMillis = 10_999L))
+        assertEquals(false, ambientShouldContinue(startMillis = 1_000L, nowMillis = 11_000L))
+        assertEquals(false, ambientShouldContinue(startMillis = 1_000L, nowMillis = 60_000L))
+    }
+
+    @Test
+    fun theLimitIsTenSeconds() {
+        assertEquals(10_000L, AMBIENT_MAX_MILLIS)
+    }
 }

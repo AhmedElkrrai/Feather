@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.lerp
@@ -55,6 +56,19 @@ import com.elkrrai.feather.ui.theme.featherColors
 import com.elkrrai.feather.ui.theme.listShapeFor
 import java.time.LocalDate
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.graphicsLayer
+import com.elkrrai.feather.ui.components.SubtaskProgressBar
+import com.elkrrai.feather.ui.theme.Dur
 
 /** The list a task belongs to, as the row shows it: its name and which of the eight list colors it has. */
 data class ListLabel(val name: String, val colorIndex: Int?)
@@ -92,6 +106,9 @@ fun TaskRow(
     /** TalkBack actions that stand in for dragging. */
     onMoveUp: (() -> Unit)? = null,
     onMoveDown: (() -> Unit)? = null,
+    /** When both are set, the card can open to show its subtasks and take a new one. */
+    onAddSubtask: ((title: String) -> Unit)? = null,
+    onToggleSubtask: ((subtaskId: String) -> Unit)? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
     val feather = MaterialTheme.featherColors
@@ -120,7 +137,9 @@ fun TaskRow(
 
     val subtaskTotal = task.subtasks.size
     val subtasksDone = task.subtasks.count { it.isCompleted }
-    val hasChips = due != null || list != null || recurrence != null || task.tags.isNotEmpty() || subtaskTotal > 0
+    val hasChips = due != null || list != null || recurrence != null || task.tags.isNotEmpty()
+    val canExpand = onAddSubtask != null && onToggleSubtask != null && !task.isCompleted
+    var expanded by rememberSaveable(task.id) { mutableStateOf(false) }
 
     val baseColor = if (selected) scheme.secondaryContainer else feather.card
     val cardColor by animateColorAsState(
@@ -244,19 +263,40 @@ fun TaskRow(
                                 content = scheme.onPrimaryContainer,
                             )
                         }
-                        if (subtaskTotal > 0) {
-                            MetaChip(
-                                text = stringResource(R.string.subtasks_of, subtasksDone, subtaskTotal),
-                                container = scheme.surfaceContainer,
-                                content = scheme.onSurfaceVariant,
-                                leading = { SubtaskLeaves(subtasksDone, subtaskTotal, scheme.onSurfaceVariant) },
-                            )
-                        }
+                    }
+                }
+                // The bar fills as subtasks are finished, with the count beside it.
+                if (subtaskTotal > 0) {
+                    Spacer(Modifier.height(Space.x2))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+                    ) {
+                        SubtaskProgressBar(done = subtasksDone, total = subtaskTotal, modifier = Modifier.weight(1f))
+                        Text(
+                            text = stringResource(R.string.subtasks_of, subtasksDone, subtaskTotal),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = scheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                if (canExpand) {
+                    AnimatedVisibility(
+                        visible = expanded,
+                        enter = expandVertically(tween(Dur.Medium1, easing = Ease.Settle)) + fadeIn(tween(Dur.Short2)),
+                        exit = shrinkVertically(tween(Dur.Short2, easing = Ease.Leave)) + fadeOut(tween(Dur.Micro)),
+                    ) {
+                        SubtaskPanel(
+                            subtasks = task.subtasks,
+                            onToggle = { id -> onToggleSubtask?.invoke(id) },
+                            onAdd = { title -> onAddSubtask?.invoke(title) },
+                            modifier = Modifier.padding(top = Space.x1),
+                        )
                     }
                 }
             }
 
-            if (task.isPinned || hasReminder || dragHandle != null) {
+            if (task.isPinned || hasReminder || dragHandle != null || canExpand) {
                 Row(
                     modifier = Modifier.height(48.dp).padding(start = Space.x2),
                     verticalAlignment = Alignment.CenterVertically,
@@ -277,6 +317,31 @@ fun TaskRow(
                             modifier = Modifier.size(16.dp),
                             tint = scheme.onSurfaceVariant,
                         )
+                    }
+                    if (canExpand) {
+                        val rotation by animateFloatAsState(
+                            targetValue = if (expanded) 180f else 0f,
+                            animationSpec = tween(Dur.Short2, easing = Ease.Soft),
+                            label = "chevron",
+                        )
+                        IconButton(onClick = { expanded = !expanded }, modifier = Modifier.size(40.dp)) {
+                            Icon(
+                                painter = painterResource(
+                                    if (subtaskTotal > 0) R.drawable.ic_chevron_down else R.drawable.ic_add
+                                ),
+                                contentDescription = stringResource(
+                                    when {
+                                        subtaskTotal == 0 -> R.string.add_subtask
+                                        expanded -> R.string.subtasks_hide
+                                        else -> R.string.subtasks_show
+                                    }
+                                ),
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .graphicsLayer { rotationZ = if (subtaskTotal > 0) rotation else 0f },
+                                tint = scheme.onSurfaceVariant,
+                            )
+                        }
                     }
                     dragHandle?.invoke()
                 }
