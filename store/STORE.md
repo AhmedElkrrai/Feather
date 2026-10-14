@@ -6,7 +6,7 @@ Everything needed to fill in a Google Play Console listing and to submit to F-Dr
 - [ ] **Donation link.** Set `SupportLinks.DONATION_URL` in `feature/settings/SupportLinks.kt`. While it is empty the "Support Feather" row is hidden. Check Google Play's current policy on links to external donations (and on whether a non-profit-style donation link inside an app is allowed) before shipping a version with the link.
 - [ ] **Exact alarms.** The app declares `SCHEDULE_EXACT_ALARM`. Check the current Play Console declaration for it. If a "core functionality" declaration is required, the honest answer is that reminders at the time chosen by the user are the main feature of a to-do app. Do not switch to `USE_EXACT_ALARM`: it is for alarm clocks and calendars.
 - [ ] **Privacy policy address and contact address** in `store/PRIVACY.md`.
-- [ ] **App icon and feature graphic.** The launcher icon is still the template's; the bird identity is milestone M8. Play needs a 512x512 icon and a 1024x500 feature graphic.
+- [ ] **App icon and feature graphic.** The launcher icon is now the bird (a code-drawn first identity). `store/graphics/` has the 512x512 icon and the 1024x500 feature graphic as SVG; export them to PNG (see its README). Replace the artwork with a designer's if there is one.
 - [ ] **Screenshots** (phone, at least 2 per language): the task list, the quick add sheet with chips, the editor, the repeat dialog, a widget, the settings. Take them in English and in Arabic (right-to-left), light and dark.
 - [ ] **Release signing** and a first release build (see `RELEASE.md`).
 
