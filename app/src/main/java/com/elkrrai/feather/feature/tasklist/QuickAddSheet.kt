@@ -1,5 +1,12 @@
 package com.elkrrai.feather.feature.tasklist
 
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.speech.RecognizerIntent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -15,6 +22,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -73,6 +81,35 @@ fun QuickAddSheet(
     var ignored by remember { mutableStateOf(emptySet<QuickAddField>()) }
     val focusRequester = remember { FocusRequester() }
 
+    // Dictation goes through the phone's own speech recognizer (no microphone permission here);
+    // what it hears is added to the text and understood like anything typed.
+    val voiceUnavailable = stringResource(R.string.voice_unavailable)
+    val voicePrompt = stringResource(R.string.voice_prompt)
+    val voiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val spoken = result.data
+                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+                ?.trim()
+            if (!spoken.isNullOrEmpty()) {
+                text = if (text.isBlank()) spoken else text.trimEnd() + " " + spoken
+            }
+        }
+    }
+
+    fun startVoice() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale.toLanguageTag())
+            .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            .putExtra(RecognizerIntent.EXTRA_PROMPT, voicePrompt)
+        try {
+            voiceLauncher.launch(intent)
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(context, voiceUnavailable, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val listNames = lists.map { it.displayName() }
     val parsed = remember(text, ignored, listNames) {
         QuickAddParser.parse(text, LocalDateTime.now(), listNames, ignored)
@@ -116,6 +153,14 @@ fun QuickAddSheet(
                         { Text(stringResource(R.string.quick_add_example)) }
                     } else {
                         null
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = ::startVoice) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_mic),
+                                contentDescription = stringResource(R.string.voice_input),
+                            )
+                        }
                     },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(

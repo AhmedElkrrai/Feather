@@ -356,4 +356,9 @@
     <!-- Quick add -->
     <string name="quick_add_example">مثال: اتصل بأمي غدا الساعة 5 مساء !عالية #العائلة</string>
     <string name="quick_add_ignore">تجاهل %1$s</string>
+
+    <!-- Voice input -->
+    <string name="voice_input">تحدّث</string>
+    <string name="voice_prompt">قل مهمتك</string>
+    <string name="voice_unavailable">الإدخال الصوتي غير متاح على هذا الهاتف.</string>
 </resources>

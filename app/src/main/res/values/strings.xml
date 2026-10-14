@@ -300,4 +300,9 @@
     <!-- Quick add -->
     <string name="quick_add_example">Try: Call mom tomorrow 5pm !high #family</string>
     <string name="quick_add_ignore">Ignore %1$s</string>
+
+    <!-- Voice input -->
+    <string name="voice_input">Speak</string>
+    <string name="voice_prompt">Say your task</string>
+    <string name="voice_unavailable">Voice input is not available on this phone.</string>
 </resources>
