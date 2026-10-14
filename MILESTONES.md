@@ -17,7 +17,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | Built; install and real-device testing still pending |
 | M4 | Recurrence | Rule engine, repeat modes, completion history | Code complete (developed with the "flash" workflow: not built, installed or tested) |
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | Code complete (flash workflow: not built, installed or tested) |
-| M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | |
+| M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | In progress (flash workflow) |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | |
 | M8 | Brand | Bird identity and animation | |
 
@@ -179,3 +179,30 @@ Reminders and end conditions in the parser, dialect Arabic, list names with spac
 - Not parsed: reminders, "until" and "for N times", other Latin or Arabic-script languages, list names with spaces other than `_`.
 - The share sheet shows the activity label "Add to Feather"; the tile has to be added by the user from the Quick Settings editor.
 - The share target accepts only plain text, not images or files.
+
+## Milestone 6: Widgets and backup
+
+**Definition of done:** the whole database can be exported to one JSON file and imported again (merging with what is on the phone, or replacing it), tasks can be exported as CSV, a backup can be written automatically every day into a folder the user picked, and two home-screen widgets exist: a Today list whose tasks can be ticked off and opened, and a one-tap "add task" button. English and Arabic. No network permission is added.
+
+### Decisions made for M6
+The user did not answer the open questions, so these are the recommended defaults; any of them can be changed later.
+- **Import merges by id; "replace everything" is a separate, confirmed choice.** For each record the newer `updatedAt` wins (ties keep what is on the phone), so importing an old backup never undoes newer edits and importing on a second device never loses data. Tags with the same name as an existing tag are joined to it instead of duplicated. A task whose list does not exist falls back to the Inbox.
+- **The file is a versioned JSON document** (`"format": "feather-backup"`, `"version": 1`) that mirrors the tables (folders, lists, tags, tasks with subtasks, task-tag links, reminders, completion history), soft-deleted rows included so deletions travel too. Unknown fields are ignored, a newer `version` than the app knows is refused with a clear message, and the file format is independent of Room's classes.
+- **Merging is a pure function** (`BackupMerger`) from "what is on the phone" and "what is in the file" to "what to write", so it is unit tested without a database. Child rows (tag links, reminders) are only taken from the file for tasks whose own record was taken from it; completion history is a union.
+- **CSV is for reading elsewhere, not for restoring.** One row per open or finished top-level task: title, notes, list, due date and time, priority, status, completion time, tags, repeat rule, subtasks. English column names, UTF-8 with a byte order mark so spreadsheets show Arabic correctly.
+- **Automatic backup is daily and keeps the last 7 files**, written through the Storage Access Framework into the chosen folder (a Drive-synced folder works). One file per day (`feather-backup-2026-10-14.json`), a second run on the same day replaces it. WorkManager runs it; "Back up now" runs the same code. If the folder permission is lost the backup fails quietly and the settings row says so.
+- **Widgets use Jetpack Glance** (as planned in ARCHITECTURE.md). A Today list widget (open tasks due today or earlier, tick to complete, tap to open, a header button to add) and a quick-add button widget. The single-task widget is left for M7. Widgets refresh when tasks change and every half hour (so they roll over at midnight).
+- **Android's own cloud backup is left as it is** (the database is included in Auto Backup and device-to-device transfer). The rules files now say so explicitly. This is an operating-system feature, not something the app does, but the store listing's privacy text should mention it.
+- **No encryption of backup files.** They are plain JSON in a place the user chose.
+
+### Steps
+1. **Format and pure logic.** Backup records, JSON codec with version checks, `BackupMerger`, CSV builder, with JVM tests.
+2. **Backup repository.** `BackupDao`, entity-to-record mapping, `BackupRepositoryImpl` (export, merge import, replace import, CSV) and DI.
+3. **Settings: manual backup.** Backup section in Settings (export, import with merge or replace, CSV), file reading and writing, result messages in English and Arabic.
+4. **Automatic backup.** Settings for on/off, folder and last backup; `AutoBackup`, the daily worker and scheduling; UI rows.
+5. **Today widget.** Glance dependency, widget, tick-off and open actions, refresh on changes.
+6. **Quick-add widget and wrap-up.** The button widget, manifest entries, backup rules documented.
+7. **Tests and docs.** Repository tests (instrumented, written not run), FEATURES, ARCHITECTURE and MILESTONES updates.
+
+### Deferred from M6
+The single-task widget, widget configuration screens (choosing a list), encrypted backups, restoring from a backup at first launch, backup of settings (language, reminder defaults), a CSV or calendar import, and sync.
