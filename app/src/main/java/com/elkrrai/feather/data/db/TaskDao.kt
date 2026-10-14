@@ -59,6 +59,13 @@ interface TaskDao {
     )
     suspend fun reopenSubtasks(parentId: String, updatedAt: Long)
 
+    /** Ticks the rest of a task's checklist, used when the task itself is finished for good. */
+    @Query(
+        "UPDATE tasks SET completedAt = :completedAt, updatedAt = :completedAt " +
+            "WHERE parentTaskId = :parentId AND deletedAt IS NULL AND completedAt IS NULL"
+    )
+    suspend fun completeSubtasks(parentId: String, completedAt: Long)
+
     @Query("UPDATE tasks SET sortOrder = :sortOrder, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setSortOrder(id: String, sortOrder: Long, updatedAt: Long)
 

@@ -197,6 +197,8 @@ class TaskRepositoryImpl @Inject constructor(
 
         if (due == null || recurrence == null || next == null) {
             taskDao.setCompletedAt(task.id, completedAt = now, updatedAt = now)
+            // A finished task has a finished checklist.
+            taskDao.completeSubtasks(task.id, completedAt = now)
         } else {
             advance(task, recurrence, due, next, now)
         }

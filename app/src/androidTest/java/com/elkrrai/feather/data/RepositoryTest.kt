@@ -534,6 +534,18 @@ class RepositoryTest {
     }
 
     @Test
+    fun finishingATaskFinishesItsOpenSubtasks() = runTest {
+        val t = tasks.addTask(inbox, "Plan trip")
+        tasks.saveTaskDetails(
+            t.copy(subtasks = listOf(Subtask("s1", "Book flights", isCompleted = true), Subtask("s2", "Pack")))
+        )
+
+        tasks.setCompleted(t.id, true)
+
+        assertEquals(listOf(true, true), tasks.getTask(t.id)!!.subtasks.map { it.isCompleted })
+    }
+
+    @Test
     fun finishingARepeatingTaskMovesItToTheNextDateAndRecordsIt() = runTest {
         val t = repeatingTask(weekly)
 
