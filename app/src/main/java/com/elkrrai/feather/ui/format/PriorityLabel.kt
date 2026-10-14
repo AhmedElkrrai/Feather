@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.ui.theme.featherColors
 
 @Composable
 fun Priority.label(): String = stringResource(
@@ -16,6 +17,18 @@ fun Priority.label(): String = stringResource(
         Priority.HIGH -> R.string.priority_high
     }
 )
+
+/** The color of the completion ring: neutral without a priority, sky, amber or coral with one. */
+@Composable
+fun Priority.ringColor(): Color {
+    val colors = MaterialTheme.featherColors
+    return when (this) {
+        Priority.NONE -> colors.prioNone
+        Priority.LOW -> colors.prioLow
+        Priority.MEDIUM -> colors.prioMed
+        Priority.HIGH -> colors.prioHigh
+    }
+}
 
 /** Marker color for a priority, or null when there is nothing to show. */
 @Composable

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -37,6 +36,8 @@ import com.elkrrai.feather.ui.format.formatDueDate
 import com.elkrrai.feather.ui.format.formatDueTime
 import com.elkrrai.feather.ui.format.label
 import com.elkrrai.feather.ui.format.markerColor
+import com.elkrrai.feather.ui.format.ringColor
+import com.elkrrai.feather.ui.components.CompletionRing
 import com.elkrrai.feather.ui.rememberHaptics
 import java.time.LocalDate
 
@@ -130,14 +131,15 @@ fun TaskRow(
             },
         ),
         leadingContent = {
-            // The checkbox is named after its task, so it is not just "checkbox" in a list of them.
-            Checkbox(
+            // The ring is named after its task, so it is not just "checkbox" in a list of them.
+            CompletionRing(
                 checked = task.isCompleted,
                 onCheckedChange = { checked ->
-                    if (checked) haptics.confirm()
+                    haptics.tick()
                     onToggle(checked)
                 },
-                modifier = Modifier.semantics { contentDescription = task.title },
+                ringColor = task.priority.ringColor(),
+                contentDescription = task.title,
             )
         },
         headlineContent = {
