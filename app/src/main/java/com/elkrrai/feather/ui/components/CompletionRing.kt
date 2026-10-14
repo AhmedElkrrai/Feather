@@ -55,7 +55,8 @@ private const val POP_SCALE = 1.12f
 
 /**
  * The round control that finishes a task. 48dp to touch, a 26dp ring to look at, in [ringColor]
- * (the task's priority). Finishing squeezes the ring, fills it with the primary color, pops it and
+ * (the task's priority). Finishing squeezes the ring, fills it with the priority color (the primary
+ * color when there is none), pops it and
  * draws the check as a stroke; undoing erases the check. The feather confetti is the screen's: the
  * ring only says where it is ([onCelebrate]). With reduced motion the ring is filled at once and the
  * check fades in over 90ms.
@@ -111,7 +112,8 @@ fun CompletionRing(
         }
     }
 
-    val primary = MaterialTheme.colorScheme.primary
+    // A task with a priority keeps its color once it is ticked (a filled ring in that color); one without fills with the primary.
+    val primary = if (barbs > 0) ringColor else MaterialTheme.colorScheme.primary
     val onPrimary = MaterialTheme.colorScheme.onPrimary
     val checkPath = remember { Path() }
     val checkMeasure = remember { PathMeasure() }
