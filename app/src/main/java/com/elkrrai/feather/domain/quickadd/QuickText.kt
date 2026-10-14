@@ -53,7 +53,9 @@ internal class QuickText(val original: String) {
             if (consumed[i] && !before[i]) {
                 var j = i
                 while (j + 1 < consumed.size && consumed[j + 1] && !before[j + 1]) j++
-                spanList += TokenSpan(field, sourceIndex[i], sourceIndex[j] + 1)
+                // Diacritics after the last letter belong to it (the title drops them with it).
+                val end = if (j + 1 < sourceIndex.size) sourceIndex[j + 1] else original.length
+                spanList += TokenSpan(field, sourceIndex[i], end)
                 i = j + 1
             } else {
                 i++

@@ -165,6 +165,13 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Fonts are variable.** One file per family serves every weight through `FontVariation.weight`; fine because minSdk is 26.
 - **The window background is the paper color** (`nest_paper`), so there is no white flash before the first frame.
 
+#### M9 step 5: quick-add polish
+- **Spans from the parser.** `QuickText.runAs(field) { ... }` notes which characters a rule consumed and turns them into `TokenSpan`s over the user's own text (diacritics stay with their letter, like in the title). `ParsedQuickAdd.spans` is a body property of the data class, so it is not part of equality and a `copy` forgets it; whatever shows the text asks the parser again.
+- **Tinting is a `VisualTransformation`.** The text field's value stays a plain string; the transformation adds a color and background to the spans and keeps the cursor mapping the identity. Chips and tinted words share one `fieldTint` per field.
+- **Tools only edit text.** `QuickAddEdits` (append, remove a field's words, replace them) is the whole interface between the tool buttons and the parser. There is no second copy of the task's settings in the sheet, so what the chips show is always what the text says.
+- **Chips animate by slot.** Every part has a fixed slot in the `FlowRow` inside an `AnimatedVisibility`, so appearing and disappearing are separate, interruptible animations; a slot remembers its last words so a chip can shrink away after its part stopped being recognized.
+- **Landing.** The list state carries `justAddedId` for about a second; the card tint is an `animateColorAsState` with an 800 ms fade, nothing in the data layer.
+
 #### M9 step 4: the illustration kit
 - **Scenes are code, on a board.** Each of the eight scenes (`ui/brand/scenes`) is a 200 by 200 board drawn with Compose: a back layer, the live bird, a front layer. The bird is the animated `BirdIllustration`, placed by one `BirdPlacement` (position, scale, tilt); the props are small `DrawScope` functions in `SceneProps.kt`, shared by the scenes. Changing a scene means changing a few lines of coordinates.
 - **One frame for all** (`SceneFrame`): scales the board to the requested size, fades and lifts it in, runs the leaf sway and the first-launch sunrise, and honors reduced motion. Scenes have no semantics; the sentence next to them carries the meaning.

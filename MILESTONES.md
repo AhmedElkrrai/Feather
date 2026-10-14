@@ -20,7 +20,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | Code complete (flash workflow: not built, installed or tested) |
 | M8 | Brand | Bird identity and animation | Code complete (flash workflow: not built, installed or tested) |
-| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | In progress (steps 1 to 4 done) |
+| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | In progress (steps 1 to 5 done) |
 
 Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
 
@@ -408,7 +408,7 @@ Flash workflow: written, built once at the end of step 4 but not this step; not 
 - **The new task lands softly:** its card is tinted with the primary container at 30 percent and fades to normal over 800 ms, and sending gives a soft thud.
 - **Not in this step:** the add button turning into the sheet (the sheet keeps its own slide for now), the level-driven microphone waveform (dictation goes through the phone's speech recognizer, which gives no level), and the tool buttons for the editor.
 
-Sub-steps:
+Sub-steps (all done):
 1. Plan (this section).
 2. The parser reports where each recognized part sits in the text.
 3. Pure helpers: editing the text for the tools, and the hint counter.
@@ -417,6 +417,16 @@ Sub-steps:
 6. The sheet: tinted words, tools, send button, hint.
 7. The landing highlight and the thud.
 8. Tests and docs.
+
+Known gaps after M9 step 5 (flash workflow: this step was written, not built or run):
+- The sheet is the riskiest new code: the `VisualTransformation` that tints words (it assumes the parsed spans and the field's text are always the same text), the `DatePickerDialog`, the two dropdown menus inside the sheet, and `FilledIconButton`. Expect small compile errors and some layout tuning (the tool row beside the keyboard, the 56 dp send button next to the field).
+- The tools write words into the text and rely on the parser: the repeat menu writes "every week" (or the Arabic phrase), the priority menu writes `!high`, the date picker writes an ISO date. A date picked while the text already has a date word replaces that word; if the parser ever stops understanding one of those phrases the tool would appear to do nothing.
+- The tag tool writes a `#` and waits for the name; there is no tag list to pick from.
+- The add button still does not morph into the sheet (the sheet keeps its own slide), and the microphone has no waveform: dictation uses the phone's recognizer, which reports no level.
+- The example hint counter lives in a small preferences file (`feather_ui_hints`), outside Settings and outside backups, so a restored backup shows the hint again.
+- The share sheet and Quick Settings tile open a separate quick-add screen that has not been given the new sheet's look.
+- Arabic names and phrases for the new tools are drafts for a native speaker.
+- New tests (written, not run): `QuickAddSpansTest`, `QuickAddEditsTest`, `QuickAddChipsTest`.
 
 ### Where the project stands
 All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.
