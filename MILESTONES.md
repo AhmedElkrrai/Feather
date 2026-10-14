@@ -20,7 +20,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | Code complete (flash workflow: not built, installed or tested) |
 | M8 | Brand | Bird identity and animation | Code complete (flash workflow: not built, installed or tested) |
-| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | In progress |
+| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | In progress (steps 1 and 2 done) |
 
 Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
 
@@ -329,13 +329,20 @@ Flash workflow again: written, not built, installed or tested.
 - **Design choices.** The ring replaces the Material checkbox (48 dp target, 26 dp ring, colored by priority; the barbs come with the row redesign in step 3). The feathers are drawn by one `drawBehind` modifier with pre-built paths, so they cost no layout and no extra composables. A finished row is kept alive by a small local "finishing" map in the list, not by changing what the ViewModel emits, so the data layer is untouched.
 
 Sub-steps:
-1. Plan (this section).
-2. Motion settings: Reduce motion and Little celebrations, `rememberReduceMotion()`.
-3. The completion ring.
-4. The animated strike-through.
-5. The feather burst.
-6. Finished rows linger and collapse; wire it into the list and rows.
-7. Tests for the pure parts, and docs.
+1. Plan (this section). Done.
+2. Motion settings: Reduce motion and Little celebrations, `rememberReduceMotion()`. Done.
+3. The completion ring. Done.
+4. The animated strike-through. Done.
+5. The feather burst. Done.
+6. Finished rows linger and collapse; wired into the list and rows. Done.
+7. Tests for the pure parts, and docs. Done.
+
+Known gaps after M9 step 2 (written under the flash workflow, so nothing here has been compiled or run):
+- The first build will probably show small compile errors in `CompletionRing`, `StrikeText`, `FeatherBurst` and `TaskListScreen` (the Compose animation and draw APIs were used from memory).
+- To look at on the phone: the squeeze and pop timing, whether the check looks right at 26dp, where the strike line sits on Nunito and on Readex Pro, the feather shapes and colors in light, dark and black, the 420 ms linger against the 140 ms fade, and Arabic strike direction.
+- Not in this step: the priority barbs inside the ring and the "Done today" count pulse (step 3), the last-task celebration (step 9), the repeating-task flight (step 9), the low-end mode that uses three feathers (step 10), and the undo snackbar after completing.
+- New tests (written, not run): `FinishingRowsTest`, `CompletionMotionTest` and one more case in `AppSettingsDefaultsTest`.
+- The Arabic strings for the two new switches are drafts for a native speaker.
 
 ### Where the project stands
 All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.

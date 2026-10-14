@@ -18,4 +18,12 @@ class AppSettingsDefaultsTest {
         assertFalse(defaults.pureBlack)
         assertTrue(defaults.haptics)
     }
+
+    @Test
+    fun celebrationsAreOnAndMotionIsNotReducedUntilAskedFor() {
+        val defaults = AppSettings()
+
+        assertTrue(defaults.celebrations)
+        assertFalse(defaults.reduceMotion)
+    }
 }

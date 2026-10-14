@@ -165,6 +165,14 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Fonts are variable.** One file per family serves every weight through `FontVariation.weight`; fine because minSdk is 26.
 - **The window background is the paper color** (`nest_paper`), so there is no white flash before the first frame.
 
+#### M9 step 2: the completion moment
+- **One reduced-motion rule.** `rememberReduceMotion()` is true when the phone's animation scale is zero or Reduce motion is on in Settings. Every animation below has a quiet version for it. Little celebrations is a separate switch (feathers and the bird's hop), because someone may want calm screens but still enjoy the small reward, or the reverse.
+- **The ring is one composable** (`CompletionRing`): a 48dp toggle target, a 26dp ring drawn in a Canvas, three `Animatable`s (fill, check, press scale) and one for the burst, all read while drawing so a running animation redraws without recomposing. The check is a path trimmed with a `PathMeasure` that is built once.
+- **The strike is drawn, not a text decoration** (`StrikeText`): lines are struck one after another from the reading-direction start (right edge for Arabic), using the text layout's line positions. `strikeFractions` is the pure part.
+- **The burst is a `drawBehind` modifier** with fixed particle data (`burstParticles`) and one pre-built leaf path; it draws outside the 48dp box without affecting layout. With reduced motion a halo replaces it.
+- **Finished rows are kept by the screen, not by the data.** `TaskListContent` holds a small map of tasks finished in the last 420 ms; `withFinishing` merges them back into what the database emitted. The ViewModel and repositories are unchanged, and an undo tap simply removes the entry. Manual-order lists keep their own draggable copy of the order, so rows leave at once there.
+- **Haptics.** The ring uses the light segment tick; the stronger confirm is kept for the once-a-day "all done" moment (step 9).
+
 ## Open items
 - Donation mechanism (external link vs. Play flow) and Play policy implications
 - Exact-alarm permission strategy (see Reminders)
