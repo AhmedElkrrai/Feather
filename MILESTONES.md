@@ -18,7 +18,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M4 | Recurrence | Rule engine, repeat modes, completion history | Code complete (developed with the "flash" workflow: not built, installed or tested) |
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | Code complete (flash workflow: not built, installed or tested) |
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
-| M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | |
+| M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | In progress (flash workflow) |
 | M8 | Brand | Bird identity and animation | |
 
 Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
@@ -216,3 +216,37 @@ The single-task widget, widget configuration screens (choosing a list), encrypte
 - The widgets use the system accent colors on Android 12 and up and fixed colors below.
 - The CSV is for reading elsewhere; there is no CSV import.
 - The tests for the merge rules, the codec, the CSV builder and the backup file names are JVM tests (`BackupMergerTest`, `BackupCodecTest`, `TaskCsvTest`, `AutoBackupNamesTest`); `BackupRepositoryTest` is instrumented. All are written but not run (flash).
+
+## Milestone 7: Polish
+
+**Definition of done:** everything the v1 feature list still owes is in (appearance and format settings, manual order with drag, selecting several tasks, duplicating, links in notes, saved filters, a "next task" widget), the main screens work with TalkBack and large text, and the repository holds what a store submission needs (release rules, listing texts in both languages, privacy text, F-Droid metadata, a release guide).
+
+### Decisions made for M7
+The user did not answer the open questions, so these are the recommended defaults.
+- **Appearance settings now, not in M8.** Theme (follow system, light, dark), a "pure black" option for dark mode (AMOLED), and Material You colors on or off. The bird brand in M8 changes the palette, not these switches.
+- **Format settings.** Time format (system, 12-hour, 24-hour), first day of the week (system, Monday, Saturday, Sunday) and haptic feedback on or off. The first day of the week orders the weekday chips of the repeat dialog; the system date picker keeps following the system.
+- **Donations are an external link** in Settings ("Support Feather"; donations never unlock anything). The link is a constant that is empty until the owner fills it in, and the row stays hidden while it is empty, so no placeholder address ships. No billing library, nothing that blocks F-Droid. The Play policy for such links must be checked before publishing.
+- **Manual order is a sort option** ("Manual") with a drag handle on each row; it permutes the `sortOrder` values the visible tasks already have, so the tasks that are not visible keep their relative place. "Created" now sorts by creation time only (it used to share `sortOrder`), which is the same order until someone drags.
+- **Selecting several tasks** starts with a long press on a row; the top bar then offers complete, move to a list, add a tag, delete (with undo) and select all.
+- **Duplicate** lives in the editor's menu: it copies title, notes, date, priority, list, tags, a repeat rule, reminders and a fresh unchecked checklist, and opens the copy.
+- **Links in notes** appear as chips under the notes field (the field itself stays plain text) and open in the browser.
+- **Saved filters** are simple on purpose: a name plus optional list, tag, minimum priority and a due window (any, overdue, today, next 7 days, no date), with "hide finished". They are a new Room table (schema v5, auto-migration), show in the drawer, and are part of the backup file (an optional field, so version 1 files still read).
+- **The "Next task" widget** shows the single most urgent open task with a checkbox; no configuration screen.
+- **Accessibility is an audit of what exists:** one TalkBack announcement per row (title, due, priority, state), the checkbox named after its task, actions for complete, delete and pin as TalkBack custom actions (swipe is not reachable otherwise), section titles marked as headings, and 48 dp touch targets.
+- **Performance is the cheap, safe part:** stable keys, no work in composition that can be done once, and nothing on the main thread at start. A baseline profile and macrobenchmarks need a separate module and a device, so they are left out.
+- **Release hardening without a release build:** keep rules written from the libraries' documentation, a version name and code in one place, and a release guide. They are untested until someone builds the release variant.
+
+### Steps
+1. **Appearance and format settings.** Theme, AMOLED, Material You, time format, week start, haptics: stored, applied, shown in Settings.
+2. **Accessibility.** The audit above for the list, rows, editor and dialogs.
+3. **Select several tasks.** Selection mode and its actions.
+4. **Manual order.** The Manual sort and the drag handle.
+5. **Duplicate and links in notes.**
+6. **Saved filters.** Schema v5, domain, repository, drawer and editor dialog, backup.
+7. **Next task widget.**
+8. **Performance and release rules.**
+9. **Store preparation.** Listing texts, privacy text, F-Droid metadata, release guide, the donation row.
+10. **Tests and docs.**
+
+### Deferred from M7
+Macrobenchmarks and a baseline profile, screenshot tests in LTR and RTL, snapping a dragged task between two sections, a filter with several lists or tags, widget configuration screens, a calendar view, and the bird brand (M8).
