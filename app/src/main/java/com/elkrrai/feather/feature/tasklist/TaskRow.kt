@@ -27,7 +27,6 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
@@ -38,6 +37,7 @@ import com.elkrrai.feather.ui.format.label
 import com.elkrrai.feather.ui.format.markerColor
 import com.elkrrai.feather.ui.format.ringColor
 import com.elkrrai.feather.ui.components.CompletionRing
+import com.elkrrai.feather.ui.components.StrikeText
 import com.elkrrai.feather.ui.rememberHaptics
 import java.time.LocalDate
 
@@ -143,16 +143,15 @@ fun TaskRow(
             )
         },
         headlineContent = {
-            Text(
+            // The strike grows across the title; a finished title is dimmed to the secondary color.
+            StrikeText(
                 text = task.title,
+                struck = task.isCompleted,
+                activeColor = MaterialTheme.colorScheme.onSurface,
+                doneColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.titleMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                textDecoration = if (task.isCompleted) TextDecoration.LineThrough else null,
-                color = if (task.isCompleted) {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
             )
         },
         supportingContent = if (hasSupporting) {
