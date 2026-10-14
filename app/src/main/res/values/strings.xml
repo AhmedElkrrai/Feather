@@ -464,4 +464,6 @@
     <string name="today_nothing_planned">Nothing planned today</string>
     <string name="done_today_pill">Done today · %1$d</string>
     <string name="subtasks_of">%1$d of %2$d</string>
+    <string name="state_expanded">Expanded</string>
+    <string name="state_collapsed">Collapsed</string>
 </resources>

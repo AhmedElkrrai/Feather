@@ -80,6 +80,13 @@ import java.time.LocalDate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.elkrrai.feather.ui.theme.listColorIndex
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import java.time.LocalTime
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun TaskListScreen(
@@ -360,10 +367,20 @@ fun TaskListContent(
         )
     }
 
+    // The Today view has its own header (with the buttons), so it has no top bar.
+    val todayView = state.scope == TaskScope.Today && !selecting && !state.isLoading
+    val collapse = rememberHeaderCollapse()
+    // Each time the Today view is shown, its header starts open.
+    LaunchedEffect(state.scope) { collapse.state.offset = 0f }
+    var doneExpanded by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier,
+        contentWindowInsets = if (todayView) WindowInsets.navigationBars else ScaffoldDefaults.contentWindowInsets,
         topBar = {
-            if (selecting) {
+            if (todayView) {
+                // nothing: see TodayHeader
+            } else if (selecting) {
                 SelectionTopBar(count = state.selection.size, actions = selectionActions)
             } else {
             TopAppBar(
@@ -399,11 +416,13 @@ fun TaskListContent(
                 }
             }
         },
-    ) { padding ->
+    ) { scaffoldPadding ->
+        val listBody: @Composable (PaddingValues) -> Unit = { padding ->
         when {
             state.isLoading -> Box(Modifier.fillMaxSize().padding(padding))
 
-            state.isEmpty -> {
+            // Today keeps its header (and its message) instead of an empty-state picture.
+            state.isEmpty && !todayView -> {
                 val isList = state.scope is TaskScope.InList
                 EmptyState(
                     mood = if (isList) BirdMood.IDLE else BirdMood.SLEEPING,
@@ -498,7 +517,51 @@ fun TaskListContent(
                         }
                     }
                 }
+                if (todayView && state.doneToday.isNotEmpty()) {
+                    item(key = "done-today-pill") {
+                        DoneTodayPill(
+                            count = state.doneToday.size,
+                            expanded = doneExpanded,
+                            onClick = { doneExpanded = !doneExpanded },
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
+                    if (doneExpanded) {
+                        items(state.doneToday, key = { "done-${it.id}" }) { task ->
+                            TaskRow(
+                                task = task,
+                                today = today,
+                                onToggle = { onToggle(task, it) },
+                                onClick = { onOpenTask(task.id) },
+                                list = listLabels[task.listId],
+                                modifier = Modifier.animateItem(),
+                            )
+                        }
+                    }
+                }
             }
+        }
+        }
+
+        if (todayView) {
+            val now = remember(state.today) { LocalTime.now() }
+            Column(Modifier.fillMaxSize().nestedScroll(collapse.connection)) {
+                TodayHeader(
+                    status = state.today,
+                    date = today,
+                    time = now,
+                    collapse = collapse.state,
+                    title = state.scope.title(state.lists, state.tags),
+                    onMenuClick = onMenuClick,
+                    onSearchClick = onSearchClick,
+                    sortActions = sortActions,
+                )
+                Box(Modifier.weight(1f)) {
+                    listBody(PaddingValues(bottom = scaffoldPadding.calculateBottomPadding()))
+                }
+            }
+        } else {
+            listBody(scaffoldPadding)
         }
     }
 }

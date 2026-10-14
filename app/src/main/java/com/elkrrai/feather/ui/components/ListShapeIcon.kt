@@ -54,7 +54,7 @@ private fun triangleShape(): Path = Path().apply {
     close()
 }
 
-private fun moonShape(): Path = Path().apply {
+internal fun moonShape(): Path = Path().apply {
     moveTo(0.62f, 0.08f)
     cubicTo(0.28f, 0.12f, 0.10f, 0.40f, 0.18f, 0.68f)
     cubicTo(0.28f, 0.90f, 0.58f, 0.98f, 0.84f, 0.80f)
