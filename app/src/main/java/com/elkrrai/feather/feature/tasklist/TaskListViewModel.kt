@@ -27,6 +27,7 @@ import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +35,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** How long a task that was just added keeps its tint before it starts to fade. */
+private const val JUST_ADDED_MILLIS = 1_000L
 
 /** Tasks of one day (Upcoming view) or, with a null [date], the whole view in one block. */
 data class TaskSection(val date: LocalDate?, val tasks: List<Task>)
@@ -55,6 +59,8 @@ data class TaskListUiState(
     val today: TodayStatus = TodayStatus(),
     /** Tasks finished today, newest first; filled for the Today view only. */
     val doneToday: List<Task> = emptyList(),
+    /** The task that was just added from quick add; its card glows for a moment. */
+    val justAddedId: String? = null,
 ) {
     val isEmpty: Boolean get() = sections.all { it.tasks.isEmpty() }
 }
@@ -72,6 +78,7 @@ class TaskListViewModel @Inject constructor(
     private val selectedScope = MutableStateFlow<TaskScope>(inbox)
     private val selectedSort = MutableStateFlow(TaskSort.CREATED)
     private val pickedIds = MutableStateFlow<Set<String>>(emptySet())
+    private val justAdded = MutableStateFlow<String?>(null)
 
     private data class Data(
         val tasks: List<Task>,
@@ -89,8 +96,8 @@ class TaskListViewModel @Inject constructor(
         filterRepository.observeFilters(),
     ) { tasks, lists, folders, tags, filters -> Data(tasks, lists, folders, tags, filters) }
 
-    val uiState: StateFlow<TaskListUiState> = combine(data, selectedScope, selectedSort, pickedIds) { d, scope, sort, picked ->
-        buildState(d, scope, sort, picked)
+    val uiState: StateFlow<TaskListUiState> = combine(data, selectedScope, selectedSort, pickedIds, justAdded) { d, scope, sort, picked, added ->
+        buildState(d, scope, sort, picked).copy(justAddedId = added)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TaskListUiState())
 
     /** The Clock is UTC; "today" must follow the user's own time zone. */
@@ -181,12 +188,16 @@ class TaskListViewModel @Inject constructor(
                 else -> null
             }
             val viewedTag = current.tags.firstOrNull { it.id == viewedTagId }
-            QuickAddTask(taskRepository, tagRepository)(
+            val added = QuickAddTask(taskRepository, tagRepository)(
                 parsed = parsed,
                 listId = listId ?: viewList,
                 fallbackDate = viewDate,
                 extraTags = listOfNotNull(viewedTag),
             )
+            // The new card is tinted for a moment, then fades back (the screen animates the fade).
+            justAdded.value = added.id
+            delay(JUST_ADDED_MILLIS)
+            if (justAdded.value == added.id) justAdded.value = null
         }
     }
 

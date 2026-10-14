@@ -508,6 +508,7 @@ fun TaskListContent(
                                     if (selecting) selectionActions.onToggle(task.id) else onOpenTask(task.id)
                                 },
                                 selected = task.id in state.selection,
+                                highlighted = task.id == state.justAddedId,
                                 dragHandle = if (reorderable) ({ DragHandle(reorder, task.id) }) else null,
                                 onMoveUp = if (reorderable) ({ reorder.moveBy(task.id, -1) }) else null,
                                 onMoveDown = if (reorderable) ({ reorder.moveBy(task.id, 1) }) else null,

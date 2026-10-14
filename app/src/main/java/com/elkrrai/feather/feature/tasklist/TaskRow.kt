@@ -1,5 +1,8 @@
 package com.elkrrai.feather.feature.tasklist
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +21,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -43,6 +48,8 @@ import com.elkrrai.feather.ui.format.dueLabelFor
 import com.elkrrai.feather.ui.format.label
 import com.elkrrai.feather.ui.format.ringColor
 import com.elkrrai.feather.ui.rememberHaptics
+import com.elkrrai.feather.ui.rememberReduceMotion
+import com.elkrrai.feather.ui.theme.Ease
 import com.elkrrai.feather.ui.theme.Space
 import com.elkrrai.feather.ui.theme.featherColors
 import com.elkrrai.feather.ui.theme.listShapeFor
@@ -73,6 +80,8 @@ fun TaskRow(
     onPinChange: ((Boolean) -> Unit)? = null,
     /** Part of the current selection (highlighted and announced as selected). */
     selected: Boolean = false,
+    /** The task was just added: its card is tinted, then fades back to normal over 800 ms. */
+    highlighted: Boolean = false,
     /** A long press, used to start selecting; null leaves the row without one. */
     onLongClick: (() -> Unit)? = null,
     /** The grip shown at the end of the row while the list can be reordered. */
@@ -110,10 +119,17 @@ fun TaskRow(
     val subtasksDone = task.subtasks.count { it.isCompleted }
     val hasChips = due != null || list != null || recurrence != null || task.tags.isNotEmpty() || subtaskTotal > 0
 
+    val baseColor = if (selected) scheme.secondaryContainer else feather.card
+    val cardColor by animateColorAsState(
+        targetValue = if (highlighted) lerp(baseColor, scheme.primaryContainer, 0.3f) else baseColor,
+        animationSpec = if (rememberReduceMotion()) snap() else tween(800, easing = Ease.Soft),
+        label = "cardColor",
+    )
+
     Surface(
         modifier = modifier.padding(horizontal = Space.gutter, vertical = Space.x1),
         shape = RoundedCornerShape(20.dp),
-        color = if (selected) scheme.secondaryContainer else feather.card,
+        color = cardColor,
         border = BorderStroke(1.dp, scheme.outlineVariant),
     ) {
         Row(
