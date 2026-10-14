@@ -414,4 +414,7 @@
     <string name="widget_today_label">Feather: اليوم</string>
     <string name="widget_today_description">ما يستحق اليوم، مع زر لإضافة مهمة.</string>
     <string name="widget_today_empty">لا شيء مستحق اليوم</string>
+
+    <string name="widget_quick_add_label">Feather: إضافة مهمة</string>
+    <string name="widget_quick_add_description">نقرة واحدة لإضافة مهمة.</string>
 </resources>
