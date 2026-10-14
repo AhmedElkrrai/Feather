@@ -1,7 +1,7 @@
 package com.elkrrai.feather.feature.tasklist
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -54,6 +56,10 @@ fun TaskRow(
     onDelete: (() -> Unit)? = null,
     /** When set, TalkBack offers pin and unpin. */
     onPinChange: ((Boolean) -> Unit)? = null,
+    /** Part of the current selection (highlighted and announced as selected). */
+    selected: Boolean = false,
+    /** A long press, used to start selecting; null leaves the row without one. */
+    onLongClick: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
@@ -75,6 +81,7 @@ fun TaskRow(
 
     val haptics = rememberHaptics()
     val openLabel = stringResource(R.string.action_open_task)
+    val selectLabel = stringResource(R.string.action_select)
     val doneActionLabel = stringResource(
         if (task.isCompleted) R.string.action_mark_not_done else R.string.action_mark_done
     )
@@ -89,8 +96,14 @@ fun TaskRow(
 
     ListItem(
         modifier = modifier
-            .clickable(onClickLabel = openLabel, onClick = onClick)
+            .combinedClickable(
+                onClickLabel = openLabel,
+                onLongClickLabel = if (onLongClick != null) selectLabel else null,
+                onLongClick = onLongClick,
+                onClick = onClick,
+            )
             .semantics {
+                this.selected = selected
                 if (isOverdue) stateDescription = overdueLabel
                 customActions = buildList {
                     add(CustomAccessibilityAction(doneActionLabel) { onToggle(!task.isCompleted); true })
@@ -100,6 +113,13 @@ fun TaskRow(
                     }
                 }
             },
+        colors = ListItemDefaults.colors(
+            containerColor = if (selected) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                ListItemDefaults.containerColor
+            },
+        ),
         leadingContent = {
             // The checkbox is named after its task, so it is not just "checkbox" in a list of them.
             Checkbox(

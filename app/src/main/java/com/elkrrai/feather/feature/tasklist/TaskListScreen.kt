@@ -1,5 +1,6 @@
 package com.elkrrai.feather.feature.tasklist
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -49,7 +50,10 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.TaskSort
+import com.elkrrai.feather.feature.taskedit.ListPickerDialog
 import com.elkrrai.feather.ui.components.EmptyState
+import com.elkrrai.feather.ui.rememberHaptics
+import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
 import com.elkrrai.feather.ui.format.displayName
@@ -75,6 +79,30 @@ fun TaskListScreen(
     var organizeDialog by remember { mutableStateOf<OrganizeDialog?>(null) }
     val deletedMessage = stringResource(R.string.task_deleted)
     val undoLabel = stringResource(R.string.action_undo)
+    val resources = LocalContext.current.resources
+    var selectionDialog by remember { mutableStateOf<SelectionDialog?>(null) }
+
+    val selectionActions = SelectionActions(
+        onToggle = viewModel::toggleSelected,
+        onClear = viewModel::clearSelection,
+        onSelectAll = viewModel::selectAll,
+        onComplete = viewModel::completeSelected,
+        onMove = { selectionDialog = SelectionDialog.Move },
+        onTag = { selectionDialog = SelectionDialog.Tag },
+        onDelete = {
+            val ids = state.selection.toList()
+            viewModel.deleteTasks(ids)
+            coroutineScope.launch {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                val result = snackbarHostState.showSnackbar(
+                    message = resources.getQuantityString(R.plurals.tasks_deleted, ids.size, ids.size),
+                    actionLabel = undoLabel,
+                    duration = SnackbarDuration.Short,
+                )
+                if (result == SnackbarResult.ActionPerformed) viewModel.restoreTasks(ids)
+            }
+        },
+    )
 
     fun closeDrawer() {
         coroutineScope.launch { drawerState.close() }
@@ -145,6 +173,7 @@ fun TaskListScreen(
             onSearchClick = onOpenSearch,
             onSortChange = viewModel::setSort,
             onPinChange = { task, pinned -> viewModel.setPinned(task.id, pinned) },
+            selectionActions = selectionActions,
         )
     }
 
@@ -154,6 +183,33 @@ fun TaskListScreen(
         actions = organizeActions,
         onDismiss = { organizeDialog = null },
     )
+
+    when (selectionDialog) {
+        null -> Unit
+
+        SelectionDialog.Move -> ListPickerDialog(
+            lists = state.lists,
+            selectedId = "",
+            onSelect = {
+                viewModel.moveSelectedTo(it)
+                selectionDialog = null
+            },
+            onDismiss = { selectionDialog = null },
+        )
+
+        SelectionDialog.Tag -> TagPickerDialog(
+            tags = state.tags,
+            onPick = {
+                viewModel.addTagToSelected(it)
+                selectionDialog = null
+            },
+            onCreate = {
+                viewModel.addNewTagToSelected(it)
+                selectionDialog = null
+            },
+            onDismiss = { selectionDialog = null },
+        )
+    }
 
     if (showQuickAdd) {
         QuickAddSheet(
@@ -180,9 +236,15 @@ fun TaskListContent(
     modifier: Modifier = Modifier,
     today: LocalDate = LocalDate.now(),
     onPinChange: (Task, Boolean) -> Unit = { _, _ -> },
+    selectionActions: SelectionActions = SelectionActions(),
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
+    val selecting = state.selection.isNotEmpty()
+    val haptics = rememberHaptics()
+
+    // Back leaves selection mode before it leaves the screen.
+    BackHandler(enabled = selecting) { selectionActions.onClear() }
 
     // Only mixed views (smart views, tags) show which list a task belongs to.
     val listNames: Map<String, String> = if (state.scope is TaskScope.InList) {
@@ -202,6 +264,9 @@ fun TaskListContent(
     Scaffold(
         modifier = modifier,
         topBar = {
+            if (selecting) {
+                SelectionTopBar(count = state.selection.size, actions = selectionActions)
+            } else {
             TopAppBar(
                 title = { Text(state.scope.title(state.lists, state.tags), maxLines = 1) },
                 navigationIcon = {
@@ -222,10 +287,11 @@ fun TaskListContent(
                     OverflowButton(actions = sortActions)
                 },
             )
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            if (state.scope != TaskScope.Completed) {
+            if (state.scope != TaskScope.Completed && !selecting) {
                 FloatingActionButton(onClick = onAddClick) {
                     Icon(
                         painter = painterResource(R.drawable.ic_add),
@@ -273,12 +339,19 @@ fun TaskListContent(
                         }
                     }
                     items(section.tasks, key = { it.id }) { task ->
-                        SwipeToDeleteRow(onDelete = { onDelete(task) }) {
+                        SwipeToDeleteRow(enabled = !selecting, onDelete = { onDelete(task) }) {
                             TaskRow(
                                 task = task,
                                 today = today,
                                 onToggle = { onToggle(task, it) },
-                                onClick = { onOpenTask(task.id) },
+                                onClick = {
+                                    if (selecting) selectionActions.onToggle(task.id) else onOpenTask(task.id)
+                                },
+                                selected = task.id in state.selection,
+                                onLongClick = {
+                                    haptics.longPress()
+                                    selectionActions.onToggle(task.id)
+                                },
                                 listName = listNames[task.listId],
                                 onDelete = { onDelete(task) },
                                 onPinChange = { pinned -> onPinChange(task, pinned) },
@@ -302,6 +375,7 @@ private fun TaskSort.labelRes(): Int = when (this) {
 @Composable
 private fun SwipeToDeleteRow(
     onDelete: () -> Unit,
+    enabled: Boolean,
     content: @Composable () -> Unit,
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
@@ -317,6 +391,8 @@ private fun SwipeToDeleteRow(
 
     SwipeToDismissBox(
         state = dismissState,
+        enableDismissFromStartToEnd = enabled,
+        enableDismissFromEndToStart = enabled,
         backgroundContent = {
             val direction = dismissState.dismissDirection
             Box(
@@ -348,3 +424,44 @@ private fun SwipeToDeleteRow(
         content = { content() },
     )
 }
+
+/** Replaces the top bar while tasks are selected: how many, and what can be done with them. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectionTopBar(count: Int, actions: SelectionActions) {
+    val resources = LocalContext.current.resources
+    TopAppBar(
+        title = { Text(resources.getQuantityString(R.plurals.selected_count, count, count), maxLines = 1) },
+        navigationIcon = {
+            IconButton(onClick = actions.onClear) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_close),
+                    contentDescription = stringResource(R.string.selection_clear),
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = actions.onComplete) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_check),
+                    contentDescription = stringResource(R.string.action_mark_done),
+                )
+            }
+            IconButton(onClick = actions.onDelete) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_delete),
+                    contentDescription = stringResource(R.string.action_delete),
+                )
+            }
+            OverflowButton(
+                actions = listOf(
+                    MenuAction(stringResource(R.string.selection_select_all)) { actions.onSelectAll() },
+                    MenuAction(stringResource(R.string.selection_move)) { actions.onMove() },
+                    MenuAction(stringResource(R.string.selection_tag)) { actions.onTag() },
+                ),
+            )
+        },
+    )
+}
+
+private enum class SelectionDialog { Move, Tag }

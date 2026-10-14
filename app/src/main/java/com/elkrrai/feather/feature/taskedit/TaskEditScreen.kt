@@ -543,7 +543,7 @@ private fun SubtasksEditor(subtasks: List<Subtask>, actions: TaskEditActions) {
 }
 
 @Composable
-private fun ListPickerDialog(
+internal fun ListPickerDialog(
     lists: List<TaskList>,
     selectedId: String,
     onSelect: (String) -> Unit,

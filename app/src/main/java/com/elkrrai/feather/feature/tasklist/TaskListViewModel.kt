@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Tasks of one day (Upcoming view) or, with a null [date], the whole view in one block. */
@@ -42,6 +43,8 @@ data class TaskListUiState(
     val tags: List<Tag> = emptyList(),
     /** Open-task counts for every smart view, list and tag, for the drawer badges. */
     val counts: Map<TaskScope, Int> = emptyMap(),
+    /** Ids of the tasks picked with a long press; always a subset of what is on screen. */
+    val selection: Set<String> = emptySet(),
 ) {
     val isEmpty: Boolean get() = sections.all { it.tasks.isEmpty() }
 }
@@ -57,6 +60,7 @@ class TaskListViewModel @Inject constructor(
     private val inbox = TaskScope.InList(TaskList.INBOX_ID)
     private val selectedScope = MutableStateFlow<TaskScope>(inbox)
     private val selectedSort = MutableStateFlow(TaskSort.CREATED)
+    private val pickedIds = MutableStateFlow<Set<String>>(emptySet())
 
     private data class Data(
         val tasks: List<Task>,
@@ -72,14 +76,14 @@ class TaskListViewModel @Inject constructor(
         tagRepository.observeTags(),
     ) { tasks, lists, folders, tags -> Data(tasks, lists, folders, tags) }
 
-    val uiState: StateFlow<TaskListUiState> = combine(data, selectedScope, selectedSort) { d, scope, sort ->
-        buildState(d, scope, sort)
+    val uiState: StateFlow<TaskListUiState> = combine(data, selectedScope, selectedSort, pickedIds) { d, scope, sort, picked ->
+        buildState(d, scope, sort, picked)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TaskListUiState())
 
     /** The Clock is UTC; "today" must follow the user's own time zone. */
     private fun today(): LocalDate = LocalDate.now(clock.withZone(ZoneId.systemDefault()))
 
-    private fun buildState(d: Data, selected: TaskScope, sort: TaskSort): TaskListUiState {
+    private fun buildState(d: Data, selected: TaskScope, sort: TaskSort, picked: Set<String>): TaskListUiState {
         val today = today()
         // A deleted list or tag falls back to the Inbox.
         val scope = when (selected) {
@@ -112,11 +116,13 @@ class TaskListViewModel @Inject constructor(
             folders = d.folders,
             tags = d.tags,
             counts = countedScopes.associateWith { d.tasks.openCountIn(it, today) },
+            selection = picked.intersect(visible.map { it.id }.toSet()),
         )
     }
 
     fun selectScope(scope: TaskScope) {
         selectedScope.value = scope
+        pickedIds.value = emptySet()
     }
 
     fun setSort(sort: TaskSort) {
@@ -153,6 +159,72 @@ class TaskListViewModel @Inject constructor(
                 extraTags = listOfNotNull(viewedTag),
             )
         }
+    }
+
+    // --- Selecting several tasks ---
+
+    fun toggleSelected(taskId: String) {
+        pickedIds.update { if (taskId in it) it - taskId else it + taskId }
+    }
+
+    fun clearSelection() {
+        pickedIds.value = emptySet()
+    }
+
+    fun selectAll() {
+        pickedIds.value = uiState.value.sections.flatMap { it.tasks }.map { it.id }.toSet()
+    }
+
+    fun completeSelected() {
+        val ids = uiState.value.selection.toList()
+        clearSelection()
+        viewModelScope.launch { ids.forEach { taskRepository.setCompleted(it, true) } }
+    }
+
+    /** Moves the selected tasks (with their checklists, tags and reminders) to [listId]. */
+    fun moveSelectedTo(listId: String) {
+        val ids = uiState.value.selection.toList()
+        clearSelection()
+        viewModelScope.launch {
+            ids.forEach { id ->
+                taskRepository.getTask(id)?.let { taskRepository.saveTaskDetails(it.copy(listId = listId)) }
+            }
+        }
+    }
+
+    fun addTagToSelected(tag: Tag) {
+        val ids = uiState.value.selection.toList()
+        clearSelection()
+        viewModelScope.launch { ids.forEach { addTag(it, tag) } }
+    }
+
+    /** Creates the tag (or finds the one with that name) and adds it to the selected tasks. */
+    fun addNewTagToSelected(name: String) {
+        val ids = uiState.value.selection.toList()
+        clearSelection()
+        viewModelScope.launch {
+            val tag = try {
+                tagRepository.createTag(name)
+            } catch (e: IllegalArgumentException) {
+                return@launch // blank name
+            }
+            ids.forEach { addTag(it, tag) }
+        }
+    }
+
+    private suspend fun addTag(taskId: String, tag: Tag) {
+        val task = taskRepository.getTask(taskId) ?: return
+        if (task.tags.any { it.id == tag.id }) return
+        taskRepository.saveTaskDetails(task.copy(tags = task.tags + tag))
+    }
+
+    fun deleteTasks(taskIds: List<String>) {
+        clearSelection()
+        viewModelScope.launch { taskIds.forEach { taskRepository.deleteTask(it) } }
+    }
+
+    fun restoreTasks(taskIds: List<String>) {
+        viewModelScope.launch { taskIds.forEach { taskRepository.restoreTask(it) } }
     }
 
     fun setCompleted(taskId: String, completed: Boolean) {

@@ -442,4 +442,27 @@
     <string name="action_mark_not_done">تحديد كغير منجزة</string>
     <string name="action_pin">تثبيت في الأعلى</string>
     <string name="action_unpin">إلغاء التثبيت</string>
+
+    <!-- Selecting several tasks -->
+    <string name="action_select">تحديد</string>
+    <plurals name="selected_count">
+        <item quantity="zero">تم تحديد %d مهمة</item>
+        <item quantity="one">تم تحديد مهمة واحدة</item>
+        <item quantity="two">تم تحديد مهمتين</item>
+        <item quantity="few">تم تحديد %d مهام</item>
+        <item quantity="many">تم تحديد %d مهمة</item>
+        <item quantity="other">تم تحديد %d مهمة</item>
+    </plurals>
+    <string name="selection_clear">إلغاء التحديد</string>
+    <string name="selection_select_all">تحديد الكل</string>
+    <string name="selection_move">نقل إلى قائمة…</string>
+    <string name="selection_tag">إضافة وسم…</string>
+    <plurals name="tasks_deleted">
+        <item quantity="zero">تم حذف %d مهمة</item>
+        <item quantity="one">تم حذف مهمة واحدة</item>
+        <item quantity="two">تم حذف مهمتين</item>
+        <item quantity="few">تم حذف %d مهام</item>
+        <item quantity="many">تم حذف %d مهمة</item>
+        <item quantity="other">تم حذف %d مهمة</item>
+    </plurals>
 </resources>

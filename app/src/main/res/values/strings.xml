@@ -382,4 +382,19 @@
     <string name="action_mark_not_done">Mark as not done</string>
     <string name="action_pin">Pin to top</string>
     <string name="action_unpin">Unpin</string>
+
+    <!-- Selecting several tasks -->
+    <string name="action_select">Select</string>
+    <plurals name="selected_count">
+        <item quantity="one">%d selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
+    <string name="selection_clear">Clear selection</string>
+    <string name="selection_select_all">Select all</string>
+    <string name="selection_move">Move to list…</string>
+    <string name="selection_tag">Add tag…</string>
+    <plurals name="tasks_deleted">
+        <item quantity="one">%d task deleted</item>
+        <item quantity="other">%d tasks deleted</item>
+    </plurals>
 </resources>
