@@ -361,4 +361,11 @@
     <string name="voice_input">تحدّث</string>
     <string name="voice_prompt">قل مهمتك</string>
     <string name="voice_unavailable">الإدخال الصوتي غير متاح على هذا الهاتف.</string>
+
+    <!-- Quick add from outside the app -->
+    <string name="share_to_feather">إضافة إلى Feather</string>
+    <string name="tile_label">إضافة مهمة</string>
+    <string name="shortcut_add_short">إضافة مهمة</string>
+    <string name="shortcut_add_long">إضافة مهمة جديدة</string>
+    <string name="quick_add_done">تمت إضافة المهمة</string>
 </resources>

@@ -305,4 +305,11 @@
     <string name="voice_input">Speak</string>
     <string name="voice_prompt">Say your task</string>
     <string name="voice_unavailable">Voice input is not available on this phone.</string>
+
+    <!-- Quick add from outside the app -->
+    <string name="share_to_feather">Add to Feather</string>
+    <string name="tile_label">Add task</string>
+    <string name="shortcut_add_short">Add task</string>
+    <string name="shortcut_add_long">Add a task</string>
+    <string name="quick_add_done">Task added</string>
 </resources>

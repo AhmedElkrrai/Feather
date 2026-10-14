@@ -32,7 +32,44 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Long-press launcher shortcut: add a task. -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
+
+        <!-- Quick add on top of whatever the user was doing. Opened by the share sheet (text),
+             the Quick Settings tile and the launcher shortcut. -->
+        <activity
+            android:name=".feature.quickadd.QuickAddActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/share_to_feather"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Feather.Translucent"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!-- The "Add task" tile of the Quick Settings panel. -->
+        <service
+            android:name=".feature.quickadd.QuickAddTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_add"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
 
         <!-- Snooze dialog opened from a reminder notification. -->
         <activity
