@@ -344,5 +344,25 @@ Known gaps after M9 step 2 (written under the flash workflow, so nothing here ha
 - New tests (written, not run): `FinishingRowsTest`, `CompletionMotionTest` and one more case in `AppSettingsDefaultsTest`.
 - The Arabic strings for the two new switches are drafts for a native speaker.
 
+### M9 step 3 in detail: the Today header and richer rows (DESIGN_SPEC.md section 5)
+Flash workflow: written, not built, installed or tested.
+- **Today header.** Only in the Today view. A sky wash that follows the time of day (dawn from 05:00, day from 10:00, dusk from 17:00, night from 20:00), a greeting in the display font (morning, afternoon, evening, night, with their own boundaries at 05:00, 12:00, 17:00 and 21:00), the date, "N things left · M done" (or "All done."), five decorative leaves (done out of planned), and the bird on a branch with a sun or a moon (eggs on the branch when everything is done). Its bottom edge is a 24 dp concave "nest lip". The bird's mood follows the day: tasks pending, idle; nothing left, happy with eggs; late with at most two left, sleepy under the moon; nothing planned, asleep.
+- **Collapsing.** The header is 236 dp tall plus the status bar and collapses to a 64 dp bar as the list scrolls (a nested scroll connection; the bird drifts at 0.4 times the scroll, shrinks to 0.6, and the greeting fades into the title). The menu, search and sort buttons live in the header, so the Today view has no separate top bar. Other views keep the top bar, with its title in the display font.
+- **Rows become cards** (radius 20, 8 dp apart): a ring with priority barbs (one, two or three small tally strokes for low, medium, high), the title in up to three lines, and a row of 26 dp chips. The chips are a friendly date ("Tonight · 7:00 PM", "Today", "Tomorrow", a weekday, or "Waiting since Mon" in neutral colors, never red), the list (a color and a shape, in mixed views only), a repeat chip, the tags, and subtask leaves with "2 of 4". Pin and reminder icons stay at the end of the row. The priority dot is gone; priority is spoken as part of the ring's description.
+- **Waiting, not overdue.** The Overdue view is renamed "Waiting for you" and an overdue date is shown in neutral colors.
+- **List colors** move to the Nest palette (eight colors, each with a shape). Colors saved with the old palette are mapped by position, so no list loses its color.
+- **Done today.** In the Today view a collapsed "Done today · N" pill sits under the list; tapping it shows the tasks finished today, where the ring undoes one.
+- **Not in this step:** the drawer redesign, the quick-add sheet, illustrations (step 4), the last-task celebration (step 9).
+
+Sub-steps:
+1. Plan (this section).
+2. Pure logic: greeting, day phase, bird mood, friendly due text, barb ticks, list shapes and colors, subtask leaves.
+3. Data and strings: what Today shows (left, done, finished today), the new strings in English and Arabic, "Waiting for you".
+4. Small pieces: list shape icon, subtask leaves, chip, barbs in the ring.
+5. The task row as a card with chips.
+6. The Today header, its collapsing, and the wiring in the list screen.
+7. The "Done today" pill.
+8. Tests and docs.
+
 ### Where the project stands
 All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.
