@@ -61,6 +61,9 @@ object Dur {
     const val Medium2 = 360
     const val Long1 = 480
 
+    /** How long a finished row stays in the list so its ring, strike and feathers can play. */
+    const val RowLinger = 420
+
     /** The longest any celebration burst may run. */
     const val Burst = 700
 

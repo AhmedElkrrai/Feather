@@ -1,6 +1,7 @@
 package com.elkrrai.feather.feature.tasklist
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,6 +35,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -69,7 +72,12 @@ import com.elkrrai.feather.ui.components.OverflowButton
 import com.elkrrai.feather.ui.format.displayName
 import com.elkrrai.feather.ui.format.formatDayHeader
 import com.elkrrai.feather.ui.format.title
+import com.elkrrai.feather.ui.rememberReduceMotion
+import com.elkrrai.feather.ui.theme.Dur
+import com.elkrrai.feather.ui.theme.Ease
+import java.time.Instant
 import java.time.LocalDate
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -316,6 +324,11 @@ fun TaskListContent(
     val locale = LocalConfiguration.current.locales[0]
     val selecting = state.selection.isNotEmpty()
     val haptics = rememberHaptics()
+    val reduceMotion = rememberReduceMotion()
+    val scope = rememberCoroutineScope()
+    // Tasks finished a moment ago, kept on screen while their finishing animation plays.
+    val finishing = remember { mutableStateMapOf<String, FinishingRow>() }
+    var finishStamp by remember { mutableLongStateOf(0L) }
 
     // Manual order: while a row is dragged the list shows a local copy of the saved order.
     val listState = rememberLazyListState()
@@ -425,7 +438,9 @@ fun TaskListContent(
                             )
                         }
                     }
-                    items(if (reorderable) order else section.tasks, key = { it.id }) { task ->
+                    // Manual order keeps its own copy of the list for dragging, so finished rows leave at once there.
+                    val rows = if (reorderable) order else withFinishing(section.tasks, finishing, section.date)
+                    items(rows, key = { it.id }) { task ->
                         val dragging = reorder.draggingId == task.id
                         SwipeToDeleteRow(
                             enabled = !selecting && reorder.draggingId == null,
@@ -433,13 +448,37 @@ fun TaskListContent(
                             modifier = if (dragging) {
                                 Modifier.zIndex(1f).graphicsLayer { translationY = reorder.offset }
                             } else {
-                                Modifier.animateItem()
+                                Modifier.animateItem(
+                                    fadeInSpec = tween(if (reduceMotion) Dur.Micro else Dur.Short2),
+                                    placementSpec = if (reduceMotion) null else Ease.nestle(),
+                                    fadeOutSpec = tween(
+                                        durationMillis = if (reduceMotion) 120 else Dur.Short1,
+                                        easing = Ease.Leave,
+                                    ),
+                                )
                             },
                         ) {
                             TaskRow(
                                 task = task,
                                 today = today,
-                                onToggle = { onToggle(task, it) },
+                                onToggle = { completed ->
+                                    if (completed && !reduceMotion && !reorderable) {
+                                        val stamp = ++finishStamp
+                                        finishing[task.id] = FinishingRow(
+                                            task = task.copy(completedAt = Instant.now()),
+                                            index = rows.indexOfFirst { it.id == task.id }.coerceAtLeast(0),
+                                            sectionKey = section.date,
+                                            stamp = stamp,
+                                        )
+                                        scope.launch {
+                                            delay(Dur.RowLinger.toLong())
+                                            if (finishing[task.id]?.stamp == stamp) finishing.remove(task.id)
+                                        }
+                                    } else {
+                                        finishing.remove(task.id)
+                                    }
+                                    onToggle(task, completed)
+                                },
                                 onClick = {
                                     if (selecting) selectionActions.onToggle(task.id) else onOpenTask(task.id)
                                 },
