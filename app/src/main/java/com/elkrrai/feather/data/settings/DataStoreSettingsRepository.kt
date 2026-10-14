@@ -36,6 +36,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val timeFormat = stringPreferencesKey("time_format")
         val weekStart = stringPreferencesKey("week_start")
         val haptics = booleanPreferencesKey("haptics")
+        val birdAnimations = booleanPreferencesKey("bird_animations")
     }
 
     override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
@@ -54,6 +55,7 @@ class DataStoreSettingsRepository @Inject constructor(
             timeFormat = prefs.enumOf(Keys.timeFormat, defaults.timeFormat),
             weekStart = prefs.enumOf(Keys.weekStart, defaults.weekStart),
             haptics = prefs[Keys.haptics] ?: defaults.haptics,
+            birdAnimations = prefs[Keys.birdAnimations] ?: defaults.birdAnimations,
         )
     }
 
@@ -107,6 +109,10 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setHaptics(enabled: Boolean) {
         dataStore.edit { it[Keys.haptics] = enabled }
+    }
+
+    override suspend fun setBirdAnimations(enabled: Boolean) {
+        dataStore.edit { it[Keys.birdAnimations] = enabled }
     }
 
     /** A stored enum by name; a missing or unknown name (say, from a newer version) gives [default]. */

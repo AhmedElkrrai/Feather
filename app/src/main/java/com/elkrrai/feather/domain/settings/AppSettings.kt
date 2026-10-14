@@ -33,6 +33,8 @@ data class AppSettings(
     val timeFormat: TimeFormat = TimeFormat.SYSTEM,
     val weekStart: WeekStart = WeekStart.SYSTEM,
     val haptics: Boolean = true,
+    /** Lets the bird move; off keeps it still. */
+    val birdAnimations: Boolean = true,
 )
 
 /** Snooze lengths offered in settings, in minutes. */
@@ -68,4 +70,6 @@ interface SettingsRepository {
     suspend fun setWeekStart(start: WeekStart)
 
     suspend fun setHaptics(enabled: Boolean)
+
+    suspend fun setBirdAnimations(enabled: Boolean)
 }

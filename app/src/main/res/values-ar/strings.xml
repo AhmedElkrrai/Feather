@@ -506,4 +506,8 @@
     <string name="settings_about">عن Feather</string>
     <string name="settings_version">الإصدار %1$s</string>
     <string name="settings_about_summary">مجاني، بلا إعلانات ولا حسابات ولا تتبع.</string>
+
+    <!-- Bird animations -->
+    <string name="settings_bird_animations">حركة العصفور</string>
+    <string name="settings_bird_animations_summary">دع العصفور يتحرك: يغفو ويقفز عند إنجاز مهمة. عند الإيقاف يبقى ساكنًا.</string>
 </resources>

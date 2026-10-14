@@ -38,6 +38,7 @@ class AppearanceActions(
     val onTimeFormatChange: (TimeFormat) -> Unit = {},
     val onWeekStartChange: (WeekStart) -> Unit = {},
     val onHapticsChange: (Boolean) -> Unit = {},
+    val onBirdAnimationsChange: (Boolean) -> Unit = {},
 )
 
 @StringRes
@@ -124,6 +125,15 @@ internal fun AppearanceRows(
         supporting = stringResource(R.string.settings_haptics_summary),
         onClick = { actions.onHapticsChange(!settings.haptics) },
         trailing = { Switch(checked = settings.haptics, onCheckedChange = actions.onHapticsChange) },
+    )
+    SettingsRow(
+        title = stringResource(R.string.settings_bird_animations),
+        summary = null,
+        supporting = stringResource(R.string.settings_bird_animations_summary),
+        onClick = { actions.onBirdAnimationsChange(!settings.birdAnimations) },
+        trailing = {
+            Switch(checked = settings.birdAnimations, onCheckedChange = actions.onBirdAnimationsChange)
+        },
     )
 }
 

@@ -59,6 +59,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repository.setWeekStart(start) }
     }
 
+    fun setBirdAnimations(enabled: Boolean) {
+        viewModelScope.launch { repository.setBirdAnimations(enabled) }
+    }
+
     fun setHaptics(enabled: Boolean) {
         viewModelScope.launch { repository.setHaptics(enabled) }
     }

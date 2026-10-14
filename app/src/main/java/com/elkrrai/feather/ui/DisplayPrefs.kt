@@ -30,6 +30,8 @@ object DisplayPrefs {
         private set
     var haptics by mutableStateOf(true)
         private set
+    var birdAnimations by mutableStateOf(true)
+        private set
 
     fun update(settings: AppSettings) {
         timeFormat = settings.timeFormat
@@ -37,6 +39,7 @@ object DisplayPrefs {
         dynamicColor = settings.dynamicColor
         pureBlack = settings.pureBlack
         haptics = settings.haptics
+        birdAnimations = settings.birdAnimations
     }
 }
 
