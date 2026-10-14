@@ -16,7 +16,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Done (built and installed; the 1 -> 2 database upgrade kept existing data) |
 | M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | Built; install and real-device testing still pending |
 | M4 | Recurrence | Rule engine, repeat modes, completion history | Code complete (developed with the "flash" workflow: not built, installed or tested) |
-| M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | |
+| M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | In progress (flash workflow) |
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | |
 | M8 | Brand | Bird identity and animation | |
@@ -140,3 +140,33 @@ Showing future occurrences in Upcoming and a calendar, an undo for completing a 
 - Upcoming and Today show a repeating task once, at its next date.
 - No automated migration test yet (same gap as M2 and M3).
 - The unit tests (`RecurrenceTest`) and instrumented tests added for M4 are written but not run (flash).
+
+## Milestone 5: Quick add
+
+**Definition of done:** typing (or dictating) "Call mom tomorrow 5pm !high #family @Home every monday" into quick add fills the title, due date, time, priority, tags, list and repeat rule, shows what it understood as chips that can be tapped away, and creates the task. The same quick add opens from the share sheet, a Quick Settings tile and a launcher shortcut. English and standard Arabic.
+
+### Decisions made for M5
+- **Rule-based parser in pure Kotlin** (`domain/quickadd`), no network and no model. It takes the text, the current local date and time and the known list names, and returns a `ParsedQuickAdd`. Table-driven JVM tests with many phrases per language are the safety net.
+- **Symbols are the same in both languages:** `#tag` (any number), `@list` (must match an existing list, spaces written as `_`; otherwise it stays in the title), `!high` `!medium` `!low`, `!1` `!2` `!3` and `!!!` for priority; Arabic words are accepted after the `!`.
+- **Standard Arabic only** (the user's decision): no dialect words such as "بكرة". Arabic-Indic digits, diacritics and alef/ya/ta-marbuta spelling variants are normalized before matching, and the title keeps the user's original letters.
+- **English and Arabic rules run together** on the same text, so mixed phrases work and no language switch is needed.
+- **What is understood.** Dates: today, tomorrow, the day after tomorrow, weekdays (`friday`, `next friday`), `in 3 days/weeks/months`, `next week/month`, weekend, `Oct 20`, `20 October`, `the 15th`, ISO `2026-10-20`; Arabic equivalents. Times: `5pm`, `5:30 pm`, `17:30`, `at 5`, noon, midnight, morning/afternoon/evening/tonight, `in 2 hours`, `in 30 minutes`; Arabic equivalents (`الساعة 5 مساء`). Repeats: `daily`, `every day`, `every 2 weeks`, `every other week`, `every monday and friday`, `every weekday`, `monthly`, `yearly`; Arabic equivalents.
+- **Rules that avoid surprises.** A bare weekday means the next such day after today; `next <weekday>` is that day in the following week. A time without a date means today if it is still ahead, otherwise tomorrow. `at 5` guesses PM for 1 to 6 and AM for 7 to 11. A repeat rule without a date starts at its first matching day. A date that has passed this year (`Jan 5` in October) means next year. If nothing is left for a title, the whole text is the title.
+- **Tap a chip to undo one interpretation.** The parser takes a set of disabled fields; a disabled field leaves its words in the title.
+- **Not parsed in M5:** reminders ("remind me"), end conditions ("until", "for 5 times"), list names with spaces other than `_`, and several tasks from one text. A share of several lines makes **one** task (the user's decision).
+- **Voice input** uses the system speech recognizer through `RecognizerIntent` (no microphone permission, no custom UI). The dictated text goes into the same field and is parsed like typed text. The system recognizer may send audio to Google, which the store listing has to say.
+- **One quick-add screen for outside entry points.** A see-through `QuickAddActivity` (like the snooze dialog) hosts the same sheet for the share target (`text/plain`), the Quick Settings tile and the launcher shortcut, adds the task to the Inbox (or the `@list`), shows a short confirmation and closes.
+- **Shared creation code.** `QuickAddTask` turns a `ParsedQuickAdd` into a saved task (tags created or reused, list resolved, repeat rule attached) and is used by both the task list screen and the activity.
+
+### Steps
+1. **Parser core.** Text normalization with an index map back to the original, the `ParsedQuickAdd` result, the field set, and the symbol rules (tags, list, priority) with tests.
+2. **English rules.** Repeat, time and date extraction.
+3. **Arabic rules.** The same set in standard Arabic.
+4. **Parser tests.** Phrase tables for both languages, edge cases and the disabled-field behavior.
+5. **Quick add in the app.** `QuickAddTask`, the sheet with live chips and tap-to-undo, the task list ViewModel hook, strings in both languages.
+6. **Voice input.** A microphone button in the sheet.
+7. **Outside entry points.** `QuickAddActivity`, share target, Quick Settings tile, launcher shortcut, manifest, strings.
+8. **Docs.** FEATURES, ARCHITECTURE and MILESTONES updates.
+
+### Deferred from M5
+Reminders and end conditions in the parser, dialect Arabic, list names with spaces, creating a list from `@name`, localized relative phrases for other languages, an on-device model, offline-only speech recognition (a custom `SpeechRecognizer` with its own UI and the microphone permission), and a home-screen widget (M6).
