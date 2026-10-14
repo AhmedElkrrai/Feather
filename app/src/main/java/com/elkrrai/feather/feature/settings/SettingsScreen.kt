@@ -1,6 +1,8 @@
 package com.elkrrai.feather.feature.settings
 
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,6 +53,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.settings.AppSettings
+import com.elkrrai.feather.reminders.startActivitySafely
 import com.elkrrai.feather.domain.settings.SNOOZE_MINUTE_OPTIONS
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
@@ -142,6 +146,11 @@ fun SettingsScreen(
             onWeekStartChange = viewModel::setWeekStart,
             onHapticsChange = viewModel::setHaptics,
         ),
+        supportUrl = SupportLinks.DONATION_URL,
+        onOpenSupport = {
+            context.startActivitySafely(Intent(Intent.ACTION_VIEW, Uri.parse(SupportLinks.DONATION_URL)))
+        },
+        versionName = remember { versionNameOf(context) },
         modifier = modifier,
     )
 
@@ -172,6 +181,9 @@ fun SettingsContent(
     backup: BackupActions = BackupActions(),
     backupBusy: Boolean = false,
     appearance: AppearanceActions = AppearanceActions(),
+    supportUrl: String = SupportLinks.DONATION_URL,
+    onOpenSupport: () -> Unit = {},
+    versionName: String = "",
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val resources = LocalContext.current.resources
@@ -265,6 +277,29 @@ fun SettingsContent(
                 supporting = null,
                 onClick = { dialog = SettingsDialog.Language },
             )
+
+            if (supportUrl.isNotBlank()) {
+                SettingsRow(
+                    title = stringResource(R.string.settings_support),
+                    summary = null,
+                    supporting = stringResource(R.string.settings_support_summary),
+                    onClick = onOpenSupport,
+                )
+            }
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.settings_about)) },
+                supportingContent = {
+                    Column {
+                        if (versionName.isNotBlank()) {
+                            Text(stringResource(R.string.settings_version, versionName))
+                        }
+                        Text(
+                            text = stringResource(R.string.settings_about_summary),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+            )
         }
     }
 
@@ -333,6 +368,13 @@ fun SettingsContent(
             onDismiss = { dialog = null },
         )
     }
+}
+
+@Suppress("DEPRECATION")
+private fun versionNameOf(context: Context): String = try {
+    context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty()
+} catch (e: PackageManager.NameNotFoundException) {
+    ""
 }
 
 /** Which settings dialog is open. An enum so it survives rotation with `rememberSaveable`. */

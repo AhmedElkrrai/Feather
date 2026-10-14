@@ -499,4 +499,11 @@
     <string name="widget_next_description">أكثر مهمة مفتوحة إلحاحًا، مع خانة اختيار.</string>
     <string name="widget_next_heading">التالية</string>
     <string name="widget_next_empty">لا شيء متبقٍ</string>
+
+    <!-- About and support -->
+    <string name="settings_support">ادعم Feather</string>
+    <string name="settings_support_summary">Feather مجاني وسيبقى كذلك. التبرعات مرحّب بها ولا تفتح أي ميزة.</string>
+    <string name="settings_about">عن Feather</string>
+    <string name="settings_version">الإصدار %1$s</string>
+    <string name="settings_about_summary">مجاني، بلا إعلانات ولا حسابات ولا تتبع.</string>
 </resources>
