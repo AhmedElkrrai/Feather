@@ -165,6 +165,14 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Fonts are variable.** One file per family serves every weight through `FontVariation.weight`; fine because minSdk is 26.
 - **The window background is the paper color** (`nest_paper`), so there is no white flash before the first frame.
 
+#### M9 step 3: the Today header and richer rows
+- **Pure logic first.** Greeting and sky boundaries, the bird's mood for the day, how many leaves are filled (`ui/today/TodayLogic.kt`), the choice of date label (`ui/format/FriendlyDue.kt`), the list color/shape mapping (`ui/theme/ListColors.kt`), barb strokes and leaf progress are plain functions with tests; the composables only draw them.
+- **What Today shows comes from the list state.** `TaskListUiState` has `today` (open tasks due today or earlier, tasks finished today) and, for the Today view only, `doneToday`. Nothing is added to the repositories.
+- **The header is position-driven, not animated.** Its height is read from a `HeaderCollapseState` in a `layout` modifier and its content fades through `graphicsLayer`, so scrolling never recomposes it. A `NestedScrollConnection` on the parent closes it before the list scrolls and opens it again when the list is at its top.
+- **The list screen's body is a local function** (`listBody`) so the same list code sits either alone (every other view, under a top bar) or under the Today header; the scaffold's insets and top bar change with the view.
+- **Rows are cards, built by hand** instead of Material's `ListItem`: ring, title and a `FlowRow` of `MetaChip`s. Accessibility is kept: the ring is named after the task and its priority, the card carries the open, select, complete, delete, pin and move actions, and waiting tasks announce "Waiting".
+- **List colors** are stored as ARGB as before; `listColorIndex` maps a saved color (current or from an earlier palette) to one of eight positions, and the theme supplies the actual color and a shape for that position, so list colors adapt to light and dark themes.
+
 #### M9 step 2: the completion moment
 - **One reduced-motion rule.** `rememberReduceMotion()` is true when the phone's animation scale is zero or Reduce motion is on in Settings. Every animation below has a quiet version for it. Little celebrations is a separate switch (feathers and the bird's hop), because someone may want calm screens but still enjoy the small reward, or the reverse.
 - **The ring is one composable** (`CompletionRing`): a 48dp toggle target, a 26dp ring drawn in a Canvas, three `Animatable`s (fill, check, press scale) and one for the burst, all read while drawing so a running animation redraws without recomposing. The check is a path trimmed with a `PathMeasure` that is built once.

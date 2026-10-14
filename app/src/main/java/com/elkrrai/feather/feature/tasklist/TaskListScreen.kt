@@ -384,7 +384,13 @@ fun TaskListContent(
                 SelectionTopBar(count = state.selection.size, actions = selectionActions)
             } else {
             TopAppBar(
-                title = { Text(state.scope.title(state.lists, state.tags), maxLines = 1) },
+                title = {
+                    Text(
+                        text = state.scope.title(state.lists, state.tags),
+                        style = MaterialTheme.typography.headlineSmall,
+                        maxLines = 1,
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onMenuClick) {
                         Icon(

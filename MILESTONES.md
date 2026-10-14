@@ -20,7 +20,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | Code complete (flash workflow: not built, installed or tested) |
 | M8 | Brand | Bird identity and animation | Code complete (flash workflow: not built, installed or tested) |
-| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | In progress (steps 1 and 2 done) |
+| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | In progress (steps 1 to 3 done) |
 
 Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
 
@@ -354,15 +354,24 @@ Flash workflow: written, not built, installed or tested.
 - **Done today.** In the Today view a collapsed "Done today · N" pill sits under the list; tapping it shows the tasks finished today, where the ring undoes one.
 - **Not in this step:** the drawer redesign, the quick-add sheet, illustrations (step 4), the last-task celebration (step 9).
 
-Sub-steps:
+Sub-steps (all done; the "Done today" pill was built together with the header):
 1. Plan (this section).
 2. Pure logic: greeting, day phase, bird mood, friendly due text, barb ticks, list shapes and colors, subtask leaves.
 3. Data and strings: what Today shows (left, done, finished today), the new strings in English and Arabic, "Waiting for you".
 4. Small pieces: list shape icon, subtask leaves, chip, barbs in the ring.
 5. The task row as a card with chips.
-6. The Today header, its collapsing, and the wiring in the list screen.
-7. The "Done today" pill.
-8. Tests and docs.
+6. The Today header, its collapsing, the "Done today" pill and the wiring in the list screen.
+7. Tests and docs.
+
+Known gaps after M9 step 3 (flash workflow: nothing has been compiled or run):
+- The header is the most likely place for compile errors and layout surprises: the nested scroll connection, the `layout` modifier that sets its height from scroll state, the scooped path, and the `Scaffold` content restructured into a local `listBody`. Expect to tune the 236 dp height, text widths next to the bird (long Arabic greetings, large font sizes) and the bird scene's coordinates.
+- Status bar icon colors do not follow the sky: they follow the theme, so in the light theme at night the icons may be dark on a dark sky.
+- The collapsing header and the swipe, drag and selection behavior have never been tried together. Selecting a task in Today switches to the selection bar and the header disappears until selection ends.
+- The list rows no longer show the priority as a dot, so a task with no barbs is the only visual cue for "no priority"; check the three priorities are easy to tell apart in all three themes.
+- Existing lists keep their color through the mapping from the old palette, but the color picker now shows the new palette, so a list saved with an old color shows no selected swatch in the dialog.
+- Still plain: the drawer, the quick-add sheet, the editor, Settings and the widgets (steps 5, 7 and the rest). The "Overdue" rename also changes the drawer label to "Waiting for you"; the daily-summary notification still says overdue.
+- The Arabic text added in this step (greetings, counts, the pill, "Waiting since") is a draft for a native speaker.
+- New tests (written, not run): `TodayLogicTest`, `FriendlyDueTest`, `ListColorsTest`, `RowPiecesTest`.
 
 ### Where the project stands
 All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.
