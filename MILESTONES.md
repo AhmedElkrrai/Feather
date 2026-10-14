@@ -320,5 +320,22 @@ The app works but looks like plain Material 3. M9 gives it an identity (warm pap
 10. Ambient life and seasons.
 11. Weekly feather and Your nest.
 
+### M9 step 2 in detail: the completion moment (DESIGN_SPEC.md sections 7 and 10)
+Flash workflow again: written, not built, installed or tested.
+- **Behavior.** Tapping the ring squeezes it to 0.9 (90 ms), fills it, pops to 1.12 and settles, and draws the check with a stroke. The title's strike-through grows from the reading-direction start (200 ms, after 100 ms) and the text fades to 60%. Six or seven leaf-feathers (sky, amber, coral, moss) burst out of the ring (580 ms, starting at 120 ms). The finished row stays 420 ms, then fades (140 ms) and the rows below slide up (280 ms). The bird hop over the list stays as it is. A tap on the ring during those 420 ms undoes it.
+- **Reduced motion** (system animation scale 0 or the in-app switch): the ring fills at once, the check fades in over 90 ms, no strike growth, no feathers (a 120 ms halo instead), the row leaves with a 120 ms fade and no linger.
+- **Two new switches:** Reduce motion (follows the system unless switched on) and Little celebrations (feathers and the hop; independent of reduced motion).
+- **Haptics:** a light tick when the ring is tapped, in both directions. The stronger confirm is kept for the once-a-day "all done" moment (step 9).
+- **Design choices.** The ring replaces the Material checkbox (48 dp target, 26 dp ring, colored by priority; the barbs come with the row redesign in step 3). The feathers are drawn by one `drawBehind` modifier with pre-built paths, so they cost no layout and no extra composables. A finished row is kept alive by a small local "finishing" map in the list, not by changing what the ViewModel emits, so the data layer is untouched.
+
+Sub-steps:
+1. Plan (this section).
+2. Motion settings: Reduce motion and Little celebrations, `rememberReduceMotion()`.
+3. The completion ring.
+4. The animated strike-through.
+5. The feather burst.
+6. Finished rows linger and collapse; wire it into the list and rows.
+7. Tests for the pure parts, and docs.
+
 ### Where the project stands
 All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.
