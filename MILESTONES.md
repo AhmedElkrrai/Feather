@@ -399,5 +399,24 @@ Known gaps after M9 step 4 (flash workflow: nothing has been compiled or run):
 - The Arabic sentences are the designer's drafts and need a native speaker; the first-launch sentence says Feather in Latin letters like the rest of the Arabic text, where the draft said ريشة.
 - New tests (written, not run): `SceneLayoutTest`.
 
+### M9 step 5 in detail: quick-add polish (DESIGN_SPEC.md section 5, "Quick add", and section 7)
+Flash workflow: written, built once at the end of step 4 but not this step; not installed or tested.
+- **The words you typed are tinted in place.** The parser now says which characters of the text each recognized part came from (a list of spans per field), so the date, time, repeat, priority, tag and list words are colored in the field itself while the chips below stay the way to switch a part off.
+- **Chips are pills with an icon** (36 dp tall, 12 dp icon, friendly text) and they pop in (scale 0.7 to 1 with a spring, 160 ms, 40 ms apart) and shrink away (120 ms) as the parser starts and stops recognizing a part. A light tick marks a new part, at most once every 400 ms. Reduced motion: an 80 ms fade.
+- **The sheet gets the Nest look:** 32 dp top corners, 20 dp padding, a 56 dp send button with the add-button shape, and a row of 48 dp tools under the field: date (a date picker that writes the date into the text), priority (a menu), tag (writes a `#` and waits for the name), repeat (a menu that writes "every week" and so on) and the microphone. The tools only edit the text; the parser stays the single source of truth for what the text means, so a tool can never disagree with what is shown.
+- **The hint** ("Try: Call mom tomorrow 5pm !high #family") goes away after the fifth task added from the sheet, counted in a small preferences file on the phone.
+- **The new task lands softly:** its card is tinted with the primary container at 30 percent and fades to normal over 800 ms, and sending gives a soft thud.
+- **Not in this step:** the add button turning into the sheet (the sheet keeps its own slide for now), the level-driven microphone waveform (dictation goes through the phone's speech recognizer, which gives no level), and the tool buttons for the editor.
+
+Sub-steps:
+1. Plan (this section).
+2. The parser reports where each recognized part sits in the text.
+3. Pure helpers: editing the text for the tools, and the hint counter.
+4. Icons and strings.
+5. The chips: look, pop in and out, tick.
+6. The sheet: tinted words, tools, send button, hint.
+7. The landing highlight and the thud.
+8. Tests and docs.
+
 ### Where the project stands
 All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.
