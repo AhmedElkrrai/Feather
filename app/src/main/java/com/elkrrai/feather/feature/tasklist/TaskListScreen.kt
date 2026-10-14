@@ -94,6 +94,7 @@ import androidx.compose.ui.geometry.Offset
 import com.elkrrai.feather.ui.DisplayPrefs
 import com.elkrrai.feather.ui.components.ConfettiBurst
 import com.elkrrai.feather.ui.components.FeatherConfettiOverlay
+import com.elkrrai.feather.ui.components.rememberConfettiController
 
 @Composable
 fun TaskListScreen(
@@ -117,10 +118,8 @@ fun TaskListScreen(
     var filterDialog by remember { mutableStateOf<FilterDialogState?>(null) }
     // Counts up each time a task is finished; the bird hops over the list for each step.
     var celebration by remember { mutableIntStateOf(0) }
-    // Feather confetti: where the last one started, and how many there have been.
-    var confetti by remember { mutableStateOf<ConfettiBurst?>(null) }
-    var confettiCount by remember { mutableIntStateOf(0) }
-    val reduceMotion = rememberReduceMotion()
+    // Feather confetti for every checkbox finished on this screen.
+    val confetti = rememberConfettiController()
 
     val selectionActions = SelectionActions(
         onToggle = viewModel::toggleSelected,
@@ -225,9 +224,7 @@ fun TaskListScreen(
             onPinChange = { task, pinned -> viewModel.setPinned(task.id, pinned) },
             selectionActions = selectionActions,
             onReorder = viewModel::reorderTasks,
-            onCelebrate = { origin ->
-                if (DisplayPrefs.celebrations && !reduceMotion) confetti = ConfettiBurst(++confettiCount, origin)
-            },
+            onCelebrate = confetti::celebrate,
             onAddSubtask = viewModel::addSubtask,
             onToggleSubtask = viewModel::toggleSubtask,
         )
@@ -344,7 +341,7 @@ fun TaskListContent(
     onPinChange: (Task, Boolean) -> Unit = { _, _ -> },
     selectionActions: SelectionActions = SelectionActions(),
     onReorder: (List<String>) -> Unit = {},
-    onCelebrate: (Offset) -> Unit = {},
+    onCelebrate: (Offset, Float) -> Unit = { _, _ -> },
     onAddSubtask: (taskId: String, title: String) -> Unit = { _, _ -> },
     onToggleSubtask: (taskId: String, subtaskId: String) -> Unit = { _, _ -> },
 ) {

@@ -98,6 +98,10 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
+import androidx.compose.ui.geometry.Offset
+import com.elkrrai.feather.ui.components.FeatherConfettiOverlay
+import com.elkrrai.feather.ui.components.MiniRing
+import com.elkrrai.feather.ui.components.rememberConfettiController
 
 /** Everything the editor can ask its ViewModel to do. */
 class TaskEditActions(
@@ -207,9 +211,11 @@ fun TaskEditContent(
     var showRecurrence by rememberSaveable { mutableStateOf(false) }
     var showNewTag by rememberSaveable { mutableStateOf(false) }
     var reminderStep by remember { mutableStateOf<ReminderStep>(ReminderStep.None) }
+    val confetti = rememberConfettiController()
 
+    Box(modifier = modifier) {
     Scaffold(
-        modifier = modifier,
+        modifier = Modifier,
         topBar = {
             TopAppBar(
                 title = {
@@ -434,7 +440,7 @@ fun TaskEditContent(
             }
 
             FieldSection(label = stringResource(R.string.field_subtasks)) {
-                SubtasksEditor(state.subtasks, actions)
+                SubtasksEditor(state.subtasks, actions, onCelebrate = confetti::celebrate)
             }
 
             Row(
@@ -446,6 +452,8 @@ fun TaskEditContent(
                 Switch(checked = state.isPinned, onCheckedChange = actions.onPinnedChange)
             }
         }
+    }
+    FeatherConfettiOverlay(confetti)
     }
 
     if (showDatePicker) {
@@ -533,7 +541,11 @@ private fun FieldSection(label: String, content: @Composable () -> Unit) {
 
 /** The checklist: existing items (editable, removable) plus a field to add another. */
 @Composable
-private fun SubtasksEditor(subtasks: List<Subtask>, actions: TaskEditActions) {
+private fun SubtasksEditor(
+    subtasks: List<Subtask>,
+    actions: TaskEditActions,
+    onCelebrate: (Offset, Float) -> Unit,
+) {
     var newTitle by rememberSaveable { mutableStateOf("") }
 
     fun addNew() {
@@ -545,9 +557,11 @@ private fun SubtasksEditor(subtasks: List<Subtask>, actions: TaskEditActions) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         subtasks.forEach { subtask ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
+                MiniRing(
                     checked = subtask.isCompleted,
                     onCheckedChange = { actions.onSubtaskToggle(subtask.id) },
+                    contentDescription = subtask.title,
+                    onCelebrate = { origin -> onCelebrate(origin, 0.6f) },
                 )
                 OutlinedTextField(
                     value = subtask.title,

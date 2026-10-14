@@ -97,8 +97,8 @@ fun TaskRow(
     selected: Boolean = false,
     /** The task was just added: its card is tinted, then fades back to normal over 800 ms. */
     highlighted: Boolean = false,
-    /** Called with the ring's position (window pixels) when the task is finished, to start the confetti. */
-    onCelebrate: (Offset) -> Unit = {},
+    /** Called with the ring's position (window pixels) and the size of the burst when a task or subtask is finished. */
+    onCelebrate: (origin: Offset, scale: Float) -> Unit = { _, _ -> },
     /** A long press, used to start selecting; null leaves the row without one. */
     onLongClick: (() -> Unit)? = null,
     /** The grip shown at the end of the row while the list can be reordered. */
@@ -188,7 +188,7 @@ fun TaskRow(
                 ringColor = task.priority.ringColor(),
                 contentDescription = ringDescription,
                 barbs = task.priority.barbCount(),
-                onCelebrate = onCelebrate,
+                onCelebrate = { origin -> onCelebrate(origin, 1f) },
             )
 
             Column(
@@ -290,6 +290,7 @@ fun TaskRow(
                             subtasks = task.subtasks,
                             onToggle = { id -> onToggleSubtask?.invoke(id) },
                             onAdd = { title -> onAddSubtask?.invoke(title) },
+                            onCelebrate = { origin -> onCelebrate(origin, 0.6f) },
                             modifier = Modifier.padding(top = Space.x1),
                         )
                     }

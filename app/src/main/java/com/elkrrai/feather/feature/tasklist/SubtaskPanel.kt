@@ -32,6 +32,7 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.ui.components.MiniRing
 import com.elkrrai.feather.ui.rememberHaptics
+import androidx.compose.ui.geometry.Offset
 
 /**
  * What opens under a task card: its subtasks, each with a small ring, and a field to add another.
@@ -43,6 +44,7 @@ internal fun SubtaskPanel(
     onToggle: (subtaskId: String) -> Unit,
     onAdd: (title: String) -> Unit,
     modifier: Modifier = Modifier,
+    onCelebrate: (Offset) -> Unit = {},
 ) {
     val haptics = rememberHaptics()
     Column(modifier = modifier.fillMaxWidth()) {
@@ -56,6 +58,7 @@ internal fun SubtaskPanel(
                             onToggle(subtask.id)
                         },
                         contentDescription = subtask.title,
+                        onCelebrate = onCelebrate,
                     )
                     Text(
                         text = subtask.title,

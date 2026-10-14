@@ -39,6 +39,9 @@ import com.elkrrai.feather.feature.tasklist.ListLabel
 import com.elkrrai.feather.ui.theme.listColorIndex
 import com.elkrrai.feather.ui.brand.scenes.SceneKind
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.Box
+import com.elkrrai.feather.ui.components.FeatherConfettiOverlay
+import com.elkrrai.feather.ui.components.rememberConfettiController
 
 @Composable
 fun SearchScreen(
@@ -73,11 +76,13 @@ fun SearchContent(
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val listLabels = state.lists.associate { it.id to ListLabel(it.displayName(), listColorIndex(it.colorArgb)) }
+    val confetti = rememberConfettiController()
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
+    Box(modifier = modifier) {
     Scaffold(
-        modifier = modifier,
+        modifier = Modifier,
         topBar = {
             TopAppBar(
                 title = {
@@ -147,9 +152,12 @@ fun SearchContent(
                         onToggle = { onToggle(task, it) },
                         onClick = { onOpenTask(task.id) },
                         list = listLabels[task.listId],
+                        onCelebrate = confetti::celebrate,
                     )
                 }
             }
         }
+    }
+    FeatherConfettiOverlay(confetti)
     }
 }

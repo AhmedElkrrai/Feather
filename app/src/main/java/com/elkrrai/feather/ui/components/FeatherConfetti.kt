@@ -25,6 +25,9 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.sin
+import androidx.compose.runtime.Stable
+import com.elkrrai.feather.ui.DisplayPrefs
+import com.elkrrai.feather.ui.rememberReduceMotion
 
 /**
  * One feather in the confetti. The numbers are fixed, not random, so every burst looks the same and
@@ -103,8 +106,48 @@ internal fun confettiAlpha(piece: ConfettiPiece, progress: Float): Float {
     }
 }
 
-/** A burst of confetti: its number (a new number starts a new burst) and where it starts, in window pixels. */
-class ConfettiBurst(val id: Int, val origin: Offset)
+/** Below this share of the screen's height a burst is thrown up; above it, down, so it stays on screen. */
+internal const val THROW_DOWN_ABOVE_FRACTION = 0.4f
+
+/** The same feathers thrown the other way: a mirror image of the fan across the horizontal. */
+internal fun mirrored(pieces: List<ConfettiPiece>): List<ConfettiPiece> =
+    pieces.map { it.copy(angleDegrees = -it.angleDegrees) }
+
+/**
+ * A burst of confetti: its number (a new number starts a new burst), where it starts in window
+ * pixels, and how big it is: 1 for a task, a smaller one for a subtask.
+ */
+class ConfettiBurst(val id: Int, val origin: Offset, val scale: Float = 1f)
+
+/**
+ * Starts the feather confetti for one screen. Every checkbox on the screen that gets finished calls
+ * [celebrate] with where it is; nothing happens when Little celebrations is off or motion is reduced.
+ */
+@Stable
+class ConfettiController internal constructor() {
+    var burst by mutableStateOf<ConfettiBurst?>(null)
+        private set
+    internal var reduceMotion: Boolean = false
+    private var count = 0
+
+    fun celebrate(origin: Offset, scale: Float = 1f) {
+        if (!DisplayPrefs.celebrations || reduceMotion) return
+        burst = ConfettiBurst(++count, origin, scale)
+    }
+}
+
+@Composable
+fun rememberConfettiController(): ConfettiController {
+    val controller = remember { ConfettiController() }
+    controller.reduceMotion = rememberReduceMotion()
+    return controller
+}
+
+/** The overlay for a screen's [controller]; put it last, over everything else. */
+@Composable
+fun FeatherConfettiOverlay(controller: ConfettiController, modifier: Modifier = Modifier) {
+    FeatherConfettiOverlay(controller.burst, modifier)
+}
 
 /**
  * Feather confetti over the whole screen: about 28 small leaf-feathers thrown up from [burst]'s
@@ -113,7 +156,8 @@ class ConfettiBurst(val id: Int, val origin: Offset)
  */
 @Composable
 fun FeatherConfettiOverlay(burst: ConfettiBurst?, modifier: Modifier = Modifier) {
-    val pieces = remember { confettiPieces() }
+    val upward = remember { confettiPieces() }
+    val downward = remember { mirrored(upward) }
     val feather = MaterialTheme.featherColors
     val colors = remember(feather) {
         listOf(Nest.SkyWing, Nest.Amber, Nest.Coral, feather.listColors[3], Nest.Cream, Nest.Plumage)
@@ -139,13 +183,15 @@ fun FeatherConfettiOverlay(burst: ConfettiBurst?, modifier: Modifier = Modifier)
         val p = progress.value
         if (p <= 0f || p >= 1f) return@Canvas
         val seconds = p * CONFETTI_SECONDS
-        for (piece in pieces) {
+        // Near the top of the screen there is no room above: spray down instead of up.
+        val fromTop = (current.origin.y - topLeft.y) < size.height * THROW_DOWN_ABOVE_FRACTION
+        for (piece in if (fromTop) downward else upward) {
             val alpha = confettiAlpha(piece, p)
             if (alpha <= 0f) continue
             val (dx, dy) = confettiOffset(piece, seconds)
-            val cx = current.origin.x - topLeft.x + dx.dp.toPx()
-            val cy = current.origin.y - topLeft.y + dy.dp.toPx()
-            val length = piece.sizeDp.dp.toPx()
+            val cx = current.origin.x - topLeft.x + dx.dp.toPx() * current.scale
+            val cy = current.origin.y - topLeft.y + dy.dp.toPx() * current.scale
+            val length = piece.sizeDp.dp.toPx() * (0.5f + 0.5f * current.scale)
             val color = colors[piece.colorIndex % colors.size].copy(alpha = alpha)
             withTransform({
                 translate(left = cx, top = cy)

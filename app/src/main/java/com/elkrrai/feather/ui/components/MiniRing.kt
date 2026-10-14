@@ -29,6 +29,10 @@ import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.ui.rememberReduceMotion
 import com.elkrrai.feather.ui.theme.Dur
 import com.elkrrai.feather.ui.theme.Ease
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 
 /**
  * The small round control of a subtask: a 40dp target around a 20dp ring that fills with the
@@ -40,8 +44,11 @@ fun MiniRing(
     onCheckedChange: (Boolean) -> Unit,
     contentDescription: String,
     modifier: Modifier = Modifier,
+    /** Called with the ring's middle (window pixels) when it is ticked, to start the confetti. */
+    onCelebrate: (Offset) -> Unit = {},
 ) {
     val reduceMotion = rememberReduceMotion()
+    var centerInRoot by remember { mutableStateOf(Offset.Zero) }
     val fill by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
         animationSpec = if (reduceMotion) snap() else tween(Dur.Short2, easing = Ease.Soft),
@@ -62,12 +69,16 @@ fun MiniRing(
     Box(
         modifier = modifier
             .size(40.dp)
+            .onGloballyPositioned { centerInRoot = it.positionInRoot() + Offset(it.size.width / 2f, it.size.height / 2f) }
             .toggleable(
                 value = checked,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(bounded = false, radius = 20.dp),
                 role = Role.Checkbox,
-                onValueChange = onCheckedChange,
+                onValueChange = { value ->
+                    if (value) onCelebrate(centerInRoot)
+                    onCheckedChange(value)
+                },
             )
             .semantics { this.contentDescription = contentDescription },
         contentAlignment = Alignment.Center,
