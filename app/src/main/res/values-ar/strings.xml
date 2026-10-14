@@ -548,4 +548,14 @@
     <string name="scene_reminders_blocked">هاتفك يُسكت جرسي. نقرتان لأعيد الرنين.</string>
     <string name="scene_first_launch">أهلًا! أنا Feather. كل شيء يبقى على هاتفك.</string>
     <string name="scene_trash_empty">مرتّب كعشٍّ في الربيع.</string>
+
+    <!-- Quick add tools -->
+    <string name="quick_add_tool_date">اختر تاريخًا</string>
+    <string name="quick_add_tool_priority">حدد الأولوية</string>
+    <string name="quick_add_tool_tag">أضف وسمًا</string>
+    <string name="quick_add_tool_repeat">التكرار</string>
+    <string name="quick_add_insert_every_day">كل يوم</string>
+    <string name="quick_add_insert_every_week">كل أسبوع</string>
+    <string name="quick_add_insert_every_month">كل شهر</string>
+    <string name="quick_add_insert_every_year">كل سنة</string>
 </resources>

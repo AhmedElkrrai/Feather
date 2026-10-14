@@ -476,4 +476,14 @@
     <string name="scene_reminders_blocked">Your phone is keeping my bell quiet. Two taps to let it ring.</string>
     <string name="scene_first_launch">Hello! I’m Feather. Everything stays on your phone.</string>
     <string name="scene_trash_empty">Tidy as a nest in spring.</string>
+
+    <!-- Quick add tools -->
+    <string name="quick_add_tool_date">Pick a date</string>
+    <string name="quick_add_tool_priority">Set priority</string>
+    <string name="quick_add_tool_tag">Add a tag</string>
+    <string name="quick_add_tool_repeat">Repeat</string>
+    <string name="quick_add_insert_every_day">every day</string>
+    <string name="quick_add_insert_every_week">every week</string>
+    <string name="quick_add_insert_every_month">every month</string>
+    <string name="quick_add_insert_every_year">every year</string>
 </resources>
