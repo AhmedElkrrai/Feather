@@ -59,13 +59,22 @@ class CompletionMotionTest {
     }
 
     @Test
-    fun feathersAreThrownUpInAFan() {
-        for (piece in confettiPieces()) {
-            // Between about 165 and 15 degrees above the horizontal, never downward.
-            assertTrue(piece.angleDegrees in -166f..-14f)
-            assertTrue(piece.speedDp in 300f..580f)
+    fun feathersAreThrownInEveryDirection() {
+        val pieces = confettiPieces()
+        for (piece in pieces) {
+            assertTrue(piece.angleDegrees in -180f..180f)
+            assertTrue(piece.speedDp in 260f..580f)
             assertTrue(piece.sizeDp in 13f..21f)
         }
+        // Some go up and some go down.
+        assertTrue(pieces.any { it.angleDegrees < -45f && it.angleDegrees > -135f })
+        assertTrue(pieces.any { it.angleDegrees > 45f && it.angleDegrees < 135f })
+    }
+
+    @Test
+    fun eachBurstIsThrownInNewDirectionsButTheSameSeedRepeats() {
+        assertEquals(confettiPieces(seed = 3), confettiPieces(seed = 3))
+        assertTrue(confettiPieces(seed = 3).map { it.angleDegrees } != confettiPieces(seed = 4).map { it.angleDegrees })
     }
 
     @Test
@@ -84,7 +93,7 @@ class CompletionMotionTest {
     @Test
     fun aFeatherRisesFirstAndSinksLater() {
         // Thrown mostly upward: early on it is above where it started, and by the end it has fallen below it.
-        val piece = confettiPieces().first { it.angleDegrees < -80f && it.angleDegrees > -100f }
+        val piece = ConfettiPiece(-90f, 400f, 200f, 8f, 1.5f, 16f, 0, life = 1f)
 
         assertTrue(confettiOffset(piece, 0.3f).second < 0f)
         assertTrue(confettiOffset(piece, CONFETTI_SECONDS).second > confettiOffset(piece, 0.3f).second)

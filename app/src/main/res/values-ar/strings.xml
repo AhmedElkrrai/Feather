@@ -54,6 +54,7 @@
     <string name="scope_overdue">بانتظارك</string>
     <string name="scope_all">كل المهام</string>
     <string name="scope_completed">المكتملة</string>
+    <string name="action_clear_completed">مسح كل المكتملة</string>
     <string name="scope_no_date">بدون تاريخ</string>
     <string name="drawer_section_views">العروض</string>
     <string name="drawer_section_lists">القوائم</string>

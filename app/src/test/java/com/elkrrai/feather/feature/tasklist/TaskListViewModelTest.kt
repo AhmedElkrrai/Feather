@@ -512,6 +512,21 @@ class TaskListViewModelTest {
     }
 
     @Test
+    fun tickingTheLastOpenSubtaskFinishesTheTask() = runTest {
+        val task = tasks.addTask(inbox, "Plan trip")
+        val viewModel = newViewModel()
+        viewModel.addSubtask(task.id, "Book flights")
+        viewModel.addSubtask(task.id, "Pack")
+        val (first, second) = tasks.getTask(task.id)!!.subtasks
+
+        viewModel.toggleSubtask(task.id, first.id)
+        assertEquals(false, tasks.getTask(task.id)!!.isCompleted)
+
+        viewModel.toggleSubtask(task.id, second.id)
+        assertEquals(true, tasks.getTask(task.id)!!.isCompleted)
+    }
+
+    @Test
     fun aListWithOnlyFinishedTasksHasNothingOpenAndAllOfThemInTheDoneSection() = runTest {
         val done = tasks.addTask(inbox, "Done")
         tasks.setCompleted(done.id, true)

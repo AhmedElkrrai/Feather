@@ -233,12 +233,18 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
-    /** Ticks or unticks a subtask of the task [taskId]. */
+    /**
+     * Ticks or unticks a subtask of the task [taskId]. Ticking the last open one finishes the
+     * task itself.
+     */
     fun toggleSubtask(taskId: String, subtaskId: String) {
         viewModelScope.launch {
             val task = taskRepository.getTask(taskId) ?: return@launch
             val updated = task.subtasks.map { if (it.id == subtaskId) it.copy(isCompleted = !it.isCompleted) else it }
             taskRepository.saveTaskDetails(task.copy(subtasks = updated))
+            if (!task.isCompleted && updated.isNotEmpty() && updated.all { it.isCompleted }) {
+                taskRepository.setCompleted(taskId, true)
+            }
         }
     }
 

@@ -58,6 +58,7 @@
     <string name="scope_overdue">Waiting for you</string>
     <string name="scope_all">All tasks</string>
     <string name="scope_completed">Completed</string>
+    <string name="action_clear_completed">Clear all completed</string>
     <string name="scope_no_date">No date</string>
     <string name="drawer_section_views">Views</string>
     <string name="drawer_section_lists">Lists</string>

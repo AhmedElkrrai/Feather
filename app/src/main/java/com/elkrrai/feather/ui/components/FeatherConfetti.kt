@@ -24,6 +24,7 @@ import com.elkrrai.feather.ui.theme.featherColors
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.exp
+import kotlin.random.Random
 import kotlin.math.sin
 import androidx.compose.runtime.Stable
 import com.elkrrai.feather.ui.DisplayPrefs
@@ -61,24 +62,28 @@ private const val GRAVITY_DP = 620f
 private const val FEATHER_FALL = 0.22f
 
 /**
- * [count] feathers thrown up and out in a fan, no two alike: spread over the upper half-circle,
- * each with its own speed, spin, sway, size and color.
+ * [count] feathers thrown out in every direction, no two alike: the full circle is cut into
+ * [count] slices and each feather takes a random angle inside its own slice, so the burst is
+ * even but never the same twice. Each has its own speed, spin, sway, size and color. The same
+ * [seed] gives the same burst, which keeps the motion testable.
  */
-internal fun confettiPieces(count: Int = 28, colors: Int = 6): List<ConfettiPiece> =
-    List(count) { index ->
-        val a = (index * 0.6180339f) % 1f
-        val b = (index * 0.381966f + 0.17f) % 1f
+internal fun confettiPieces(count: Int = 28, colors: Int = 6, seed: Int = 0): List<ConfettiPiece> {
+    val random = Random(seed)
+    val slice = 360f / count
+    val angles = List(count) { index -> -180f + slice * (index + random.nextFloat() * 0.9f) }.shuffled(random)
+    return List(count) { index ->
         ConfettiPiece(
-            angleDegrees = -165f + 150f * a,
-            speedDp = 300f + 280f * b,
-            spinDegreesPerSecond = (if (index % 2 == 0) 1f else -1f) * (140f + 220f * a),
-            swayDp = 6f + 10f * b,
-            swayHz = 1.2f + 1.2f * a,
-            sizeDp = 13f + 8f * b,
+            angleDegrees = angles[index],
+            speedDp = 260f + 320f * random.nextFloat(),
+            spinDegreesPerSecond = (if (random.nextBoolean()) 1f else -1f) * (140f + 220f * random.nextFloat()),
+            swayDp = 6f + 10f * random.nextFloat(),
+            swayHz = 1.2f + 1.2f * random.nextFloat(),
+            sizeDp = 13f + 8f * random.nextFloat(),
             colorIndex = index % colors,
-            life = 0.75f + 0.25f * ((index * 0.7f) % 1f),
+            life = 0.75f + 0.25f * random.nextFloat(),
         )
     }
+}
 
 /**
  * Where a feather is [seconds] after the throw, in dp from where it was thrown: it flies out fast,
@@ -105,13 +110,6 @@ internal fun confettiAlpha(piece: ConfettiPiece, progress: Float): Float {
         else -> ((piece.life - p) / (piece.life * 0.3f)).coerceIn(0f, 1f)
     }
 }
-
-/** Below this share of the screen's height a burst is thrown up; above it, down, so it stays on screen. */
-internal const val THROW_DOWN_ABOVE_FRACTION = 0.4f
-
-/** The same feathers thrown the other way: a mirror image of the fan across the horizontal. */
-internal fun mirrored(pieces: List<ConfettiPiece>): List<ConfettiPiece> =
-    pieces.map { it.copy(angleDegrees = -it.angleDegrees) }
 
 /**
  * A burst of confetti: its number (a new number starts a new burst), where it starts in window
@@ -150,14 +148,14 @@ fun FeatherConfettiOverlay(controller: ConfettiController, modifier: Modifier = 
 }
 
 /**
- * Feather confetti over the whole screen: about 28 small leaf-feathers thrown up from [burst]'s
- * origin that flutter, spin, fall and fade over 1.8 seconds. It draws above everything, takes no
+ * Feather confetti over the whole screen: about 28 small leaf-feathers thrown in random
+ * directions from [burst]'s origin that flutter, spin, fall and fade over 1.8 seconds. It draws above everything, takes no
  * touches, and keeps playing after the row it started from has left the list.
  */
 @Composable
 fun FeatherConfettiOverlay(burst: ConfettiBurst?, modifier: Modifier = Modifier) {
-    val upward = remember { confettiPieces() }
-    val downward = remember { mirrored(upward) }
+    // A new burst throws its feathers in new directions.
+    val pieces = remember(burst?.id) { confettiPieces(seed = burst?.id ?: 0) }
     val feather = MaterialTheme.featherColors
     val colors = remember(feather) {
         listOf(Nest.SkyWing, Nest.Amber, Nest.Coral, feather.listColors[3], Nest.Cream, Nest.Plumage)
@@ -183,9 +181,7 @@ fun FeatherConfettiOverlay(burst: ConfettiBurst?, modifier: Modifier = Modifier)
         val p = progress.value
         if (p <= 0f || p >= 1f) return@Canvas
         val seconds = p * CONFETTI_SECONDS
-        // Near the top of the screen there is no room above: spray down instead of up.
-        val fromTop = (current.origin.y - topLeft.y) < size.height * THROW_DOWN_ABOVE_FRACTION
-        for (piece in if (fromTop) downward else upward) {
+        for (piece in pieces) {
             val alpha = confettiAlpha(piece, p)
             if (alpha <= 0f) continue
             val (dx, dy) = confettiOffset(piece, seconds)

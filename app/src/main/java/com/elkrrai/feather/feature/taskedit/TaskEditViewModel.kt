@@ -235,6 +235,10 @@ class TaskEditViewModel @Inject constructor(
                     recurrence = state.recurrence,
                 )
             )
+            // A checklist with every item ticked means the task is done.
+            if (!base.isCompleted && state.subtasks.isNotEmpty() && state.subtasks.all { it.isCompleted }) {
+                tasks.setCompleted(base.id, true)
+            }
             _uiState.update { it.copy(isSaving = false, finished = true) }
         }
     }

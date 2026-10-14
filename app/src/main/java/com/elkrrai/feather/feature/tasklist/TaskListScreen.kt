@@ -121,6 +121,20 @@ fun TaskListScreen(
     // Feather confetti for every checkbox finished on this screen.
     val confetti = rememberConfettiController()
 
+    /** Moves the tasks to the trash and offers to bring them back. */
+    fun deleteWithUndo(ids: List<String>) {
+        viewModel.deleteTasks(ids)
+        coroutineScope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            val result = snackbarHostState.showSnackbar(
+                message = resources.getQuantityString(R.plurals.tasks_deleted, ids.size, ids.size),
+                actionLabel = undoLabel,
+                duration = SnackbarDuration.Short,
+            )
+            if (result == SnackbarResult.ActionPerformed) viewModel.restoreTasks(ids)
+        }
+    }
+
     val selectionActions = SelectionActions(
         onToggle = viewModel::toggleSelected,
         onClear = viewModel::clearSelection,
@@ -131,19 +145,7 @@ fun TaskListScreen(
         },
         onMove = { selectionDialog = SelectionDialog.Move },
         onTag = { selectionDialog = SelectionDialog.Tag },
-        onDelete = {
-            val ids = state.selection.toList()
-            viewModel.deleteTasks(ids)
-            coroutineScope.launch {
-                snackbarHostState.currentSnackbarData?.dismiss()
-                val result = snackbarHostState.showSnackbar(
-                    message = resources.getQuantityString(R.plurals.tasks_deleted, ids.size, ids.size),
-                    actionLabel = undoLabel,
-                    duration = SnackbarDuration.Short,
-                )
-                if (result == SnackbarResult.ActionPerformed) viewModel.restoreTasks(ids)
-            }
-        },
+        onDelete = { deleteWithUndo(state.selection.toList()) },
     )
 
     fun closeDrawer() {
@@ -225,6 +227,7 @@ fun TaskListScreen(
             selectionActions = selectionActions,
             onReorder = viewModel::reorderTasks,
             onCelebrate = confetti::celebrate,
+            onClearCompleted = { deleteWithUndo(state.sections.flatMap { it.tasks }.map { it.id }) },
             onAddSubtask = viewModel::addSubtask,
             onToggleSubtask = viewModel::toggleSubtask,
         )
@@ -344,6 +347,7 @@ fun TaskListContent(
     onCelebrate: (Offset, Float) -> Unit = { _, _ -> },
     onAddSubtask: (taskId: String, title: String) -> Unit = { _, _ -> },
     onToggleSubtask: (taskId: String, subtaskId: String) -> Unit = { _, _ -> },
+    onClearCompleted: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
@@ -423,7 +427,12 @@ fun TaskListContent(
                             contentDescription = stringResource(R.string.action_search),
                         )
                     }
-                    OverflowButton(actions = sortActions)
+                    val clearAction = if (state.scope == TaskScope.Completed && !state.isEmpty) {
+                        listOf(MenuAction(stringResource(R.string.action_clear_completed), onClick = onClearCompleted))
+                    } else {
+                        emptyList()
+                    }
+                    OverflowButton(actions = sortActions + clearAction)
                 },
             )
             }
@@ -501,22 +510,29 @@ fun TaskListContent(
                                 )
                             },
                         ) {
+                            // Keeps a finished row on screen, struck through, for a moment before it leaves.
+                            fun lingerFinished() {
+                                val stamp = ++finishStamp
+                                finishing[task.id] = FinishingRow(
+                                    task = task.copy(
+                                        completedAt = Instant.now(),
+                                        subtasks = task.subtasks.map { it.copy(isCompleted = true) },
+                                    ),
+                                    index = rows.indexOfFirst { it.id == task.id }.coerceAtLeast(0),
+                                    sectionKey = section.date,
+                                    stamp = stamp,
+                                )
+                                scope.launch {
+                                    delay(Dur.RowLinger.toLong())
+                                    if (finishing[task.id]?.stamp == stamp) finishing.remove(task.id)
+                                }
+                            }
                             TaskRow(
                                 task = task,
                                 today = today,
                                 onToggle = { completed ->
                                     if (completed && !reduceMotion && !reorderable) {
-                                        val stamp = ++finishStamp
-                                        finishing[task.id] = FinishingRow(
-                                            task = task.copy(completedAt = Instant.now()),
-                                            index = rows.indexOfFirst { it.id == task.id }.coerceAtLeast(0),
-                                            sectionKey = section.date,
-                                            stamp = stamp,
-                                        )
-                                        scope.launch {
-                                            delay(Dur.RowLinger.toLong())
-                                            if (finishing[task.id]?.stamp == stamp) finishing.remove(task.id)
-                                        }
+                                        lingerFinished()
                                     } else {
                                         finishing.remove(task.id)
                                     }
@@ -529,7 +545,16 @@ fun TaskListContent(
                                 highlighted = task.id == state.justAddedId,
                                 onCelebrate = onCelebrate,
                                 onAddSubtask = { title -> onAddSubtask(task.id, title) },
-                                onToggleSubtask = { subtaskId -> onToggleSubtask(task.id, subtaskId) },
+                                onToggleSubtask = { subtaskId ->
+                                    // Ticking the last open subtask finishes the task: let the row linger like a ring tick.
+                                    val open = task.subtasks.filter { !it.isCompleted }
+                                    if (!task.isCompleted && open.size == 1 && open.single().id == subtaskId &&
+                                        !reduceMotion && !reorderable
+                                    ) {
+                                        lingerFinished()
+                                    }
+                                    onToggleSubtask(task.id, subtaskId)
+                                },
                                 dragHandle = if (reorderable) ({ DragHandle(reorder, task.id) }) else null,
                                 onMoveUp = if (reorderable) ({ reorder.moveBy(task.id, -1) }) else null,
                                 onMoveDown = if (reorderable) ({ reorder.moveBy(task.id, 1) }) else null,

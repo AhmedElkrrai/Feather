@@ -290,7 +290,10 @@ fun TaskRow(
                             subtasks = task.subtasks,
                             onToggle = { id -> onToggleSubtask?.invoke(id) },
                             onAdd = { title -> onAddSubtask?.invoke(title) },
-                            onCelebrate = { origin -> onCelebrate(origin, 0.6f) },
+                            // Finishing the last subtask finishes the task, so that burst is a full one.
+                            onCelebrate = { origin ->
+                                onCelebrate(origin, if (subtasksDone + 1 >= subtaskTotal) 1f else 0.6f)
+                            },
                             modifier = Modifier.padding(top = Space.x1),
                         )
                     }
