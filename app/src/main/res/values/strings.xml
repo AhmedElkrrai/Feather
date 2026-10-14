@@ -337,4 +337,16 @@
     <string name="backup_error_not_backup">This file is not a Feather backup.</string>
     <string name="backup_error_too_new">This backup was made by a newer version of Feather. Update the app to import it.</string>
     <string name="backup_error_failed">That did not work. Nothing was changed.</string>
+
+    <!-- Automatic backup -->
+    <string name="backup_auto">Automatic backup</string>
+    <string name="backup_auto_summary">Once a day, keeping the last %1$d copies in the folder you choose.</string>
+    <string name="backup_folder">Backup folder</string>
+    <string name="backup_folder_none">Not chosen</string>
+    <string name="backup_now">Back up now</string>
+    <string name="backup_last">Last backup: %1$s</string>
+    <string name="backup_never">No backup yet</string>
+    <string name="backup_done_auto">Backup saved to your folder</string>
+    <string name="backup_error_no_folder">Choose a backup folder first.</string>
+    <string name="backup_error_no_access">Feather cannot write to that folder any more. Choose it again.</string>
 </resources>

@@ -3,6 +3,8 @@ package com.elkrrai.feather.feature.settings
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.elkrrai.feather.data.backup.AutoBackup
+import com.elkrrai.feather.data.backup.AutoBackupResult
 import com.elkrrai.feather.data.backup.BackupFiles
 import com.elkrrai.feather.domain.backup.BackupFormatException
 import com.elkrrai.feather.domain.backup.BackupRepository
@@ -24,6 +26,9 @@ sealed interface BackupResult {
     data class Imported(val summary: ImportSummary) : BackupResult
     data object NotABackup : BackupResult
     data object TooNew : BackupResult
+    data object AutoBackedUp : BackupResult
+    data object NoFolder : BackupResult
+    data object NoAccess : BackupResult
     data object Failed : BackupResult
 }
 
@@ -36,6 +41,7 @@ data class BackupUiState(
 class BackupViewModel @Inject constructor(
     private val backup: BackupRepository,
     private val files: BackupFiles,
+    private val autoBackup: AutoBackup,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BackupUiState())
@@ -53,6 +59,18 @@ class BackupViewModel @Inject constructor(
         launchAction {
             val summary = backup.importJson(files.read(uri), mode)
             BackupResult.Imported(summary)
+        }
+    }
+
+    /** The same backup the daily job writes, started by hand. */
+    fun backupNow() {
+        launchAction {
+            when (autoBackup.runNow()) {
+                AutoBackupResult.DONE -> BackupResult.AutoBackedUp
+                AutoBackupResult.NO_FOLDER -> BackupResult.NoFolder
+                AutoBackupResult.NO_ACCESS -> BackupResult.NoAccess
+                AutoBackupResult.FAILED -> BackupResult.Failed
+            }
         }
     }
 

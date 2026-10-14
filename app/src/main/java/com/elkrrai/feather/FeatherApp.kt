@@ -1,8 +1,10 @@
 package com.elkrrai.feather
 
 import android.app.Application
+import com.elkrrai.feather.data.backup.BackupWorker
 import com.elkrrai.feather.domain.repository.ListRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
+import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.reminders.ReminderChannels
 import com.elkrrai.feather.reminders.ReminderSyncer
 import com.elkrrai.feather.reminders.ReminderWorker
@@ -12,6 +14,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @HiltAndroidApp
@@ -20,6 +24,7 @@ class FeatherApp : Application() {
     @Inject lateinit var listRepository: ListRepository
     @Inject lateinit var taskRepository: TaskRepository
     @Inject lateinit var reminderSyncer: ReminderSyncer
+    @Inject lateinit var settingsRepository: SettingsRepository
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -35,5 +40,12 @@ class FeatherApp : Application() {
         // Re-arms the reminder alarm now and whenever tasks or settings change.
         reminderSyncer.start(appScope)
         ReminderWorker.schedule(this)
+        // The daily backup job runs only while automatic backup is on and a folder is chosen.
+        appScope.launch {
+            settingsRepository.settings
+                .map { it.autoBackupEnabled && it.backupFolder != null }
+                .distinctUntilChanged()
+                .collect { BackupWorker.schedule(this@FeatherApp, it) }
+        }
     }
 }

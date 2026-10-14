@@ -1,5 +1,6 @@
 package com.elkrrai.feather.feature.settings
 
+import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -79,6 +80,23 @@ fun SettingsScreen(
         ActivityResultContracts.OpenDocument(),
     ) { uri -> if (uri != null) pendingImport = uri.toString() }
 
+    // Turning automatic backup on without a folder opens the folder picker first.
+    var enableAfterFolder by rememberSaveable { mutableStateOf(false) }
+    val folderLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri != null) {
+            // Keep the permission across restarts: the daily job writes long after this screen is gone.
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
+            viewModel.setBackupFolder(uri.toString())
+            if (enableAfterFolder) viewModel.setAutoBackupEnabled(true)
+        }
+        enableAfterFolder = false
+    }
+
     LaunchedEffect(backupState.result) {
         backupState.result?.let { result ->
             Toast.makeText(context, backupMessage(context, result), Toast.LENGTH_LONG).show()
@@ -99,6 +117,16 @@ fun SettingsScreen(
             onExport = { exportLauncher.launch("feather-backup-${LocalDate.now()}.json") },
             onImport = { importLauncher.launch(arrayOf("*/*")) },
             onExportCsv = { csvLauncher.launch("feather-tasks-${LocalDate.now()}.csv") },
+            onAutoBackupChange = { enable ->
+                if (enable && settings.backupFolder == null) {
+                    enableAfterFolder = true
+                    folderLauncher.launch(null)
+                } else {
+                    viewModel.setAutoBackupEnabled(enable)
+                }
+            },
+            onPickFolder = { folderLauncher.launch(null) },
+            onBackupNow = backupViewModel::backupNow,
         ),
         backupBusy = backupState.busy,
         modifier = modifier,
@@ -205,7 +233,7 @@ fun SettingsContent(
                 onClick = onOpenReliability,
             )
 
-            BackupRows(backup)
+            BackupRows(backup, settings)
 
             SectionTitle(stringResource(R.string.settings_section_general))
 

@@ -5,6 +5,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import java.time.LocalTime
@@ -22,6 +24,9 @@ class DataStoreSettingsRepository @Inject constructor(
         val snoozeMinutes = intPreferencesKey("snooze_minutes")
         val dailySummaryEnabled = booleanPreferencesKey("daily_summary_enabled")
         val dailySummaryMinute = intPreferencesKey("daily_summary_minute_of_day")
+        val autoBackupEnabled = booleanPreferencesKey("auto_backup_enabled")
+        val backupFolder = stringPreferencesKey("backup_folder")
+        val lastBackupAt = longPreferencesKey("last_backup_at")
     }
 
     override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
@@ -31,6 +36,9 @@ class DataStoreSettingsRepository @Inject constructor(
             snoozeMinutes = prefs[Keys.snoozeMinutes] ?: defaults.snoozeMinutes,
             dailySummaryEnabled = prefs[Keys.dailySummaryEnabled] ?: defaults.dailySummaryEnabled,
             dailySummaryTime = prefs[Keys.dailySummaryMinute]?.toTime() ?: defaults.dailySummaryTime,
+            autoBackupEnabled = prefs[Keys.autoBackupEnabled] ?: defaults.autoBackupEnabled,
+            backupFolder = prefs[Keys.backupFolder],
+            lastBackupAt = prefs[Keys.lastBackupAt],
         )
     }
 
@@ -48,6 +56,18 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setDailySummaryTime(time: LocalTime) {
         dataStore.edit { it[Keys.dailySummaryMinute] = time.toMinuteOfDay() }
+    }
+
+    override suspend fun setAutoBackupEnabled(enabled: Boolean) {
+        dataStore.edit { it[Keys.autoBackupEnabled] = enabled }
+    }
+
+    override suspend fun setBackupFolder(uri: String?) {
+        dataStore.edit { if (uri == null) it.remove(Keys.backupFolder) else it[Keys.backupFolder] = uri }
+    }
+
+    override suspend fun setLastBackupAt(epochMillis: Long?) {
+        dataStore.edit { if (epochMillis == null) it.remove(Keys.lastBackupAt) else it[Keys.lastBackupAt] = epochMillis }
     }
 
     private fun LocalTime.toMinuteOfDay(): Int = hour * 60 + minute

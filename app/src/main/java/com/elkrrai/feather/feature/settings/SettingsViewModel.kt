@@ -35,4 +35,12 @@ class SettingsViewModel @Inject constructor(
     fun setDailySummaryTime(time: LocalTime) {
         viewModelScope.launch { repository.setDailySummaryTime(time) }
     }
+
+    fun setAutoBackupEnabled(enabled: Boolean) {
+        viewModelScope.launch { repository.setAutoBackupEnabled(enabled) }
+    }
+
+    fun setBackupFolder(uri: String?) {
+        viewModelScope.launch { repository.setBackupFolder(uri) }
+    }
 }

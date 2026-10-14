@@ -12,6 +12,12 @@ data class AppSettings(
     val snoozeMinutes: Int = 10,
     val dailySummaryEnabled: Boolean = false,
     val dailySummaryTime: LocalTime = LocalTime.of(8, 0),
+    /** Write a backup file into [backupFolder] once a day. */
+    val autoBackupEnabled: Boolean = false,
+    /** The folder (a document tree URI) chosen for automatic backups, or null. */
+    val backupFolder: String? = null,
+    /** When the last automatic backup finished, epoch millis, or null if there was none. */
+    val lastBackupAt: Long? = null,
 )
 
 /** Snooze lengths offered in settings, in minutes. */
@@ -29,4 +35,10 @@ interface SettingsRepository {
     suspend fun setDailySummaryEnabled(enabled: Boolean)
 
     suspend fun setDailySummaryTime(time: LocalTime)
+
+    suspend fun setAutoBackupEnabled(enabled: Boolean)
+
+    suspend fun setBackupFolder(uri: String?)
+
+    suspend fun setLastBackupAt(epochMillis: Long?)
 }

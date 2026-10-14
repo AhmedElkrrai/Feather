@@ -397,4 +397,16 @@
     <string name="backup_error_not_backup">هذا الملف ليس نسخة احتياطية من Feather.</string>
     <string name="backup_error_too_new">أُنشئت هذه النسخة بإصدار أحدث من Feather. حدّث التطبيق لاستيرادها.</string>
     <string name="backup_error_failed">لم تنجح العملية. لم يتغير شيء.</string>
+
+    <!-- Automatic backup -->
+    <string name="backup_auto">النسخ الاحتياطي التلقائي</string>
+    <string name="backup_auto_summary">مرة كل يوم، مع الاحتفاظ بآخر %1$d نسخ في المجلد الذي تختاره.</string>
+    <string name="backup_folder">مجلد النسخ الاحتياطي</string>
+    <string name="backup_folder_none">لم يتم الاختيار</string>
+    <string name="backup_now">نسخ احتياطي الآن</string>
+    <string name="backup_last">آخر نسخة: %1$s</string>
+    <string name="backup_never">لا توجد نسخة بعد</string>
+    <string name="backup_done_auto">تم حفظ النسخة في مجلدك</string>
+    <string name="backup_error_no_folder">اختر مجلد النسخ الاحتياطي أولًا.</string>
+    <string name="backup_error_no_access">لم يعد بإمكان Feather الكتابة في هذا المجلد. اختره مرة أخرى.</string>
 </resources>
