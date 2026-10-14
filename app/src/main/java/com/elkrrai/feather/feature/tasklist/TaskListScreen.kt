@@ -79,6 +79,7 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.elkrrai.feather.ui.theme.listColorIndex
 
 @Composable
 fun TaskListScreen(
@@ -345,10 +346,10 @@ fun TaskListContent(
     BackHandler(enabled = selecting) { selectionActions.onClear() }
 
     // Only mixed views (smart views, tags) show which list a task belongs to.
-    val listNames: Map<String, String> = if (state.scope is TaskScope.InList) {
+    val listLabels: Map<String, ListLabel> = if (state.scope is TaskScope.InList) {
         emptyMap()
     } else {
-        state.lists.associate { it.id to it.displayName() }
+        state.lists.associate { it.id to ListLabel(it.displayName(), listColorIndex(it.colorArgb)) }
     }
 
     val sortActions = TaskSort.entries.map { sort ->
@@ -490,7 +491,7 @@ fun TaskListContent(
                                     haptics.longPress()
                                     selectionActions.onToggle(task.id)
                                 },
-                                listName = listNames[task.listId],
+                                list = listLabels[task.listId],
                                 onDelete = { onDelete(task) },
                                 onPinChange = { pinned -> onPinChange(task, pinned) },
                             )

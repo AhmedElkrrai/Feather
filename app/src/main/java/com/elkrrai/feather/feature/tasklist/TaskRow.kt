@@ -1,50 +1,64 @@
 package com.elkrrai.feather.feature.tasklist
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Task
-import com.elkrrai.feather.ui.format.formatDueDate
-import com.elkrrai.feather.ui.format.formatDueTime
-import com.elkrrai.feather.ui.format.label
-import com.elkrrai.feather.ui.format.markerColor
-import com.elkrrai.feather.ui.format.ringColor
 import com.elkrrai.feather.ui.components.CompletionRing
+import com.elkrrai.feather.ui.components.ListShapeIcon
+import com.elkrrai.feather.ui.components.MetaChip
 import com.elkrrai.feather.ui.components.StrikeText
+import com.elkrrai.feather.ui.components.SubtaskLeaves
+import com.elkrrai.feather.ui.components.barbCount
+import com.elkrrai.feather.ui.format.chipLabel
+import com.elkrrai.feather.ui.format.chipText
+import com.elkrrai.feather.ui.format.dueLabelFor
+import com.elkrrai.feather.ui.format.label
+import com.elkrrai.feather.ui.format.ringColor
 import com.elkrrai.feather.ui.rememberHaptics
+import com.elkrrai.feather.ui.theme.Space
+import com.elkrrai.feather.ui.theme.featherColors
+import com.elkrrai.feather.ui.theme.listShapeFor
 import java.time.LocalDate
 
+/** The list a task belongs to, as the row shows it: its name and which of the eight list colors it has. */
+data class ListLabel(val name: String, val colorIndex: Int?)
+
+private const val MAX_TAG_CHIPS = 3
+
 /**
- * One task. [listName] is shown in front of the due date when the view mixes several lists
- * (smart views and tag views); pass null inside a single list.
+ * One task, as a card: the completion ring, the title, and a row of small chips (date, list,
+ * repeat, tags, subtask progress). [list] is shown only when the view mixes several lists (smart
+ * views and tag views); pass null inside a single list.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TaskRow(
     task: Task,
@@ -52,7 +66,7 @@ fun TaskRow(
     onToggle: (completed: Boolean) -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    listName: String? = null,
+    list: ListLabel? = null,
     /** When set, TalkBack offers "Delete" as an action (the swipe is not reachable with it). */
     onDelete: (() -> Unit)? = null,
     /** When set, TalkBack offers pin and unpin. */
@@ -67,23 +81,18 @@ fun TaskRow(
     onMoveUp: (() -> Unit)? = null,
     onMoveDown: (() -> Unit)? = null,
 ) {
-    val context = LocalContext.current
-    val locale = LocalConfiguration.current.locales[0]
-    val dueText = remember(task.dueDate, task.dueTime, today, locale) {
-        task.dueDate?.let { date ->
-            val day = formatDueDate(context, date, today, locale)
-            task.dueTime?.let { "$day, ${formatDueTime(it, locale)}" } ?: day
-        }
-    }
-    val isOverdue = !task.isCompleted && task.dueDate?.isBefore(today) == true
-    val markerColor = task.priority.markerColor()
+    val scheme = MaterialTheme.colorScheme
+    val feather = MaterialTheme.featherColors
+
+    val due = task.dueDate?.let { dueLabelFor(it, task.dueTime, today, task.isCompleted) }
+    val waiting = due?.isWaiting == true
     val priorityLabel = task.priority.label()
+    val ringDescription = if (task.priority.barbCount() > 0) "${task.title}, $priorityLabel" else task.title
     val pinnedLabel = stringResource(R.string.pinned)
     val reminderLabel = stringResource(R.string.has_reminder)
     // A finished task no longer reminds anyone.
     val hasReminder = !task.isCompleted && task.reminders.isNotEmpty()
-    val repeatLabel = stringResource(R.string.repeat_has)
-    val repeats = !task.isCompleted && task.recurrence != null
+    val recurrence = if (task.isCompleted) null else task.recurrence
 
     val haptics = rememberHaptics()
     val openLabel = stringResource(R.string.action_open_task)
@@ -93,45 +102,45 @@ fun TaskRow(
     )
     val deleteLabel = stringResource(R.string.action_delete)
     val pinActionLabel = stringResource(if (task.isPinned) R.string.action_unpin else R.string.action_pin)
-    val overdueLabel = stringResource(R.string.scope_overdue)
+    val waitingLabel = stringResource(R.string.task_waiting)
     val moveUpLabel = stringResource(R.string.action_move_up)
     val moveDownLabel = stringResource(R.string.action_move_down)
 
-    val metaLine = listOfNotNull(listName, dueText).joinToString(" · ").ifEmpty { null }
     val subtaskTotal = task.subtasks.size
     val subtasksDone = task.subtasks.count { it.isCompleted }
-    val hasSupporting = metaLine != null || task.tags.isNotEmpty() || subtaskTotal > 0
+    val hasChips = due != null || list != null || recurrence != null || task.tags.isNotEmpty() || subtaskTotal > 0
 
-    ListItem(
-        modifier = modifier
-            .combinedClickable(
-                onClickLabel = openLabel,
-                onLongClickLabel = if (onLongClick != null) selectLabel else null,
-                onLongClick = onLongClick,
-                onClick = onClick,
-            )
-            .semantics {
-                this.selected = selected
-                if (isOverdue) stateDescription = overdueLabel
-                customActions = buildList {
-                    add(CustomAccessibilityAction(doneActionLabel) { onToggle(!task.isCompleted); true })
-                    if (onDelete != null) add(CustomAccessibilityAction(deleteLabel) { onDelete(); true })
-                    if (onPinChange != null) {
-                        add(CustomAccessibilityAction(pinActionLabel) { onPinChange(!task.isPinned); true })
+    Surface(
+        modifier = modifier.padding(horizontal = Space.gutter, vertical = Space.x1),
+        shape = RoundedCornerShape(20.dp),
+        color = if (selected) scheme.secondaryContainer else feather.card,
+        border = BorderStroke(1.dp, scheme.outlineVariant),
+    ) {
+        Row(
+            modifier = Modifier
+                .combinedClickable(
+                    onClickLabel = openLabel,
+                    onLongClickLabel = if (onLongClick != null) selectLabel else null,
+                    onLongClick = onLongClick,
+                    onClick = onClick,
+                )
+                .semantics {
+                    this.selected = selected
+                    if (waiting) stateDescription = waitingLabel
+                    customActions = buildList {
+                        add(CustomAccessibilityAction(doneActionLabel) { onToggle(!task.isCompleted); true })
+                        if (onDelete != null) add(CustomAccessibilityAction(deleteLabel) { onDelete(); true })
+                        if (onPinChange != null) {
+                            add(CustomAccessibilityAction(pinActionLabel) { onPinChange(!task.isPinned); true })
+                        }
+                        if (onMoveUp != null) add(CustomAccessibilityAction(moveUpLabel) { onMoveUp(); true })
+                        if (onMoveDown != null) add(CustomAccessibilityAction(moveDownLabel) { onMoveDown(); true })
                     }
-                    if (onMoveUp != null) add(CustomAccessibilityAction(moveUpLabel) { onMoveUp(); true })
-                    if (onMoveDown != null) add(CustomAccessibilityAction(moveDownLabel) { onMoveDown(); true })
                 }
-            },
-        colors = ListItemDefaults.colors(
-            containerColor = if (selected) {
-                MaterialTheme.colorScheme.secondaryContainer
-            } else {
-                ListItemDefaults.containerColor
-            },
-        ),
-        leadingContent = {
-            // The ring is named after its task, so it is not just "checkbox" in a list of them.
+                .padding(start = Space.x1, end = 14.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            // The ring is named after its task (and its priority), so it is not just "checkbox" in a list of them.
             CompletionRing(
                 checked = task.isCompleted,
                 onCheckedChange = { checked ->
@@ -139,58 +148,97 @@ fun TaskRow(
                     onToggle(checked)
                 },
                 ringColor = task.priority.ringColor(),
-                contentDescription = task.title,
+                contentDescription = ringDescription,
+                barbs = task.priority.barbCount(),
             )
-        },
-        headlineContent = {
-            // The strike grows across the title; a finished title is dimmed to the secondary color.
-            StrikeText(
-                text = task.title,
-                struck = task.isCompleted,
-                activeColor = MaterialTheme.colorScheme.onSurface,
-                doneColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-        supportingContent = if (hasSupporting) {
-            {
-                Column {
-                    if (metaLine != null) {
-                        Text(
-                            text = metaLine,
-                            color = if (isOverdue) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                        )
-                    }
-                    if (task.tags.isNotEmpty()) {
-                        Text(
-                            text = task.tags.joinToString("  ") { "#${it.name}" },
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    if (subtaskTotal > 0) {
-                        Text(
-                            text = stringResource(R.string.subtask_progress, subtasksDone, subtaskTotal),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = Space.x3, bottom = Space.x3),
+            ) {
+                // The strike grows across the title; a finished title is dimmed to the secondary color.
+                StrikeText(
+                    text = task.title,
+                    struck = task.isCompleted,
+                    activeColor = scheme.onSurface,
+                    doneColor = scheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (hasChips) {
+                    Spacer(Modifier.height(Space.x2))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        if (due != null) {
+                            val container = when {
+                                due.isWaiting -> scheme.surfaceVariant
+                                due.isToday -> scheme.secondaryContainer
+                                else -> scheme.surfaceContainer
+                            }
+                            val content = if (due.isToday) scheme.onSecondaryContainer else scheme.onSurfaceVariant
+                            MetaChip(text = due.chipText(), container = container, content = content)
+                        }
+                        if (list != null) {
+                            val color = list.colorIndex?.let { feather.listColors[it % feather.listColors.size] }
+                                ?: feather.prioNone
+                            MetaChip(
+                                text = list.name,
+                                container = scheme.surfaceContainer,
+                                content = scheme.onSurfaceVariant,
+                                leading = { ListShapeIcon(listShapeFor(list.colorIndex), color) },
+                            )
+                        }
+                        if (recurrence != null) {
+                            val plain = recurrence.interval == 1 && recurrence.weekdays.isEmpty() &&
+                                recurrence.until == null && recurrence.count == null &&
+                                recurrence.monthDay == null && recurrence.nthWeekday == null
+                            MetaChip(
+                                text = if (plain) stringResource(recurrence.frequency.chipLabel()) else recurrence.label(task.dueDate),
+                                container = scheme.surfaceContainer,
+                                content = scheme.onSurfaceVariant,
+                                leading = {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_repeat),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(12.dp),
+                                        tint = scheme.onSurfaceVariant,
+                                    )
+                                },
+                            )
+                        }
+                        for (tag in task.tags.take(MAX_TAG_CHIPS)) {
+                            MetaChip(
+                                text = "#${tag.name}",
+                                container = scheme.primaryContainer,
+                                content = scheme.onPrimaryContainer,
+                            )
+                        }
+                        if (task.tags.size > MAX_TAG_CHIPS) {
+                            MetaChip(
+                                text = "+${task.tags.size - MAX_TAG_CHIPS}",
+                                container = scheme.primaryContainer,
+                                content = scheme.onPrimaryContainer,
+                            )
+                        }
+                        if (subtaskTotal > 0) {
+                            MetaChip(
+                                text = stringResource(R.string.subtasks_of, subtasksDone, subtaskTotal),
+                                container = scheme.surfaceContainer,
+                                content = scheme.onSurfaceVariant,
+                                leading = { SubtaskLeaves(subtasksDone, subtaskTotal, scheme.onSurfaceVariant) },
+                            )
+                        }
                     }
                 }
             }
-        } else {
-            null
-        },
-        trailingContent = if (task.isPinned || hasReminder || repeats || markerColor != null || dragHandle != null) {
-            {
+
+            if (task.isPinned || hasReminder || dragHandle != null) {
                 Row(
+                    modifier = Modifier.height(48.dp).padding(start = Space.x2),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
@@ -199,15 +247,7 @@ fun TaskRow(
                             painter = painterResource(R.drawable.ic_pin),
                             contentDescription = pinnedLabel,
                             modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                    if (repeats) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_repeat),
-                            contentDescription = repeatLabel,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = scheme.primary,
                         )
                     }
                     if (hasReminder) {
@@ -215,22 +255,12 @@ fun TaskRow(
                             painter = painterResource(R.drawable.ic_notification),
                             contentDescription = reminderLabel,
                             modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    if (markerColor != null) {
-                        Box(
-                            Modifier
-                                .size(10.dp)
-                                .background(markerColor, CircleShape)
-                                .semantics { contentDescription = priorityLabel }
+                            tint = scheme.onSurfaceVariant,
                         )
                     }
                     dragHandle?.invoke()
                 }
             }
-        } else {
-            null
-        },
-    )
+        }
+    }
 }
