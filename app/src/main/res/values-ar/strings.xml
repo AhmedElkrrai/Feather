@@ -368,4 +368,33 @@
     <string name="shortcut_add_short">إضافة مهمة</string>
     <string name="shortcut_add_long">إضافة مهمة جديدة</string>
     <string name="quick_add_done">تمت إضافة المهمة</string>
+
+    <!-- Backup and data -->
+    <string name="settings_section_backup">النسخ الاحتياطي والبيانات</string>
+    <string name="backup_export">تصدير نسخة احتياطية</string>
+    <string name="backup_export_summary">احفظ جميع مهامك وقوائمك في ملف يمكنك الاحتفاظ به أو نقله إلى هاتف آخر.</string>
+    <string name="backup_import">استيراد نسخة احتياطية</string>
+    <string name="backup_import_summary">استعد المهام من ملف نسخة احتياطية من Feather.</string>
+    <string name="backup_csv">تصدير المهام بصيغة CSV</string>
+    <string name="backup_csv_summary">قائمة بمهامك لاستخدامها في جدول بيانات.</string>
+    <string name="backup_import_title">استيراد نسخة احتياطية</string>
+    <string name="backup_import_message">كيف تريد دمج النسخة الاحتياطية مع المهام الموجودة على هذا الهاتف؟</string>
+    <string name="backup_import_merge">دمج</string>
+    <string name="backup_import_merge_detail">الاحتفاظ بالاثنين. إذا وُجدت مهمة في الاثنين فسيُعتمد أحدث تعديل.</string>
+    <string name="backup_import_replace">استبدال كل شيء</string>
+    <string name="backup_import_replace_detail">سيتم حذف جميع المهام والقوائم والوسوم على هذا الهاتف أولًا.</string>
+    <string name="action_import">استيراد</string>
+    <string name="backup_done_export">تم حفظ النسخة الاحتياطية</string>
+    <string name="backup_done_csv">تم حفظ ملف CSV</string>
+    <plurals name="backup_done_import">
+        <item quantity="zero">تم استيراد %d مهمة</item>
+        <item quantity="one">تم استيراد مهمة واحدة</item>
+        <item quantity="two">تم استيراد مهمتين</item>
+        <item quantity="few">تم استيراد %d مهام</item>
+        <item quantity="many">تم استيراد %d مهمة</item>
+        <item quantity="other">تم استيراد %d مهمة</item>
+    </plurals>
+    <string name="backup_error_not_backup">هذا الملف ليس نسخة احتياطية من Feather.</string>
+    <string name="backup_error_too_new">أُنشئت هذه النسخة بإصدار أحدث من Feather. حدّث التطبيق لاستيرادها.</string>
+    <string name="backup_error_failed">لم تنجح العملية. لم يتغير شيء.</string>
 </resources>

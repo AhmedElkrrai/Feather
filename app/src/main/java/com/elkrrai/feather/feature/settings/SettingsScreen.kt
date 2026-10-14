@@ -1,5 +1,9 @@
 package com.elkrrai.feather.feature.settings
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -23,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,6 +51,7 @@ import com.elkrrai.feather.domain.settings.SNOOZE_MINUTE_OPTIONS
 import com.elkrrai.feather.ui.components.TimeOfDayDialog
 import com.elkrrai.feather.ui.components.rememberReminderHealth
 import com.elkrrai.feather.ui.format.formatDueTime
+import java.time.LocalDate
 import java.time.LocalTime
 
 @Composable
@@ -53,9 +60,31 @@ fun SettingsScreen(
     onOpenReliability: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
+    backupViewModel: BackupViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val health by rememberReminderHealth()
+    val backupState by backupViewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    // The file the user picked to import, kept as text so it survives rotation while the dialog is open.
+    var pendingImport by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri -> if (uri != null) backupViewModel.exportTo(uri) }
+    val csvLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv"),
+    ) { uri -> if (uri != null) backupViewModel.exportCsvTo(uri) }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri -> if (uri != null) pendingImport = uri.toString() }
+
+    LaunchedEffect(backupState.result) {
+        backupState.result?.let { result ->
+            Toast.makeText(context, backupMessage(context, result), Toast.LENGTH_LONG).show()
+            backupViewModel.resultShown()
+        }
+    }
 
     SettingsContent(
         settings = settings,
@@ -66,8 +95,24 @@ fun SettingsScreen(
         onSnoozeMinutesChange = viewModel::setSnoozeMinutes,
         onDailySummaryChange = viewModel::setDailySummaryEnabled,
         onDailySummaryTimeChange = viewModel::setDailySummaryTime,
+        backup = BackupActions(
+            onExport = { exportLauncher.launch("feather-backup-${LocalDate.now()}.json") },
+            onImport = { importLauncher.launch(arrayOf("*/*")) },
+            onExportCsv = { csvLauncher.launch("feather-tasks-${LocalDate.now()}.csv") },
+        ),
+        backupBusy = backupState.busy,
         modifier = modifier,
     )
+
+    pendingImport?.let { picked ->
+        ImportModeDialog(
+            onConfirm = { mode ->
+                backupViewModel.importFrom(Uri.parse(picked), mode)
+                pendingImport = null
+            },
+            onDismiss = { pendingImport = null },
+        )
+    }
 }
 
 /** Stateless settings screen, so it can be previewed and tested. */
@@ -83,6 +128,8 @@ fun SettingsContent(
     onDailySummaryChange: (Boolean) -> Unit,
     onDailySummaryTimeChange: (LocalTime) -> Unit,
     modifier: Modifier = Modifier,
+    backup: BackupActions = BackupActions(),
+    backupBusy: Boolean = false,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val resources = LocalContext.current.resources
@@ -110,6 +157,8 @@ fun SettingsContent(
                 .padding(padding)
                 .verticalScroll(rememberScrollState()),
         ) {
+            if (backupBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
+
             SectionTitle(stringResource(R.string.settings_section_reminders))
 
             SettingsRow(
@@ -155,6 +204,8 @@ fun SettingsContent(
                 supporting = null,
                 onClick = onOpenReliability,
             )
+
+            BackupRows(backup)
 
             SectionTitle(stringResource(R.string.settings_section_general))
 
@@ -205,7 +256,7 @@ fun SettingsContent(
 private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Language }
 
 @Composable
-private fun SectionTitle(text: String) {
+internal fun SectionTitle(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
@@ -215,7 +266,7 @@ private fun SectionTitle(text: String) {
 }
 
 @Composable
-private fun SettingsRow(
+internal fun SettingsRow(
     title: String,
     summary: String?,
     supporting: String?,

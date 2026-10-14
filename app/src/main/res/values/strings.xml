@@ -312,4 +312,29 @@
     <string name="shortcut_add_short">Add task</string>
     <string name="shortcut_add_long">Add a task</string>
     <string name="quick_add_done">Task added</string>
+
+    <!-- Backup and data -->
+    <string name="settings_section_backup">Backup and data</string>
+    <string name="backup_export">Export backup</string>
+    <string name="backup_export_summary">Save all your tasks and lists to a file you can keep or move to another phone.</string>
+    <string name="backup_import">Import backup</string>
+    <string name="backup_import_summary">Bring in tasks from a Feather backup file.</string>
+    <string name="backup_csv">Export tasks as CSV</string>
+    <string name="backup_csv_summary">A list of your tasks for a spreadsheet.</string>
+    <string name="backup_import_title">Import backup</string>
+    <string name="backup_import_message">How should the backup be combined with the tasks on this phone?</string>
+    <string name="backup_import_merge">Merge</string>
+    <string name="backup_import_merge_detail">Keep both. If a task is in both, the newest edit wins.</string>
+    <string name="backup_import_replace">Replace everything</string>
+    <string name="backup_import_replace_detail">All tasks, lists and tags on this phone are deleted first.</string>
+    <string name="action_import">Import</string>
+    <string name="backup_done_export">Backup saved</string>
+    <string name="backup_done_csv">CSV file saved</string>
+    <plurals name="backup_done_import">
+        <item quantity="one">Imported %d task</item>
+        <item quantity="other">Imported %d tasks</item>
+    </plurals>
+    <string name="backup_error_not_backup">This file is not a Feather backup.</string>
+    <string name="backup_error_too_new">This backup was made by a newer version of Feather. Update the app to import it.</string>
+    <string name="backup_error_failed">That did not work. Nothing was changed.</string>
 </resources>
