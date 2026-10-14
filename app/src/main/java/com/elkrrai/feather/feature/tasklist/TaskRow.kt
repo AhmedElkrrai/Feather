@@ -54,6 +54,7 @@ import com.elkrrai.feather.ui.theme.Space
 import com.elkrrai.feather.ui.theme.featherColors
 import com.elkrrai.feather.ui.theme.listShapeFor
 import java.time.LocalDate
+import androidx.compose.ui.geometry.Offset
 
 /** The list a task belongs to, as the row shows it: its name and which of the eight list colors it has. */
 data class ListLabel(val name: String, val colorIndex: Int?)
@@ -82,6 +83,8 @@ fun TaskRow(
     selected: Boolean = false,
     /** The task was just added: its card is tinted, then fades back to normal over 800 ms. */
     highlighted: Boolean = false,
+    /** Called with the ring's position (window pixels) when the task is finished, to start the confetti. */
+    onCelebrate: (Offset) -> Unit = {},
     /** A long press, used to start selecting; null leaves the row without one. */
     onLongClick: (() -> Unit)? = null,
     /** The grip shown at the end of the row while the list can be reordered. */
@@ -166,6 +169,7 @@ fun TaskRow(
                 ringColor = task.priority.ringColor(),
                 contentDescription = ringDescription,
                 barbs = task.priority.barbCount(),
+                onCelebrate = onCelebrate,
             )
 
             Column(

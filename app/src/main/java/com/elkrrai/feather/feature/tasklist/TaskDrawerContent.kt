@@ -77,7 +77,7 @@ fun TaskDrawerContent(
     ) {
         Text(
             text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
         )
 
@@ -185,11 +185,12 @@ fun TaskDrawerContent(
 
 @Composable
 private fun SectionHeader(@StringRes textRes: Int) {
+    // Section titles are set apart from the items under them: the display face, in the primary color.
     Text(
         text = stringResource(textRes),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp).semantics { heading() },
+        style = MaterialTheme.typography.headlineSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 16.dp, bottom = 4.dp).semantics { heading() },
     )
 }
 
@@ -256,7 +257,7 @@ private fun DrawerItem(
     menu: List<MenuAction> = emptyList(),
 ) {
     NavigationDrawerItem(
-        label = { Text(label, maxLines = 1) },
+        label = { Text(label, maxLines = 1, style = MaterialTheme.typography.bodyLarge) },
         selected = selected,
         onClick = onClick,
         modifier = modifier,

@@ -90,6 +90,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.annotation.StringRes
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.ui.brand.scenes.SceneKind
+import androidx.compose.ui.geometry.Offset
+import com.elkrrai.feather.ui.DisplayPrefs
+import com.elkrrai.feather.ui.components.ConfettiBurst
+import com.elkrrai.feather.ui.components.FeatherConfettiOverlay
 
 @Composable
 fun TaskListScreen(
@@ -113,6 +117,10 @@ fun TaskListScreen(
     var filterDialog by remember { mutableStateOf<FilterDialogState?>(null) }
     // Counts up each time a task is finished; the bird hops over the list for each step.
     var celebration by remember { mutableIntStateOf(0) }
+    // Feather confetti: where the last one started, and how many there have been.
+    var confetti by remember { mutableStateOf<ConfettiBurst?>(null) }
+    var confettiCount by remember { mutableIntStateOf(0) }
+    val reduceMotion = rememberReduceMotion()
 
     val selectionActions = SelectionActions(
         onToggle = viewModel::toggleSelected,
@@ -217,7 +225,11 @@ fun TaskListScreen(
             onPinChange = { task, pinned -> viewModel.setPinned(task.id, pinned) },
             selectionActions = selectionActions,
             onReorder = viewModel::reorderTasks,
+            onCelebrate = { origin ->
+                if (DisplayPrefs.celebrations && !reduceMotion) confetti = ConfettiBurst(++confettiCount, origin)
+            },
         )
+        FeatherConfettiOverlay(confetti)
         CompletionBird(
             trigger = celebration,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
@@ -330,6 +342,7 @@ fun TaskListContent(
     onPinChange: (Task, Boolean) -> Unit = { _, _ -> },
     selectionActions: SelectionActions = SelectionActions(),
     onReorder: (List<String>) -> Unit = {},
+    onCelebrate: (Offset) -> Unit = {},
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
@@ -431,7 +444,7 @@ fun TaskListContent(
             state.isLoading -> Box(Modifier.fillMaxSize().padding(padding))
 
             // Today keeps its header (and its message) instead of an empty-state picture.
-            state.isEmpty && !todayView -> {
+            state.isEmpty && !todayView && state.doneTasks.isEmpty() -> {
                 val copy = state.scope.emptyCopy()
                 EmptyState(
                     scene = copy.scene,
@@ -450,6 +463,10 @@ fun TaskListContent(
                     bottom = padding.calculateBottomPadding() + 88.dp,
                 ),
             ) {
+                // Everything here is finished: say so, above the Done section.
+                if (state.isEmpty && !todayView && state.doneTasks.isNotEmpty()) {
+                    item(key = "all-done-note") { AllDoneNote() }
+                }
                 state.sections.forEach { section ->
                     if (section.date != null) {
                         item(key = "header-${section.date}") {
@@ -509,6 +526,7 @@ fun TaskListContent(
                                 },
                                 selected = task.id in state.selection,
                                 highlighted = task.id == state.justAddedId,
+                                onCelebrate = onCelebrate,
                                 dragHandle = if (reorderable) ({ DragHandle(reorder, task.id) }) else null,
                                 onMoveUp = if (reorderable) ({ reorder.moveBy(task.id, -1) }) else null,
                                 onMoveDown = if (reorderable) ({ reorder.moveBy(task.id, 1) }) else null,
@@ -523,17 +541,20 @@ fun TaskListContent(
                         }
                     }
                 }
-                if (todayView && state.doneToday.isNotEmpty()) {
+                if (state.doneTasks.isNotEmpty()) {
                     item(key = "done-today-pill") {
                         DoneTodayPill(
-                            count = state.doneToday.size,
+                            label = stringResource(
+                                if (todayView) R.string.done_today_pill else R.string.done_pill,
+                                state.doneTasks.size,
+                            ),
                             expanded = doneExpanded,
                             onClick = { doneExpanded = !doneExpanded },
                             modifier = Modifier.animateItem(),
                         )
                     }
                     if (doneExpanded) {
-                        items(state.doneToday, key = { "done-${it.id}" }) { task ->
+                        items(state.doneTasks, key = { "done-${it.id}" }) { task ->
                             TaskRow(
                                 task = task,
                                 today = today,

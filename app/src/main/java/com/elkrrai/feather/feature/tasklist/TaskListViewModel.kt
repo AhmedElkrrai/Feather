@@ -57,8 +57,12 @@ data class TaskListUiState(
     val selection: Set<String> = emptySet(),
     /** How today is going, for the Today header: what is left and what was finished. */
     val today: TodayStatus = TodayStatus(),
-    /** Tasks finished today, newest first; filled for the Today view only. */
-    val doneToday: List<Task> = emptyList(),
+    /**
+     * The finished tasks of this view, newest first, shown in the Done section under the list: the
+     * tasks finished today in the Today view, and the completed tasks of a list, tag, filter or
+     * All. Empty for the Completed view (which is all of them) and for views that never list them.
+     */
+    val doneTasks: List<Task> = emptyList(),
     /** The task that was just added from quick add; its card glows for a moment. */
     val justAddedId: String? = null,
 ) {
@@ -116,10 +120,19 @@ class TaskListViewModel @Inject constructor(
         }
 
         val visible = d.tasks.inScope(scope, today).sortedWith(sort.comparator())
-        val sections = if (scope == TaskScope.Upcoming) {
-            visible.groupedByDay().map { TaskSection(it.date, it.tasks) }
+        // Lists, tags, filters and All keep their finished tasks apart, in the Done section.
+        val splitsDone = scope is TaskScope.InList || scope is TaskScope.WithTag ||
+            scope is TaskScope.Filtered || scope == TaskScope.All
+        val open = if (splitsDone) visible.filter { !it.isCompleted } else visible
+        val doneInView = if (splitsDone) {
+            visible.filter { it.isCompleted }.sortedByDescending { it.completedAt }
         } else {
-            listOf(TaskSection(null, visible))
+            emptyList()
+        }
+        val sections = if (scope == TaskScope.Upcoming) {
+            open.groupedByDay().map { TaskSection(it.date, it.tasks) }
+        } else {
+            listOf(TaskSection(null, open))
         }
 
         val countedScopes: List<TaskScope> = listOf(
@@ -148,7 +161,11 @@ class TaskListViewModel @Inject constructor(
             counts = countedScopes.associateWith { d.tasks.openCountIn(it, today) },
             selection = picked.intersect(visible.map { it.id }.toSet()),
             today = TodayStatus(left = d.tasks.openCountIn(TaskScope.Today, today), done = finishedToday.size),
-            doneToday = if (scope == TaskScope.Today) finishedToday else emptyList(),
+            doneTasks = when {
+                scope == TaskScope.Today -> finishedToday
+                splitsDone -> doneInView
+                else -> emptyList()
+            },
         )
     }
 

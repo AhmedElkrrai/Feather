@@ -12,7 +12,6 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,15 +30,14 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.elkrrai.feather.ui.DisplayPrefs
 import com.elkrrai.feather.ui.rememberReduceMotion
 import com.elkrrai.feather.ui.theme.Dur
 import com.elkrrai.feather.ui.theme.Ease
-import com.elkrrai.feather.ui.theme.Nest
-import com.elkrrai.feather.ui.theme.featherColors
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 
 /** The ring and the check are drawn in a 26 by 26 box, whatever size they end up at. */
 private const val RING_BOX = 26f
@@ -55,17 +53,12 @@ private val CheckPoints = listOf(Offset(7.4f, 13.6f), Offset(11.4f, 17.6f), Offs
 private const val SQUEEZE_SCALE = 0.9f
 private const val POP_SCALE = 1.12f
 
-/** The feathers leave 120 ms after the tap and take 580 ms, so the whole burst ends 700 ms in. */
-private const val BURST_DELAY = 120L
-private const val BURST_MILLIS = 580
-private const val BURST_FEATHERS = 7
-
 /**
  * The round control that finishes a task. 48dp to touch, a 26dp ring to look at, in [ringColor]
  * (the task's priority). Finishing squeezes the ring, fills it with the primary color, pops it and
- * draws the check as a stroke, and a few leaf-feathers fly out (when Little celebrations is on);
- * undoing erases the check. With reduced motion the ring is filled at once, the check fades in over
- * 90ms and a soft halo replaces the feathers.
+ * draws the check as a stroke; undoing erases the check. The feather confetti is the screen's: the
+ * ring only says where it is ([onCelebrate]). With reduced motion the ring is filled at once and the
+ * check fades in over 90ms.
  *
  * [contentDescription] should be the task's title, so screen readers announce which task the
  * control belongs to.
@@ -79,16 +72,15 @@ fun CompletionRing(
     modifier: Modifier = Modifier,
     /** Priority strokes inside the ring: 0 for none up to 3 (see [barbCount]). */
     barbs: Int = 0,
+    /** Called with the ring's middle (window pixels) when the person finishes the task, to start the confetti. */
+    onCelebrate: (Offset) -> Unit = {},
 ) {
     val reduceMotion = rememberReduceMotion()
     val fill = remember { Animatable(if (checked) 1f else 0f) }
     val check = remember { Animatable(if (checked) 1f else 0f) }
     val pressScale = remember { Animatable(1f) }
-    val burst = remember { Animatable(0f) }
-    var burstRuns by remember { mutableIntStateOf(0) }
-    val colors = MaterialTheme.featherColors
-    val burstColors = remember(colors) { listOf(Nest.SkyWing, colors.amberFill, colors.coralFill, colors.listColors[3]) }
-    val particles = remember { burstParticles(BURST_FEATHERS, colors = 4) }
+    // Where the ring is in the window, so the confetti can start from it.
+    var centerInRoot by remember { mutableStateOf(Offset.Zero) }
     val ticks = remember(barbs) { barbTicks(barbs) }
 
     LaunchedEffect(checked, reduceMotion) {
@@ -119,19 +111,6 @@ fun CompletionRing(
         }
     }
 
-    // Each tap that finishes the task starts one burst (nothing happens when a finished row first appears).
-    LaunchedEffect(burstRuns) {
-        if (burstRuns == 0 || !DisplayPrefs.celebrations) return@LaunchedEffect
-        burst.snapTo(0f)
-        if (reduceMotion) {
-            burst.animateTo(1f, tween(BURST_DELAY.toInt()))
-        } else {
-            delay(BURST_DELAY)
-            burst.animateTo(1f, tween(BURST_MILLIS, easing = Ease.Settle))
-        }
-        burst.snapTo(0f)
-    }
-
     val primary = MaterialTheme.colorScheme.primary
     val onPrimary = MaterialTheme.colorScheme.onPrimary
     val checkPath = remember { Path() }
@@ -147,20 +126,14 @@ fun CompletionRing(
     Box(
         modifier = modifier
             .size(48.dp)
-            .then(
-                if (reduceMotion) {
-                    Modifier.halo({ burst.value }, primary)
-                } else {
-                    Modifier.featherBurst({ burst.value }, particles, burstColors)
-                }
-            )
+            .onGloballyPositioned { centerInRoot = it.positionInRoot() + Offset(it.size.width / 2f, it.size.height / 2f) }
             .toggleable(
                 value = checked,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(bounded = false, radius = 24.dp),
                 role = Role.Checkbox,
                 onValueChange = { value ->
-                    if (value) burstRuns++
+                    if (value) onCelebrate(centerInRoot)
                     onCheckedChange(value)
                 },
             )

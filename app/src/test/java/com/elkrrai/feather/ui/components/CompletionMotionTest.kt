@@ -48,51 +48,79 @@ class CompletionMotionTest {
         assertEquals(listOf(0f, 0f), strikeFractions(listOf(0f, 0f), 1f))
     }
 
-    // --- the feather burst ---
+    // --- the feather confetti ---
 
     @Test
-    fun theBurstHasTheRequestedNumberOfFeathersAndTheFirstFliesUp() {
-        val particles = burstParticles(7)
+    fun theConfettiHasTheRequestedNumberOfFeathersAllDifferent() {
+        val pieces = confettiPieces(28)
 
-        assertEquals(7, particles.size)
-        assertEquals(-90f, particles.first().angleDegrees, tolerance)
+        assertEquals(28, pieces.size)
+        assertEquals(28, pieces.map { it.angleDegrees }.toSet().size)
     }
 
     @Test
-    fun feathersTakeTheBurstColorsInTurn() {
-        val particles = burstParticles(7, colors = 4)
-
-        assertEquals(listOf(0, 1, 2, 3, 0, 1, 2), particles.map { it.colorIndex })
-    }
-
-    @Test
-    fun feathersFlyBetween28And52DpAndSpinNoMoreThan40Degrees() {
-        for (particle in burstParticles(7)) {
-            assertTrue(particle.distanceDp in 28f..52f)
-            assertTrue(particle.spinDegrees in -40f..40f)
-            assertTrue(particle.sizeDp > 0f)
+    fun feathersAreThrownUpInAFan() {
+        for (piece in confettiPieces()) {
+            // Between about 165 and 15 degrees above the horizontal, never downward.
+            assertTrue(piece.angleDegrees in -166f..-14f)
+            assertTrue(piece.speedDp in 300f..580f)
+            assertTrue(piece.sizeDp in 13f..21f)
         }
     }
 
     @Test
-    fun theDirectionsAreAllDifferent() {
-        val angles = burstParticles(7).map { it.angleDegrees }
-
-        assertEquals(angles.size, angles.toSet().size)
+    fun feathersTakeTheColorsInTurn() {
+        assertEquals(listOf(0, 1, 2, 3, 4, 5, 0), confettiPieces(7, colors = 6).map { it.colorIndex })
     }
 
     @Test
-    fun aSmallerBurstForSlowPhonesStillWorks() {
-        assertEquals(3, burstParticles(3).size)
+    fun aFeatherStartsWhereItWasThrown() {
+        val (x, y) = confettiOffset(confettiPieces().first(), 0f)
+
+        assertEquals(0f, x, tolerance)
+        assertEquals(0f, y, tolerance)
     }
 
     @Test
-    fun theBurstIsFullStrengthThenFadesOverTheLast40Percent() {
-        assertEquals(1f, burstAlpha(0f), tolerance)
-        assertEquals(1f, burstAlpha(0.6f), tolerance)
-        assertEquals(0.5f, burstAlpha(0.8f), tolerance)
-        assertEquals(0f, burstAlpha(1f), tolerance)
-        assertEquals(1f, burstAlpha(-1f), tolerance)
-        assertEquals(0f, burstAlpha(2f), tolerance)
+    fun aFeatherRisesFirstAndSinksLater() {
+        // Thrown mostly upward: early on it is above where it started, and by the end it has fallen below it.
+        val piece = confettiPieces().first { it.angleDegrees < -80f && it.angleDegrees > -100f }
+
+        assertTrue(confettiOffset(piece, 0.3f).second < 0f)
+        assertTrue(confettiOffset(piece, CONFETTI_SECONDS).second > confettiOffset(piece, 0.3f).second)
+    }
+
+    @Test
+    fun aFeatherSlowsDownInTheAir() {
+        val piece = confettiPieces().first()
+        val early = confettiOffset(piece, 0.1f).first - confettiOffset(piece, 0f).first
+        val later = confettiOffset(piece, 1.1f).first - confettiOffset(piece, 1.0f).first
+
+        assertTrue(Math.abs(later) < Math.abs(early) + 5f)
+    }
+
+    @Test
+    fun aFeatherIsFullStrengthThenFadesAndIsGoneAtTheEndOfItsLife() {
+        val piece = ConfettiPiece(-90f, 400f, 200f, 8f, 1.5f, 16f, 0, life = 1f)
+
+        assertEquals(1f, confettiAlpha(piece, 0f), tolerance)
+        assertEquals(1f, confettiAlpha(piece, 0.7f), tolerance)
+        assertEquals(0.5f, confettiAlpha(piece, 0.85f), tolerance)
+        assertEquals(0f, confettiAlpha(piece, 1f), tolerance)
+    }
+
+    @Test
+    fun aShorterLivedFeatherFadesSooner() {
+        val short = ConfettiPiece(-90f, 400f, 200f, 8f, 1.5f, 16f, 0, life = 0.75f)
+
+        assertEquals(0f, confettiAlpha(short, 0.8f), tolerance)
+        assertEquals(1f, confettiAlpha(short, 0.5f), tolerance)
+    }
+
+    @Test
+    fun noFeatherLivesPastTheEndOfTheBurst() {
+        for (piece in confettiPieces()) {
+            assertEquals(0f, confettiAlpha(piece, 1f), tolerance)
+        }
     }
 }

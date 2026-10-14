@@ -212,14 +212,15 @@ class TaskListViewModelTest {
     }
 
     @Test
-    fun completingMovesTheTaskBelowOpenOnes() = runTest {
+    fun completingMovesTheTaskToTheDoneSection() = runTest {
         val first = tasks.addTask(inbox, "First")
         tasks.addTask(inbox, "Second")
         val viewModel = newViewModel()
 
         viewModel.setCompleted(first.id, true)
 
-        assertEquals(listOf("Second", "First"), viewModel.titles())
+        assertEquals(listOf("Second"), viewModel.titles())
+        assertEquals(listOf("First"), viewModel.uiState.value.doneTasks.map { it.title })
     }
 
     @Test

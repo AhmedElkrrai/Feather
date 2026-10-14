@@ -20,14 +20,19 @@ import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
 import com.elkrrai.feather.ui.theme.Pebble
 import com.elkrrai.feather.ui.theme.Space
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.text.style.TextAlign
+import com.elkrrai.feather.ui.brand.scenes.Illustration
+import com.elkrrai.feather.ui.brand.scenes.SceneKind
 
 /**
- * "Done today · 3": a quiet pill under the Today list. Tapping it shows or hides the tasks that
- * were finished today, where the ring undoes one.
+ * "Done today · 3" or "Done · 3": a quiet pill under a list. Tapping it shows or hides the finished
+ * tasks, where the ring undoes one.
  */
 @Composable
 fun DoneTodayPill(
-    count: Int,
+    label: String,
     expanded: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -50,10 +55,29 @@ fun DoneTodayPill(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = stringResource(R.string.done_today_pill, count),
+                text = label,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+}
+
+/** Shown above the Done pill when everything in a list is finished: the nest with all its eggs. */
+@Composable
+fun AllDoneNote(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = Space.gutter, vertical = Space.x6),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
+    ) {
+        Illustration(SceneKind.AllDone, size = 140.dp)
+        Text(
+            text = stringResource(R.string.scene_all_done),
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+        )
     }
 }
