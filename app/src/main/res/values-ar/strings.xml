@@ -417,4 +417,22 @@
 
     <string name="widget_quick_add_label">Feather: إضافة مهمة</string>
     <string name="widget_quick_add_description">نقرة واحدة لإضافة مهمة.</string>
+
+    <!-- Appearance and formats -->
+    <string name="settings_section_appearance">المظهر والتنسيقات</string>
+    <string name="settings_theme">السمة</string>
+    <string name="theme_system">اتباع النظام</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="settings_pure_black">الأسود الخالص</string>
+    <string name="settings_pure_black_summary">استخدم الأسود الخالص في الوضع الداكن لتوفير البطارية على شاشات OLED.</string>
+    <string name="settings_dynamic_color">ألوان Material You</string>
+    <string name="settings_dynamic_color_summary">استخدم ألوان خلفية الشاشة (أندرويد 12 وما بعده).</string>
+    <string name="settings_time_format">تنسيق الوقت</string>
+    <string name="format_system">اتباع النظام</string>
+    <string name="time_format_12">12 ساعة</string>
+    <string name="time_format_24">24 ساعة</string>
+    <string name="settings_week_start">أول أيام الأسبوع</string>
+    <string name="settings_haptics">الاستجابة اللمسية</string>
+    <string name="settings_haptics_summary">اهتزاز خفيف عند إنجاز مهمة أو تحديدها أو نقلها.</string>
 </resources>

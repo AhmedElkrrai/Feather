@@ -1,8 +1,12 @@
 package com.elkrrai.feather
 
 import android.app.Application
+import androidx.appcompat.app.AppCompatDelegate
 import com.elkrrai.feather.data.backup.BackupWorker
 import com.elkrrai.feather.domain.repository.ListRepository
+import com.elkrrai.feather.domain.settings.AppSettings
+import com.elkrrai.feather.domain.settings.ThemeMode
+import com.elkrrai.feather.ui.DisplayPrefs
 import com.elkrrai.feather.domain.repository.TaskRepository
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.reminders.ReminderChannels
@@ -15,6 +19,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -32,6 +38,14 @@ class FeatherApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // The saved theme and formats are applied before the first screen so nothing flashes in
+        // the wrong colors. One small read of a cached settings file, on the main thread.
+        applyAppearance(runBlocking { settingsRepository.current() })
+        appScope.launch {
+            settingsRepository.settings.collect { settings ->
+                withContext(Dispatchers.Main) { applyAppearance(settings) }
+            }
+        }
         // Channel names follow the app language, so refresh them on every start.
         ReminderChannels.ensure(withAppLocale())
         appScope.launch {
@@ -51,5 +65,17 @@ class FeatherApp : Application() {
                 .distinctUntilChanged()
                 .collect { BackupWorker.schedule(this@FeatherApp, it) }
         }
+    }
+
+    /** Light or dark through AppCompat (so system bars and dialogs follow too), plus the display choices. */
+    private fun applyAppearance(settings: AppSettings) {
+        DisplayPrefs.update(settings)
+        AppCompatDelegate.setDefaultNightMode(
+            when (settings.themeMode) {
+                ThemeMode.SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                ThemeMode.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
+                ThemeMode.DARK -> AppCompatDelegate.MODE_NIGHT_YES
+            }
+        )
     }
 }

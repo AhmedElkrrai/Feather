@@ -357,4 +357,22 @@
 
     <string name="widget_quick_add_label">Feather: Add task</string>
     <string name="widget_quick_add_description">One tap to add a task.</string>
+
+    <!-- Appearance and formats -->
+    <string name="settings_section_appearance">Appearance and formats</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_system">Follow system</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_pure_black">Pure black</string>
+    <string name="settings_pure_black_summary">Use true black in dark mode to save battery on OLED screens.</string>
+    <string name="settings_dynamic_color">Material You colors</string>
+    <string name="settings_dynamic_color_summary">Use colors from your wallpaper (Android 12 and newer).</string>
+    <string name="settings_time_format">Time format</string>
+    <string name="format_system">Follow system</string>
+    <string name="time_format_12">12-hour</string>
+    <string name="time_format_24">24-hour</string>
+    <string name="settings_week_start">First day of the week</string>
+    <string name="settings_haptics">Haptic feedback</string>
+    <string name="settings_haptics_summary">A light vibration when you finish, select or move a task.</string>
 </resources>

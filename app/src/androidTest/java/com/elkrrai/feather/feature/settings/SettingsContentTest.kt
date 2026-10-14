@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.platform.app.InstrumentationRegistry
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.settings.AppSettings
@@ -50,7 +51,8 @@ class SettingsContentTest {
         rule.onNodeWithText(string(R.string.settings_default_time)).assertIsDisplayed()
         rule.onNodeWithText(string(R.string.settings_snooze_length)).assertIsDisplayed()
         rule.onNodeWithText(string(R.string.settings_daily_summary)).assertIsDisplayed()
-        rule.onNodeWithText(string(R.string.settings_language)).assertIsDisplayed()
+        // The language row is far down the list; scroll to it first.
+        rule.onNodeWithText(string(R.string.settings_language)).performScrollTo().assertIsDisplayed()
     }
 
     @Test

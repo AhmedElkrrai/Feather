@@ -13,6 +13,7 @@ import com.elkrrai.feather.domain.recurrence.Frequency
 import com.elkrrai.feather.domain.recurrence.NthWeekday
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.domain.recurrence.RepeatMode
+import com.elkrrai.feather.ui.firstDayOfWeek
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -75,7 +76,7 @@ private fun Recurrence.detail(context: Context, locale: Locale, reference: Local
         }
     }
 
-/** "Mon, Wed", starting the week on the locale's first day. */
+/** "Mon, Wed", starting the week on the chosen first day. */
 fun weekdayList(context: Context, locale: Locale, days: Set<DayOfWeek>): String {
     val separator = context.getString(R.string.repeat_list_separator)
     return days
@@ -83,11 +84,9 @@ fun weekdayList(context: Context, locale: Locale, days: Set<DayOfWeek>): String 
         .joinToString(separator) { it.getDisplayName(TextStyle.SHORT, locale) }
 }
 
-/** Position of [day] in a week that starts on the locale's first day of the week (0 to 6). */
-fun orderInWeek(day: DayOfWeek, locale: Locale): Int {
-    val first = java.time.temporal.WeekFields.of(locale).firstDayOfWeek
-    return Math.floorMod(day.value - first.value, 7)
-}
+/** Position of [day] in a week that starts on the chosen first day of the week (0 to 6). */
+fun orderInWeek(day: DayOfWeek, locale: Locale): Int =
+    Math.floorMod(day.value - firstDayOfWeek(locale).value, 7)
 
 /** "the 2nd Tuesday" or "the last Friday", in the word order of the language. */
 fun NthWeekday.label(context: Context, locale: Locale): String =

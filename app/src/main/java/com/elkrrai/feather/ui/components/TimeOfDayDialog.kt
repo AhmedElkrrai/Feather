@@ -1,6 +1,5 @@
 package com.elkrrai.feather.ui.components
 
-import android.text.format.DateFormat
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -11,9 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.elkrrai.feather.R
+import com.elkrrai.feather.ui.use24HourClock
 import java.time.LocalTime
 
-/** A clock dialog that follows the phone's 12 or 24 hour setting. */
+/** A clock dialog that follows the 12 or 24 hour choice in Settings (the phone's own by default). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeOfDayDialog(
@@ -25,7 +25,7 @@ fun TimeOfDayDialog(
     val timeState = rememberTimePickerState(
         initialHour = initial.hour,
         initialMinute = initial.minute,
-        is24Hour = DateFormat.is24HourFormat(context),
+        is24Hour = use24HourClock(context),
     )
     AlertDialog(
         onDismissRequest = onDismiss,

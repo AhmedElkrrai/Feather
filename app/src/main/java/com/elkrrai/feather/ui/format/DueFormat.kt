@@ -2,6 +2,8 @@ package com.elkrrai.feather.ui.format
 
 import android.content.Context
 import com.elkrrai.feather.R
+import com.elkrrai.feather.domain.settings.TimeFormat
+import com.elkrrai.feather.ui.DisplayPrefs
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -24,5 +26,11 @@ fun formatDayHeader(context: Context, date: LocalDate, today: LocalDate, locale:
         else -> DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(date)
     }
 
-fun formatDueTime(time: LocalTime, locale: Locale): String =
-    DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale).format(time)
+fun formatDueTime(time: LocalTime, locale: Locale): String {
+    val formatter = when (DisplayPrefs.timeFormat) {
+        TimeFormat.SYSTEM -> DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
+        TimeFormat.H12 -> DateTimeFormatter.ofPattern("h:mm a", locale)
+        TimeFormat.H24 -> DateTimeFormatter.ofPattern("HH:mm", locale)
+    }
+    return formatter.format(time)
+}

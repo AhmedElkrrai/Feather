@@ -9,6 +9,9 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.SettingsRepository
+import com.elkrrai.feather.domain.settings.ThemeMode
+import com.elkrrai.feather.domain.settings.TimeFormat
+import com.elkrrai.feather.domain.settings.WeekStart
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +30,12 @@ class DataStoreSettingsRepository @Inject constructor(
         val autoBackupEnabled = booleanPreferencesKey("auto_backup_enabled")
         val backupFolder = stringPreferencesKey("backup_folder")
         val lastBackupAt = longPreferencesKey("last_backup_at")
+        val themeMode = stringPreferencesKey("theme_mode")
+        val pureBlack = booleanPreferencesKey("pure_black")
+        val dynamicColor = booleanPreferencesKey("dynamic_color")
+        val timeFormat = stringPreferencesKey("time_format")
+        val weekStart = stringPreferencesKey("week_start")
+        val haptics = booleanPreferencesKey("haptics")
     }
 
     override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
@@ -39,6 +48,12 @@ class DataStoreSettingsRepository @Inject constructor(
             autoBackupEnabled = prefs[Keys.autoBackupEnabled] ?: defaults.autoBackupEnabled,
             backupFolder = prefs[Keys.backupFolder],
             lastBackupAt = prefs[Keys.lastBackupAt],
+            themeMode = prefs.enumOf(Keys.themeMode, defaults.themeMode),
+            pureBlack = prefs[Keys.pureBlack] ?: defaults.pureBlack,
+            dynamicColor = prefs[Keys.dynamicColor] ?: defaults.dynamicColor,
+            timeFormat = prefs.enumOf(Keys.timeFormat, defaults.timeFormat),
+            weekStart = prefs.enumOf(Keys.weekStart, defaults.weekStart),
+            haptics = prefs[Keys.haptics] ?: defaults.haptics,
         )
     }
 
@@ -69,6 +84,34 @@ class DataStoreSettingsRepository @Inject constructor(
     override suspend fun setLastBackupAt(epochMillis: Long?) {
         dataStore.edit { if (epochMillis == null) it.remove(Keys.lastBackupAt) else it[Keys.lastBackupAt] = epochMillis }
     }
+
+    override suspend fun setThemeMode(mode: ThemeMode) {
+        dataStore.edit { it[Keys.themeMode] = mode.name }
+    }
+
+    override suspend fun setPureBlack(enabled: Boolean) {
+        dataStore.edit { it[Keys.pureBlack] = enabled }
+    }
+
+    override suspend fun setDynamicColor(enabled: Boolean) {
+        dataStore.edit { it[Keys.dynamicColor] = enabled }
+    }
+
+    override suspend fun setTimeFormat(format: TimeFormat) {
+        dataStore.edit { it[Keys.timeFormat] = format.name }
+    }
+
+    override suspend fun setWeekStart(start: WeekStart) {
+        dataStore.edit { it[Keys.weekStart] = start.name }
+    }
+
+    override suspend fun setHaptics(enabled: Boolean) {
+        dataStore.edit { it[Keys.haptics] = enabled }
+    }
+
+    /** A stored enum by name; a missing or unknown name (say, from a newer version) gives [default]. */
+    private inline fun <reified E : Enum<E>> Preferences.enumOf(key: Preferences.Key<String>, default: E): E =
+        this[key]?.let { name -> enumValues<E>().firstOrNull { it.name == name } } ?: default
 
     private fun LocalTime.toMinuteOfDay(): Int = hour * 60 + minute
 

@@ -4,7 +4,14 @@ import java.time.LocalTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
-/** User preferences that affect reminders. Language and theme are handled elsewhere. */
+/** The app's own light or dark choice, applied through AppCompat's night mode. */
+enum class ThemeMode { SYSTEM, LIGHT, DARK }
+
+enum class TimeFormat { SYSTEM, H12, H24 }
+
+enum class WeekStart { SYSTEM, MONDAY, SATURDAY, SUNDAY }
+
+/** User preferences. The language is handled separately, by AppCompat's per-app locales. */
 data class AppSettings(
     /** The due moment of a task that has a date but no time, for "before due" reminders. */
     val defaultReminderTime: LocalTime = LocalTime.of(9, 0),
@@ -18,6 +25,14 @@ data class AppSettings(
     val backupFolder: String? = null,
     /** When the last automatic backup finished, epoch millis, or null if there was none. */
     val lastBackupAt: Long? = null,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    /** True black backgrounds in dark mode, for OLED screens. */
+    val pureBlack: Boolean = false,
+    /** Material You colors from the wallpaper (Android 12 and up). */
+    val dynamicColor: Boolean = true,
+    val timeFormat: TimeFormat = TimeFormat.SYSTEM,
+    val weekStart: WeekStart = WeekStart.SYSTEM,
+    val haptics: Boolean = true,
 )
 
 /** Snooze lengths offered in settings, in minutes. */
@@ -41,4 +56,16 @@ interface SettingsRepository {
     suspend fun setBackupFolder(uri: String?)
 
     suspend fun setLastBackupAt(epochMillis: Long?)
+
+    suspend fun setThemeMode(mode: ThemeMode)
+
+    suspend fun setPureBlack(enabled: Boolean)
+
+    suspend fun setDynamicColor(enabled: Boolean)
+
+    suspend fun setTimeFormat(format: TimeFormat)
+
+    suspend fun setWeekStart(start: WeekStart)
+
+    suspend fun setHaptics(enabled: Boolean)
 }

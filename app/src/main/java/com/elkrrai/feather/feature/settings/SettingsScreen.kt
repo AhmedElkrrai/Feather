@@ -49,6 +49,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.SNOOZE_MINUTE_OPTIONS
+import com.elkrrai.feather.domain.settings.ThemeMode
+import com.elkrrai.feather.domain.settings.TimeFormat
+import com.elkrrai.feather.domain.settings.WeekStart
 import com.elkrrai.feather.ui.components.TimeOfDayDialog
 import com.elkrrai.feather.ui.components.rememberReminderHealth
 import com.elkrrai.feather.ui.format.formatDueTime
@@ -129,6 +132,14 @@ fun SettingsScreen(
             onBackupNow = backupViewModel::backupNow,
         ),
         backupBusy = backupState.busy,
+        appearance = AppearanceActions(
+            onThemeChange = viewModel::setThemeMode,
+            onPureBlackChange = viewModel::setPureBlack,
+            onDynamicColorChange = viewModel::setDynamicColor,
+            onTimeFormatChange = viewModel::setTimeFormat,
+            onWeekStartChange = viewModel::setWeekStart,
+            onHapticsChange = viewModel::setHaptics,
+        ),
         modifier = modifier,
     )
 
@@ -158,6 +169,7 @@ fun SettingsContent(
     modifier: Modifier = Modifier,
     backup: BackupActions = BackupActions(),
     backupBusy: Boolean = false,
+    appearance: AppearanceActions = AppearanceActions(),
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val resources = LocalContext.current.resources
@@ -233,6 +245,14 @@ fun SettingsContent(
                 onClick = onOpenReliability,
             )
 
+            AppearanceRows(
+                settings = settings,
+                actions = appearance,
+                onPickTheme = { dialog = SettingsDialog.Theme },
+                onPickTimeFormat = { dialog = SettingsDialog.TimeFormat },
+                onPickWeekStart = { dialog = SettingsDialog.WeekStart },
+            )
+
             BackupRows(backup, settings)
 
             SectionTitle(stringResource(R.string.settings_section_general))
@@ -277,11 +297,44 @@ fun SettingsContent(
         )
 
         SettingsDialog.Language -> LanguageDialog(onDismiss = { dialog = null })
+
+        SettingsDialog.Theme -> ChoiceDialog(
+            title = stringResource(R.string.settings_theme),
+            options = ThemeMode.entries.map { it to stringResource(it.labelRes()) },
+            selected = settings.themeMode,
+            onSelect = {
+                appearance.onThemeChange(it)
+                dialog = null
+            },
+            onDismiss = { dialog = null },
+        )
+
+        SettingsDialog.TimeFormat -> ChoiceDialog(
+            title = stringResource(R.string.settings_time_format),
+            options = TimeFormat.entries.map { it to stringResource(it.labelRes()) },
+            selected = settings.timeFormat,
+            onSelect = {
+                appearance.onTimeFormatChange(it)
+                dialog = null
+            },
+            onDismiss = { dialog = null },
+        )
+
+        SettingsDialog.WeekStart -> ChoiceDialog(
+            title = stringResource(R.string.settings_week_start),
+            options = WeekStart.entries.map { it to it.label() },
+            selected = settings.weekStart,
+            onSelect = {
+                appearance.onWeekStartChange(it)
+                dialog = null
+            },
+            onDismiss = { dialog = null },
+        )
     }
 }
 
 /** Which settings dialog is open. An enum so it survives rotation with `rememberSaveable`. */
-private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Language }
+private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Language, Theme, TimeFormat, WeekStart }
 
 @Composable
 internal fun SectionTitle(text: String) {
