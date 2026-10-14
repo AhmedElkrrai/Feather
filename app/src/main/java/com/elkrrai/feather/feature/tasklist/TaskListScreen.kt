@@ -154,8 +154,9 @@ fun TaskListScreen(
 
     if (showQuickAdd) {
         QuickAddSheet(
+            lists = state.lists,
             onDismiss = { showQuickAdd = false },
-            onAdd = viewModel::addTask,
+            onAdd = viewModel::addParsed,
         )
     }
 }

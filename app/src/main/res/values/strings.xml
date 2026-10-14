@@ -296,4 +296,8 @@
         <item quantity="other">%d times left</item>
     </plurals>
     <string name="repeat_list_separator">", "</string>
+
+    <!-- Quick add -->
+    <string name="quick_add_example">Try: Call mom tomorrow 5pm !high #family</string>
+    <string name="quick_add_ignore">Ignore %1$s</string>
 </resources>

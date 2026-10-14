@@ -6,6 +6,7 @@ import com.elkrrai.feather.domain.model.Folder
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.model.TaskList
+import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
 import com.elkrrai.feather.domain.repository.ListRepository
 import com.elkrrai.feather.domain.repository.TagRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
@@ -15,6 +16,7 @@ import com.elkrrai.feather.domain.view.comparator
 import com.elkrrai.feather.domain.view.groupedByDay
 import com.elkrrai.feather.domain.view.inScope
 import com.elkrrai.feather.domain.view.openCountIn
+import com.elkrrai.feather.feature.quickadd.QuickAddTask
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.LocalDate
@@ -123,26 +125,33 @@ class TaskListViewModel @Inject constructor(
 
     /**
      * Quick add follows the current view: a list view adds to that list; Today and Overdue add
-     * a task due today, Upcoming one due tomorrow; a tag view tags the new task.
+     * a task due today, Upcoming one due tomorrow; a tag view tags the new task. Things the text
+     * itself says (a date, an `@list`, tags) win over what the view suggests.
      */
-    fun addTask(title: String) {
-        if (title.isBlank()) return
+    fun addTask(title: String) = addParsed(ParsedQuickAdd(title = title.trim()), listId = null)
+
+    /** [listId] is the list named in the text, or null to follow the current view. */
+    fun addParsed(parsed: ParsedQuickAdd, listId: String?) {
+        if (parsed.title.isBlank()) return
         val current = uiState.value
         viewModelScope.launch {
             val today = today()
             val scope = current.scope
-            val (listId, dueDate) = when (scope) {
+            val (viewList, viewDate) = when (scope) {
                 is TaskScope.InList -> scope.listId to null
                 TaskScope.Today, TaskScope.Overdue -> TaskList.INBOX_ID to today
                 TaskScope.Upcoming -> TaskList.INBOX_ID to today.plusDays(1)
                 else -> TaskList.INBOX_ID to null
             }
-            val task = taskRepository.addTask(listId, title, dueDate)
-            if (scope is TaskScope.WithTag) {
-                current.tags.firstOrNull { it.id == scope.tagId }?.let { tag ->
-                    taskRepository.saveTaskDetails(task.copy(tags = listOf(tag)))
-                }
+            val viewedTag = (scope as? TaskScope.WithTag)?.let { tagScope ->
+                current.tags.firstOrNull { it.id == tagScope.tagId }
             }
+            QuickAddTask(taskRepository, tagRepository)(
+                parsed = parsed,
+                listId = listId ?: viewList,
+                fallbackDate = viewDate,
+                extraTags = listOfNotNull(viewedTag),
+            )
         }
     }
 
