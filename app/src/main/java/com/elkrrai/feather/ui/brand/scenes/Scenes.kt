@@ -73,9 +73,9 @@ private fun AllDoneScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifi
     SceneBird(BirdMood.HAPPY, AllDoneBird)
     Layer {
         // The eggs sit in the bowl: their lower halves are hidden by its front.
-        drawEgg(p, Offset(66f, 150f))
-        drawEgg(p, Offset(100f, 156f))
-        drawEgg(p, Offset(134f, 150f))
+        drawEgg(p, Offset(64f, 142f), size = 1.9f)
+        drawEgg(p, Offset(100f, 148f), size = 1.9f)
+        drawEgg(p, Offset(136f, 142f), size = 1.9f)
         drawNestFront(p, 100f, 152f, 54f)
     }
 }
@@ -85,8 +85,8 @@ private fun AllDoneScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifi
 private fun NothingDueScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifier) {
     val p = palette
     Layer {
-        drawCloud(p, Offset(160f, 54f))
-        drawSun(p, Offset(40f, 42f), 9f)
+        drawCloud(p, Offset(46f, 38f))
+        drawSun(p, Offset(174f, 34f), 9f)
         drawBranch(p, Offset(30f, 126f), Offset(170f, 122f))
         drawLeaf(Offset(150f, 123f), 20f, -30f, p.moss)
     }

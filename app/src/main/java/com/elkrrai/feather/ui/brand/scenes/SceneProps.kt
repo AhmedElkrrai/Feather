@@ -59,7 +59,7 @@ internal fun rememberScenePalette(): ScenePalette {
             sky = Nest.SkyWing,
             moss = feather.listColors[3],
             ink = if (dark) Nest.SkyWing else Nest.DeepTeal,
-            cloud = if (dark) Nest.SkyWing.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.85f),
+            cloud = if (dark) lerp(nest(0x121E24), Nest.SkyWing, 0.32f) else Color.White,
             dawnGround = feather.sky.getValue(DayPhase.Dawn).second,
         )
     }
