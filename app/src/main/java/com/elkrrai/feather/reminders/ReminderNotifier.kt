@@ -46,7 +46,7 @@ class ReminderNotifier @Inject constructor(
             ?: context.getString(R.string.reminder_generic)
 
         val builder = NotificationCompat.Builder(context, ReminderChannels.REMINDERS)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.ic_stat_feather)
             .setContentTitle(task.title)
             .setContentText(text)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -82,7 +82,7 @@ class ReminderNotifier @Inject constructor(
         val context = appContext.withAppLocale()
         ReminderChannels.ensure(context)
         val notification = NotificationCompat.Builder(context, ReminderChannels.REMINDERS)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.ic_stat_feather)
             .setContentTitle(context.getString(R.string.test_notification_title))
             .setContentText(context.getString(R.string.test_notification_text))
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -114,7 +114,7 @@ class ReminderNotifier @Inject constructor(
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val notification = NotificationCompat.Builder(context, ReminderChannels.SUMMARY)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.ic_stat_feather)
             .setContentTitle(context.getString(R.string.summary_title))
             .setContentText(parts.joinToString(" · "))
             .setAutoCancel(true)

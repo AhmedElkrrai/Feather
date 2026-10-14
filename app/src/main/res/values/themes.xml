@@ -11,4 +11,12 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:backgroundDimEnabled">false</item>
     </style>
+
+    <!-- The launch screen (Android 12 splash screen, backported by the AndroidX library). -->
+    <style name="Theme.Feather.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/brand_sky</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/avd_splash_bird</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
+        <item name="postSplashScreenTheme">@style/Theme.Feather</item>
+    </style>
 </resources>
