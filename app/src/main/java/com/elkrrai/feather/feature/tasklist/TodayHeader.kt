@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -371,7 +372,7 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, modifier: Modifier 
 
 /** Draws with the origin moved to ([x], [y]) and a unit box scaled to [size]. */
 private fun DrawScope.translateAndScale(x: Float, y: Float, size: Float, block: DrawScope.() -> Unit) {
-    androidx.compose.ui.graphics.drawscope.translate(left = x, top = y) {
+    translate(left = x, top = y) {
         scale(size, pivot = Offset.Zero, block = block)
     }
 }
