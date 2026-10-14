@@ -28,6 +28,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 class TaskRepositoryImpl @Inject constructor(
@@ -39,7 +40,10 @@ class TaskRepositoryImpl @Inject constructor(
 ) : TaskRepository {
 
     override fun observeTasks(): Flow<List<Task>> =
-        taskDao.observeAllActive().map { it.toDomainTasks() }
+        combine(taskDao.observeAllActive(), completionDao.observeLatest()) { rows, latest ->
+            val lastDone = latest.associate { it.taskId to Instant.ofEpochMilli(it.completedAt) }
+            rows.toDomainTasks().map { task -> lastDone[task.id]?.let { task.copy(lastCompletedAt = it) } ?: task }
+        }
 
     override suspend fun getActiveTasks(): List<Task> = taskDao.getAllActive().toDomainTasks()
 
@@ -173,8 +177,29 @@ class TaskRepositoryImpl @Inject constructor(
     }
 
     private suspend fun reopen(task: TaskEntity) {
-        task.completedAt?.let { completionDao.deleteForTaskAt(task.id, it) }
+        val finishedAt = task.completedAt
+        if (finishedAt == null) {
+            undoAdvance(task)
+            return
+        }
+        completionDao.deleteForTaskAt(task.id, finishedAt)
         taskDao.setCompletedAt(task.id, completedAt = null, updatedAt = clock.millis())
+    }
+
+    /**
+     * Takes back the last finish of a repeating task that moved on to its next date: the due
+     * date goes back to the one it was finished for, and the rule gets its occurrence back.
+     */
+    private suspend fun undoAdvance(task: TaskEntity) {
+        val recurrence = Recurrence.parse(task.rrule, RepeatMode.fromCode(task.repeatMode)) ?: return
+        val last = completionDao.getForTask(task.id).firstOrNull() ?: return
+        val dueBefore = last.dueDate ?: return
+        // Only today's finish can be taken back.
+        val today = LocalDate.now(clock.withZone(ZoneId.systemDefault()))
+        if (Instant.ofEpochMilli(last.completedAt).atZone(ZoneId.systemDefault()).toLocalDate() != today) return
+        val restored = recurrence.copy(count = recurrence.count?.plus(1))
+        taskDao.upsert(task.copy(dueDate = dueBefore, rrule = restored.toRule(), updatedAt = clock.millis()))
+        completionDao.deleteForTaskAt(task.id, last.completedAt)
     }
 
     private suspend fun complete(task: TaskEntity) {

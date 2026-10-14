@@ -4,6 +4,7 @@ import com.elkrrai.feather.domain.recurrence.Recurrence
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 
 /**
  * A todo item. Due date and time are floating local values (not instants), so a task due at
@@ -32,6 +33,20 @@ data class Task(
     val recurrence: Recurrence? = null,
     /** Only set for tasks read from the trash; live tasks are never deleted. */
     val deletedAt: Instant? = null,
+    /** When this task was last finished (a repeating task keeps going, so this is its history); null if never. */
+    val lastCompletedAt: Instant? = null,
 ) {
     val isCompleted: Boolean get() = completedAt != null
+
+    /**
+     * A repeating task that was finished today and is not due again until a later day: it is done
+     * for today and should not show as open until its next date arrives.
+     */
+    fun isRestingUntilNext(today: LocalDate, zone: ZoneId): Boolean =
+        recurrence != null && completedAt == null && dueDate != null && dueDate.isAfter(today) &&
+            lastCompletedAt?.atZone(zone)?.toLocalDate() == today
+
+    /** How a resting task is shown in a Done section: finished, with its checklist ticked. */
+    fun asFinishedToday(): Task =
+        copy(completedAt = lastCompletedAt, subtasks = subtasks.map { it.copy(isCompleted = true) })
 }

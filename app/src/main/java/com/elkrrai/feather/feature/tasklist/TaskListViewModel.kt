@@ -111,6 +111,12 @@ class TaskListViewModel @Inject constructor(
 
     private fun buildState(d: Data, selected: TaskScope, sort: TaskSort, picked: Set<String>): TaskListUiState {
         val today = today()
+        val zone = ZoneId.systemDefault()
+        // A repeating task finished today waits for its next date: it counts as done, not as open.
+        val resting = d.tasks.filter { it.isRestingUntilNext(today, zone) }
+        val restingIds = resting.map { it.id }.toSet()
+        val allTasks = d.tasks.filter { it.id !in restingIds }
+        val restingDone = resting.map { it.asFinishedToday() }
         // A deleted list or tag falls back to the Inbox.
         val scope = when (selected) {
             is TaskScope.InList -> if (d.lists.any { it.id == selected.listId }) selected else inbox
@@ -121,13 +127,14 @@ class TaskListViewModel @Inject constructor(
             else -> selected
         }
 
-        val visible = d.tasks.inScope(scope, today).sortedWith(sort.comparator())
+        val visible = allTasks.inScope(scope, today).sortedWith(sort.comparator())
         // Lists, tags, filters and All keep their finished tasks apart, in the Done section.
         val splitsDone = scope is TaskScope.InList || scope is TaskScope.WithTag ||
             scope is TaskScope.Filtered || scope == TaskScope.All
         val open = if (splitsDone) visible.filter { !it.isCompleted } else visible
         val doneInView = if (splitsDone) {
-            visible.filter { it.isCompleted }.sortedByDescending { it.completedAt }
+            (visible.filter { it.isCompleted } + restingDone.inScope(scope, today))
+                .sortedByDescending { it.completedAt }
         } else {
             emptyList()
         }
@@ -146,10 +153,9 @@ class TaskListViewModel @Inject constructor(
         ) + d.lists.map { TaskScope.InList(it.id) } + d.tags.map { TaskScope.WithTag(it.id) } +
             d.filters.map { TaskScope.Filtered(it) }
 
-        val zone = ZoneId.systemDefault()
-        val finishedToday = d.tasks.filter { task ->
-            task.completedAt?.atZone(zone)?.toLocalDate() == today
-        }.sortedByDescending { it.completedAt }
+        val finishedToday = (
+            allTasks.filter { task -> task.completedAt?.atZone(zone)?.toLocalDate() == today } + restingDone
+        ).sortedByDescending { it.completedAt }
 
         return TaskListUiState(
             isLoading = false,
@@ -160,9 +166,9 @@ class TaskListViewModel @Inject constructor(
             folders = d.folders,
             tags = d.tags,
             filters = d.filters,
-            counts = countedScopes.associateWith { d.tasks.openCountIn(it, today) },
+            counts = countedScopes.associateWith { allTasks.openCountIn(it, today) },
             selection = picked.intersect(visible.map { it.id }.toSet()),
-            today = TodayStatus(left = d.tasks.openCountIn(TaskScope.Today, today), done = finishedToday.size),
+            today = TodayStatus(left = allTasks.openCountIn(TaskScope.Today, today), done = finishedToday.size),
             doneTasks = when {
                 scope == TaskScope.Today -> finishedToday
                 splitsDone -> doneInView
