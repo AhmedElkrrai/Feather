@@ -102,6 +102,7 @@ import androidx.compose.ui.geometry.Offset
 import com.elkrrai.feather.ui.components.FeatherConfettiOverlay
 import com.elkrrai.feather.ui.components.MiniRing
 import com.elkrrai.feather.ui.components.rememberConfettiController
+import androidx.compose.material3.SelectableDates
 
 /** Everything the editor can ask its ViewModel to do. */
 class TaskEditActions(
@@ -640,6 +641,15 @@ internal fun ListPickerDialog(
     )
 }
 
+/** Only today and later can be picked as a due date; the picker hands out UTC midnights. */
+@OptIn(ExperimentalMaterial3Api::class)
+internal object TodayOrLater : SelectableDates {
+    override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+        utcTimeMillis >= LocalDate.now().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+    override fun isSelectableYear(year: Int): Boolean = year >= LocalDate.now().year
+}
+
 /** The Material date picker works in UTC millis; a due date is a plain local date. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -649,7 +659,8 @@ internal fun DueDatePickerDialog(
     onDismiss: () -> Unit,
 ) {
     val pickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initial.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        initialSelectedDateMillis = initial.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+        selectableDates = TodayOrLater,
     )
     DatePickerDialog(
         onDismissRequest = onDismiss,

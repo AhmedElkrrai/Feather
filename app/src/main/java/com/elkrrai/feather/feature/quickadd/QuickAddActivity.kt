@@ -33,9 +33,11 @@ class QuickAddActivity : AppCompatActivity() {
         setContent {
             FeatherTheme {
                 val lists by viewModel.lists.collectAsStateWithLifecycle()
+                val tags by viewModel.existingTags.collectAsStateWithLifecycle()
                 var adding by remember { mutableStateOf(false) }
                 QuickAddSheet(
                     lists = lists,
+                    tags = tags,
                     initialText = shared,
                     // Closing the sheet after adding must not end the activity before the save is done.
                     onDismiss = { if (!adding) finish() },

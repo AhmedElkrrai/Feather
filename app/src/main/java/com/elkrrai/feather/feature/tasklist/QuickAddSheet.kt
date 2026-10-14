@@ -79,6 +79,8 @@ import androidx.compose.foundation.layout.heightIn
 import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.recurrence.Frequency
 import com.elkrrai.feather.domain.recurrence.Recurrence
+import androidx.compose.material3.AlertDialog
+import com.elkrrai.feather.domain.model.Tag
 
 /** How many tasks have been added from the sheet, to know when the example hint can go. */
 private class QuickAddHintStore(context: Context) {
@@ -106,6 +108,7 @@ private class QuickAddHintStore(context: Context) {
 @Composable
 fun QuickAddSheet(
     lists: List<TaskList>,
+    tags: List<Tag>,
     onDismiss: () -> Unit,
     onAdd: (parsed: ParsedQuickAdd, listId: String?) -> Unit,
     initialText: String = "",
@@ -121,6 +124,7 @@ fun QuickAddSheet(
     var toolDate by remember { mutableStateOf<LocalDate?>(null) }
     var toolPriority by remember { mutableStateOf<Priority?>(null) }
     var toolRepeat by remember { mutableStateOf<Frequency?>(null) }
+    var toolTags by remember { mutableStateOf(emptyList<String>()) }
     val focusRequester = remember { FocusRequester() }
     val hintStore = remember { QuickAddHintStore(context) }
     var addsSoFar by remember { mutableIntStateOf(hintStore.count()) }
@@ -158,8 +162,8 @@ fun QuickAddSheet(
     val fromText = remember(text, ignored, listNames) {
         QuickAddParser.parse(text, LocalDateTime.now(), listNames, ignored)
     }
-    val parsed = remember(fromText, toolDate, toolPriority, toolRepeat) {
-        fromText.withTools(toolDate, toolPriority, toolRepeat)
+    val parsed = remember(fromText, toolDate, toolPriority, toolRepeat, toolTags) {
+        fromText.withTools(toolDate, toolPriority, toolRepeat, toolTags)
     }
     val today = LocalDate.now()
 
@@ -184,6 +188,7 @@ fun QuickAddSheet(
             QuickAddField.DATE -> toolDate = null
             QuickAddField.PRIORITY -> toolPriority = null
             QuickAddField.REPEAT -> toolRepeat = null
+            QuickAddField.TAGS -> toolTags = emptyList()
             else -> Unit
         }
         ignored = ignored + field
@@ -197,7 +202,6 @@ fun QuickAddSheet(
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .imePadding()
-                .heightIn(min = SHEET_MIN_HEIGHT)
                 .padding(start = Space.gutter, end = Space.gutter, bottom = Space.x4),
             verticalArrangement = Arrangement.spacedBy(Space.x4),
         ) {
@@ -283,10 +287,15 @@ fun QuickAddSheet(
                     chosen(QuickAddField.REPEAT)
                 },
                 onVoice = ::startVoice,
-                onTag = {
-                    text = QuickAddEdits.append(text, "#")
+                tags = tags,
+                chosenTags = toolTags,
+                onTagToggle = { name ->
+                    toolTags = if (toolTags.any { it.equals(name, ignoreCase = true) }) {
+                        toolTags.filterNot { it.equals(name, ignoreCase = true) }
+                    } else {
+                        toolTags + name
+                    }
                     chosen(QuickAddField.TAGS)
-                    focusRequester.requestFocus()
                 },
             )
         }
@@ -295,7 +304,7 @@ fun QuickAddSheet(
 
 /**
  * Date, priority, tag, repeat and voice: 48dp tools. Date, priority and repeat hand their choice up
- * to be shown as a badge; the tag tool starts a `#` in the text, and voice adds what it hears.
+ * (and tags) to be shown as badges; voice adds what it hears to the text.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -304,11 +313,15 @@ private fun QuickAddTools(
     onPriority: (Priority) -> Unit,
     onRepeat: (Frequency) -> Unit,
     onVoice: () -> Unit,
-    onTag: () -> Unit,
+    tags: List<Tag>,
+    chosenTags: List<String>,
+    onTagToggle: (String) -> Unit,
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var priorityMenu by remember { mutableStateOf(false) }
     var repeatMenu by remember { mutableStateOf(false) }
+    var tagMenu by remember { mutableStateOf(false) }
+    var newTagDialog by remember { mutableStateOf(false) }
 
     Row(horizontalArrangement = Arrangement.spacedBy(Space.x1), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = { showDatePicker = true }) {
@@ -338,8 +351,34 @@ private fun QuickAddTools(
             }
         }
 
-        IconButton(onClick = onTag) {
-            Icon(painterResource(R.drawable.ic_tag), stringResource(R.string.quick_add_tool_tag))
+        Box {
+            IconButton(onClick = { tagMenu = true }) {
+                Icon(painterResource(R.drawable.ic_tag), stringResource(R.string.quick_add_tool_tag))
+            }
+            DropdownMenu(expanded = tagMenu, onDismissRequest = { tagMenu = false }) {
+                tags.forEach { tag ->
+                    val picked = chosenTags.any { it.equals(tag.name, ignoreCase = true) }
+                    DropdownMenuItem(
+                        text = { Text("#${tag.name}") },
+                        trailingIcon = if (picked) {
+                            { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(18.dp)) }
+                        } else {
+                            null
+                        },
+                        onClick = {
+                            tagMenu = false
+                            onTagToggle(tag.name)
+                        },
+                    )
+                }
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.new_tag)) },
+                    onClick = {
+                        tagMenu = false
+                        newTagDialog = true
+                    },
+                )
+            }
         }
 
         Box {
@@ -370,8 +409,37 @@ private fun QuickAddTools(
         }
     }
 
+    if (newTagDialog) {
+        var name by rememberSaveable { mutableStateOf("") }
+        val clean = name.trim().trimStart('#').trim()
+        AlertDialog(
+            onDismissRequest = { newTagDialog = false },
+            title = { Text(stringResource(R.string.new_tag)) },
+            text = {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    label = { Text(stringResource(R.string.tag_name)) },
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = clean.isNotEmpty(),
+                    onClick = {
+                        onTagToggle(clean)
+                        newTagDialog = false
+                    },
+                ) { Text(stringResource(R.string.action_add)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { newTagDialog = false }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
+
     if (showDatePicker) {
-        val pickerState = rememberDatePickerState()
+        val pickerState = rememberDatePickerState(selectableDates = com.elkrrai.feather.feature.taskedit.TodayOrLater)
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
@@ -395,12 +463,17 @@ private fun QuickAddTools(
     }
 }
 
-/** Height the sheet keeps even when it is nearly empty, so it does not jump as badges come and go. */
-private val SHEET_MIN_HEIGHT = 320.dp
-
-/** The tools' choices on top of what the text said; a repeat with no date starts today. */
-private fun ParsedQuickAdd.withTools(date: LocalDate?, priority: Priority?, repeat: Frequency?): ParsedQuickAdd {
+/** The tools' choices on top of what the text said; a repeat with no date starts today, tags are added. */
+private fun ParsedQuickAdd.withTools(
+    date: LocalDate?,
+    priority: Priority?,
+    repeat: Frequency?,
+    extraTags: List<String>,
+): ParsedQuickAdd {
     var result = this
+    if (extraTags.isNotEmpty()) {
+        result = result.copy(tags = (result.tags + extraTags).distinctBy { it.lowercase() })
+    }
     if (date != null) result = result.copy(dueDate = date, dateIsImplied = false)
     if (priority != null) result = result.copy(priority = priority)
     if (repeat != null) {

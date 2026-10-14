@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.elkrrai.feather.domain.model.Tag
 
 /** Behind [QuickAddActivity]: the lists for `@list`, and saving the task. */
 @HiltViewModel
@@ -25,6 +26,9 @@ class QuickAddViewModel @Inject constructor(
 ) : ViewModel() {
 
     val lists: StateFlow<List<TaskList>> = listRepository.observeLists()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val existingTags: StateFlow<List<Tag>> = tags.observeTags()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /**

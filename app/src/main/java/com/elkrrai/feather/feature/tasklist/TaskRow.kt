@@ -73,8 +73,6 @@ import com.elkrrai.feather.ui.theme.Dur
 /** The list a task belongs to, as the row shows it: its name and which of the eight list colors it has. */
 data class ListLabel(val name: String, val colorIndex: Int?)
 
-private const val MAX_TAG_CHIPS = 3
-
 /**
  * One task, as a card: the completion ring, the title, and a row of small chips (date, list,
  * repeat, tags, subtask progress). [list] is shown only when the view mixes several lists (smart
@@ -249,16 +247,10 @@ fun TaskRow(
                                 },
                             )
                         }
-                        for (tag in task.tags.take(MAX_TAG_CHIPS)) {
+                        // Every tag shows; the row wraps onto another line when there are many.
+                        for (tag in task.tags) {
                             MetaChip(
                                 text = "#${tag.name}",
-                                container = scheme.primaryContainer,
-                                content = scheme.onPrimaryContainer,
-                            )
-                        }
-                        if (task.tags.size > MAX_TAG_CHIPS) {
-                            MetaChip(
-                                text = "+${task.tags.size - MAX_TAG_CHIPS}",
                                 container = scheme.primaryContainer,
                                 content = scheme.onPrimaryContainer,
                             )
