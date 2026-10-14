@@ -35,6 +35,10 @@ data class AppSettings(
     val haptics: Boolean = true,
     /** Lets the bird move; off keeps it still. */
     val birdAnimations: Boolean = true,
+    /** Fewer animations: things appear and leave without moving. The phone's own setting counts too. */
+    val reduceMotion: Boolean = false,
+    /** The feathers and the bird's hop when a task is finished. Independent of [reduceMotion]. */
+    val celebrations: Boolean = true,
 )
 
 /** Snooze lengths offered in settings, in minutes. */
@@ -72,4 +76,8 @@ interface SettingsRepository {
     suspend fun setHaptics(enabled: Boolean)
 
     suspend fun setBirdAnimations(enabled: Boolean)
+
+    suspend fun setReduceMotion(enabled: Boolean)
+
+    suspend fun setCelebrations(enabled: Boolean)
 }

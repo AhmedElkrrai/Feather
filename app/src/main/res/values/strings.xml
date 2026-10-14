@@ -441,5 +441,9 @@
 
     <!-- Bird animations -->
     <string name="settings_bird_animations">Bird animations</string>
-    <string name="settings_bird_animations_summary">Let the bird move: napping, and hopping when you finish a task. Off keeps it still.</string>
+    <string name="settings_bird_animations_summary">Let the bird move: napping and fluttering on empty screens. Off keeps it still.</string>
+    <string name="settings_celebrations">Little celebrations</string>
+    <string name="settings_celebrations_summary">A burst of feathers and a hop when you finish a task.</string>
+    <string name="settings_reduce_motion">Reduce motion</string>
+    <string name="settings_reduce_motion_summary">Fewer animations: things appear and leave without moving. Your phone’s own setting is respected even when this is off.</string>
 </resources>

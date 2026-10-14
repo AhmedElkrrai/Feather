@@ -63,6 +63,14 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repository.setBirdAnimations(enabled) }
     }
 
+    fun setReduceMotion(enabled: Boolean) {
+        viewModelScope.launch { repository.setReduceMotion(enabled) }
+    }
+
+    fun setCelebrations(enabled: Boolean) {
+        viewModelScope.launch { repository.setCelebrations(enabled) }
+    }
+
     fun setHaptics(enabled: Boolean) {
         viewModelScope.launch { repository.setHaptics(enabled) }
     }

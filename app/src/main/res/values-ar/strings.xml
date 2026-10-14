@@ -509,5 +509,9 @@
 
     <!-- Bird animations -->
     <string name="settings_bird_animations">حركة العصفور</string>
-    <string name="settings_bird_animations_summary">دع العصفور يتحرك: يغفو ويقفز عند إنجاز مهمة. عند الإيقاف يبقى ساكنًا.</string>
+    <string name="settings_bird_animations_summary">دع العصفور يتحرك: يغفو ويرفرف في الشاشات الفارغة. عند الإيقاف يبقى ساكنًا.</string>
+    <string name="settings_celebrations">احتفالات صغيرة</string>
+    <string name="settings_celebrations_summary">رذاذ من الريش وقفزة عند إنجاز مهمة.</string>
+    <string name="settings_reduce_motion">تقليل الحركة</string>
+    <string name="settings_reduce_motion_summary">حركات أقل: تظهر العناصر وتختفي دون حركة. يُحترم إعداد هاتفك حتى لو كان هذا الخيار متوقفًا.</string>
 </resources>

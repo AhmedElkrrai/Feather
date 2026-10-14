@@ -39,6 +39,8 @@ class AppearanceActions(
     val onWeekStartChange: (WeekStart) -> Unit = {},
     val onHapticsChange: (Boolean) -> Unit = {},
     val onBirdAnimationsChange: (Boolean) -> Unit = {},
+    val onReduceMotionChange: (Boolean) -> Unit = {},
+    val onCelebrationsChange: (Boolean) -> Unit = {},
 )
 
 @StringRes
@@ -134,6 +136,20 @@ internal fun AppearanceRows(
         trailing = {
             Switch(checked = settings.birdAnimations, onCheckedChange = actions.onBirdAnimationsChange)
         },
+    )
+    SettingsRow(
+        title = stringResource(R.string.settings_celebrations),
+        summary = null,
+        supporting = stringResource(R.string.settings_celebrations_summary),
+        onClick = { actions.onCelebrationsChange(!settings.celebrations) },
+        trailing = { Switch(checked = settings.celebrations, onCheckedChange = actions.onCelebrationsChange) },
+    )
+    SettingsRow(
+        title = stringResource(R.string.settings_reduce_motion),
+        summary = null,
+        supporting = stringResource(R.string.settings_reduce_motion_summary),
+        onClick = { actions.onReduceMotionChange(!settings.reduceMotion) },
+        trailing = { Switch(checked = settings.reduceMotion, onCheckedChange = actions.onReduceMotionChange) },
     )
 }
 

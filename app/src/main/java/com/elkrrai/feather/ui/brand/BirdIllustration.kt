@@ -1,6 +1,5 @@
 package com.elkrrai.feather.ui.brand
 
-import android.provider.Settings
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -26,12 +25,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.vector.PathParser
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.ui.DisplayPrefs
+import com.elkrrai.feather.ui.rememberReduceMotion
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.min
@@ -51,16 +50,10 @@ private class BirdPaths {
 
 /**
  * Whether the bird may move: not when the person turned bird animations off in Settings, and not
- * when the system's animation scale is zero ("remove animations" / reduce motion).
+ * when motion is reduced (the phone's animation scale is zero, or Reduce motion is on).
  */
 @Composable
-fun rememberBirdMotionAllowed(): Boolean {
-    val context = LocalContext.current
-    val systemAnimationsOff = remember(context) {
-        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-    }
-    return DisplayPrefs.birdAnimations && !systemAnimationsOff
-}
+fun rememberBirdMotionAllowed(): Boolean = DisplayPrefs.birdAnimations && !rememberReduceMotion()
 
 /**
  * The Feather bird. It moves on its own in a loop while movement is allowed
@@ -97,7 +90,7 @@ fun BirdIllustration(
 /** A short hop of the bird over the screen each time [trigger] changes (a task was finished). */
 @Composable
 fun CompletionBird(trigger: Int, modifier: Modifier = Modifier) {
-    if (trigger == 0 || !rememberBirdMotionAllowed()) return
+    if (trigger == 0 || !DisplayPrefs.celebrations || !rememberBirdMotionAllowed()) return
     val progress = remember { Animatable(0f) }
     var visible by remember { mutableStateOf(false) }
 

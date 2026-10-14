@@ -32,6 +32,10 @@ object DisplayPrefs {
         private set
     var birdAnimations by mutableStateOf(true)
         private set
+    var reduceMotion by mutableStateOf(false)
+        private set
+    var celebrations by mutableStateOf(true)
+        private set
 
     fun update(settings: AppSettings) {
         timeFormat = settings.timeFormat
@@ -40,6 +44,8 @@ object DisplayPrefs {
         pureBlack = settings.pureBlack
         haptics = settings.haptics
         birdAnimations = settings.birdAnimations
+        reduceMotion = settings.reduceMotion
+        celebrations = settings.celebrations
     }
 }
 

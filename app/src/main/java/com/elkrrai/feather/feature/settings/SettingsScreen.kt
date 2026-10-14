@@ -148,6 +148,8 @@ fun SettingsScreen(
             onWeekStartChange = viewModel::setWeekStart,
             onHapticsChange = viewModel::setHaptics,
             onBirdAnimationsChange = viewModel::setBirdAnimations,
+            onReduceMotionChange = viewModel::setReduceMotion,
+            onCelebrationsChange = viewModel::setCelebrations,
         ),
         supportUrl = SupportLinks.DONATION_URL,
         onOpenSupport = {
