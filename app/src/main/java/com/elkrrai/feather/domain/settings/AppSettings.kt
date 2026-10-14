@@ -28,8 +28,8 @@ data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     /** True black backgrounds in dark mode, for OLED screens. */
     val pureBlack: Boolean = false,
-    /** Material You colors from the wallpaper (Android 12 and up). */
-    val dynamicColor: Boolean = true,
+    /** Material You colors from the wallpaper (Android 12 and up); off by default, the app has its own colors. */
+    val dynamicColor: Boolean = false,
     val timeFormat: TimeFormat = TimeFormat.SYSTEM,
     val weekStart: WeekStart = WeekStart.SYSTEM,
     val haptics: Boolean = true,

@@ -13,16 +13,60 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.elkrrai.feather.ui.DisplayPrefs
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Sky80,
-    secondary = SkyGrey80,
-    tertiary = Sage80
+private val LightColorScheme = lightColorScheme(
+    primary = BrandPrimary,
+    onPrimary = BrandOnPrimary,
+    primaryContainer = BrandPrimaryContainer,
+    onPrimaryContainer = BrandOnPrimaryContainer,
+    secondary = BrandSecondary,
+    onSecondary = BrandOnSecondary,
+    secondaryContainer = BrandSecondaryContainer,
+    onSecondaryContainer = BrandOnSecondaryContainer,
+    tertiary = BrandTertiary,
+    onTertiary = BrandOnTertiary,
+    tertiaryContainer = BrandTertiaryContainer,
+    onTertiaryContainer = BrandOnTertiaryContainer,
+    background = BrandBackground,
+    onBackground = BrandOnBackground,
+    surface = BrandBackground,
+    onSurface = BrandOnBackground,
+    surfaceVariant = BrandSurfaceVariant,
+    onSurfaceVariant = BrandOnSurfaceVariant,
+    outline = BrandOutline,
+    outlineVariant = BrandOutlineVariant,
+    surfaceContainerLowest = BrandContainerLowest,
+    surfaceContainerLow = BrandContainerLow,
+    surfaceContainer = BrandContainer,
+    surfaceContainerHigh = BrandContainerHigh,
+    surfaceContainerHighest = BrandContainerHighest,
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Sky40,
-    secondary = SkyGrey40,
-    tertiary = Sage40
+private val DarkColorScheme = darkColorScheme(
+    primary = BrandPrimaryDark,
+    onPrimary = BrandOnPrimaryDark,
+    primaryContainer = BrandPrimaryContainerDark,
+    onPrimaryContainer = BrandOnPrimaryContainerDark,
+    secondary = BrandSecondaryDark,
+    onSecondary = BrandOnSecondaryDark,
+    secondaryContainer = BrandSecondaryContainerDark,
+    onSecondaryContainer = BrandOnSecondaryContainerDark,
+    tertiary = BrandTertiaryDark,
+    onTertiary = BrandOnTertiaryDark,
+    tertiaryContainer = BrandTertiaryContainerDark,
+    onTertiaryContainer = BrandOnTertiaryContainerDark,
+    background = BrandBackgroundDark,
+    onBackground = BrandOnBackgroundDark,
+    surface = BrandBackgroundDark,
+    onSurface = BrandOnBackgroundDark,
+    surfaceVariant = BrandSurfaceVariantDark,
+    onSurfaceVariant = BrandOnSurfaceVariantDark,
+    outline = BrandOutlineDark,
+    outlineVariant = BrandOutlineVariantDark,
+    surfaceContainerLowest = BrandContainerLowestDark,
+    surfaceContainerLow = BrandContainerLowDark,
+    surfaceContainer = BrandContainerDark,
+    surfaceContainerHigh = BrandContainerHighDark,
+    surfaceContainerHighest = BrandContainerHighestDark,
 )
 
 /** Pure black backgrounds for OLED screens; cards and sheets stay slightly lifted so they read as layers. */

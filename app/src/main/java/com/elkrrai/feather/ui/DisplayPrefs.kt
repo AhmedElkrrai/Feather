@@ -24,7 +24,7 @@ object DisplayPrefs {
         private set
     var weekStart by mutableStateOf(WeekStart.SYSTEM)
         private set
-    var dynamicColor by mutableStateOf(true)
+    var dynamicColor by mutableStateOf(false)
         private set
     var pureBlack by mutableStateOf(false)
         private set
