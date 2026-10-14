@@ -22,4 +22,5 @@ fun TaskScope.title(lists: List<TaskList>, tags: List<Tag>): String = when (this
     is TaskScope.InList -> lists.firstOrNull { it.id == listId }?.displayName()
         ?: stringResource(R.string.inbox)
     is TaskScope.WithTag -> tags.firstOrNull { it.id == tagId }?.let { "#${it.name}" }.orEmpty()
+    is TaskScope.Filtered -> filter.name
 }

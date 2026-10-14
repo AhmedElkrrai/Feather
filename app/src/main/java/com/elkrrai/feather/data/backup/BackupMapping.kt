@@ -4,6 +4,7 @@ import com.elkrrai.feather.data.db.CompletionEntity
 import com.elkrrai.feather.data.db.FolderEntity
 import com.elkrrai.feather.data.db.ListEntity
 import com.elkrrai.feather.data.db.ReminderEntity
+import com.elkrrai.feather.data.db.SavedFilterEntity
 import com.elkrrai.feather.data.db.TagEntity
 import com.elkrrai.feather.data.db.TaskEntity
 import com.elkrrai.feather.data.db.TaskTagCrossRef
@@ -105,3 +106,31 @@ fun ReminderRecord.toEntity() = ReminderEntity(
 fun CompletionEntity.toRecord() = CompletionRecord(id, taskId, completedAt, dueDate)
 
 fun CompletionRecord.toEntity() = CompletionEntity(id, taskId, completedAt, dueDate)
+
+fun SavedFilterEntity.toRecord() = FilterRecord(
+    id = id,
+    name = name,
+    listId = listId,
+    tagId = tagId,
+    minPriority = minPriority,
+    dueWindow = dueWindow,
+    hideCompleted = hideCompleted,
+    sortOrder = sortOrder,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    deletedAt = deletedAt,
+)
+
+fun FilterRecord.toEntity() = SavedFilterEntity(
+    id = id,
+    name = name,
+    listId = listId,
+    tagId = tagId,
+    minPriority = minPriority,
+    dueWindow = dueWindow,
+    hideCompleted = hideCompleted,
+    sortOrder = sortOrder,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    deletedAt = deletedAt,
+)

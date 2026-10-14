@@ -1,5 +1,7 @@
 package com.elkrrai.feather.domain.view
 
+import com.elkrrai.feather.domain.model.SavedFilter
+
 /** What the task screen is showing: a smart view, one list, or one tag. */
 sealed interface TaskScope {
     /** Open tasks due today or earlier. */
@@ -22,6 +24,9 @@ sealed interface TaskScope {
     data class InList(val listId: String) : TaskScope
 
     data class WithTag(val tagId: String) : TaskScope
+
+    /** A saved filter; it carries its definition, so showing it needs no lookup. */
+    data class Filtered(val filter: SavedFilter) : TaskScope
 }
 
 enum class TaskSort {

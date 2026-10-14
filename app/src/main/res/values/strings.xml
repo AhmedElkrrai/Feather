@@ -408,4 +408,22 @@
     <string name="action_duplicate">Duplicate</string>
     <string name="duplicate_title">%1$s (copy)</string>
     <string name="open_link">Open link %1$s</string>
+
+    <!-- Saved filters -->
+    <string name="drawer_section_filters">Filters</string>
+    <string name="new_filter">New filter</string>
+    <string name="edit_filter">Edit filter</string>
+    <string name="filter_name">Filter name</string>
+    <string name="filter_list_any">Any list</string>
+    <string name="filter_tag_any">Any tag</string>
+    <string name="filter_priority_any">Any priority</string>
+    <string name="filter_priority_at_least">%1$s or higher</string>
+    <string name="due_window_any">Any date</string>
+    <string name="due_window_overdue">Overdue</string>
+    <string name="due_window_today">Today</string>
+    <string name="due_window_week">Next 7 days</string>
+    <string name="due_window_none">No date</string>
+    <string name="filter_hide_completed">Hide finished tasks</string>
+    <string name="delete_filter_title">Delete filter?</string>
+    <string name="delete_filter_message">“%1$s” will be deleted. Your tasks are not affected.</string>
 </resources>

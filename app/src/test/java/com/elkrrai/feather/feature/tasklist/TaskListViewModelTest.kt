@@ -5,6 +5,7 @@ import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
 import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.TaskSort
 import com.elkrrai.feather.testutil.FakeListRepository
+import com.elkrrai.feather.testutil.FakeSavedFilterRepository
 import com.elkrrai.feather.testutil.FakeTagRepository
 import com.elkrrai.feather.testutil.FakeTaskRepository
 import com.elkrrai.feather.testutil.MainDispatcherRule
@@ -32,6 +33,7 @@ class TaskListViewModelTest {
     private val tasks = FakeTaskRepository()
     private val lists = FakeListRepository()
     private val tags = FakeTagRepository()
+    private val filters = FakeSavedFilterRepository()
     private val clock: Clock = Clock.fixed(Instant.parse("2026-10-12T12:00:00Z"), ZoneId.of("UTC"))
 
     /** Same rule the ViewModel uses for "today". */
@@ -44,7 +46,7 @@ class TaskListViewModelTest {
      * must run on an unconfined dispatcher: on `runTest`'s default one it would never start.
      */
     private fun TestScope.newViewModel(): TaskListViewModel {
-        val viewModel = TaskListViewModel(tasks, lists, tags, clock)
+        val viewModel = TaskListViewModel(tasks, lists, tags, filters, clock)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiState.collect {}
         }

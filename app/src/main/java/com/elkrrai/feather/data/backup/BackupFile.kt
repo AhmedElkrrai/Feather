@@ -23,6 +23,8 @@ data class BackupFile(
     val taskTags: List<TaskTagRecord> = emptyList(),
     val reminders: List<ReminderRecord> = emptyList(),
     val completions: List<CompletionRecord> = emptyList(),
+    /** Added with the saved filters; older files simply have none. */
+    val filters: List<FilterRecord> = emptyList(),
 ) {
     companion object {
         const val FORMAT = "feather-backup"
@@ -111,4 +113,19 @@ data class CompletionRecord(
     val taskId: String,
     val completedAt: Long,
     val dueDate: String? = null,
+)
+
+@Serializable
+data class FilterRecord(
+    val id: String,
+    val name: String,
+    val listId: String? = null,
+    val tagId: String? = null,
+    val minPriority: Int = 0,
+    val dueWindow: Int = 0,
+    val hideCompleted: Boolean = true,
+    val sortOrder: Long = 0,
+    val createdAt: Long = 0,
+    val updatedAt: Long = 0,
+    val deletedAt: Long? = null,
 )

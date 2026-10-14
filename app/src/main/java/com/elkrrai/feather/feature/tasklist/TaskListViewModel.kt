@@ -2,12 +2,16 @@ package com.elkrrai.feather.feature.tasklist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.elkrrai.feather.domain.model.DueWindow
 import com.elkrrai.feather.domain.model.Folder
+import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.domain.model.SavedFilter
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
 import com.elkrrai.feather.domain.repository.ListRepository
+import com.elkrrai.feather.domain.repository.SavedFilterRepository
 import com.elkrrai.feather.domain.repository.TagRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
 import com.elkrrai.feather.domain.view.TaskScope
@@ -41,6 +45,7 @@ data class TaskListUiState(
     val lists: List<TaskList> = emptyList(),
     val folders: List<Folder> = emptyList(),
     val tags: List<Tag> = emptyList(),
+    val filters: List<SavedFilter> = emptyList(),
     /** Open-task counts for every smart view, list and tag, for the drawer badges. */
     val counts: Map<TaskScope, Int> = emptyMap(),
     /** Ids of the tasks picked with a long press; always a subset of what is on screen. */
@@ -54,6 +59,7 @@ class TaskListViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
     private val listRepository: ListRepository,
     private val tagRepository: TagRepository,
+    private val filterRepository: SavedFilterRepository,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -67,6 +73,7 @@ class TaskListViewModel @Inject constructor(
         val lists: List<TaskList>,
         val folders: List<Folder>,
         val tags: List<Tag>,
+        val filters: List<SavedFilter>,
     )
 
     private val data = combine(
@@ -74,7 +81,8 @@ class TaskListViewModel @Inject constructor(
         listRepository.observeLists(),
         listRepository.observeFolders(),
         tagRepository.observeTags(),
-    ) { tasks, lists, folders, tags -> Data(tasks, lists, folders, tags) }
+        filterRepository.observeFilters(),
+    ) { tasks, lists, folders, tags, filters -> Data(tasks, lists, folders, tags, filters) }
 
     val uiState: StateFlow<TaskListUiState> = combine(data, selectedScope, selectedSort, pickedIds) { d, scope, sort, picked ->
         buildState(d, scope, sort, picked)
@@ -89,6 +97,9 @@ class TaskListViewModel @Inject constructor(
         val scope = when (selected) {
             is TaskScope.InList -> if (d.lists.any { it.id == selected.listId }) selected else inbox
             is TaskScope.WithTag -> if (d.tags.any { it.id == selected.tagId }) selected else inbox
+            // An edited filter is shown with its new definition; a deleted one falls back to the Inbox.
+            is TaskScope.Filtered -> d.filters.firstOrNull { it.id == selected.filter.id }
+                ?.let { TaskScope.Filtered(it) } ?: inbox
             else -> selected
         }
 
@@ -105,7 +116,8 @@ class TaskListViewModel @Inject constructor(
             TaskScope.Overdue,
             TaskScope.All,
             TaskScope.NoDate,
-        ) + d.lists.map { TaskScope.InList(it.id) } + d.tags.map { TaskScope.WithTag(it.id) }
+        ) + d.lists.map { TaskScope.InList(it.id) } + d.tags.map { TaskScope.WithTag(it.id) } +
+            d.filters.map { TaskScope.Filtered(it) }
 
         return TaskListUiState(
             isLoading = false,
@@ -115,6 +127,7 @@ class TaskListViewModel @Inject constructor(
             lists = d.lists,
             folders = d.folders,
             tags = d.tags,
+            filters = d.filters,
             counts = countedScopes.associateWith { d.tasks.openCountIn(it, today) },
             selection = picked.intersect(visible.map { it.id }.toSet()),
         )
@@ -145,13 +158,17 @@ class TaskListViewModel @Inject constructor(
             val scope = current.scope
             val (viewList, viewDate) = when (scope) {
                 is TaskScope.InList -> scope.listId to null
+                is TaskScope.Filtered -> (scope.filter.listId ?: TaskList.INBOX_ID) to null
                 TaskScope.Today, TaskScope.Overdue -> TaskList.INBOX_ID to today
                 TaskScope.Upcoming -> TaskList.INBOX_ID to today.plusDays(1)
                 else -> TaskList.INBOX_ID to null
             }
-            val viewedTag = (scope as? TaskScope.WithTag)?.let { tagScope ->
-                current.tags.firstOrNull { it.id == tagScope.tagId }
+            val viewedTagId = when (scope) {
+                is TaskScope.WithTag -> scope.tagId
+                is TaskScope.Filtered -> scope.filter.tagId
+                else -> null
             }
+            val viewedTag = current.tags.firstOrNull { it.id == viewedTagId }
             QuickAddTask(taskRepository, tagRepository)(
                 parsed = parsed,
                 listId = listId ?: viewList,
@@ -245,6 +262,44 @@ class TaskListViewModel @Inject constructor(
 
     fun restoreTask(taskId: String) {
         viewModelScope.launch { taskRepository.restoreTask(taskId) }
+    }
+
+    // --- Saved filters ---
+
+    fun createFilter(draft: FilterDraft) {
+        viewModelScope.launch {
+            val filter = filterRepository.createFilter(
+                name = draft.name,
+                listId = draft.listId,
+                tagId = draft.tagId,
+                minPriority = draft.minPriority,
+                due = draft.due,
+                hideCompleted = draft.hideCompleted,
+            )
+            selectedScope.value = TaskScope.Filtered(filter)
+            pickedIds.value = emptySet()
+        }
+    }
+
+    fun updateFilter(filter: SavedFilter, draft: FilterDraft) {
+        viewModelScope.launch {
+            filterRepository.updateFilter(
+                filter.copy(
+                    name = draft.name,
+                    listId = draft.listId,
+                    tagId = draft.tagId,
+                    minPriority = draft.minPriority,
+                    due = draft.due,
+                    hideCompleted = draft.hideCompleted,
+                )
+            )
+        }
+    }
+
+    fun deleteFilter(filter: SavedFilter) {
+        val selected = selectedScope.value
+        if (selected is TaskScope.Filtered && selected.filter.id == filter.id) selectedScope.value = inbox
+        viewModelScope.launch { filterRepository.deleteFilter(filter.id) }
     }
 
     // --- Lists, folders and tags ---

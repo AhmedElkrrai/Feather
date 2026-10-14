@@ -8,6 +8,7 @@ import com.elkrrai.feather.data.db.FeatherDatabase
 import com.elkrrai.feather.data.db.FolderDao
 import com.elkrrai.feather.data.db.ListDao
 import com.elkrrai.feather.data.db.ReminderDao
+import com.elkrrai.feather.data.db.SavedFilterDao
 import com.elkrrai.feather.data.db.TagDao
 import com.elkrrai.feather.data.db.TaskDao
 import dagger.Module
@@ -44,6 +45,9 @@ object DatabaseModule {
 
     @Provides
     fun provideCompletionDao(db: FeatherDatabase): CompletionDao = db.completionDao()
+
+    @Provides
+    fun provideSavedFilterDao(db: FeatherDatabase): SavedFilterDao = db.savedFilterDao()
 
     @Provides
     fun provideBackupDao(db: FeatherDatabase): BackupDao = db.backupDao()

@@ -476,4 +476,22 @@
     <string name="action_duplicate">نسخ المهمة</string>
     <string name="duplicate_title">%1$s (نسخة)</string>
     <string name="open_link">فتح الرابط %1$s</string>
+
+    <!-- Saved filters -->
+    <string name="drawer_section_filters">عوامل التصفية</string>
+    <string name="new_filter">عامل تصفية جديد</string>
+    <string name="edit_filter">تعديل عامل التصفية</string>
+    <string name="filter_name">اسم عامل التصفية</string>
+    <string name="filter_list_any">أي قائمة</string>
+    <string name="filter_tag_any">أي وسم</string>
+    <string name="filter_priority_any">أي أولوية</string>
+    <string name="filter_priority_at_least">%1$s أو أعلى</string>
+    <string name="due_window_any">أي تاريخ</string>
+    <string name="due_window_overdue">متأخرة</string>
+    <string name="due_window_today">اليوم</string>
+    <string name="due_window_week">الأيام السبعة القادمة</string>
+    <string name="due_window_none">بدون تاريخ</string>
+    <string name="filter_hide_completed">إخفاء المهام المنجزة</string>
+    <string name="delete_filter_title">حذف عامل التصفية؟</string>
+    <string name="delete_filter_message">سيتم حذف «%1$s». لن تتأثر مهامك.</string>
 </resources>

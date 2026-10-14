@@ -34,6 +34,15 @@ interface BackupDao {
     @Query("SELECT * FROM completion_history")
     suspend fun completions(): List<CompletionEntity>
 
+    @Query("SELECT * FROM saved_filters")
+    suspend fun filters(): List<SavedFilterEntity>
+
+    @Upsert
+    suspend fun upsertFilters(rows: List<SavedFilterEntity>)
+
+    @Query("DELETE FROM saved_filters")
+    suspend fun deleteAllFilters()
+
     @Upsert
     suspend fun upsertFolders(rows: List<FolderEntity>)
 

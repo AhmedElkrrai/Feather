@@ -27,6 +27,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Folder
+import com.elkrrai.feather.domain.model.SavedFilter
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.view.TaskScope
@@ -47,6 +48,9 @@ class DrawerActions(
     val onDeleteTag: (Tag) -> Unit,
     val onOpenTrash: () -> Unit,
     val onOpenSettings: () -> Unit,
+    val onNewFilter: () -> Unit = {},
+    val onEditFilter: (SavedFilter) -> Unit = {},
+    val onDeleteFilter: (SavedFilter) -> Unit = {},
 )
 
 private val smartViews: List<Pair<Int, TaskScope>> = listOf(
@@ -87,6 +91,29 @@ fun TaskDrawerContent(
                 modifier = Modifier.padding(itemPadding),
             )
         }
+
+        HorizontalDivider(Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
+        SectionHeader(R.string.drawer_section_filters)
+        state.filters.forEach { filter ->
+            val scope = TaskScope.Filtered(filter)
+            DrawerItem(
+                label = filter.name,
+                selected = state.scope == scope,
+                count = state.counts[scope],
+                onClick = { actions.onSelect(scope) },
+                menu = listOf(
+                    MenuAction(stringResource(R.string.action_edit)) { actions.onEditFilter(filter) },
+                    MenuAction(stringResource(R.string.action_delete)) { actions.onDeleteFilter(filter) },
+                ),
+                modifier = Modifier.padding(itemPadding),
+            )
+        }
+        NavigationDrawerItem(
+            label = { Text(stringResource(R.string.new_filter)) },
+            selected = false,
+            onClick = actions.onNewFilter,
+            modifier = Modifier.padding(itemPadding),
+        )
 
         HorizontalDivider(Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
         SectionHeader(R.string.drawer_section_lists)

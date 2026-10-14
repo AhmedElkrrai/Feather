@@ -71,6 +71,7 @@ class BackupRepositoryImpl @Inject constructor(
         taskTags = dao.tagLinks().map { it.toRecord() },
         reminders = dao.reminders().map { it.toRecord() },
         completions = dao.completions().map { it.toRecord() },
+        filters = dao.filters().map { it.toRecord() },
     )
 
     private suspend fun wipe() {
@@ -78,6 +79,7 @@ class BackupRepositoryImpl @Inject constructor(
         dao.deleteAllLists()
         dao.deleteAllFolders()
         dao.deleteAllTags()
+        dao.deleteAllFilters()
     }
 
     /** Parents before children, so every foreign key points at a row that already exists. */
@@ -85,6 +87,7 @@ class BackupRepositoryImpl @Inject constructor(
         dao.upsertFolders(plan.folders.map { it.toEntity() })
         dao.upsertLists(plan.lists.map { it.toEntity() })
         dao.upsertTags(plan.tags.map { it.toEntity() })
+        dao.upsertFilters(plan.filters.map { it.toEntity() })
         dao.upsertTasks(plan.tasks.map { it.toEntity() })
         // Tasks taken from the file bring their own tags, replacing the phone's.
         plan.rewrittenTaskIds.toList().chunked(SQL_VARIABLE_CHUNK).forEach { dao.clearTagLinks(it) }

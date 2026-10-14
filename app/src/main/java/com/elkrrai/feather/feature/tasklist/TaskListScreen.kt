@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -25,6 +26,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -52,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
+import com.elkrrai.feather.domain.model.SavedFilter
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.TaskSort
@@ -86,6 +89,7 @@ fun TaskListScreen(
     val undoLabel = stringResource(R.string.action_undo)
     val resources = LocalContext.current.resources
     var selectionDialog by remember { mutableStateOf<SelectionDialog?>(null) }
+    var filterDialog by remember { mutableStateOf<FilterDialogState?>(null) }
 
     val selectionActions = SelectionActions(
         onToggle = viewModel::toggleSelected,
@@ -134,6 +138,9 @@ fun TaskListScreen(
             closeDrawer()
             onOpenSettings()
         },
+        onNewFilter = { filterDialog = FilterDialogState.New },
+        onEditFilter = { filterDialog = FilterDialogState.Edit(it) },
+        onDeleteFilter = { filterDialog = FilterDialogState.Delete(it) },
     )
 
     val organizeActions = OrganizeActions(
@@ -189,6 +196,50 @@ fun TaskListScreen(
         actions = organizeActions,
         onDismiss = { organizeDialog = null },
     )
+
+    when (val dialog = filterDialog) {
+        null -> Unit
+
+        FilterDialogState.New -> FilterDialog(
+            initial = null,
+            lists = state.lists,
+            tags = state.tags,
+            onConfirm = {
+                viewModel.createFilter(it)
+                filterDialog = null
+                closeDrawer()
+            },
+            onDismiss = { filterDialog = null },
+        )
+
+        is FilterDialogState.Edit -> FilterDialog(
+            initial = dialog.filter,
+            lists = state.lists,
+            tags = state.tags,
+            onConfirm = {
+                viewModel.updateFilter(dialog.filter, it)
+                filterDialog = null
+            },
+            onDismiss = { filterDialog = null },
+        )
+
+        is FilterDialogState.Delete -> AlertDialog(
+            onDismissRequest = { filterDialog = null },
+            title = { Text(stringResource(R.string.delete_filter_title)) },
+            text = { Text(stringResource(R.string.delete_filter_message, dialog.filter.name)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteFilter(dialog.filter)
+                        filterDialog = null
+                    },
+                ) { Text(stringResource(R.string.action_delete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { filterDialog = null }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
 
     when (selectionDialog) {
         null -> Unit
@@ -499,3 +550,10 @@ private fun SelectionTopBar(count: Int, actions: SelectionActions) {
 }
 
 private enum class SelectionDialog { Move, Tag }
+
+/** Which saved-filter dialog is open. */
+private sealed interface FilterDialogState {
+    data object New : FilterDialogState
+    data class Edit(val filter: SavedFilter) : FilterDialogState
+    data class Delete(val filter: SavedFilter) : FilterDialogState
+}

@@ -17,6 +17,7 @@ fun Task.matches(scope: TaskScope, today: LocalDate): Boolean = when (scope) {
     TaskScope.NoDate -> !isCompleted && dueDate == null
     is TaskScope.InList -> listId == scope.listId
     is TaskScope.WithTag -> tags.any { it.id == scope.tagId }
+    is TaskScope.Filtered -> scope.filter.accepts(this, today)
 }
 
 fun List<Task>.inScope(scope: TaskScope, today: LocalDate): List<Task> =

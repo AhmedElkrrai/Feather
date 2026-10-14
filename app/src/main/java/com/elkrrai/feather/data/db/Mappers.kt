@@ -2,8 +2,10 @@ package com.elkrrai.feather.data.db
 
 import com.elkrrai.feather.domain.model.Folder
 import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.domain.model.DueWindow
 import com.elkrrai.feather.domain.model.Reminder
 import com.elkrrai.feather.domain.model.ReminderKind
+import com.elkrrai.feather.domain.model.SavedFilter
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
@@ -66,6 +68,17 @@ fun TaskEntity.toSubtask(): Subtask = Subtask(
 )
 
 fun TagEntity.toDomain(): Tag = Tag(id = id, name = name)
+
+fun SavedFilterEntity.toDomain(): SavedFilter = SavedFilter(
+    id = id,
+    name = name,
+    listId = listId,
+    tagId = tagId,
+    minPriority = Priority.fromLevel(minPriority),
+    due = DueWindow.fromCode(dueWindow),
+    hideCompleted = hideCompleted,
+    sortOrder = sortOrder,
+)
 
 fun ReminderEntity.toDomain(): Reminder = Reminder(
     id = id,

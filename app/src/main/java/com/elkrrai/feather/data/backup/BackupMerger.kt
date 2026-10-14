@@ -15,6 +15,7 @@ data class MergePlan(
     val tagLinks: List<TaskTagRecord>,
     val reminders: List<ReminderRecord>,
     val completions: List<CompletionRecord>,
+    val filters: List<FilterRecord>,
     val rewrittenTaskIds: Set<String>,
 )
 
@@ -36,6 +37,7 @@ object BackupMerger {
     fun plan(local: BackupFile, incoming: BackupFile, inboxId: String): MergePlan {
         val folders = newer(local.folders, incoming.folders, { it.id }, { it.updatedAt })
         val lists = newer(local.lists, incoming.lists, { it.id }, { it.updatedAt })
+        val filters = newer(local.filters, incoming.filters, { it.id }, { it.updatedAt })
 
         // Same-named tags are one tag.
         val liveLocalTags = local.tags.filter { it.deletedAt == null }.associateBy { normalizedName(it.name) }
@@ -76,6 +78,7 @@ object BackupMerger {
             tagLinks = tagLinks,
             reminders = reminders,
             completions = completions,
+            filters = filters,
             rewrittenTaskIds = rewritten,
         )
     }
