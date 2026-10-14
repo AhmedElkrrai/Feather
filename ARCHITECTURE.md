@@ -165,6 +165,12 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Fonts are variable.** One file per family serves every weight through `FontVariation.weight`; fine because minSdk is 26.
 - **The window background is the paper color** (`nest_paper`), so there is no white flash before the first frame.
 
+#### M9 step 4: the illustration kit
+- **Scenes are code, on a board.** Each of the eight scenes (`ui/brand/scenes`) is a 200 by 200 board drawn with Compose: a back layer, the live bird, a front layer. The bird is the animated `BirdIllustration`, placed by one `BirdPlacement` (position, scale, tilt); the props are small `DrawScope` functions in `SceneProps.kt`, shared by the scenes. Changing a scene means changing a few lines of coordinates.
+- **One frame for all** (`SceneFrame`): scales the board to the requested size, fades and lifts it in, runs the leaf sway and the first-launch sunrise, and honors reduced motion. Scenes have no semantics; the sentence next to them carries the meaning.
+- **Size is a pure rule** (`sceneSizeDp`): 190 dp, 140 dp at 200 percent font, nothing under 320 dp of free height. `EmptyState` measures its space and applies it.
+- **Screens choose a scene by view.** `TaskScope.emptyCopy()` maps an empty view to a scene and its words; trash, search, the reliability screen and the backup dialog use theirs directly.
+
 #### M9 step 3: the Today header and richer rows
 - **Pure logic first.** Greeting and sky boundaries, the bird's mood for the day, how many leaves are filled (`ui/today/TodayLogic.kt`), the choice of date label (`ui/format/FriendlyDue.kt`), the list color/shape mapping (`ui/theme/ListColors.kt`), barb strokes and leaf progress are plain functions with tests; the composables only draw them.
 - **What Today shows comes from the list state.** `TaskListUiState` has `today` (open tasks due today or earlier, tasks finished today) and, for the Today view only, `doneToday`. Nothing is added to the repositories.

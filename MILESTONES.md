@@ -20,7 +20,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | Code complete (flash workflow: not built, installed or tested) |
 | M8 | Brand | Bird identity and animation | Code complete (flash workflow: not built, installed or tested) |
-| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | In progress (steps 1 to 3 done) |
+| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | In progress (steps 1 to 4 done) |
 
 Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
 
@@ -381,13 +381,23 @@ Flash workflow: written, not built, installed or tested. No SVG files came from 
 - **Where they appear.** Empty list: the Inbox shows the first-launch scene ("Hello! I'm Feather"), other lists the empty-list scene. Today, Upcoming and the other smart views: nothing due; Waiting for you: all done. Search with no results: no results (with the query in the sentence). Trash: trash empty. Reminder reliability: reminders blocked, above the checks, when something is wrong. A manual backup export: a small "backup saved" dialog instead of a toast.
 - **Not in this step:** a real first-launch welcome (there is no flag for "first time", so the Inbox shows the first-launch scene whenever it is empty), the quick-add and other screens, and any scene art from a designer.
 
-Sub-steps:
+Sub-steps (all done):
 1. Plan (this section).
 2. Foundations: scene layout rules, the palette, the props, and the `Illustration` composable.
 3. Scenes: empty list, all done, nothing due, no results.
 4. Scenes: backup saved, reminders blocked, first launch, trash empty.
 5. Strings (English and Arabic) and putting the scenes into the screens.
 6. Tests and docs.
+
+Known gaps after M9 step 4 (flash workflow: nothing has been compiled or run):
+- **The art has never been seen.** Every coordinate was worked out on paper, so expect to move things: the bird's feet against the branch, nest and rim; the egg and shell shapes; the bell's proportions; whether the loupe, the lid and the feather read clearly at 190 dp and at 140 dp; contrast of the cloud and the ground shadow in the three themes. Each scene is about 15 lines in `Scenes.kt`, so changes are quick.
+- **No designer's SVGs.** If they arrive, the props in `SceneProps.kt` can be replaced by their paths without touching the screens.
+- **First launch** is the Inbox's empty state, not a real welcome: it shows again whenever the Inbox is empty. A one-time welcome needs a stored flag.
+- **The backup dialog** replaces the toast only for a written backup file (export and CSV); imports and errors keep the toast.
+- **Empty Today** has no scene of its own: the header (with the sleeping bird) is its picture.
+- **Instrumented tests** that looked for the old empty-state wording were updated, but not run.
+- The Arabic sentences are the designer's drafts and need a native speaker; the first-launch sentence says Feather in Latin letters like the rest of the Arabic text, where the draft said ريشة.
+- New tests (written, not run): `SceneLayoutTest`.
 
 ### Where the project stands
 All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.

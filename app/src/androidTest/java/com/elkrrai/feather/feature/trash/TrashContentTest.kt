@@ -53,7 +53,7 @@ class TrashContentTest {
     fun anEmptyTrashShowsItsMessage() {
         show(emptyList())
 
-        rule.onNodeWithText(string(R.string.trash_empty_title)).assertIsDisplayed()
+        rule.onNodeWithText(string(R.string.scene_trash_empty)).assertIsDisplayed()
     }
 
     @Test

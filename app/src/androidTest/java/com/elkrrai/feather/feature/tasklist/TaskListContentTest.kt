@@ -96,14 +96,22 @@ class TaskListContentTest {
     fun emptyListShowsTheEmptyState() {
         show(emptyList())
 
-        rule.onNodeWithText(string(R.string.task_list_empty_title)).assertIsDisplayed()
+        // The Inbox is where a new user starts, so it greets.
+        rule.onNodeWithText(string(R.string.scene_first_launch)).assertIsDisplayed()
     }
 
     @Test
-    fun emptySmartViewShowsItsOwnMessage() {
+    fun emptyDateViewSaysNothingIsDue() {
+        show(emptyList(), scope = TaskScope.Upcoming)
+
+        rule.onNodeWithText(string(R.string.scene_nothing_due)).assertIsDisplayed()
+    }
+
+    @Test
+    fun emptyTodayShowsItsHeaderInsteadOfAPicture() {
         show(emptyList(), scope = TaskScope.Today)
 
-        rule.onNodeWithText(string(R.string.empty_view_title)).assertIsDisplayed()
+        rule.onNodeWithText(string(R.string.today_nothing_planned)).assertIsDisplayed()
     }
 
     @Test

@@ -69,6 +69,6 @@ class SearchContentTest {
     fun aQueryWithNoMatchesShowsTheNoResultsMessage() {
         show(SearchUiState(query = "zzz", results = emptyList(), lists = listOf(inbox)))
 
-        rule.onNodeWithText(string(R.string.search_no_results)).assertIsDisplayed()
+        rule.onNodeWithText(string(R.string.search_no_results_body)).assertIsDisplayed()
     }
 }
