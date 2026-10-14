@@ -213,7 +213,7 @@ private fun DrawScope.drawSleepingZs(phase: Float) {
 private fun Modifier.describedAs(description: String?): Modifier =
     if (description == null) clearAndSetSemantics { } else semantics { contentDescription = description }
 
-private fun periodMillis(mood: BirdMood): Int = when (mood) {
+internal fun periodMillis(mood: BirdMood): Int = when (mood) {
     BirdMood.IDLE -> 4000
     BirdMood.SLEEPING -> 3600
     BirdMood.HAPPY -> 1100
