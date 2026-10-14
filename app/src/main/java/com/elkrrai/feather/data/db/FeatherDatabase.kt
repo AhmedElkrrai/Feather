@@ -38,6 +38,7 @@ abstract class FeatherDatabase : RoomDatabase() {
     abstract fun tagDao(): TagDao
     abstract fun reminderDao(): ReminderDao
     abstract fun completionDao(): CompletionDao
+    abstract fun backupDao(): BackupDao
 
     companion object {
         const val NAME = "feather.db"

@@ -2,10 +2,12 @@ package com.elkrrai.feather.di
 
 import com.elkrrai.feather.data.db.RoomTransactionRunner
 import com.elkrrai.feather.data.db.TransactionRunner
+import com.elkrrai.feather.data.repository.BackupRepositoryImpl
 import com.elkrrai.feather.data.repository.ListRepositoryImpl
 import com.elkrrai.feather.data.repository.ReminderRepositoryImpl
 import com.elkrrai.feather.data.repository.TagRepositoryImpl
 import com.elkrrai.feather.data.repository.TaskRepositoryImpl
+import com.elkrrai.feather.domain.backup.BackupRepository
 import com.elkrrai.feather.domain.repository.ListRepository
 import com.elkrrai.feather.domain.repository.ReminderRepository
 import com.elkrrai.feather.domain.repository.TagRepository
@@ -30,6 +32,9 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindReminderRepository(impl: ReminderRepositoryImpl): ReminderRepository
+
+    @Binds
+    abstract fun bindBackupRepository(impl: BackupRepositoryImpl): BackupRepository
 
     @Binds
     abstract fun bindTransactionRunner(impl: RoomTransactionRunner): TransactionRunner

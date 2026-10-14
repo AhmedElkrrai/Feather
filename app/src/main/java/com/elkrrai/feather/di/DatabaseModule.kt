@@ -2,6 +2,7 @@ package com.elkrrai.feather.di
 
 import android.content.Context
 import androidx.room.Room
+import com.elkrrai.feather.data.db.BackupDao
 import com.elkrrai.feather.data.db.CompletionDao
 import com.elkrrai.feather.data.db.FeatherDatabase
 import com.elkrrai.feather.data.db.FolderDao
@@ -43,6 +44,9 @@ object DatabaseModule {
 
     @Provides
     fun provideCompletionDao(db: FeatherDatabase): CompletionDao = db.completionDao()
+
+    @Provides
+    fun provideBackupDao(db: FeatherDatabase): BackupDao = db.backupDao()
 
     @Provides
     fun provideClock(): Clock = Clock.systemUTC()
