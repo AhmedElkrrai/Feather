@@ -119,7 +119,7 @@ class TodayWidget : GlanceAppWidget() {
                     ),
                     modifier = GlanceModifier
                         .defaultWeight()
-                        .clickable(actionStartActivity<MainActivity>()),
+                        .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
                 )
                 Image(
                     provider = ImageProvider(R.drawable.ic_add),
@@ -128,7 +128,7 @@ class TodayWidget : GlanceAppWidget() {
                     modifier = GlanceModifier
                         .size(32.dp)
                         .padding(4.dp)
-                        .clickable(actionStartActivity<QuickAddActivity>()),
+                        .clickable(actionStartActivity(Intent(context, QuickAddActivity::class.java))),
                 )
             }
 

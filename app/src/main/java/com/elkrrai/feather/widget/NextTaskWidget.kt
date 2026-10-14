@@ -1,6 +1,7 @@
 package com.elkrrai.feather.widget
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -85,7 +86,7 @@ class NextTaskWidget : GlanceAppWidget() {
                         Column(
                             modifier = GlanceModifier
                                 .fillMaxSize()
-                                .clickable(actionStartActivity<MainActivity>()),
+                                .clickable(actionStartActivity(Intent(localized, MainActivity::class.java))),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {

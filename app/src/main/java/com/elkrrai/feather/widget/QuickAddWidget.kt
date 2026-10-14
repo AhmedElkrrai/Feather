@@ -1,6 +1,7 @@
 package com.elkrrai.feather.widget
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
@@ -43,7 +44,7 @@ class QuickAddWidget : GlanceAppWidget() {
                         .background(GlanceTheme.colors.primaryContainer)
                         .cornerRadius(24.dp)
                         .padding(horizontal = 12.dp)
-                        .clickable(actionStartActivity<QuickAddActivity>()),
+                        .clickable(actionStartActivity(Intent(context, QuickAddActivity::class.java))),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
