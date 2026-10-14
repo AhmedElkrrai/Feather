@@ -93,16 +93,6 @@ class TodayWidget : GlanceAppWidget() {
 
     private data class TodayRow(val id: String, val title: String, val due: String, val overdue: Boolean)
 
-    /** The time for a task due today, the date for an overdue one. */
-    private fun dueLabel(context: Context, task: Task, today: LocalDate, locale: Locale): String {
-        val date = task.dueDate ?: return ""
-        val time = task.dueTime?.let { formatDueTime(it, locale) }
-        return when {
-            date.isBefore(today) -> listOfNotNull(formatDueDate(context, date, today, locale), time).joinToString(", ")
-            else -> time.orEmpty()
-        }
-    }
-
     @Composable
     private fun TodayContent(
         context: Context,
@@ -197,12 +187,6 @@ class TodayWidget : GlanceAppWidget() {
         }
     }
 
-    private fun openTaskIntent(context: Context, taskId: String): Intent =
-        Intent(context, MainActivity::class.java)
-            .putExtra(MainActivity.EXTRA_OPEN_TASK_ID, taskId)
-            // A distinct data URI keeps every row's PendingIntent separate.
-            .setData(Uri.parse("feather://task/$taskId"))
-
     private companion object {
         const val MAX_ROWS = 30
     }
@@ -221,7 +205,7 @@ class CompleteTaskAction : ActionCallback {
         entry.taskRepository().setCompleted(taskId, true)
         entry.notifier().cancel(taskId)
         entry.scheduler().reschedule()
-        TodayWidget().updateAll(context)
+        updateTaskWidgets(context)
     }
 
     companion object {

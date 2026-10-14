@@ -494,4 +494,9 @@
     <string name="filter_hide_completed">إخفاء المهام المنجزة</string>
     <string name="delete_filter_title">حذف عامل التصفية؟</string>
     <string name="delete_filter_message">سيتم حذف «%1$s». لن تتأثر مهامك.</string>
+
+    <string name="widget_next_label">Feather: المهمة التالية</string>
+    <string name="widget_next_description">أكثر مهمة مفتوحة إلحاحًا، مع خانة اختيار.</string>
+    <string name="widget_next_heading">التالية</string>
+    <string name="widget_next_empty">لا شيء متبقٍ</string>
 </resources>

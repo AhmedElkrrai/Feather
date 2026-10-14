@@ -1,7 +1,6 @@
 package com.elkrrai.feather.widget
 
 import android.content.Context
-import androidx.glance.appwidget.updateAll
 import com.elkrrai.feather.domain.repository.TaskRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -26,7 +25,7 @@ class WidgetUpdater @Inject constructor(
         scope.launch {
             tasks.observeTasks()
                 .debounce(DEBOUNCE_MILLIS)
-                .collect { TodayWidget().updateAll(context) }
+                .collect { updateTaskWidgets(context) }
         }
     }
 

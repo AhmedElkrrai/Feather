@@ -426,4 +426,9 @@
     <string name="filter_hide_completed">Hide finished tasks</string>
     <string name="delete_filter_title">Delete filter?</string>
     <string name="delete_filter_message">“%1$s” will be deleted. Your tasks are not affected.</string>
+
+    <string name="widget_next_label">Feather: Next task</string>
+    <string name="widget_next_description">The most urgent open task, with a checkbox.</string>
+    <string name="widget_next_heading">Next up</string>
+    <string name="widget_next_empty">Nothing left to do</string>
 </resources>
