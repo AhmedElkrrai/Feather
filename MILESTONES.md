@@ -16,7 +16,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Done (built and installed; the 1 -> 2 database upgrade kept existing data) |
 | M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | Built; install and real-device testing still pending |
 | M4 | Recurrence | Rule engine, repeat modes, completion history | Code complete (developed with the "flash" workflow: not built, installed or tested) |
-| M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | In progress (flash workflow) |
+| M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | Code complete (flash workflow: not built, installed or tested) |
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | |
 | M8 | Brand | Bird identity and animation | |
@@ -166,7 +166,16 @@ Showing future occurrences in Upcoming and a calendar, an undo for completing a 
 5. **Quick add in the app.** `QuickAddTask`, the sheet with live chips and tap-to-undo, the task list ViewModel hook, strings in both languages.
 6. **Voice input.** A microphone button in the sheet.
 7. **Outside entry points.** `QuickAddActivity`, share target, Quick Settings tile, launcher shortcut, manifest, strings.
-8. **Docs.** FEATURES, ARCHITECTURE and MILESTONES updates.
+8. **Tests and docs.** `QuickAddTask` and ViewModel tests; FEATURES, ARCHITECTURE and MILESTONES updates.
 
 ### Deferred from M5
 Reminders and end conditions in the parser, dialect Arabic, list names with spaces, creating a list from `@name`, localized relative phrases for other languages, an on-device model, offline-only speech recognition (a custom `SpeechRecognizer` with its own UI and the microphone permission), and a home-screen widget (M6).
+
+### Known gaps after M5
+- **Nothing in M5 has been compiled or run**, including the parser tests. The regular expressions are the likeliest place for surprises; the phrase tables in `QuickAddParserTest` are the first thing to run.
+- **Needs a real device:** dictation in English and Arabic (and what the recognizer returns for numbers), the share sheet entry, the Quick Settings tile (it has to be added to the panel by hand) and the launcher shortcut, the see-through screen with the keyboard, and RTL layout of the chips.
+- Arabic is standard Arabic only: no dialect words ("بكرة"), no Levantine month names, and the week-start for "next week" is Monday in both languages.
+- `at 5` with no am or pm is a guess (1 to 6 afternoon, 7 to 11 morning); `5:30` with a colon but no am or pm is read as 24-hour.
+- Not parsed: reminders, "until" and "for N times", other Latin or Arabic-script languages, list names with spaces other than `_`.
+- The share sheet shows the activity label "Add to Feather"; the tile has to be added by the user from the Quick Settings editor.
+- The share target accepts only plain text, not images or files.

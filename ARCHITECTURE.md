@@ -125,6 +125,15 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Completion lives in the repository.** `TaskRepositoryImpl.setCompleted` runs in one transaction: history row, next date (or final completion), checklist reset, and reminders moved with the date (specific-time reminders shift by the same number of days; a pending snooze is dropped; all become eligible to fire again with a new `updatedAt` so a trigger already in the past is not replayed). The list, search and the notification action all go through it.
 - **"Today" for a completion is the user's day** (`Clock` is UTC, converted with the system zone), the same convention as the task list.
 
+### M5 (quick add)
+- **The parser is pure Kotlin in `domain/quickadd`.** `QuickAddParser.parse(text, now, listNames, disabled)` returns a `ParsedQuickAdd`; `now` and the list names are passed in, so nothing depends on Android or on a clock. Language packs implement `LanguageRules` (repeat, time, date); English and Arabic both run on the same text.
+- **Matching is done on a normalized copy** of the text (`QuickText`): lower case, ASCII digits, one spelling for alef, ya and ta marbuta, no diacritics. Recognized words are blanked in that copy and removed from the user's original text by an index map, so the title keeps the user's own letters, hamza and diacritics.
+- **Symbols are language-neutral:** `#tag`, `@list` (only for an existing list; spaces as `_`) and `!priority`. Everything else is words.
+- **Switching a field off re-runs the parser without that field** (`disabled`), so its words stay in the title. A date that is only implied (a time alone, a repeat alone) has no chip of its own.
+- **Saving is shared:** `QuickAddTask` turns a `ParsedQuickAdd` into a task through the repositories. The task list ViewModel and `QuickAddViewModel` both use it; the text overrides what the current view would suggest.
+- **One see-through `QuickAddActivity`** hosts the same `QuickAddSheet` for the share sheet (`ACTION_SEND` `text/plain`, collapsed to one line), the Quick Settings tile (`TileService`; `PendingIntent` on Android 14+) and a static launcher shortcut. Its write is wrapped in `NonCancellable` so it finishes while the screen closes.
+- **Voice** is `RecognizerIntent` (no microphone permission); offline is requested but not required, so the system recognizer may use the network.
+
 ## Open items
 - Donation mechanism (external link vs. Play flow) and Play policy implications
 - Exact-alarm permission strategy (see Reminders)

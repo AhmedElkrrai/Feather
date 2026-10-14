@@ -1,6 +1,7 @@
 package com.elkrrai.feather.feature.tasklist
 
 import com.elkrrai.feather.domain.model.TaskList
+import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
 import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.TaskSort
 import com.elkrrai.feather.testutil.FakeListRepository
@@ -227,5 +228,41 @@ class TaskListViewModelTest {
 
         viewModel.restoreTask(task.id)
         assertEquals(listOf("Task"), viewModel.titles())
+    }
+
+    @Test
+    fun aListNamedInTheTextWinsOverTheCurrentView() = runTest {
+        val work = lists.createList("Work")
+        val viewModel = newViewModel()
+
+        viewModel.addParsed(ParsedQuickAdd(title = "Draft report"), listId = work.id)
+
+        assertEquals(listOf("Draft report"), tasks.getActiveTasks().filter { it.listId == work.id }.map { it.title })
+    }
+
+    @Test
+    fun aDateInTheTextWinsOverTheTodayView() = runTest {
+        val viewModel = newViewModel()
+        viewModel.selectScope(TaskScope.Today)
+        val written = today.plusDays(5)
+
+        viewModel.addParsed(ParsedQuickAdd(title = "Later", dueDate = written), listId = null)
+        viewModel.addParsed(ParsedQuickAdd(title = "No date"), listId = null)
+
+        val byTitle = tasks.getActiveTasks().associateBy { it.title }
+        assertEquals(written, byTitle.getValue("Later").dueDate)
+        assertEquals(today, byTitle.getValue("No date").dueDate)
+    }
+
+    @Test
+    fun aTagViewAddsItsTagBesidesTheOnesInTheText() = runTest {
+        val work = tags.createTag("work")
+        val viewModel = newViewModel()
+        viewModel.selectScope(TaskScope.WithTag(work.id))
+
+        viewModel.addParsed(ParsedQuickAdd(title = "Report", tags = listOf("urgent")), listId = null)
+
+        val saved = tasks.getActiveTasks().single()
+        assertEquals(setOf("work", "urgent"), saved.tags.map { it.name }.toSet())
     }
 }
