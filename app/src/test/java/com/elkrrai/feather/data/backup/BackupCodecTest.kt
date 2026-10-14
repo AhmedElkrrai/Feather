@@ -94,4 +94,21 @@ class BackupCodecTest {
 
         assertEquals(BackupFormatException.Reason.TOO_NEW, rejectionOf(text))
     }
+
+    @Test
+    fun aFileWithoutFiltersStillReads() {
+        // Written before saved filters existed.
+        val text = "{\"format\": \"feather-backup\", \"version\": 1, \"tasks\": []}"
+
+        assertEquals(emptyList<FilterRecord>(), BackupCodec.decode(text).filters)
+    }
+
+    @Test
+    fun filtersSurviveAWriteAndRead() {
+        val file = BackupFile(
+            filters = listOf(FilterRecord("f", "Important", listId = "l", tagId = "t", minPriority = 3, dueWindow = 3)),
+        )
+
+        assertEquals(file, BackupCodec.decode(BackupCodec.encode(file)))
+    }
 }

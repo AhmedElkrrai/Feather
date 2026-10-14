@@ -142,6 +142,15 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Widgets are Jetpack Glance** (`widget/`): `TodayWidget` reads through a Hilt entry point, `CompleteTaskAction` finishes a task through the same `setCompleted` as everywhere else, `WidgetUpdater` redraws on task changes (debounced), and the system refreshes every 30 minutes, which rolls the list over at midnight. `QuickAddWidget` only opens `QuickAddActivity`.
 - **Android's own Auto Backup** is limited by `data_extraction_rules.xml` and `backup_rules.xml` to the task database and the settings file.
 
+### M7 (polish)
+- **Display choices live in `DisplayPrefs`** (`ui/DisplayPrefs.kt`): a small object of snapshot state that the app writes from the saved settings at start and on every change, and that formatting, theme and haptics code reads. This keeps the clock format and first weekday out of every function signature, and lets notifications and widgets format times the same way as the screens. The price is global state; it is written in one place only.
+- **Light and dark go through `AppCompatDelegate.setDefaultNightMode`**, not a flag passed to the theme, so system bars, dialogs and `isSystemInDarkTheme()` agree. Pure black and Material You are theme parameters that default to `DisplayPrefs`. The saved settings are read once, blocking, in `Application.onCreate` so the first frame already has the right colors.
+- **Selection** is ViewModel state (`pickedIds`), always intersected with what is on screen, and cleared when the view changes. Bulk actions go through the same repository calls as single ones.
+- **Manual order** swaps the `sortOrder` values the dragged tasks already have, so tasks that are not in the list keep their place. `Created` sorts by `createdAt` only, otherwise dragging would rewrite creation order. The list being dragged is a local copy (`ReorderState`) committed when the finger lifts; TalkBack users get Move up and Move down actions instead of a drag.
+- **A saved filter is data, and the scope carries it** (`TaskScope.Filtered(filter)`), so matching is a pure function like the other scopes and the ViewModel only re-resolves it by id when the filter changes. `saved_filters` has no foreign keys: a filter outlives a deleted list or tag and then matches nothing. Schema v5, `@AutoMigration(4, 5)`, and an optional `filters` field in the backup file (still version 1, because older files simply lack it).
+- **Links in notes** are found by a pure function (`findLinks`) and shown as chips; the notes field stays plain text.
+- **Release.** `proguard-rules.pro` lists only what the libraries do not bring (serializers by name, the two workers); the signing details come from an untracked `keystore.properties`; only English and Arabic library resources are kept.
+
 ## Open items
 - Donation mechanism (external link vs. Play flow) and Play policy implications
 - Exact-alarm permission strategy (see Reminders)

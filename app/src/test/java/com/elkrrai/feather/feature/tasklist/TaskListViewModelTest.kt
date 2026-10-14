@@ -1,5 +1,7 @@
 package com.elkrrai.feather.feature.tasklist
 
+import com.elkrrai.feather.domain.model.DueWindow
+import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
 import com.elkrrai.feather.domain.view.TaskScope
@@ -266,5 +268,206 @@ class TaskListViewModelTest {
 
         val saved = tasks.getActiveTasks().single()
         assertEquals(setOf("work", "urgent"), saved.tags.map { it.name }.toSet())
+    }
+
+    // --- Selecting several tasks ---
+
+    @Test
+    fun selectionIsLimitedToTasksOnScreen() = runTest {
+        val a = tasks.addTask(inbox, "A")
+        val viewModel = newViewModel()
+
+        viewModel.toggleSelected(a.id)
+        viewModel.toggleSelected("ghost")
+        assertEquals(setOf(a.id), viewModel.uiState.value.selection)
+
+        viewModel.toggleSelected(a.id)
+        assertTrue(viewModel.uiState.value.selection.isEmpty())
+    }
+
+    @Test
+    fun selectAllAndClear() = runTest {
+        tasks.addTask(inbox, "A")
+        tasks.addTask(inbox, "B")
+        val viewModel = newViewModel()
+
+        viewModel.selectAll()
+        assertEquals(2, viewModel.uiState.value.selection.size)
+
+        viewModel.clearSelection()
+        assertTrue(viewModel.uiState.value.selection.isEmpty())
+    }
+
+    @Test
+    fun changingTheViewClearsTheSelection() = runTest {
+        val a = tasks.addTask(inbox, "A")
+        val viewModel = newViewModel()
+        viewModel.toggleSelected(a.id)
+
+        viewModel.selectScope(TaskScope.All)
+
+        assertTrue(viewModel.uiState.value.selection.isEmpty())
+    }
+
+    @Test
+    fun completeSelectedFinishesThemAndEndsSelecting() = runTest {
+        val a = tasks.addTask(inbox, "A")
+        val b = tasks.addTask(inbox, "B")
+        val c = tasks.addTask(inbox, "C")
+        val viewModel = newViewModel()
+        viewModel.toggleSelected(a.id)
+        viewModel.toggleSelected(b.id)
+
+        viewModel.completeSelected()
+
+        assertTrue(tasks.getTask(a.id)!!.isCompleted)
+        assertTrue(tasks.getTask(b.id)!!.isCompleted)
+        assertFalse(tasks.getTask(c.id)!!.isCompleted)
+        assertTrue(viewModel.uiState.value.selection.isEmpty())
+    }
+
+    @Test
+    fun moveSelectedGoesToTheChosenList() = runTest {
+        val work = lists.createList("Work")
+        val a = tasks.addTask(inbox, "A")
+        val viewModel = newViewModel()
+        viewModel.toggleSelected(a.id)
+
+        viewModel.moveSelectedTo(work.id)
+
+        assertEquals(work.id, tasks.getTask(a.id)!!.listId)
+    }
+
+    @Test
+    fun addTagToSelectedKeepsOtherTagsAndDoesNotRepeat() = runTest {
+        val existing = tags.createTag("home")
+        val a = tasks.addTask(inbox, "A")
+        tasks.saveTaskDetails(a.copy(tags = listOf(existing)))
+        val viewModel = newViewModel()
+
+        viewModel.toggleSelected(a.id)
+        viewModel.addNewTagToSelected("urgent")
+        viewModel.toggleSelected(a.id)
+        viewModel.addTagToSelected(existing)
+
+        assertEquals(setOf("home", "urgent"), tasks.getTask(a.id)!!.tags.map { it.name }.toSet())
+        assertEquals(2, tasks.getTask(a.id)!!.tags.size)
+    }
+
+    @Test
+    fun deleteTasksCanBeUndone() = runTest {
+        val a = tasks.addTask(inbox, "A")
+        val b = tasks.addTask(inbox, "B")
+        val viewModel = newViewModel()
+
+        viewModel.deleteTasks(listOf(a.id, b.id))
+        assertTrue(viewModel.uiState.value.isEmpty)
+
+        viewModel.restoreTasks(listOf(a.id, b.id))
+        assertEquals(listOf("A", "B"), viewModel.titles())
+    }
+
+    // --- Manual order and pinning ---
+
+    @Test
+    fun manualOrderFollowsTheSavedOrder() = runTest {
+        val a = tasks.addTask(inbox, "A")
+        val b = tasks.addTask(inbox, "B")
+        val c = tasks.addTask(inbox, "C")
+        val viewModel = newViewModel()
+        viewModel.setSort(TaskSort.MANUAL)
+
+        viewModel.reorderTasks(listOf(c.id, a.id, b.id))
+
+        assertEquals(listOf("C", "A", "B"), viewModel.titles())
+    }
+
+    @Test
+    fun createdOrderIsNotChangedByDragging() = runTest {
+        val a = tasks.addTask(inbox, "A")
+        val b = tasks.addTask(inbox, "B")
+        val viewModel = newViewModel()
+
+        viewModel.reorderTasks(listOf(b.id, a.id))
+
+        assertEquals(listOf("A", "B"), viewModel.titles())
+    }
+
+    @Test
+    fun pinningMovesATaskToTheTop() = runTest {
+        tasks.addTask(inbox, "A")
+        val b = tasks.addTask(inbox, "B")
+        val viewModel = newViewModel()
+
+        viewModel.setPinned(b.id, true)
+
+        assertEquals(listOf("B", "A"), viewModel.titles())
+    }
+
+    // --- Saved filters ---
+
+    private fun draft(
+        name: String = "Filter",
+        listId: String? = null,
+        tagId: String? = null,
+        minPriority: Priority = Priority.NONE,
+        due: DueWindow = DueWindow.ANY,
+        hideCompleted: Boolean = true,
+    ) = FilterDraft(name, listId, tagId, minPriority, due, hideCompleted)
+
+    @Test
+    fun creatingAFilterOpensItAndShowsOnlyMatchingTasks() = runTest {
+        val urgent = tasks.addTask(inbox, "Urgent")
+        tasks.saveTask(urgent.copy(priority = Priority.HIGH))
+        tasks.addTask(inbox, "Whenever")
+        val viewModel = newViewModel()
+
+        viewModel.createFilter(draft(name = "Important", minPriority = Priority.HIGH))
+
+        val state = viewModel.uiState.value
+        assertTrue(state.scope is TaskScope.Filtered)
+        assertEquals(listOf("Urgent"), viewModel.titles())
+        assertEquals(1, state.filters.size)
+        assertEquals(1, state.counts[state.scope])
+    }
+
+    @Test
+    fun editingTheOpenFilterUpdatesTheView() = runTest {
+        val high = tasks.addTask(inbox, "High")
+        tasks.saveTask(high.copy(priority = Priority.HIGH))
+        tasks.addTask(inbox, "Plain")
+        val viewModel = newViewModel()
+        viewModel.createFilter(draft(minPriority = Priority.HIGH))
+        val filter = viewModel.uiState.value.filters.single()
+
+        viewModel.updateFilter(filter, draft(minPriority = Priority.NONE))
+
+        assertEquals(setOf("High", "Plain"), viewModel.titles().toSet())
+    }
+
+    @Test
+    fun deletingTheOpenFilterFallsBackToTheInbox() = runTest {
+        val viewModel = newViewModel()
+        viewModel.createFilter(draft())
+        val filter = viewModel.uiState.value.filters.single()
+
+        viewModel.deleteFilter(filter)
+
+        assertEquals(TaskScope.InList(inbox), viewModel.uiState.value.scope)
+        assertTrue(viewModel.uiState.value.filters.isEmpty())
+    }
+
+    @Test
+    fun quickAddInsideAFilterUsesItsListAndTag() = runTest {
+        val work = lists.createList("Work")
+        val tag = tags.createTag("urgent")
+        val viewModel = newViewModel()
+        viewModel.createFilter(draft(listId = work.id, tagId = tag.id))
+
+        viewModel.addTask("From the filter")
+
+        val added = tasks.getActiveTasks().single()
+        assertEquals(work.id, added.listId)
+        assertEquals(listOf("urgent"), added.tags.map { it.name })
     }
 }

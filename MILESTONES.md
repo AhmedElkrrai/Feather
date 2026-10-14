@@ -18,7 +18,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M4 | Recurrence | Rule engine, repeat modes, completion history | Code complete (developed with the "flash" workflow: not built, installed or tested) |
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | Code complete (flash workflow: not built, installed or tested) |
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
-| M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | In progress (flash workflow) |
+| M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | Code complete (flash workflow: not built, installed or tested) |
 | M8 | Brand | Bird identity and animation | |
 
 Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
@@ -250,3 +250,14 @@ The user did not answer the open questions, so these are the recommended default
 
 ### Deferred from M7
 Macrobenchmarks and a baseline profile, screenshot tests in LTR and RTL, snapping a dragged task between two sections, a filter with several lists or tags, widget configuration screens, a calendar view, and the bird brand (M8).
+
+### Known gaps after M7
+- **Nothing in M3 to M7 has been compiled or run.** Five milestones of code are stacked on the last build (M2). The first build will probably show compile errors, mostly in the newest and most Compose-heavy files (Glance widgets, the drag state, the list screen, the settings screen), and the database now has to upgrade 2 -> 5 on the phone. A stabilization pass (build, fix, run the unit tests, install over the old build, walk through `store/RELEASE.md`) is the right next step before any new feature.
+- **Needs a real device:** dragging (feel, auto-scroll at the edges, rows of different heights), long-press selection, TalkBack on a task row and in the drawer, large font sizes, pure black on an OLED screen, switching theme while the app is open (the activity is recreated), the 12 and 24 hour clock in the time picker, Arabic in the filter dialog and the chips.
+- Dragging works only in a single list of tasks (not in Upcoming, which is grouped by day) and only in the Manual sort. There is no auto-scroll while the finger is still.
+- The week start orders the weekday chips of the repeat dialog; the system date picker and the parser's "next week" keep their own rules (the picker follows the system, the parser uses Monday).
+- Saved filters have one list and one tag at most, and no sort of their own.
+- `SupportLinks.DONATION_URL` is empty, so "Support Feather" is not shown until the owner sets it; the Play policy on donation links and the exact-alarm declaration still need to be checked (`store/STORE.md`).
+- The launcher icon is the template's; the bird identity is M8. The release build, R8 rules and signing have never been run.
+- Macrobenchmarks, a baseline profile and screenshot tests (LTR and RTL) were left out; the view code still builds all lists in memory on the main thread, which is fine for thousands of tasks but is the first thing to measure.
+- New tests (written, not run): `SavedFilterTest`, `TaskSortOrderTest`, `LinksTest`, `DisplayFormatTest`, additions to `TaskListViewModelTest`, `BackupMergerTest`, `BackupCodecTest`, `RepositoryTest`, `BackupRepositoryTest` and the new `SavedFilterRepositoryTest`.

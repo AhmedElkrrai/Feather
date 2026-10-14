@@ -153,4 +153,22 @@ class BackupMergerTest {
 
         assertEquals(listOf("c2"), plan(local, incoming).completions.map { it.id })
     }
+
+    @Test
+    fun filtersFollowTheSameNewestWinsRule() {
+        val local = BackupFile(
+            filters = listOf(FilterRecord("kept", "Local", updatedAt = 10), FilterRecord("old", "Local", updatedAt = 1)),
+        )
+        val incoming = BackupFile(
+            filters = listOf(
+                FilterRecord("kept", "File", updatedAt = 5),
+                FilterRecord("old", "File", updatedAt = 2),
+                FilterRecord("new", "File", updatedAt = 1),
+            ),
+        )
+
+        val plan = plan(local, incoming)
+
+        assertEquals(setOf("old", "new"), plan.filters.map { it.id }.toSet())
+    }
 }

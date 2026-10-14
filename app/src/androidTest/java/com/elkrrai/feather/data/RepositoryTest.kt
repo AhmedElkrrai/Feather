@@ -1,5 +1,6 @@
 package com.elkrrai.feather.data
 
+import org.junit.Assert.assertNotEquals
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -645,5 +646,65 @@ class RepositoryTest {
         tasks.deleteForever(t.id)
 
         assertTrue(db.completionDao().getForTask(t.id).isEmpty())
+    }
+
+    // --- Duplicate and manual order ---
+
+    @Test
+    fun duplicatingCopiesTheDetailsUnderNewIds() = runTest {
+        val tag = tags.createTag("urgent")
+        val original = tasks.addTask(inbox, "Original", LocalDate.of(2026, 10, 20))
+        tasks.saveTaskDetails(
+            original.copy(
+                notes = "Bring the report",
+                priority = Priority.HIGH,
+                tags = listOf(tag),
+                subtasks = listOf(Subtask("s1", "Step", isCompleted = true)),
+                reminders = listOf(beforeDue("r1", 30)),
+                recurrence = Recurrence(Frequency.WEEKLY),
+            )
+        )
+
+        val copy = tasks.duplicateTask(original.id, "Original (copy)")!!
+
+        assertNotEquals(original.id, copy.id)
+        assertEquals("Original (copy)", copy.title)
+        assertEquals("Bring the report", copy.notes)
+        assertEquals(Priority.HIGH, copy.priority)
+        assertEquals(LocalDate.of(2026, 10, 20), copy.dueDate)
+        assertEquals(listOf("urgent"), copy.tags.map { it.name })
+        assertEquals(Recurrence(Frequency.WEEKLY), copy.recurrence)
+        assertEquals(listOf("Step"), copy.subtasks.map { it.title })
+        assertFalse(copy.subtasks.single().isCompleted)
+        assertNotEquals("s1", copy.subtasks.single().id)
+        assertEquals(1, copy.reminders.size)
+        assertNotEquals("r1", copy.reminders.single().id)
+        assertEquals(2, allTasks().size)
+    }
+
+    @Test
+    fun duplicatingAMissingTaskDoesNothing() = runTest {
+        assertNull(tasks.duplicateTask("missing", "Copy"))
+        assertTrue(allTasks().isEmpty())
+    }
+
+    @Test
+    fun reorderingSwapsTheSortValuesAmongTheGivenTasks() = runTest {
+        val a = tasks.addTask(inbox, "A")
+        clock.advance()
+        val b = tasks.addTask(inbox, "B")
+        clock.advance()
+        val c = tasks.addTask(inbox, "C")
+        clock.advance()
+        val other = tasks.addTask(inbox, "Not shown")
+        val values = listOf(a, b, c).map { it.sortOrder }
+
+        tasks.reorderTasks(listOf(c.id, a.id, b.id))
+
+        val byId = allTasks().associateBy { it.id }
+        assertEquals(values[0], byId.getValue(c.id).sortOrder)
+        assertEquals(values[1], byId.getValue(a.id).sortOrder)
+        assertEquals(values[2], byId.getValue(b.id).sortOrder)
+        assertEquals(other.sortOrder, byId.getValue(other.id).sortOrder)
     }
 }

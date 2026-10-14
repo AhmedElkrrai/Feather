@@ -1,5 +1,7 @@
 package com.elkrrai.feather.data
 
+import com.elkrrai.feather.data.repository.SavedFilterRepositoryImpl
+import com.elkrrai.feather.domain.model.DueWindow
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -191,5 +193,21 @@ class BackupRepositoryTest {
         assertTrue(csv.contains("Report"))
         assertTrue(csv.contains("Work"))
         assertTrue(csv.contains("urgent"))
+    }
+
+    @Test
+    fun savedFiltersTravelInTheBackup() = runTest {
+        val filters = SavedFilterRepositoryImpl(db.savedFilterDao(), clock)
+        filters.createFilter("Important", null, null, Priority.HIGH, DueWindow.OVERDUE, hideCompleted = true)
+        val json = backup.exportJson()
+
+        backup.importJson(BackupCodec.encode(BackupFile()), ImportMode.REPLACE)
+        assertTrue(filters.observeFilters().first().isEmpty())
+
+        backup.importJson(json, ImportMode.MERGE)
+        val restored = filters.observeFilters().first().single()
+        assertEquals("Important", restored.name)
+        assertEquals(Priority.HIGH, restored.minPriority)
+        assertEquals(DueWindow.OVERDUE, restored.due)
     }
 }
