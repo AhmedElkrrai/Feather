@@ -1,5 +1,7 @@
 package com.elkrrai.feather.data.repository
 
+import com.elkrrai.feather.data.db.CompletionDao
+import com.elkrrai.feather.data.db.CompletionEntity
 import com.elkrrai.feather.data.db.ReminderDao
 import com.elkrrai.feather.data.db.TaskDao
 import com.elkrrai.feather.data.db.TaskEntity
@@ -11,11 +13,17 @@ import com.elkrrai.feather.data.db.toEntity
 import com.elkrrai.feather.data.db.toSubtask
 import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Task
+import com.elkrrai.feather.domain.recurrence.Recurrence
+import com.elkrrai.feather.domain.recurrence.RepeatMode
+import com.elkrrai.feather.domain.recurrence.afterAdvance
+import com.elkrrai.feather.domain.recurrence.nextOccurrence
 import com.elkrrai.feather.domain.repository.TaskRepository
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +32,7 @@ import kotlinx.coroutines.flow.map
 class TaskRepositoryImpl @Inject constructor(
     private val taskDao: TaskDao,
     private val reminderDao: ReminderDao,
+    private val completionDao: CompletionDao,
     private val tx: TransactionRunner,
     private val clock: Clock,
 ) : TaskRepository {
@@ -149,9 +158,74 @@ class TaskRepositoryImpl @Inject constructor(
         if (rows.isNotEmpty()) reminderDao.upsertAll(rows)
     }
 
+    /**
+     * Finishing a task records it in the completion history. A repeating task does not stay
+     * finished: it moves to its next date (see [advance]), unless that was its last occurrence.
+     * Reopening a finished task takes its history row back.
+     */
     override suspend fun setCompleted(id: String, completed: Boolean) {
+        tx.run {
+            taskDao.getById(id)?.let { task ->
+                if (completed) complete(task) else reopen(task)
+            }
+        }
+    }
+
+    private suspend fun reopen(task: TaskEntity) {
+        task.completedAt?.let { completionDao.deleteForTaskAt(task.id, it) }
+        taskDao.setCompletedAt(task.id, completedAt = null, updatedAt = clock.millis())
+    }
+
+    private suspend fun complete(task: TaskEntity) {
+        if (task.completedAt != null) return
         val now = clock.millis()
-        taskDao.setCompletedAt(id, completedAt = if (completed) now else null, updatedAt = now)
+        completionDao.insert(
+            CompletionEntity(
+                id = UUID.randomUUID().toString(),
+                taskId = task.id,
+                completedAt = now,
+                dueDate = task.dueDate,
+            )
+        )
+
+        val due = task.dueDate?.let(LocalDate::parse)
+        val recurrence = Recurrence.parse(task.rrule, RepeatMode.fromCode(task.repeatMode))
+        // The Clock is UTC; the day a task was finished on is the user's own day.
+        val completedOn = LocalDate.now(clock.withZone(ZoneId.systemDefault()))
+        val next = if (due != null && recurrence != null) recurrence.nextOccurrence(due, completedOn) else null
+
+        if (due == null || recurrence == null || next == null) {
+            taskDao.setCompletedAt(task.id, completedAt = now, updatedAt = now)
+        } else {
+            advance(task, recurrence, due, next, now)
+        }
+    }
+
+    /**
+     * Moves a repeating task to [next]: the rule loses one occurrence, the checklist is
+     * unchecked, and the reminders move with the date and may fire again.
+     */
+    private suspend fun advance(task: TaskEntity, recurrence: Recurrence, due: LocalDate, next: LocalDate, now: Long) {
+        taskDao.upsert(
+            task.copy(dueDate = next.toString(), rrule = recurrence.afterAdvance().toRule(), updatedAt = now)
+        )
+        taskDao.reopenSubtasks(task.id, updatedAt = now)
+
+        // A pending snooze belonged to the occurrence that was just finished.
+        reminderDao.softDeleteSnoozes(task.id, deletedAt = now)
+        val days = ChronoUnit.DAYS.between(due, next)
+        val moved = reminderDao.getActiveForTask(task.id)
+            .filter { it.kind != ReminderKind.SNOOZE.code }
+            .map { row ->
+                val atDate = if (row.kind == ReminderKind.AT_TIME.code) {
+                    row.atDate?.let { LocalDate.parse(it).plusDays(days).toString() }
+                } else {
+                    row.atDate
+                }
+                // A new updatedAt keeps a reminder whose time is already past from being replayed.
+                row.copy(atDate = atDate, firedForTrigger = null, updatedAt = now)
+            }
+        if (moved.isNotEmpty()) reminderDao.upsertAll(moved)
     }
 
     override suspend fun setPinned(id: String, pinned: Boolean) {

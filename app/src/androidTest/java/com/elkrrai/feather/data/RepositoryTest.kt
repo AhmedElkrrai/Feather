@@ -48,7 +48,7 @@ class RepositoryTest {
         db = Room.inMemoryDatabaseBuilder(context, FeatherDatabase::class.java).build()
         clock = TestClock()
         val tx = RoomTransactionRunner(db)
-        tasks = TaskRepositoryImpl(db.taskDao(), db.reminderDao(), tx, clock)
+        tasks = TaskRepositoryImpl(db.taskDao(), db.reminderDao(), db.completionDao(), tx, clock)
         reminderRepo = ReminderRepositoryImpl(db.reminderDao(), tx, clock)
         lists = ListRepositoryImpl(db.listDao(), db.folderDao(), db.taskDao(), tx, clock)
         tags = TagRepositoryImpl(db.tagDao(), clock)

@@ -52,6 +52,13 @@ interface TaskDao {
     @Query("UPDATE tasks SET completedAt = :completedAt, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setCompletedAt(id: String, completedAt: Long?, updatedAt: Long)
 
+    /** Unchecks a task's checklist, used when a repeating task moves to its next date. */
+    @Query(
+        "UPDATE tasks SET completedAt = NULL, updatedAt = :updatedAt " +
+            "WHERE parentTaskId = :parentId AND deletedAt IS NULL AND completedAt IS NOT NULL"
+    )
+    suspend fun reopenSubtasks(parentId: String, updatedAt: Long)
+
     @Query("UPDATE tasks SET isPinned = :pinned, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setPinned(id: String, pinned: Boolean, updatedAt: Long)
 
