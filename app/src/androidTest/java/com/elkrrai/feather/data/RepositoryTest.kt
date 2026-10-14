@@ -14,12 +14,18 @@ import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.Reminder
 import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
+import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.model.TaskList
+import com.elkrrai.feather.domain.recurrence.Frequency
+import com.elkrrai.feather.domain.recurrence.Recurrence
+import com.elkrrai.feather.domain.recurrence.RepeatMode
+import java.time.DayOfWeek
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneOffset
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -498,5 +504,146 @@ class RepositoryTest {
 
         assertTrue(tasks.getActiveTasks().isEmpty())
         assertTrue(tasks.observeTrash().first().isEmpty())
+    }
+
+    // --- Recurrence ---
+
+    private val weekly = Recurrence(Frequency.WEEKLY)
+
+    private fun utcMillis(date: LocalDate) = date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+    private suspend fun repeatingTask(rule: Recurrence): Task {
+        val t = taskDueOn20th()
+        tasks.saveTaskDetails(t.copy(recurrence = rule))
+        return t
+    }
+
+    @Test
+    fun recurrenceIsStoredWithTheTask() = runTest {
+        val rule = Recurrence(
+            Frequency.WEEKLY,
+            interval = 2,
+            weekdays = setOf(DayOfWeek.MONDAY),
+            mode = RepeatMode.AFTER_COMPLETION,
+        )
+        val t = repeatingTask(rule)
+
+        assertEquals(rule, tasks.getTask(t.id)!!.recurrence)
+        assertEquals(rule, allTasks().single().recurrence)
+    }
+
+    @Test
+    fun finishingARepeatingTaskMovesItToTheNextDateAndRecordsIt() = runTest {
+        val t = repeatingTask(weekly)
+
+        tasks.setCompleted(t.id, true)
+
+        val after = tasks.getTask(t.id)!!
+        assertEquals(LocalDate.of(2026, 10, 27), after.dueDate)
+        assertFalse(after.isCompleted)
+        assertEquals(weekly, after.recurrence)
+        assertEquals("2026-10-20", db.completionDao().getForTask(t.id).single().dueDate)
+    }
+
+    @Test
+    fun finishingLateJumpsPastTheMissedOccurrences() = runTest {
+        val t = repeatingTask(Recurrence(Frequency.DAILY))
+        clock.millis = utcMillis(LocalDate.of(2026, 10, 25))
+
+        tasks.setCompleted(t.id, true)
+
+        assertEquals(LocalDate.of(2026, 10, 26), tasks.getTask(t.id)!!.dueDate)
+    }
+
+    @Test
+    fun repeatAfterCompletionCountsFromTheDayItWasFinished() = runTest {
+        val t = repeatingTask(Recurrence(Frequency.DAILY, interval = 2, mode = RepeatMode.AFTER_COMPLETION))
+        clock.millis = utcMillis(LocalDate.of(2026, 10, 25))
+
+        tasks.setCompleted(t.id, true)
+
+        assertEquals(LocalDate.of(2026, 10, 27), tasks.getTask(t.id)!!.dueDate)
+    }
+
+    @Test
+    fun theLastCountedOccurrenceFinishesTheTask() = runTest {
+        val t = repeatingTask(Recurrence(Frequency.DAILY, count = 2))
+
+        tasks.setCompleted(t.id, true)
+        val second = tasks.getTask(t.id)!!
+        assertFalse(second.isCompleted)
+        assertEquals(1, second.recurrence!!.count)
+
+        tasks.setCompleted(t.id, true)
+        val done = tasks.getTask(t.id)!!
+        assertTrue(done.isCompleted)
+        assertEquals(LocalDate.of(2026, 10, 21), done.dueDate)
+        assertEquals(2, db.completionDao().getForTask(t.id).size)
+    }
+
+    @Test
+    fun finishingARepeatingTaskUnchecksItsChecklist() = runTest {
+        val t = taskDueOn20th()
+        tasks.saveTaskDetails(
+            t.copy(
+                recurrence = weekly,
+                subtasks = listOf(Subtask("s1", "One", isCompleted = true), Subtask("s2", "Two")),
+            )
+        )
+
+        tasks.setCompleted(t.id, true)
+
+        assertEquals(listOf(false, false), tasks.getTask(t.id)!!.subtasks.map { it.isCompleted })
+    }
+
+    @Test
+    fun remindersFollowARepeatingTaskToItsNextDate() = runTest {
+        val t = taskDueOn20th()
+        val specific = Reminder(id = "at", kind = ReminderKind.AT_TIME, at = LocalDateTime.of(2026, 10, 19, 18, 0))
+        tasks.saveTaskDetails(t.copy(recurrence = weekly, reminders = listOf(beforeDue("b", 60), specific)))
+        reminderRepo.markFired("b", Instant.ofEpochMilli(5_000))
+        reminderRepo.snooze(t.id, LocalDateTime.of(2026, 10, 20, 10, 0))
+        clock.advance()
+
+        tasks.setCompleted(t.id, true)
+
+        val reminders = tasks.getTask(t.id)!!.reminders
+        assertEquals(setOf("b", "at"), reminders.map { it.id }.toSet()) // the snooze is gone
+        assertTrue(reminders.all { it.firedForTrigger == null })
+        assertEquals(LocalDateTime.of(2026, 10, 26, 18, 0), reminders.first { it.id == "at" }.at)
+        assertTrue(reminders.all { it.updatedAt.toEpochMilli() == clock.millis })
+    }
+
+    @Test
+    fun reopeningAFinishedTaskTakesBackItsHistoryRow() = runTest {
+        val t = tasks.addTask(inbox, "One-off")
+        clock.advance()
+
+        tasks.setCompleted(t.id, true)
+        assertEquals(1, db.completionDao().getForTask(t.id).size)
+
+        tasks.setCompleted(t.id, false)
+        assertTrue(db.completionDao().getForTask(t.id).isEmpty())
+    }
+
+    @Test
+    fun finishingAFinishedTaskAgainRecordsNothingNew() = runTest {
+        val t = tasks.addTask(inbox, "One-off")
+
+        tasks.setCompleted(t.id, true)
+        tasks.setCompleted(t.id, true)
+
+        assertEquals(1, db.completionDao().getForTask(t.id).size)
+    }
+
+    @Test
+    fun theHistoryGoesWhenTheTaskIsDeletedForever() = runTest {
+        val t = repeatingTask(weekly)
+        tasks.setCompleted(t.id, true)
+        tasks.deleteTask(t.id)
+
+        tasks.deleteForever(t.id)
+
+        assertTrue(db.completionDao().getForTask(t.id).isEmpty())
     }
 }

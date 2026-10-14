@@ -119,6 +119,12 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Notifications** are one per task (task id as the tag), built with the app language even before Android 13 (`withAppLocale`), and cleaned up when the task is finished elsewhere.
 - **The reliability helper reads real state** (notification permission and channel, exact-alarm permission, battery optimization) and links to the matching system screens; for phone makers with their own limits it explains the manual steps and links to dontkillmyapp.com. It deliberately does not use the restricted `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` permission.
 
+### M4 (recurrence)
+- **Schema v4** adds `tasks.rrule` and `tasks.repeatMode` and the `completion_history` table, migrated with `@AutoMigration(3, 4)`. A repeating task stays one row whose `dueDate` moves forward; nothing is copied.
+- **The rule engine is pure Kotlin** in `domain/recurrence` (`Recurrence`, `nextOccurrence`, `afterAdvance`), with no library. The rule string is an RFC 5545 subset (`FREQ`, `INTERVAL`, `BYDAY`, `BYMONTHDAY`, `BYMONTH`, `UNTIL`, `COUNT`) that the parser reads case-insensitively and rejects when it does not understand it (the task then simply does not repeat). `COUNT` is the number of occurrences still to come, so no start date is stored.
+- **Completion lives in the repository.** `TaskRepositoryImpl.setCompleted` runs in one transaction: history row, next date (or final completion), checklist reset, and reminders moved with the date (specific-time reminders shift by the same number of days; a pending snooze is dropped; all become eligible to fire again with a new `updatedAt` so a trigger already in the past is not replayed). The list, search and the notification action all go through it.
+- **"Today" for a completion is the user's day** (`Clock` is UTC, converted with the system zone), the same convention as the task list.
+
 ## Open items
 - Donation mechanism (external link vs. Play flow) and Play policy implications
 - Exact-alarm permission strategy (see Reminders)

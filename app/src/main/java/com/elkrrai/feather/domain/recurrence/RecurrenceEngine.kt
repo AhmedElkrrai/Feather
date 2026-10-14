@@ -18,7 +18,7 @@ import java.time.temporal.TemporalAdjusters
 fun Recurrence.nextOccurrence(due: LocalDate, completedOn: LocalDate): LocalDate? {
     if (count != null && count <= 1) return null
     val next = when (mode) {
-        RepeatMode.FIXED -> nextOnSchedule(due, after = maxOf(due, completedOn))
+        RepeatMode.FIXED -> nextOnSchedule(due, after = if (completedOn.isAfter(due)) completedOn else due)
         RepeatMode.AFTER_COMPLETION -> nextAfterCompletion(completedOn)
     }
     return if (until != null && next.isAfter(until)) null else next

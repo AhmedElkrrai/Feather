@@ -15,7 +15,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M1 | Foundation | Tasks, Room, navigation, English and Arabic (RTL) | Done |
 | M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Done (built and installed; the 1 -> 2 database upgrade kept existing data) |
 | M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | Built; install and real-device testing still pending |
-| M4 | Recurrence | Rule engine, repeat modes, completion history | In progress (developed with the "flash" workflow: no build or install) |
+| M4 | Recurrence | Rule engine, repeat modes, completion history | Code complete (developed with the "flash" workflow: not built, installed or tested) |
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | |
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | |
@@ -119,15 +119,24 @@ Per-task custom notification sounds, repeating reminders ("every 10 minutes unti
 - **What moves with the due date.** "Before due" reminders follow automatically; "at a specific time" reminders are shifted by the same number of days; a pending snooze is dropped; all reminders become eligible to fire again. The checklist is reset to unchecked.
 - **A repeating task needs a due date.** Choosing a repeat rule on a task without one sets it to today; clearing the due date clears the rule.
 - **Completion history.** One row per completion (task, when, which due date it was for). Un-completing a finished task removes its row. No screen uses it yet; it is the base for streaks later.
+- **No undo yet.** Finishing a repeating task by mistake means editing its date back; the completion history row for that finish stays.
 - **Shared code path.** The list checkbox, search and the notification Complete button all call `TaskRepository.setCompleted`, so all three get recurrence without changes.
 
 ### Steps
 1. **Rule model and engine.** `Recurrence`, `Frequency`, `RepeatMode`, `NthWeekday`; RRULE string parse and format; `nextOccurrence` and `afterAdvance`; JVM tests.
 2. **Schema v4 and mapping.** `tasks.rrule` and `repeatMode`, `completion_history` entity and DAO, `Task.recurrence`, mappers, auto-migration 3 -> 4.
 3. **Completing a repeating task.** Repository: history, next date, checklist reset, reminder shift, un-complete; subtask reopening query.
-4. **Editor.** Repeat section and `RecurrenceDialog` (frequency, interval, weekdays, monthly pattern, repeat after completion, end condition); ViewModel state; English and Arabic strings with plurals.
-5. **Labels and rows.** A readable summary ("Every 2 weeks · Mon, Wed · Until 31 Dec"), a repeat icon on rows.
-6. **Tests and docs.** Repository and editor tests (written, not run), FEATURES, ARCHITECTURE and MILESTONES updates.
+4. **Strings, summary and editor state.** English and Arabic strings with plurals; a readable summary ("Every 2 weeks · Mon, Wed · Until 31 Dec"); the editor ViewModel carries the rule.
+5. **Editor and rows.** Repeat section and `RecurrenceDialog` (frequency, interval, weekdays, monthly pattern, repeat after completion, end condition); a repeat icon on rows.
+6. **Tests and docs.** Repository, editor ViewModel and dialog tests (written, not run), FEATURES, ARCHITECTURE and MILESTONES updates.
 
 ### Deferred from M4
 Showing future occurrences in Upcoming and a calendar, an undo for completing a repeating task, "skip this occurrence", editing a single occurrence, rules with several month days or "every weekday" presets, a screen for the completion history and streaks, and leaving a reminder notification in the tray after the task was completed from inside the app.
+
+### Known gaps after M4
+- **Nothing in M4 has been compiled or run.** The first build may show compile errors, and the new schema (v4) has not been tried on the phone; the 3 -> 4 upgrade should be checked by installing over the M3 build and confirming existing tasks survive.
+- **Not yet verified on a device:** the repeat dialog (RTL layout, keyboard, scrolling on small screens), the Arabic wording of the summaries, and a repeating task finished from the reminder notification.
+- A notification that is still in the tray when a repeating task is finished inside the app stays there until it is swiped away (finishing from the notification itself clears it).
+- Upcoming and Today show a repeating task once, at its next date.
+- No automated migration test yet (same gap as M2 and M3).
+- The unit tests (`RecurrenceTest`) and instrumented tests added for M4 are written but not run (flash).

@@ -16,6 +16,8 @@ import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.TaskList
+import com.elkrrai.feather.domain.recurrence.Frequency
+import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.testutil.MainDispatcherRule
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -25,6 +27,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -267,5 +270,52 @@ class TaskEditViewModelTest {
         viewModel.save()
 
         assertEquals(1, tasks.getTask(existing.id)!!.reminders.size)
+    }
+
+    @Test
+    fun choosingARepeatRuleSetsADueDateWhenThereIsNone() {
+        val viewModel = newTaskViewModel()
+
+        viewModel.onRecurrenceChange(Recurrence(Frequency.DAILY))
+
+        assertNotNull(viewModel.uiState.value.dueDate)
+    }
+
+    @Test
+    fun clearingTheDueDateClearsTheRepeatRule() {
+        val viewModel = newTaskViewModel()
+        viewModel.onDueDateChange(LocalDate.of(2026, 10, 20))
+        viewModel.onRecurrenceChange(Recurrence(Frequency.WEEKLY))
+
+        viewModel.onDueDateChange(null)
+
+        assertNull(viewModel.uiState.value.recurrence)
+    }
+
+    @Test
+    fun theRepeatRuleIsSavedAndLoadedAgain() = runTest {
+        val rule = Recurrence(Frequency.MONTHLY, monthDay = 31, until = LocalDate.of(2027, 12, 31))
+        val viewModel = newTaskViewModel()
+        viewModel.onTitleChange("Pay rent")
+        viewModel.onDueDateChange(LocalDate.of(2026, 10, 31))
+        viewModel.onRecurrenceChange(rule)
+
+        viewModel.save()
+
+        val saved = tasks.observeTasks().first().single()
+        assertEquals(rule, saved.recurrence)
+        assertEquals(rule, editViewModel(saved.id).uiState.value.recurrence)
+    }
+
+    @Test
+    fun removingTheRuleMakesTheTaskAOneOff() = runTest {
+        val existing = tasks.addTask(inbox, "Task", LocalDate.of(2026, 10, 20))
+        tasks.saveTaskDetails(existing.copy(recurrence = Recurrence(Frequency.DAILY)))
+        val viewModel = editViewModel(existing.id)
+
+        viewModel.onRecurrenceChange(null)
+        viewModel.save()
+
+        assertNull(tasks.getTask(existing.id)!!.recurrence)
     }
 }
