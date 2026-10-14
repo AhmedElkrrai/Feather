@@ -20,6 +20,9 @@
 
     <!-- Due dates -->
     <string name="due_today">اليوم</string>
+    <string name="due_tonight">الليلة</string>
+    <string name="due_waiting_since">بانتظارك منذ %1$s</string>
+    <string name="task_waiting">بانتظارك</string>
     <string name="due_tomorrow">غدًا</string>
 
     <!-- Priorities -->
@@ -48,7 +51,7 @@
     <string name="inbox">الوارد</string>
     <string name="scope_today">اليوم</string>
     <string name="scope_upcoming">القادمة</string>
-    <string name="scope_overdue">المتأخرة</string>
+    <string name="scope_overdue">بانتظارك</string>
     <string name="scope_all">كل المهام</string>
     <string name="scope_completed">المكتملة</string>
     <string name="scope_no_date">بدون تاريخ</string>
@@ -514,4 +517,23 @@
     <string name="settings_celebrations_summary">رذاذ من الريش وقفزة عند إنجاز مهمة.</string>
     <string name="settings_reduce_motion">تقليل الحركة</string>
     <string name="settings_reduce_motion_summary">حركات أقل: تظهر العناصر وتختفي دون حركة. يُحترم إعداد هاتفك حتى لو كان هذا الخيار متوقفًا.</string>
+
+    <!-- Today header -->
+    <string name="greeting_morning">صباح الخير</string>
+    <string name="greeting_afternoon">نهارك سعيد</string>
+    <string name="greeting_evening">مساء الخير</string>
+    <string name="greeting_night">ليلة هادئة</string>
+    <plurals name="today_left">
+        <item quantity="zero">لا مهام متبقية</item>
+        <item quantity="one">مهمة واحدة متبقية</item>
+        <item quantity="two">مهمتان متبقيتان</item>
+        <item quantity="few">%d مهام متبقية</item>
+        <item quantity="many">%d مهمة متبقية</item>
+        <item quantity="other">%d مهمة متبقية</item>
+    </plurals>
+    <string name="today_done_count">%1$d منجزة</string>
+    <string name="today_all_done">تم كل شيء.</string>
+    <string name="today_nothing_planned">لا شيء مخطط لليوم</string>
+    <string name="done_today_pill">أُنجز اليوم · %1$d</string>
+    <string name="subtasks_of">%1$d من %2$d</string>
 </resources>

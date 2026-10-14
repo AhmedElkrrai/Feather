@@ -21,6 +21,7 @@ import com.elkrrai.feather.domain.view.groupedByDay
 import com.elkrrai.feather.domain.view.inScope
 import com.elkrrai.feather.domain.view.openCountIn
 import com.elkrrai.feather.feature.quickadd.QuickAddTask
+import com.elkrrai.feather.ui.today.TodayStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.LocalDate
@@ -50,6 +51,10 @@ data class TaskListUiState(
     val counts: Map<TaskScope, Int> = emptyMap(),
     /** Ids of the tasks picked with a long press; always a subset of what is on screen. */
     val selection: Set<String> = emptySet(),
+    /** How today is going, for the Today header: what is left and what was finished. */
+    val today: TodayStatus = TodayStatus(),
+    /** Tasks finished today, newest first; filled for the Today view only. */
+    val doneToday: List<Task> = emptyList(),
 ) {
     val isEmpty: Boolean get() = sections.all { it.tasks.isEmpty() }
 }
@@ -119,6 +124,11 @@ class TaskListViewModel @Inject constructor(
         ) + d.lists.map { TaskScope.InList(it.id) } + d.tags.map { TaskScope.WithTag(it.id) } +
             d.filters.map { TaskScope.Filtered(it) }
 
+        val zone = ZoneId.systemDefault()
+        val finishedToday = d.tasks.filter { task ->
+            task.completedAt?.atZone(zone)?.toLocalDate() == today
+        }.sortedByDescending { it.completedAt }
+
         return TaskListUiState(
             isLoading = false,
             scope = scope,
@@ -130,6 +140,8 @@ class TaskListViewModel @Inject constructor(
             filters = d.filters,
             counts = countedScopes.associateWith { d.tasks.openCountIn(it, today) },
             selection = picked.intersect(visible.map { it.id }.toSet()),
+            today = TodayStatus(left = d.tasks.openCountIn(TaskScope.Today, today), done = finishedToday.size),
+            doneToday = if (scope == TaskScope.Today) finishedToday else emptyList(),
         )
     }
 

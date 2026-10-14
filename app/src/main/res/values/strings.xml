@@ -22,6 +22,9 @@
     <!-- Due dates -->
     <string name="due_today">Today</string>
     <string name="due_tomorrow">Tomorrow</string>
+    <string name="due_tonight">Tonight</string>
+    <string name="due_waiting_since">Waiting since %1$s</string>
+    <string name="task_waiting">Waiting</string>
 
     <!-- Priorities -->
     <string name="priority_none">None</string>
@@ -52,7 +55,7 @@
     <string name="inbox">Inbox</string>
     <string name="scope_today">Today</string>
     <string name="scope_upcoming">Upcoming</string>
-    <string name="scope_overdue">Overdue</string>
+    <string name="scope_overdue">Waiting for you</string>
     <string name="scope_all">All tasks</string>
     <string name="scope_completed">Completed</string>
     <string name="scope_no_date">No date</string>
@@ -446,4 +449,19 @@
     <string name="settings_celebrations_summary">A burst of feathers and a hop when you finish a task.</string>
     <string name="settings_reduce_motion">Reduce motion</string>
     <string name="settings_reduce_motion_summary">Fewer animations: things appear and leave without moving. Your phone’s own setting is respected even when this is off.</string>
+
+    <!-- Today header -->
+    <string name="greeting_morning">Good morning</string>
+    <string name="greeting_afternoon">Good afternoon</string>
+    <string name="greeting_evening">Good evening</string>
+    <string name="greeting_night">Good night</string>
+    <plurals name="today_left">
+        <item quantity="one">%d thing left</item>
+        <item quantity="other">%d things left</item>
+    </plurals>
+    <string name="today_done_count">%1$d done</string>
+    <string name="today_all_done">All done.</string>
+    <string name="today_nothing_planned">Nothing planned today</string>
+    <string name="done_today_pill">Done today · %1$d</string>
+    <string name="subtasks_of">%1$d of %2$d</string>
 </resources>
