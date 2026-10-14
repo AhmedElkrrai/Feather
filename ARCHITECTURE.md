@@ -134,6 +134,14 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **One see-through `QuickAddActivity`** hosts the same `QuickAddSheet` for the share sheet (`ACTION_SEND` `text/plain`, collapsed to one line), the Quick Settings tile (`TileService`; `PendingIntent` on Android 14+) and a static launcher shortcut. Its write is wrapped in `NonCancellable` so it finishes while the screen closes.
 - **Voice** is `RecognizerIntent` (no microphone permission); offline is requested but not required, so the system recognizer may use the network.
 
+### M6 (widgets and backup)
+- **The backup file is its own format** (`data/backup/BackupFile`): versioned JSON records that mirror the tables but are separate classes, so Room can change without breaking old files. Soft-deleted rows are included. Reading checks `format` and `version` before decoding the rest (every record field has a default, so a random JSON object would otherwise pass as an empty backup), ignores unknown fields, and refuses newer versions.
+- **Merging is a pure function** (`BackupMerger`): per record the newer `updatedAt` wins, same-named live tags are joined, unknown lists fall back to the Inbox, and tag links and reminders are taken only for tasks whose record came from the file. Replace is "delete everything, then merge into an empty phone". The whole import is one transaction, and the file is decoded before anything is touched.
+- **Writes are upserts**, never delete-and-insert, so cascading foreign keys cannot remove a task's reminders or history while it is rewritten.
+- **Files go through the Storage Access Framework** (`BackupFiles`, `DocumentFile`); the app needs no storage permission and no network. The automatic backup keeps a persisted tree permission, writes `feather-auto-backup-DATE.json` (a prefix of its own, so manual exports in the same folder are never pruned), keeps 7, and runs from a daily WorkManager job that exists only while it is switched on and a folder is set.
+- **Widgets are Jetpack Glance** (`widget/`): `TodayWidget` reads through a Hilt entry point, `CompleteTaskAction` finishes a task through the same `setCompleted` as everywhere else, `WidgetUpdater` redraws on task changes (debounced), and the system refreshes every 30 minutes, which rolls the list over at midnight. `QuickAddWidget` only opens `QuickAddActivity`.
+- **Android's own Auto Backup** is limited by `data_extraction_rules.xml` and `backup_rules.xml` to the task database and the settings file.
+
 ## Open items
 - Donation mechanism (external link vs. Play flow) and Play policy implications
 - Exact-alarm permission strategy (see Reminders)

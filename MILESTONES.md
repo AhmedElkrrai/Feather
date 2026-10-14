@@ -17,7 +17,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | Built; install and real-device testing still pending |
 | M4 | Recurrence | Rule engine, repeat modes, completion history | Code complete (developed with the "flash" workflow: not built, installed or tested) |
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | Code complete (flash workflow: not built, installed or tested) |
-| M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | In progress (flash workflow) |
+| M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | |
 | M8 | Brand | Bird identity and animation | |
 
@@ -206,3 +206,13 @@ The user did not answer the open questions, so these are the recommended default
 
 ### Deferred from M6
 The single-task widget, widget configuration screens (choosing a list), encrypted backups, restoring from a backup at first launch, backup of settings (language, reminder defaults), a CSV or calendar import, and sync.
+
+### Known gaps after M6
+- **Nothing in M6 has been compiled or run.** The Glance code is the likeliest place for compile errors (it is a separate UI toolkit with its own imports), followed by the file-picker wiring in Settings. Glance 1.1.1 was chosen from memory of the release list and has not been resolved by Gradle yet.
+- **Needs a real device:** exporting and importing through the system file picker (including a Drive folder), choosing a backup folder and letting the daily job run (WorkManager is deferred by the battery manager on some phones, so "Back up now" is the reliable check), adding both widgets to the home screen, ticking a task in the widget, and the widgets in dark mode, in Arabic and at different sizes.
+- Importing does not ask before merging; replacing asks once. A very large file is read into memory in one piece.
+- A backup does not carry settings (language, reminder defaults, the backup folder), only tasks and what belongs to them.
+- Reminders are rescheduled after an import by the normal task-change path, not by the import itself.
+- The widgets use the system accent colors on Android 12 and up and fixed colors below.
+- The CSV is for reading elsewhere; there is no CSV import.
+- The tests for the merge rules, the codec, the CSV builder and the backup file names are JVM tests (`BackupMergerTest`, `BackupCodecTest`, `TaskCsvTest`, `AutoBackupNamesTest`); `BackupRepositoryTest` is instrumented. All are written but not run (flash).
