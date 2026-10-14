@@ -8,4 +8,5 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="brand_sky">#FFBFE3EE</color>
+    <color name="nest_paper">#FFFFF8EC</color>
 </resources>

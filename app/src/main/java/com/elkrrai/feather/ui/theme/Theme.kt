@@ -4,72 +4,17 @@ import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import com.elkrrai.feather.ui.DisplayPrefs
 
-private val LightColorScheme = lightColorScheme(
-    primary = BrandPrimary,
-    onPrimary = BrandOnPrimary,
-    primaryContainer = BrandPrimaryContainer,
-    onPrimaryContainer = BrandOnPrimaryContainer,
-    secondary = BrandSecondary,
-    onSecondary = BrandOnSecondary,
-    secondaryContainer = BrandSecondaryContainer,
-    onSecondaryContainer = BrandOnSecondaryContainer,
-    tertiary = BrandTertiary,
-    onTertiary = BrandOnTertiary,
-    tertiaryContainer = BrandTertiaryContainer,
-    onTertiaryContainer = BrandOnTertiaryContainer,
-    background = BrandBackground,
-    onBackground = BrandOnBackground,
-    surface = BrandBackground,
-    onSurface = BrandOnBackground,
-    surfaceVariant = BrandSurfaceVariant,
-    onSurfaceVariant = BrandOnSurfaceVariant,
-    outline = BrandOutline,
-    outlineVariant = BrandOutlineVariant,
-    surfaceContainerLowest = BrandContainerLowest,
-    surfaceContainerLow = BrandContainerLow,
-    surfaceContainer = BrandContainer,
-    surfaceContainerHigh = BrandContainerHigh,
-    surfaceContainerHighest = BrandContainerHighest,
-)
-
-private val DarkColorScheme = darkColorScheme(
-    primary = BrandPrimaryDark,
-    onPrimary = BrandOnPrimaryDark,
-    primaryContainer = BrandPrimaryContainerDark,
-    onPrimaryContainer = BrandOnPrimaryContainerDark,
-    secondary = BrandSecondaryDark,
-    onSecondary = BrandOnSecondaryDark,
-    secondaryContainer = BrandSecondaryContainerDark,
-    onSecondaryContainer = BrandOnSecondaryContainerDark,
-    tertiary = BrandTertiaryDark,
-    onTertiary = BrandOnTertiaryDark,
-    tertiaryContainer = BrandTertiaryContainerDark,
-    onTertiaryContainer = BrandOnTertiaryContainerDark,
-    background = BrandBackgroundDark,
-    onBackground = BrandOnBackgroundDark,
-    surface = BrandBackgroundDark,
-    onSurface = BrandOnBackgroundDark,
-    surfaceVariant = BrandSurfaceVariantDark,
-    onSurfaceVariant = BrandOnSurfaceVariantDark,
-    outline = BrandOutlineDark,
-    outlineVariant = BrandOutlineVariantDark,
-    surfaceContainerLowest = BrandContainerLowestDark,
-    surfaceContainerLow = BrandContainerLowDark,
-    surfaceContainer = BrandContainerDark,
-    surfaceContainerHigh = BrandContainerHighDark,
-    surfaceContainerHighest = BrandContainerHighestDark,
-)
-
-/** Pure black backgrounds for OLED screens; cards and sheets stay slightly lifted so they read as layers. */
+/** Pure black for Material You colors, which have no black set of their own. */
 private fun ColorScheme.toPureBlack(): ColorScheme = copy(
     background = Color.Black,
     surface = Color.Black,
@@ -93,20 +38,31 @@ fun FeatherTheme(
     pureBlack: Boolean = DisplayPrefs.pureBlack,
     content: @Composable () -> Unit
 ) {
-    val base = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+    val dynamic = dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val colorScheme = when {
+        dynamic -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            val scheme = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (darkTheme && pureBlack) scheme.toPureBlack() else scheme
         }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> if (pureBlack) NestBlackScheme else NestDarkScheme
+        else -> NestLightScheme
     }
-    val colorScheme = if (darkTheme && pureBlack) base.toPureBlack() else base
+    val featherColors = when {
+        !darkTheme -> LightFeatherColors
+        pureBlack -> BlackFeatherColors
+        else -> DarkFeatherColors
+    }
+    val arabic = LocalConfiguration.current.locales[0].language == "ar"
+    val typography = remember(arabic) { featherTypography(arabic) }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalFeatherColors provides featherColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = typography,
+            shapes = NestShapes,
+            content = content,
+        )
+    }
 }

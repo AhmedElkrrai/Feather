@@ -158,6 +158,13 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **The launch screen** uses the AndroidX splash-screen library: `MainActivity` has the `Theme.Feather.Starting` theme, calls `installSplashScreen()` first, and the library swaps in `Theme.Feather` afterwards. The animated icon is an animated vector (the wing group rotates).
 - **The palette replaces the placeholder** in `Color.kt` and `Theme.kt`; Material You is applied only when the switch is on. The template's bitmap launcher icons were deleted since every supported Android version uses the adaptive icon.
 
+### M9 (Cozy Nest)
+- **Theme tokens in `ui/theme`.** `Color.kt` holds the Nest palette and the three Material schemes (light, dark, black); `FeatherColors.kt` holds what Material has no slot for (card, priority tints, list colors, heat ramp, sky washes) and is read as `MaterialTheme.featherColors`; `Tokens.kt` holds shapes, spacing, elevation, durations and easings; `Type.kt` builds the type scale per language (`featherTypography(arabic)`), picked in `FeatherTheme` from the current locale.
+- **Contrast is a test.** `NestContrastTest` checks 4.5:1 for text pairs and 3:1 for graphics in all three themes, so a color change that hurts readability fails a build.
+- **Plumage is for art only.** Cream text on Plumage is 4.1:1, so buttons and links use `primary` (`#1F6C88`).
+- **Fonts are variable.** One file per family serves every weight through `FontVariation.weight`; fine because minSdk is 26.
+- **The window background is the paper color** (`nest_paper`), so there is no white flash before the first frame.
+
 ## Open items
 - Donation mechanism (external link vs. Play flow) and Play policy implications
 - Exact-alarm permission strategy (see Reminders)

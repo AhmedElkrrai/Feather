@@ -20,6 +20,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | Code complete (flash workflow: not built, installed or tested) |
 | M8 | Brand | Bird identity and animation | Code complete (flash workflow: not built, installed or tested) |
+| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | In progress |
 
 Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
 
@@ -295,6 +296,29 @@ A designer's artwork, more moods (waiting, sad), the bird reacting to streaks or
 - The art is a first identity, not a designer's: it has one pose style and no dark-mode variant of its own.
 - There is no sound and the Arabic store graphic is not made.
 - New tests (written, not run): `BirdPoseTest`, `BirdArtworkTest`, `AppSettingsDefaultsTest` and one more case in `SettingsContentTest`.
+
+## Milestone 9: Cozy Nest
+
+The app works but looks like plain Material 3. M9 gives it an identity (warm paper, pebble shapes, twig lines, the bird's world), richer rows, small celebrations, illustrations and a gentle "Your rhythm" progress screen. `DESIGN_SPEC.md` is the contract (it came from Claude Design); every step below refers to its sections. Unlike M4 to M8 this milestone is built and run on the phone as it goes.
+
+### Decisions made for M9
+- Build order is the spec's section 9, one commit per step.
+- Fonts are bundled (variable TTFs for Nunito, Readex Pro and Noto Naskh Arabic; static Young Serif), all SIL OFL, licenses in `third_party/fonts`. About 970 KB in total.
+- Material You stays an option (off by default); the extra colors in `FeatherColors` always come from the Nest palette.
+- The spec's Arabic copy is a draft until a native speaker reads it.
+
+### Steps
+1. Theme: color schemes (light, dark, black), `FeatherColors`, shapes, spacing, motion tokens, fonts, a contrast test. No layout changes.
+2. Completion moment: reduced-motion helper, ring and strike, one-Canvas feather burst, haptics.
+3. Today header and richer rows.
+4. Eight empty-state illustrations and props as vector drawables.
+5. Quick-add polish.
+6. Your rhythm (progress) screen and the query layer behind it.
+7. Widgets restyled.
+8. Morning and evening cards.
+9. Last-task celebration and the repeating-task flight.
+10. Ambient life and seasons.
+11. Weekly feather and Your nest.
 
 ### Where the project stands
 All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.
