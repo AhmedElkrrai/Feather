@@ -1,21 +1,31 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+# Feather release rules.
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Hilt, Room, WorkManager, Glance, DataStore and Navigation ship their own consumer rules, so only
+# what this app adds on top is listed here. These come from the kotlinx.serialization documentation:
+# the generated serializers of our @Serializable classes (the backup file records and the type-safe
+# navigation routes) are found by name at run time.
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+-keepclassmembers class kotlinx.serialization.json.** {
+    *** Companion;
+}
+-keepclasseswithmembers class kotlinx.serialization.json.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keep,includedescriptorclasses class com.elkrrai.feather.**$$serializer { *; }
+-keepclassmembers class com.elkrrai.feather.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.elkrrai.feather.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# WorkManager creates workers by class name from its own database.
+-keep class com.elkrrai.feather.reminders.ReminderWorker { <init>(...); }
+-keep class com.elkrrai.feather.data.backup.BackupWorker { <init>(...); }
+
+# Readable crash reports from a release build (upload mapping.txt together with the app).
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
