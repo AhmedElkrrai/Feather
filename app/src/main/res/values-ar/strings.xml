@@ -435,4 +435,11 @@
     <string name="settings_week_start">أول أيام الأسبوع</string>
     <string name="settings_haptics">الاستجابة اللمسية</string>
     <string name="settings_haptics_summary">اهتزاز خفيف عند إنجاز مهمة أو تحديدها أو نقلها.</string>
+
+    <!-- Accessibility actions -->
+    <string name="action_open_task">فتح المهمة</string>
+    <string name="action_mark_done">تحديد كمنجزة</string>
+    <string name="action_mark_not_done">تحديد كغير منجزة</string>
+    <string name="action_pin">تثبيت في الأعلى</string>
+    <string name="action_unpin">إلغاء التثبيت</string>
 </resources>

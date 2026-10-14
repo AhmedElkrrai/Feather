@@ -375,4 +375,11 @@
     <string name="settings_week_start">First day of the week</string>
     <string name="settings_haptics">Haptic feedback</string>
     <string name="settings_haptics_summary">A light vibration when you finish, select or move a task.</string>
+
+    <!-- Accessibility actions -->
+    <string name="action_open_task">Open task</string>
+    <string name="action_mark_done">Mark as done</string>
+    <string name="action_mark_not_done">Mark as not done</string>
+    <string name="action_pin">Pin to top</string>
+    <string name="action_unpin">Unpin</string>
 </resources>

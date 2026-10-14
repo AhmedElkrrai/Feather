@@ -40,6 +40,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -142,6 +144,7 @@ fun TaskListScreen(
             onOpenTask = onOpenTask,
             onSearchClick = onOpenSearch,
             onSortChange = viewModel::setSort,
+            onPinChange = { task, pinned -> viewModel.setPinned(task.id, pinned) },
         )
     }
 
@@ -176,6 +179,7 @@ fun TaskListContent(
     onSortChange: (TaskSort) -> Unit,
     modifier: Modifier = Modifier,
     today: LocalDate = LocalDate.now(),
+    onPinChange: (Task, Boolean) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
@@ -262,7 +266,9 @@ fun TaskListContent(
                                 text = formatDayHeader(context, section.date, today, locale),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .semantics { heading() },
                             )
                         }
                     }
@@ -274,6 +280,8 @@ fun TaskListContent(
                                 onToggle = { onToggle(task, it) },
                                 onClick = { onOpenTask(task.id) },
                                 listName = listNames[task.listId],
+                                onDelete = { onDelete(task) },
+                                onPinChange = { pinned -> onPinChange(task, pinned) },
                             )
                         }
                     }

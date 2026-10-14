@@ -159,6 +159,10 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch { taskRepository.setCompleted(taskId, completed) }
     }
 
+    fun setPinned(taskId: String, pinned: Boolean) {
+        viewModelScope.launch { taskRepository.setPinned(taskId, pinned) }
+    }
+
     fun deleteTask(taskId: String) {
         viewModelScope.launch { taskRepository.deleteTask(taskId) }
     }

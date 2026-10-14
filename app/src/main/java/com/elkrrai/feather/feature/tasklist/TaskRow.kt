@@ -21,8 +21,11 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -32,6 +35,7 @@ import com.elkrrai.feather.ui.format.formatDueDate
 import com.elkrrai.feather.ui.format.formatDueTime
 import com.elkrrai.feather.ui.format.label
 import com.elkrrai.feather.ui.format.markerColor
+import com.elkrrai.feather.ui.rememberHaptics
 import java.time.LocalDate
 
 /**
@@ -46,6 +50,10 @@ fun TaskRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     listName: String? = null,
+    /** When set, TalkBack offers "Delete" as an action (the swipe is not reachable with it). */
+    onDelete: (() -> Unit)? = null,
+    /** When set, TalkBack offers pin and unpin. */
+    onPinChange: ((Boolean) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
@@ -65,15 +73,43 @@ fun TaskRow(
     val repeatLabel = stringResource(R.string.repeat_has)
     val repeats = !task.isCompleted && task.recurrence != null
 
+    val haptics = rememberHaptics()
+    val openLabel = stringResource(R.string.action_open_task)
+    val doneActionLabel = stringResource(
+        if (task.isCompleted) R.string.action_mark_not_done else R.string.action_mark_done
+    )
+    val deleteLabel = stringResource(R.string.action_delete)
+    val pinActionLabel = stringResource(if (task.isPinned) R.string.action_unpin else R.string.action_pin)
+    val overdueLabel = stringResource(R.string.scope_overdue)
+
     val metaLine = listOfNotNull(listName, dueText).joinToString(" · ").ifEmpty { null }
     val subtaskTotal = task.subtasks.size
     val subtasksDone = task.subtasks.count { it.isCompleted }
     val hasSupporting = metaLine != null || task.tags.isNotEmpty() || subtaskTotal > 0
 
     ListItem(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .clickable(onClickLabel = openLabel, onClick = onClick)
+            .semantics {
+                if (isOverdue) stateDescription = overdueLabel
+                customActions = buildList {
+                    add(CustomAccessibilityAction(doneActionLabel) { onToggle(!task.isCompleted); true })
+                    if (onDelete != null) add(CustomAccessibilityAction(deleteLabel) { onDelete(); true })
+                    if (onPinChange != null) {
+                        add(CustomAccessibilityAction(pinActionLabel) { onPinChange(!task.isPinned); true })
+                    }
+                }
+            },
         leadingContent = {
-            Checkbox(checked = task.isCompleted, onCheckedChange = onToggle)
+            // The checkbox is named after its task, so it is not just "checkbox" in a list of them.
+            Checkbox(
+                checked = task.isCompleted,
+                onCheckedChange = { checked ->
+                    if (checked) haptics.confirm()
+                    onToggle(checked)
+                },
+                modifier = Modifier.semantics { contentDescription = task.title },
+            )
         },
         headlineContent = {
             Text(

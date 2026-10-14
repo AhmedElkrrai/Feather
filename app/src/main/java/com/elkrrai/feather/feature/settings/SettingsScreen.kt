@@ -42,6 +42,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Row
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -342,7 +344,9 @@ internal fun SectionTitle(text: String) {
         text = text,
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+        modifier = Modifier
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)
+            .semantics { heading() },
     )
 }
 
