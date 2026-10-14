@@ -135,8 +135,7 @@ fun TaskRow(
 
     val subtaskTotal = task.subtasks.size
     val subtasksDone = task.subtasks.count { it.isCompleted }
-    val hasChips = due != null || task.priority.barbCount() > 0 || list != null || recurrence != null ||
-        task.tags.isNotEmpty()
+    val hasChips = due != null || list != null || recurrence != null || task.tags.isNotEmpty()
     val canExpand = onAddSubtask != null && onToggleSubtask != null && !task.isCompleted
     var expanded by rememberSaveable(task.id) { mutableStateOf(false) }
 
@@ -219,22 +218,6 @@ fun TaskRow(
                             }
                             val content = if (due.isToday) scheme.onSecondaryContainer else scheme.onSurfaceVariant
                             MetaChip(text = due.chipText(), container = container, content = content)
-                        }
-                        // Priority is named in a chip too, so it still shows when the ring is ticked.
-                        if (task.priority.barbCount() > 0) {
-                            MetaChip(
-                                text = priorityLabel,
-                                container = scheme.surfaceContainer,
-                                content = scheme.onSurfaceVariant,
-                                leading = {
-                                    Icon(
-                                        painter = painterResource(R.drawable.ic_flag),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(12.dp),
-                                        tint = task.priority.ringColor(),
-                                    )
-                                },
-                            )
                         }
                         if (list != null) {
                             val color = list.colorIndex?.let { feather.listColors[it % feather.listColors.size] }
