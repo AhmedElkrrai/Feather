@@ -161,7 +161,7 @@ private fun DrawScope.drawBird(paths: BirdPaths, pose: BirdPose) {
     drawPath(paths.head, BirdColors.Plumage)
     drawPath(paths.belly, BirdColors.Cream)
     withTransform({ rotate(pose.wingAngle, pivot = Offset(BirdShapes.WING_PIVOT_X, BirdShapes.WING_PIVOT_Y)) }) {
-        drawPath(paths.wing, BirdColors.Deep)
+        drawPath(paths.wing, BirdColors.Wing)
     }
     drawPath(paths.beak, BirdColors.Amber)
     drawPath(paths.crest, BirdColors.Amber)

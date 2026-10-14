@@ -19,7 +19,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | Code complete (flash workflow: not built, installed or tested) |
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | Code complete (flash workflow: not built, installed or tested) |
-| M8 | Brand | Bird identity and animation | In progress (flash workflow) |
+| M8 | Brand | Bird identity and animation | Code complete (flash workflow: not built, installed or tested) |
 
 Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
 
@@ -269,7 +269,7 @@ Macrobenchmarks and a baseline profile, screenshot tests in LTR and RTL, snappin
 ### Decisions made for M8
 The user did not answer the open questions, so these are the recommended defaults.
 - **The bird.** A flat, friendly songbird in profile with a feather-shaped crest, built from a handful of smooth shapes (body, wing, tail, belly, beak, eye, crest). One set of path data (`ui/brand/BirdShapes.kt`) is the source; the vector drawables for the icon, the launch screen, the widgets and the store graphics repeat the same paths, and a unit test checks that they have not drifted apart. It is a placeholder identity in the sense that a designer's artwork can replace the paths without touching any screen.
-- **Palette.** Plumage teal, deep blue (wing and tail), cream (belly), amber (beak and crest), coral (cheek), ink (eye). They become the app's light and dark color schemes. **Material You is now off by default** (it stays one switch away in Settings): a brand needs its own colors. People who already chose a setting keep it.
+- **Palette.** Plumage teal, deep blue (tail), sky blue (wing), cream (belly), amber (beak and crest), coral (cheek), ink (eye). They become the app's light and dark color schemes. **Material You is now off by default** (it stays one switch away in Settings): a brand needs its own colors. People who already chose a setting keep it.
 - **Animation is Compose-native.** The bird is drawn on a `Canvas` from a pure function (`birdPose(mood, phase)`) that returns wing angle, body offset, eye opening, scale and tilt, so it needs no animation library, adds nothing to the APK, and can be tested without a device. Four moods: idle (a slow bob and an occasional blink), sleeping (eyes closed, breathing, floating z's), happy (one hop with flapping wings) and flying.
 - **Less motion is honored twice:** when the system animation scale is zero the bird is drawn still, and a new switch in Settings ("Bird animations") turns the movement off inside the app. The static picture stays.
 - **Where the bird appears.** The adaptive launcher icon (with a single-color version for themed icons), the launch screen (Android 12 splash with a wing-flap animated icon; a still bird before Android 12), the empty states (idle for "no tasks yet", sleeping for "all clear" and the trash), a short hop over the list when a task is finished, the empty state of the two list widgets, the About row, and a bird silhouette as the small notification icon. The bell stays as the "has a reminder" marker on a task row.
@@ -286,3 +286,15 @@ The user did not answer the open questions, so these are the recommended default
 
 ### Deferred from M8
 A designer's artwork, more moods (waiting, sad), the bird reacting to streaks or counts, sounds, a Lottie or Rive pipeline, an animated widget, dark-mode variants of the artwork, and localized store graphics.
+
+### Known gaps after M8
+- **Nothing in M3 to M8 has been compiled or run.** The bird's shapes were designed on paper from coordinates and have never been looked at: expect to adjust proportions, the crest, the eye and the wing pivot once the icon and the empty state can be seen. Because the paths live in `BirdShapes.kt`, the drawables and the SVGs, `BirdArtworkTest` will say which copies need the same change.
+- **Needs a real device:** the adaptive icon on several launchers and as a themed icon, the Android 12 splash animation (and the still version on Android 8 to 11), the animated bird in the empty states, the hop over the list, the bird in the widgets, the sleeping bird's z's, the brand palette in light, dark and pure black, contrast of the text on the palette, the Material You switch, and the notification silhouette at small sizes.
+- The splash-screen library and the Glance, Compose and Hilt versions in `libs.versions.toml` have never been resolved by Gradle; a version typo shows up as the first build error.
+- The bird faces right in both left-to-right and right-to-left layouts (it is a picture, not an arrow); whether that feels right in Arabic is a design question.
+- The art is a first identity, not a designer's: it has one pose style and no dark-mode variant of its own.
+- There is no sound and the Arabic store graphic is not made.
+- New tests (written, not run): `BirdPoseTest`, `BirdArtworkTest`, `AppSettingsDefaultsTest` and one more case in `SettingsContentTest`.
+
+### Where the project stands
+All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.

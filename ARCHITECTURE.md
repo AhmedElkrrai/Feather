@@ -151,6 +151,13 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Links in notes** are found by a pure function (`findLinks`) and shown as chips; the notes field stays plain text.
 - **Release.** `proguard-rules.pro` lists only what the libraries do not bring (serializers by name, the two workers); the signing details come from an untracked `keystore.properties`; only English and Arabic library resources are kept.
 
+### M8 (brand)
+- **One source for the bird.** `ui/brand/BirdShapes.kt` holds the path data (a 96 by 96 box) and the colors. The animated drawing parses those strings; the vector drawables (full-color mark, launcher icon, themed icon, launch screen, notification silhouette) and the store SVGs repeat them by hand, and `BirdArtworkTest` fails if one of them drifts. Replacing the artwork means changing those files; no screen refers to the shapes.
+- **Animation is a pure function plus a canvas.** `birdPose(mood, phase)` returns wing angle, body offset, eye opening, scale and tilt; `BirdCanvas` draws them. The phase is a `State` read while drawing, so a running animation redraws but does not recompose. A phase of 0 is a calm still pose in every mood, which is what is shown when movement is off.
+- **Motion is opt-out twice:** `rememberBirdMotionAllowed()` is false when the Settings switch is off or the system `ANIMATOR_DURATION_SCALE` is zero.
+- **The launch screen** uses the AndroidX splash-screen library: `MainActivity` has the `Theme.Feather.Starting` theme, calls `installSplashScreen()` first, and the library swaps in `Theme.Feather` afterwards. The animated icon is an animated vector (the wing group rotates).
+- **The palette replaces the placeholder** in `Color.kt` and `Theme.kt`; Material You is applied only when the switch is on. The template's bitmap launcher icons were deleted since every supported Android version uses the adaptive icon.
+
 ## Open items
 - Donation mechanism (external link vs. Play flow) and Play policy implications
 - Exact-alarm permission strategy (see Reminders)

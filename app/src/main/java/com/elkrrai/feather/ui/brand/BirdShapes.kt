@@ -48,6 +48,7 @@ object BirdShapes {
 object BirdColors {
     val Plumage = Color(0xFF2A7F9E)
     val Deep = Color(0xFF17485E)
+    val Wing = Color(0xFF78C0D8)
     val Cream = Color(0xFFFFF3DC)
     val Amber = Color(0xFFF2A93B)
     val Coral = Color(0xFFE8735F)

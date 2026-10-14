@@ -84,4 +84,28 @@ class SettingsContentTest {
 
         assertTrue(reliabilityOpened == 1)
     }
+
+    @Test
+    fun theBirdAnimationsSwitchIsListedAndToggles() {
+        var changed: Boolean? = null
+        rule.setContent {
+            FeatherTheme(dynamicColor = false) {
+                SettingsContent(
+                    settings = AppSettings(birdAnimations = true),
+                    remindersHealthy = true,
+                    onBack = {},
+                    onOpenReliability = {},
+                    onDefaultTimeChange = {},
+                    onSnoozeMinutesChange = {},
+                    onDailySummaryChange = {},
+                    onDailySummaryTimeChange = {},
+                    appearance = AppearanceActions(onBirdAnimationsChange = { changed = it }),
+                )
+            }
+        }
+
+        rule.onNodeWithText(string(R.string.settings_bird_animations)).performScrollTo().performClick()
+
+        assertEquals(false, changed)
+    }
 }

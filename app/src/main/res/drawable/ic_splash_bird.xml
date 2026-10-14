@@ -13,7 +13,7 @@
         <path android:fillColor="#2A7F9E" android:pathData="M78,38 A16,16 0 1,1 46,38 A16,16 0 1,1 78,38 Z" />
         <path android:fillColor="#FFF3DC" android:pathData="M44,60 C50,54 62,54 70,58 C66,68 54,74 44,70 C42,66 42,63 44,60 Z" />
         <group android:name="wing" android:pivotX="44" android:pivotY="52">
-            <path android:fillColor="#17485E" android:pathData="M40,50 C30,48 18,54 12,70 C26,70 38,64 46,56 Z" />
+            <path android:fillColor="#78C0D8" android:pathData="M40,50 C30,48 18,54 12,70 C26,70 38,64 46,56 Z" />
         </group>
         <path android:fillColor="#F2A93B" android:pathData="M76,38 L90,43 L76,48 Z" />
         <path android:fillColor="#F2A93B" android:pathData="M60,22 C57,14 61,9 66,7 C66,13 68,18 66,23 Z" />
