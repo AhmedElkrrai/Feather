@@ -20,6 +20,8 @@ import java.time.LocalTime
 object QuickAddParser {
 
     private val rules: List<LanguageRules> = listOf(EnglishRules, ArabicRules)
+    private val arabicFirst: List<LanguageRules> = listOf(ArabicRules, EnglishRules)
+    private val arabicLetter = Regex("[\u0600-\u06FF]")
 
     /**
      * @param now the current local date and time, which relative phrases ("tomorrow", "in 2
@@ -42,7 +44,7 @@ object QuickAddParser {
         val priority = if (QuickAddField.PRIORITY in disabled) Priority.NONE else takePriority(quick)
 
         val repeat = if (QuickAddField.REPEAT in disabled) null else rules.firstNotNullOfOrNull { it.repeat(quick) }
-        val timeSpec = if (QuickAddField.TIME in disabled) null else rules.firstNotNullOfOrNull { it.time(quick, now) }
+        val timeSpec = if (QuickAddField.TIME in disabled) null else rulesFor(text).firstNotNullOfOrNull { it.time(quick, now) }
         val written = if (QuickAddField.DATE in disabled) null else takeIsoDate(quick) ?: rules.firstNotNullOfOrNull { it.date(quick, today) }
 
         val time = timeSpec?.time
@@ -127,6 +129,13 @@ object QuickAddParser {
     }
 
     // --- Putting the pieces together ---
+
+    /**
+     * Both languages are tried, but the one the sentence is written in goes first: a bare "5:30"
+     * belongs to "الساعة 5:30", and the English rule must not take it and leave the Arabic word behind.
+     */
+    private fun rulesFor(text: String): List<LanguageRules> =
+        if (arabicLetter.containsMatchIn(text)) arabicFirst else rules
 
     /**
      * The date to use when only a time or a repeat was written: for a repeat, its first matching

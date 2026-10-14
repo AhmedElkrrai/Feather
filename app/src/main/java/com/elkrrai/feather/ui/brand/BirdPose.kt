@@ -83,7 +83,7 @@ fun birdPose(mood: BirdMood, phase: Float): BirdPose {
 private fun blink(p: Float): Float {
     if (p < BLINK_START || p > BLINK_END) return 1f
     val x = (p - BLINK_START) / (BLINK_END - BLINK_START)
-    return 1f - 0.95f * sin((PI * x).toFloat())
+    return (1f - 0.95f * sin((PI * x).toFloat())).coerceIn(0f, 1f)
 }
 
 private const val HOP_HEIGHT = 14f
