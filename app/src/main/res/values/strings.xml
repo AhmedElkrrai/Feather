@@ -349,4 +349,9 @@
     <string name="backup_done_auto">Backup saved to your folder</string>
     <string name="backup_error_no_folder">Choose a backup folder first.</string>
     <string name="backup_error_no_access">Feather cannot write to that folder any more. Choose it again.</string>
+
+    <!-- Widgets -->
+    <string name="widget_today_label">Feather: Today</string>
+    <string name="widget_today_description">What is due today, with a button to add a task.</string>
+    <string name="widget_today_empty">Nothing due today</string>
 </resources>

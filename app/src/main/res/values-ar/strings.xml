@@ -409,4 +409,9 @@
     <string name="backup_done_auto">تم حفظ النسخة في مجلدك</string>
     <string name="backup_error_no_folder">اختر مجلد النسخ الاحتياطي أولًا.</string>
     <string name="backup_error_no_access">لم يعد بإمكان Feather الكتابة في هذا المجلد. اختره مرة أخرى.</string>
+
+    <!-- Widgets -->
+    <string name="widget_today_label">Feather: اليوم</string>
+    <string name="widget_today_description">ما يستحق اليوم، مع زر لإضافة مهمة.</string>
+    <string name="widget_today_empty">لا شيء مستحق اليوم</string>
 </resources>

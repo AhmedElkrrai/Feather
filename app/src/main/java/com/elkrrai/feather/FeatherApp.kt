@@ -9,6 +9,7 @@ import com.elkrrai.feather.reminders.ReminderChannels
 import com.elkrrai.feather.reminders.ReminderSyncer
 import com.elkrrai.feather.reminders.ReminderWorker
 import com.elkrrai.feather.reminders.withAppLocale
+import com.elkrrai.feather.widget.WidgetUpdater
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +26,7 @@ class FeatherApp : Application() {
     @Inject lateinit var taskRepository: TaskRepository
     @Inject lateinit var reminderSyncer: ReminderSyncer
     @Inject lateinit var settingsRepository: SettingsRepository
+    @Inject lateinit var widgetUpdater: WidgetUpdater
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -40,6 +42,8 @@ class FeatherApp : Application() {
         // Re-arms the reminder alarm now and whenever tasks or settings change.
         reminderSyncer.start(appScope)
         ReminderWorker.schedule(this)
+        // Keeps the home-screen widgets in step with the tasks.
+        widgetUpdater.start(appScope)
         // The daily backup job runs only while automatic backup is on and a folder is chosen.
         appScope.launch {
             settingsRepository.settings
