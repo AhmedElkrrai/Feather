@@ -83,7 +83,7 @@ internal fun SceneFrame(
         entrance.animateTo(1f, tween(if (reduceMotion) 160 else ENTRANCE_MILLIS, easing = Ease.Settle))
     }
 
-    // The sway, like the bird, comes to rest after ten seconds.
+    // The sway, like the bird, comes to rest after five seconds.
     val swayPhase = rememberAmbientPhase(SWAY_MILLIS, enabled = moving)
 
     val sunProgress = remember { Animatable(if (risingSun) 0f else 1f) }

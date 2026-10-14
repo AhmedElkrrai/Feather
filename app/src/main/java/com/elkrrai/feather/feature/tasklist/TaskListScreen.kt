@@ -152,6 +152,9 @@ fun TaskListScreen(
         coroutineScope.launch { drawerState.close() }
     }
 
+    // Back closes the menu first, before it leaves the screen.
+    BackHandler(enabled = drawerState.currentValue == DrawerValue.Open) { closeDrawer() }
+
     val drawerActions = DrawerActions(
         onSelect = { scope ->
             viewModel.selectScope(scope)
@@ -173,6 +176,7 @@ fun TaskListScreen(
             closeDrawer()
             onOpenSettings()
         },
+        onClose = ::closeDrawer,
         onNewFilter = { filterDialog = FilterDialogState.New },
         onEditFilter = { filterDialog = FilterDialogState.Edit(it) },
         onDeleteFilter = { filterDialog = FilterDialogState.Delete(it) },

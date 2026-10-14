@@ -12,7 +12,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
@@ -48,6 +52,7 @@ class DrawerActions(
     val onDeleteTag: (Tag) -> Unit,
     val onOpenTrash: () -> Unit,
     val onOpenSettings: () -> Unit,
+    val onClose: () -> Unit = {},
     val onNewFilter: () -> Unit = {},
     val onEditFilter: (SavedFilter) -> Unit = {},
     val onDeleteFilter: (SavedFilter) -> Unit = {},
@@ -75,11 +80,31 @@ fun TaskDrawerContent(
             .verticalScroll(rememberScrollState())
             .padding(vertical = 12.dp),
     ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.weight(1f).padding(vertical = 8.dp),
+            )
+            // A round, quiet close button: the drawer can be dismissed without reaching for the scrim.
+            FilledTonalIconButton(
+                onClick = actions.onClose,
+                modifier = Modifier.size(40.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_close),
+                    contentDescription = stringResource(R.string.action_close_menu),
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
 
         SectionHeader(R.string.drawer_section_views)
         smartViews.forEach { (labelRes, scope) ->

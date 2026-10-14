@@ -58,7 +58,7 @@ private class BirdPaths {
 fun rememberBirdMotionAllowed(): Boolean = DisplayPrefs.birdAnimations && !rememberReduceMotion()
 
 /** Ambient movement (the idle bird, a swaying leaf) runs for this long at most, then comes to rest. */
-internal const val AMBIENT_MAX_MILLIS = 10_000L
+internal const val AMBIENT_MAX_MILLIS = 5_000L
 
 /**
  * Whether an ambient loop that started at [startMillis] should begin another cycle at [nowMillis]:
@@ -69,7 +69,7 @@ internal fun ambientShouldContinue(startMillis: Long, nowMillis: Long): Boolean 
     nowMillis - startMillis < AMBIENT_MAX_MILLIS
 
 /**
- * A phase that runs from 0 to 1 over [periodMillis], again and again, for at most 10 seconds
+ * A phase that runs from 0 to 1 over [periodMillis], again and again, for at most 5 seconds
  * after the screen appears (and for good only while [enabled]); then it stays at 0, the calm
  * pose. Nothing that is only decoration should keep waking the screen for as long as someone
  * looks at it. Read its value while drawing so a running loop redraws without recomposing.

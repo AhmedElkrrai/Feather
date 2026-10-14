@@ -60,6 +60,7 @@
     <string name="drawer_section_lists">القوائم</string>
     <string name="drawer_section_tags">الوسوم</string>
     <string name="action_open_menu">فتح القائمة</string>
+    <string name="action_close_menu">إغلاق القائمة</string>
     <string name="trash">سلة المحذوفات</string>
     <string name="empty_view_title">كل شيء على ما يرام</string>
     <string name="empty_view_body">العصفور يغفو. لا شيء ليُنجز في هذا العرض.</string>

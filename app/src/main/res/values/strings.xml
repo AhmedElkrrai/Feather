@@ -64,6 +64,7 @@
     <string name="drawer_section_lists">Lists</string>
     <string name="drawer_section_tags">Tags</string>
     <string name="action_open_menu">Open menu</string>
+    <string name="action_close_menu">Close menu</string>
     <string name="trash">Trash</string>
     <string name="empty_view_title">All clear</string>
     <string name="empty_view_body">Your bird is napping. Nothing to do in this view.</string>
