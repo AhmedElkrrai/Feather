@@ -46,6 +46,7 @@ private const val RING_BOX = 26f
 private const val RING_RADIUS = 12f
 private const val RING_STROKE = 2f
 private const val CHECK_STROKE = 2.4f
+private const val BARB_STROKE = 1.8f
 
 /** The check mark as a stroke: a short stroke down, a long one up. */
 private val CheckPoints = listOf(Offset(7.4f, 13.6f), Offset(11.4f, 17.6f), Offset(18.8f, 9.4f))
@@ -76,6 +77,8 @@ fun CompletionRing(
     ringColor: Color,
     contentDescription: String,
     modifier: Modifier = Modifier,
+    /** Priority strokes inside the ring: 0 for none up to 3 (see [barbCount]). */
+    barbs: Int = 0,
 ) {
     val reduceMotion = rememberReduceMotion()
     val fill = remember { Animatable(if (checked) 1f else 0f) }
@@ -86,6 +89,7 @@ fun CompletionRing(
     val colors = MaterialTheme.featherColors
     val burstColors = remember(colors) { listOf(Nest.SkyWing, colors.amberFill, colors.coralFill, colors.listColors[3]) }
     val particles = remember { burstParticles(BURST_FEATHERS, colors = 4) }
+    val ticks = remember(barbs) { barbTicks(barbs) }
 
     LaunchedEffect(checked, reduceMotion) {
         val target = if (checked) 1f else 0f
@@ -184,6 +188,18 @@ fun CompletionRing(
                     center = center,
                     style = Stroke(width = RING_STROKE),
                 )
+                // The priority strokes fade out as the ring fills.
+                if (ticks.isNotEmpty() && filled < 1f) {
+                    for ((from, to) in ticks) {
+                        drawLine(
+                            color = ringColor.copy(alpha = 1f - filled),
+                            start = from,
+                            end = to,
+                            strokeWidth = BARB_STROKE,
+                            cap = StrokeCap.Round,
+                        )
+                    }
+                }
                 val drawn = check.value
                 if (drawn > 0f) {
                     visible.rewind()
