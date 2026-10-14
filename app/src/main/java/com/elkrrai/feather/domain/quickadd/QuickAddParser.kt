@@ -39,13 +39,29 @@ object QuickAddParser {
         val quick = QuickText(text)
         val today = now.toLocalDate()
 
-        val tags = if (QuickAddField.TAGS in disabled) emptyList() else takeTags(quick)
-        val listName = if (QuickAddField.LIST in disabled) null else takeList(quick, listNames)
-        val priority = if (QuickAddField.PRIORITY in disabled) Priority.NONE else takePriority(quick)
+        val tags = if (QuickAddField.TAGS in disabled) emptyList() else quick.runAs(QuickAddField.TAGS) { takeTags(quick) }
+        val listName = if (QuickAddField.LIST in disabled) null else quick.runAs(QuickAddField.LIST) { takeList(quick, listNames) }
+        val priority = if (QuickAddField.PRIORITY in disabled) {
+            Priority.NONE
+        } else {
+            quick.runAs(QuickAddField.PRIORITY) { takePriority(quick) }
+        }
 
-        val repeat = if (QuickAddField.REPEAT in disabled) null else rules.firstNotNullOfOrNull { it.repeat(quick) }
-        val timeSpec = if (QuickAddField.TIME in disabled) null else rulesFor(text).firstNotNullOfOrNull { it.time(quick, now) }
-        val written = if (QuickAddField.DATE in disabled) null else takeIsoDate(quick) ?: rules.firstNotNullOfOrNull { it.date(quick, today) }
+        val repeat = if (QuickAddField.REPEAT in disabled) {
+            null
+        } else {
+            quick.runAs(QuickAddField.REPEAT) { rules.firstNotNullOfOrNull { it.repeat(quick) } }
+        }
+        val timeSpec = if (QuickAddField.TIME in disabled) {
+            null
+        } else {
+            quick.runAs(QuickAddField.TIME) { rulesFor(text).firstNotNullOfOrNull { it.time(quick, now) } }
+        }
+        val written = if (QuickAddField.DATE in disabled) {
+            null
+        } else {
+            quick.runAs(QuickAddField.DATE) { takeIsoDate(quick) ?: rules.firstNotNullOfOrNull { it.date(quick, today) } }
+        }
 
         val time = timeSpec?.time
         var date = written ?: timeSpec?.date
@@ -67,7 +83,7 @@ object QuickAddParser {
             listName = listName,
             recurrence = recurrence,
             dateIsImplied = implied,
-        )
+        ).also { it.spans = quick.spans() }
     }
 
     // --- #tags, @list, !priority ---

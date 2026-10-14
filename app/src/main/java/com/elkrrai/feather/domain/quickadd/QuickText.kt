@@ -39,6 +39,32 @@ internal class QuickText(val original: String) {
         }
     }
 
+    private val spanList = ArrayList<TokenSpan>()
+
+    /**
+     * Runs [block] (a rule that consumes words) and remembers that whatever it consumed belongs to
+     * [field], as stretches of the original text.
+     */
+    fun <T> runAs(field: QuickAddField, block: () -> T): T {
+        val before = consumed.copyOf()
+        val result = block()
+        var i = 0
+        while (i < consumed.size) {
+            if (consumed[i] && !before[i]) {
+                var j = i
+                while (j + 1 < consumed.size && consumed[j + 1] && !before[j + 1]) j++
+                spanList += TokenSpan(field, sourceIndex[i], sourceIndex[j] + 1)
+                i = j + 1
+            } else {
+                i++
+            }
+        }
+        return result
+    }
+
+    /** Everything recognized so far, in the order it appears in the original text. */
+    fun spans(): List<TokenSpan> = spanList.sortedBy { it.start }
+
     /** The user's own spelling of the characters in [range] of [text]. */
     fun originalSlice(range: IntRange): String =
         original.substring(sourceIndex[range.first], sourceIndex[range.last] + 1)
