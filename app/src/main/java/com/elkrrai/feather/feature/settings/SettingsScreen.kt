@@ -108,12 +108,20 @@ fun SettingsScreen(
         enableAfterFolder = false
     }
 
+    // A finished export gets a small dialog with a picture; everything else stays a toast.
+    var savedMessage by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(backupState.result) {
         backupState.result?.let { result ->
-            Toast.makeText(context, backupMessage(context, result), Toast.LENGTH_LONG).show()
+            val message = backupMessage(context, result)
+            if (result == BackupResult.Exported || result == BackupResult.CsvExported) {
+                savedMessage = message
+            } else {
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            }
             backupViewModel.resultShown()
         }
     }
+    savedMessage?.let { message -> BackupSavedDialog(detail = message, onDismiss = { savedMessage = null }) }
 
     SettingsContent(
         settings = settings,

@@ -538,4 +538,14 @@
     <string name="subtasks_of">%1$d من %2$d</string>
     <string name="state_expanded">موسّع</string>
     <string name="state_collapsed">مطوي</string>
+
+    <!-- Illustration kit: the sentence under each scene -->
+    <string name="scene_empty_list">لا شيء هنا بعد. أضف فكرة وسأُبقيها دافئة.</string>
+    <string name="scene_all_done">كل البيض في العش. اذهب وعِش يومك.</string>
+    <string name="scene_nothing_due">يوم كامل بلا مواعيد. مريب، لكنه لطيف.</string>
+    <string name="scene_no_results">فتّشت تحت كل غصن. لا شيء يطابق «%1$s».</string>
+    <string name="scene_backup_saved">حُفظت بأمان. مهامك، لك وحدك.</string>
+    <string name="scene_reminders_blocked">هاتفك يُسكت جرسي. نقرتان لأعيد الرنين.</string>
+    <string name="scene_first_launch">أهلًا! أنا Feather. كل شيء يبقى على هاتفك.</string>
+    <string name="scene_trash_empty">مرتّب كعشٍّ في الربيع.</string>
 </resources>

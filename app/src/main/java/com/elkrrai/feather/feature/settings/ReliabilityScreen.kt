@@ -42,6 +42,9 @@ import com.elkrrai.feather.reminders.SettingsIntents
 import com.elkrrai.feather.reminders.startActivitySafely
 import com.elkrrai.feather.ui.components.rememberReminderHealth
 import kotlinx.coroutines.launch
+import androidx.compose.ui.text.style.TextAlign
+import com.elkrrai.feather.ui.brand.scenes.Illustration
+import com.elkrrai.feather.ui.brand.scenes.SceneKind
 
 /** What the user can do from the reliability helper. */
 class ReliabilityActions(
@@ -134,6 +137,19 @@ fun ReliabilityContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (!allGood) {
+                Illustration(
+                    kind = SceneKind.RemindersBlocked,
+                    size = 160.dp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                )
+                Text(
+                    text = stringResource(R.string.scene_reminders_blocked),
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             Text(
                 text = stringResource(
                     if (allGood) R.string.reliability_all_good else R.string.reliability_intro

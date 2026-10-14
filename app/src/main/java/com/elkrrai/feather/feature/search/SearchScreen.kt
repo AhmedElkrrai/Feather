@@ -37,6 +37,7 @@ import com.elkrrai.feather.ui.format.displayName
 import java.time.LocalDate
 import com.elkrrai.feather.feature.tasklist.ListLabel
 import com.elkrrai.feather.ui.theme.listColorIndex
+import com.elkrrai.feather.ui.brand.scenes.SceneKind
 
 @Composable
 fun SearchScreen(
@@ -127,7 +128,8 @@ fun SearchContent(
             )
 
             state.results.isEmpty() -> EmptyState(
-                title = stringResource(R.string.search_no_results),
+                scene = SceneKind.NoResults,
+                title = stringResource(R.string.scene_no_results, state.query.trim()),
                 body = stringResource(R.string.search_no_results_body),
                 modifier = Modifier.padding(padding),
             )

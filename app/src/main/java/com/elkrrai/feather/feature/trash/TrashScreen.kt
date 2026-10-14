@@ -36,6 +36,7 @@ import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
+import com.elkrrai.feather.ui.brand.scenes.SceneKind
 
 @Composable
 fun TrashScreen(
@@ -100,8 +101,8 @@ fun TrashContent(
             state.isLoading -> Box(Modifier.fillMaxSize().padding(padding))
 
             state.tasks.isEmpty() -> EmptyState(
-                mood = BirdMood.SLEEPING,
-                title = stringResource(R.string.trash_empty_title),
+                scene = SceneKind.TrashEmpty,
+                title = stringResource(R.string.scene_trash_empty),
                 body = stringResource(R.string.trash_empty_body, TRASH_RETENTION_DAYS.toInt()),
                 modifier = Modifier.padding(padding),
             )

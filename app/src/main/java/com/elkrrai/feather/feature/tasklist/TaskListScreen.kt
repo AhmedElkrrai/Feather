@@ -87,6 +87,9 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import java.time.LocalTime
 import androidx.compose.runtime.LaunchedEffect
+import androidx.annotation.StringRes
+import com.elkrrai.feather.domain.model.TaskList
+import com.elkrrai.feather.ui.brand.scenes.SceneKind
 
 @Composable
 fun TaskListScreen(
@@ -429,15 +432,11 @@ fun TaskListContent(
 
             // Today keeps its header (and its message) instead of an empty-state picture.
             state.isEmpty && !todayView -> {
-                val isList = state.scope is TaskScope.InList
+                val copy = state.scope.emptyCopy()
                 EmptyState(
-                    mood = if (isList) BirdMood.IDLE else BirdMood.SLEEPING,
-                    title = stringResource(
-                        if (isList) R.string.task_list_empty_title else R.string.empty_view_title
-                    ),
-                    body = stringResource(
-                        if (isList) R.string.task_list_empty_body else R.string.empty_view_body
-                    ),
+                    scene = copy.scene,
+                    title = stringResource(copy.title),
+                    body = copy.body?.let { stringResource(it) },
                     modifier = Modifier.padding(padding),
                 )
             }
@@ -570,6 +569,28 @@ fun TaskListContent(
             listBody(scaffoldPadding)
         }
     }
+}
+
+/** The picture and words for an empty view. */
+private class EmptyCopy(val scene: SceneKind, @StringRes val title: Int, @StringRes val body: Int?)
+
+/**
+ * What an empty view says. The Inbox is where a new user starts, so it greets; other lists invite
+ * a first task; Waiting for you is a happy place to be; the date views say nothing is due.
+ */
+private fun TaskScope.emptyCopy(): EmptyCopy = when (this) {
+    is TaskScope.InList ->
+        if (listId == TaskList.INBOX_ID) {
+            EmptyCopy(SceneKind.FirstLaunch, R.string.scene_first_launch, R.string.task_list_empty_body)
+        } else {
+            EmptyCopy(SceneKind.EmptyList, R.string.scene_empty_list, R.string.task_list_empty_body)
+        }
+
+    TaskScope.Overdue -> EmptyCopy(SceneKind.AllDone, R.string.scene_all_done, null)
+    TaskScope.Today, TaskScope.Upcoming, TaskScope.NoDate ->
+        EmptyCopy(SceneKind.NothingDue, R.string.scene_nothing_due, null)
+
+    else -> EmptyCopy(SceneKind.NothingDue, R.string.empty_view_title, R.string.empty_view_body)
 }
 
 private fun TaskSort.labelRes(): Int = when (this) {

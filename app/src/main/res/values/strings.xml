@@ -466,4 +466,14 @@
     <string name="subtasks_of">%1$d of %2$d</string>
     <string name="state_expanded">Expanded</string>
     <string name="state_collapsed">Collapsed</string>
+
+    <!-- Illustration kit: the sentence under each scene -->
+    <string name="scene_empty_list">Nothing here yet. Add a thought and I’ll keep it warm.</string>
+    <string name="scene_all_done">Every egg is in the nest. Go be a person.</string>
+    <string name="scene_nothing_due">A whole day with nothing due. Suspicious, but nice.</string>
+    <string name="scene_no_results">Looked under every twig. Nothing matches “%1$s”.</string>
+    <string name="scene_backup_saved">Tucked away safely. Your tasks, only yours.</string>
+    <string name="scene_reminders_blocked">Your phone is keeping my bell quiet. Two taps to let it ring.</string>
+    <string name="scene_first_launch">Hello! I’m Feather. Everything stays on your phone.</string>
+    <string name="scene_trash_empty">Tidy as a nest in spring.</string>
 </resources>
