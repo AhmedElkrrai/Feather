@@ -249,4 +249,107 @@
     <string name="pin_to_top">تثبيت في الأعلى</string>
     <string name="pinned">مثبتة</string>
     <string name="subtask_progress">المهام الفرعية %1$d/%2$d</string>
+
+    <!-- Repeating tasks -->
+    <string name="field_repeat">التكرار</string>
+    <string name="repeat_none">لا تتكرر</string>
+    <string name="repeat_has">مهمة متكررة</string>
+    <string name="repeat_dialog_title">التكرار</string>
+    <string name="repeat_freq_daily">يوميًا</string>
+    <string name="repeat_freq_weekly">أسبوعيًا</string>
+    <string name="repeat_freq_monthly">شهريًا</string>
+    <string name="repeat_freq_yearly">سنويًا</string>
+    <string name="repeat_every">كل</string>
+    <plurals name="repeat_unit_days">
+        <item quantity="zero">يوم</item>
+        <item quantity="one">يوم</item>
+        <item quantity="two">يومين</item>
+        <item quantity="few">أيام</item>
+        <item quantity="many">يومًا</item>
+        <item quantity="other">يوم</item>
+    </plurals>
+    <plurals name="repeat_unit_weeks">
+        <item quantity="zero">أسبوع</item>
+        <item quantity="one">أسبوع</item>
+        <item quantity="two">أسبوعين</item>
+        <item quantity="few">أسابيع</item>
+        <item quantity="many">أسبوعًا</item>
+        <item quantity="other">أسبوع</item>
+    </plurals>
+    <plurals name="repeat_unit_months">
+        <item quantity="zero">شهر</item>
+        <item quantity="one">شهر</item>
+        <item quantity="two">شهرين</item>
+        <item quantity="few">أشهر</item>
+        <item quantity="many">شهرًا</item>
+        <item quantity="other">شهر</item>
+    </plurals>
+    <plurals name="repeat_unit_years">
+        <item quantity="zero">سنة</item>
+        <item quantity="one">سنة</item>
+        <item quantity="two">سنتين</item>
+        <item quantity="few">سنوات</item>
+        <item quantity="many">سنة</item>
+        <item quantity="other">سنة</item>
+    </plurals>
+    <plurals name="repeat_every_days">
+        <item quantity="zero">كل %d يوم</item>
+        <item quantity="one">كل يوم</item>
+        <item quantity="two">كل يومين</item>
+        <item quantity="few">كل %d أيام</item>
+        <item quantity="many">كل %d يومًا</item>
+        <item quantity="other">كل %d يوم</item>
+    </plurals>
+    <plurals name="repeat_every_weeks">
+        <item quantity="zero">كل %d أسبوع</item>
+        <item quantity="one">كل أسبوع</item>
+        <item quantity="two">كل أسبوعين</item>
+        <item quantity="few">كل %d أسابيع</item>
+        <item quantity="many">كل %d أسبوعًا</item>
+        <item quantity="other">كل %d أسبوع</item>
+    </plurals>
+    <plurals name="repeat_every_months">
+        <item quantity="zero">كل %d شهر</item>
+        <item quantity="one">كل شهر</item>
+        <item quantity="two">كل شهرين</item>
+        <item quantity="few">كل %d أشهر</item>
+        <item quantity="many">كل %d شهرًا</item>
+        <item quantity="other">كل %d شهر</item>
+    </plurals>
+    <plurals name="repeat_every_years">
+        <item quantity="zero">كل %d سنة</item>
+        <item quantity="one">كل سنة</item>
+        <item quantity="two">كل سنتين</item>
+        <item quantity="few">كل %d سنوات</item>
+        <item quantity="many">كل %d سنة</item>
+        <item quantity="other">كل %d سنة</item>
+    </plurals>
+    <string name="repeat_on_days">التكرار في</string>
+    <string name="repeat_monthly_on_day">في اليوم %1$d</string>
+    <string name="repeat_monthly_last_day">في آخر يوم من الشهر</string>
+    <string name="repeat_monthly_nth">في %2$s %1$s</string>
+    <string name="repeat_yearly_on">في %1$s</string>
+    <string name="ordinal_first">الأول</string>
+    <string name="ordinal_second">الثاني</string>
+    <string name="ordinal_third">الثالث</string>
+    <string name="ordinal_fourth">الرابع</string>
+    <string name="ordinal_last">الأخير</string>
+    <string name="repeat_after_completion">التكرار بعد الإنجاز</string>
+    <string name="repeat_after_completion_hint">يُحسب التاريخ التالي من يوم إنجاز المهمة.</string>
+    <string name="repeat_after_completion_summary">من تاريخ الإنجاز</string>
+    <string name="repeat_ends">الانتهاء</string>
+    <string name="repeat_end_never">أبدًا</string>
+    <string name="repeat_end_on_date">في تاريخ محدد</string>
+    <string name="repeat_end_after_count">بعد عدد من المرات</string>
+    <string name="repeat_times_label">عدد المرات</string>
+    <string name="repeat_until">حتى %1$s</string>
+    <plurals name="repeat_times_left">
+        <item quantity="zero">%d مرة متبقية</item>
+        <item quantity="one">مرة واحدة متبقية</item>
+        <item quantity="two">مرتان متبقيتان</item>
+        <item quantity="few">%d مرات متبقية</item>
+        <item quantity="many">%d مرة متبقية</item>
+        <item quantity="other">%d مرة متبقية</item>
+    </plurals>
+    <string name="repeat_list_separator">"، "</string>
 </resources>

@@ -11,6 +11,7 @@ import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.model.TaskList
+import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.domain.repository.ListRepository
 import com.elkrrai.feather.domain.repository.TagRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
@@ -43,6 +44,8 @@ data class TaskEditUiState(
     val subtasks: List<Subtask> = emptyList(),
     /** The editable reminders (a pending snooze is not shown and is left untouched). */
     val reminders: List<Reminder> = emptyList(),
+    /** How the task repeats, or null. A repeating task always has a due date. */
+    val recurrence: Recurrence? = null,
     val availableLists: List<TaskList> = emptyList(),
     val availableTags: List<Tag> = emptyList(),
     val isSaving: Boolean = false,
@@ -102,6 +105,7 @@ class TaskEditViewModel @Inject constructor(
                     tags = task.tags,
                     subtasks = task.subtasks,
                     reminders = task.reminders.filter { r -> r.kind != ReminderKind.SNOOZE },
+                    recurrence = task.recurrence,
                 )
             }
         }
@@ -111,13 +115,25 @@ class TaskEditViewModel @Inject constructor(
 
     fun onNotesChange(notes: String) = _uiState.update { it.copy(notes = notes) }
 
-    /** Clearing the date also clears the time, since a time without a date is meaningless. */
+    /**
+     * Clearing the date also clears the time, since a time without a date is meaningless, and
+     * the repeat rule, since there is nothing left to repeat from.
+     */
     fun onDueDateChange(date: LocalDate?) = _uiState.update {
         it.copy(
             dueDate = date,
             dueTime = if (date == null) null else it.dueTime,
+            recurrence = if (date == null) null else it.recurrence,
             // "Before due" reminders need a due date to count from.
             reminders = if (date == null) it.reminders.filter { r -> r.kind != ReminderKind.BEFORE_DUE } else it.reminders,
+        )
+    }
+
+    /** A repeating task needs a due date to repeat from, so one is set to today if missing. */
+    fun onRecurrenceChange(recurrence: Recurrence?) = _uiState.update {
+        it.copy(
+            recurrence = recurrence,
+            dueDate = if (recurrence != null && it.dueDate == null) LocalDate.now() else it.dueDate,
         )
     }
 
@@ -205,6 +221,7 @@ class TaskEditViewModel @Inject constructor(
                     tags = state.tags,
                     subtasks = state.subtasks,
                     reminders = state.reminders,
+                    recurrence = state.recurrence,
                 )
             )
             _uiState.update { it.copy(isSaving = false, finished = true) }

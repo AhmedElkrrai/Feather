@@ -229,4 +229,71 @@
     <string name="pin_to_top">Pin to top</string>
     <string name="pinned">Pinned</string>
     <string name="subtask_progress">Subtasks %1$d/%2$d</string>
+
+    <!-- Repeating tasks -->
+    <string name="field_repeat">Repeat</string>
+    <string name="repeat_none">Does not repeat</string>
+    <string name="repeat_has">Repeats</string>
+    <string name="repeat_dialog_title">Repeat</string>
+    <string name="repeat_freq_daily">Daily</string>
+    <string name="repeat_freq_weekly">Weekly</string>
+    <string name="repeat_freq_monthly">Monthly</string>
+    <string name="repeat_freq_yearly">Yearly</string>
+    <string name="repeat_every">Every</string>
+    <plurals name="repeat_unit_days">
+        <item quantity="one">day</item>
+        <item quantity="other">days</item>
+    </plurals>
+    <plurals name="repeat_unit_weeks">
+        <item quantity="one">week</item>
+        <item quantity="other">weeks</item>
+    </plurals>
+    <plurals name="repeat_unit_months">
+        <item quantity="one">month</item>
+        <item quantity="other">months</item>
+    </plurals>
+    <plurals name="repeat_unit_years">
+        <item quantity="one">year</item>
+        <item quantity="other">years</item>
+    </plurals>
+    <plurals name="repeat_every_days">
+        <item quantity="one">Every day</item>
+        <item quantity="other">Every %d days</item>
+    </plurals>
+    <plurals name="repeat_every_weeks">
+        <item quantity="one">Every week</item>
+        <item quantity="other">Every %d weeks</item>
+    </plurals>
+    <plurals name="repeat_every_months">
+        <item quantity="one">Every month</item>
+        <item quantity="other">Every %d months</item>
+    </plurals>
+    <plurals name="repeat_every_years">
+        <item quantity="one">Every year</item>
+        <item quantity="other">Every %d years</item>
+    </plurals>
+    <string name="repeat_on_days">Repeat on</string>
+    <string name="repeat_monthly_on_day">On day %1$d</string>
+    <string name="repeat_monthly_last_day">On the last day</string>
+    <string name="repeat_monthly_nth">On the %1$s %2$s</string>
+    <string name="repeat_yearly_on">On %1$s</string>
+    <string name="ordinal_first">first</string>
+    <string name="ordinal_second">second</string>
+    <string name="ordinal_third">third</string>
+    <string name="ordinal_fourth">fourth</string>
+    <string name="ordinal_last">last</string>
+    <string name="repeat_after_completion">Repeat after completion</string>
+    <string name="repeat_after_completion_hint">The next date counts from the day you finish the task.</string>
+    <string name="repeat_after_completion_summary">From completion</string>
+    <string name="repeat_ends">Ends</string>
+    <string name="repeat_end_never">Never</string>
+    <string name="repeat_end_on_date">On a date</string>
+    <string name="repeat_end_after_count">After a number of times</string>
+    <string name="repeat_times_label">Times</string>
+    <string name="repeat_until">Until %1$s</string>
+    <plurals name="repeat_times_left">
+        <item quantity="one">%d time left</item>
+        <item quantity="other">%d times left</item>
+    </plurals>
+    <string name="repeat_list_separator">", "</string>
 </resources>
