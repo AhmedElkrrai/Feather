@@ -5,6 +5,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 ## Working agreement
 - The **"humbug"** workflow: for each step write the code, commit, push and go straight to the next step, with no compile, tests or install in between. When the milestone is finished, build and install the app on the phone. Unit tests are not run unless asked.
 - Commit to git only as part of that workflow or when asked.
+- The **"flash"** workflow: plan the milestone, develop it with one commit per step, push once when it is finished, then brief the user on the next milestone. Development only: no build, install or tests unless asked.
 - Test device: OnePlus/Oppo CPH2625, Android 16 (confirm vendor-specific reminder behavior in M3).
 
 ## Roadmap
@@ -13,8 +14,8 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 |---|---|---|---|
 | M1 | Foundation | Tasks, Room, navigation, English and Arabic (RTL) | Done |
 | M2 | Organization and views | Lists, one-level folders, tags, subtasks, search, Today / Upcoming / Overdue, trash | Done (built and installed; the 1 -> 2 database upgrade kept existing data) |
-| M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | Code complete, awaiting build, install and real-device testing |
-| M4 | Recurrence | Rule engine, repeat modes, completion history | |
+| M3 | Reminders | Scheduler, receivers, notification actions, reliability helper, real-device testing | Built; install and real-device testing still pending |
+| M4 | Recurrence | Rule engine, repeat modes, completion history | In progress (developed with the "flash" workflow: no build or install) |
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | |
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | |
@@ -102,3 +103,31 @@ Per-task custom notification sounds, repeating reminders ("every 10 minutes unti
 - There is no per-task choice of notification sound, and reminders do not repeat until the task is done (deferred).
 - Reminders for a task that is marked complete and then reopened after their time can show as a catch-up within 24 hours.
 - Unit and instrumented tests for M3 are written but not run (humbug).
+
+## Milestone 4: Recurrence
+
+**Definition of done:** a task can repeat daily, weekly (chosen days), monthly (a date, the last day, or "the 2nd Tuesday"), yearly or at a custom interval, on a fixed schedule or counted from the day it is finished, with an optional end date or number of times. Completing a repeating task (from the list, search or a notification) moves it to its next date instead of finishing it, resets its checklist and re-arms its reminders. Every completion is recorded in a history. Works in English and Arabic.
+
+### Decisions made for M4
+- **Storage.** `tasks.rrule` holds an RFC 5545 style rule limited to what the editor can express (for example `FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE;UNTIL=20261231`); `tasks.repeatMode` is 0 for a fixed schedule and 1 for "repeat after completion". Schema v4, auto-migration 3 -> 4 (two new columns and the `completion_history` table).
+- **In-house rule engine, no library.** The supported subset is small and fully tested in pure Kotlin (`domain/recurrence`); `lib-recur` would bring more surface than we use.
+- **A repeating task is one row that moves forward** (as planned in ARCHITECTURE.md). Completing it appends a row to `completion_history` and advances `dueDate`; it never creates copies.
+- **Next date, fixed schedule.** The first occurrence strictly after the later of the current due date and the day of completion. Finishing early does not skip ahead further than the next occurrence after the due date; finishing very late jumps to the next future occurrence instead of replaying every missed one.
+- **Next date, repeat after completion.** The day of completion plus the interval (days, weeks, months or years). Weekday and month patterns are ignored in this mode.
+- **Short months.** A monthly rule on day 29, 30 or 31 uses the last day of shorter months; a yearly rule on 29 February uses 28 February in other years. Day 31 therefore doubles as "last day of the month". The editor stores the day explicitly, so the pattern is not lost after a clamped month.
+- **End conditions.** `UNTIL` is inclusive. `COUNT` is stored as the number of occurrences still to come, including the current one, and goes down on each completion, so no start date has to be remembered. When the last occurrence is finished (or the next one would be after `UNTIL`), the task completes for real.
+- **What moves with the due date.** "Before due" reminders follow automatically; "at a specific time" reminders are shifted by the same number of days; a pending snooze is dropped; all reminders become eligible to fire again. The checklist is reset to unchecked.
+- **A repeating task needs a due date.** Choosing a repeat rule on a task without one sets it to today; clearing the due date clears the rule.
+- **Completion history.** One row per completion (task, when, which due date it was for). Un-completing a finished task removes its row. No screen uses it yet; it is the base for streaks later.
+- **Shared code path.** The list checkbox, search and the notification Complete button all call `TaskRepository.setCompleted`, so all three get recurrence without changes.
+
+### Steps
+1. **Rule model and engine.** `Recurrence`, `Frequency`, `RepeatMode`, `NthWeekday`; RRULE string parse and format; `nextOccurrence` and `afterAdvance`; JVM tests.
+2. **Schema v4 and mapping.** `tasks.rrule` and `repeatMode`, `completion_history` entity and DAO, `Task.recurrence`, mappers, auto-migration 3 -> 4.
+3. **Completing a repeating task.** Repository: history, next date, checklist reset, reminder shift, un-complete; subtask reopening query.
+4. **Editor.** Repeat section and `RecurrenceDialog` (frequency, interval, weekdays, monthly pattern, repeat after completion, end condition); ViewModel state; English and Arabic strings with plurals.
+5. **Labels and rows.** A readable summary ("Every 2 weeks · Mon, Wed · Until 31 Dec"), a repeat icon on rows.
+6. **Tests and docs.** Repository and editor tests (written, not run), FEATURES, ARCHITECTURE and MILESTONES updates.
+
+### Deferred from M4
+Showing future occurrences in Upcoming and a calendar, an undo for completing a repeating task, "skip this occurrence", editing a single occurrence, rules with several month days or "every weekday" presets, a screen for the completion history and streaks, and leaving a reminder notification in the tray after the task was completed from inside the app.
