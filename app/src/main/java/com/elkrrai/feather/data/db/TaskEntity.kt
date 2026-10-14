@@ -41,4 +41,7 @@ data class TaskEntity(
     // Added in schema v2.
     val parentTaskId: String? = null,
     @ColumnInfo(defaultValue = "0") val isPinned: Boolean = false,
+    // Added in schema v4. [rrule] is an RFC 5545 style rule; [repeatMode] is a `RepeatMode` code.
+    val rrule: String? = null,
+    @ColumnInfo(defaultValue = "0") val repeatMode: Int = 0,
 )

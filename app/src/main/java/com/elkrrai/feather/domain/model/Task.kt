@@ -1,5 +1,6 @@
 package com.elkrrai.feather.domain.model
 
+import com.elkrrai.feather.domain.recurrence.Recurrence
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -27,6 +28,8 @@ data class Task(
     val subtasks: List<Subtask> = emptyList(),
     /** Editable reminders plus any pending snooze; the editor works with the former only. */
     val reminders: List<Reminder> = emptyList(),
+    /** How the task repeats, or null for a one-off. A repeating task always has a due date. */
+    val recurrence: Recurrence? = null,
     /** Only set for tasks read from the trash; live tasks are never deleted. */
     val deletedAt: Instant? = null,
 ) {

@@ -8,6 +8,8 @@ import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.model.TaskList
+import com.elkrrai.feather.domain.recurrence.Recurrence
+import com.elkrrai.feather.domain.recurrence.RepeatMode
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -33,6 +35,7 @@ fun TaskEntity.toDomain(
     tags = tags,
     subtasks = subtasks,
     reminders = reminders,
+    recurrence = Recurrence.parse(rrule, RepeatMode.fromCode(repeatMode)),
     deletedAt = deletedAt?.let(Instant::ofEpochMilli),
 )
 
@@ -52,6 +55,8 @@ fun Task.toEntity(deletedAt: Long? = null): TaskEntity = TaskEntity(
     deletedAt = deletedAt,
     parentTaskId = null,
     isPinned = isPinned,
+    rrule = recurrence?.toRule(),
+    repeatMode = recurrence?.mode?.code ?: RepeatMode.FIXED.code,
 )
 
 fun TaskEntity.toSubtask(): Subtask = Subtask(
