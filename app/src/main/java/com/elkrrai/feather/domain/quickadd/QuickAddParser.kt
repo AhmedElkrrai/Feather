@@ -19,7 +19,7 @@ import java.time.LocalTime
  */
 object QuickAddParser {
 
-    private val rules: List<LanguageRules> = listOf(EnglishRules)
+    private val rules: List<LanguageRules> = listOf(EnglishRules, ArabicRules)
 
     /**
      * @param now the current local date and time, which relative phrases ("tomorrow", "in 2
