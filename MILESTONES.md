@@ -19,7 +19,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M5 | Quick add | Natural-language parser (EN and AR), voice input, share target, Quick Settings tile | Code complete (flash workflow: not built, installed or tested) |
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | Code complete (flash workflow: not built, installed or tested) |
-| M8 | Brand | Bird identity and animation | |
+| M8 | Brand | Bird identity and animation | In progress (flash workflow) |
 
 Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
 
@@ -261,3 +261,28 @@ Macrobenchmarks and a baseline profile, screenshot tests in LTR and RTL, snappin
 - The launcher icon is the template's; the bird identity is M8. The release build, R8 rules and signing have never been run.
 - Macrobenchmarks, a baseline profile and screenshot tests (LTR and RTL) were left out; the view code still builds all lists in memory on the main thread, which is fine for thousands of tasks but is the first thing to measure.
 - New tests (written, not run): `SavedFilterTest`, `TaskSortOrderTest`, `LinksTest`, `DisplayFormatTest`, additions to `TaskListViewModelTest`, `BackupMergerTest`, `BackupCodecTest`, `RepositoryTest`, `BackupRepositoryTest` and the new `SavedFilterRepositoryTest`.
+
+## Milestone 8: Brand
+
+**Definition of done:** Feather has a face. A small bird (drawn in code, as a first identity that a designer can later replace) is the app icon, the launch screen, the picture in empty states, the little celebration when a task is finished, and a mark on the widgets; the colors are the app's own; the bird moves, but never when the person has asked for less motion.
+
+### Decisions made for M8
+The user did not answer the open questions, so these are the recommended defaults.
+- **The bird.** A flat, friendly songbird in profile with a feather-shaped crest, built from a handful of smooth shapes (body, wing, tail, belly, beak, eye, crest). One set of path data (`ui/brand/BirdShapes.kt`) is the source; the vector drawables for the icon, the launch screen, the widgets and the store graphics repeat the same paths, and a unit test checks that they have not drifted apart. It is a placeholder identity in the sense that a designer's artwork can replace the paths without touching any screen.
+- **Palette.** Plumage teal, deep blue (wing and tail), cream (belly), amber (beak and crest), coral (cheek), ink (eye). They become the app's light and dark color schemes. **Material You is now off by default** (it stays one switch away in Settings): a brand needs its own colors. People who already chose a setting keep it.
+- **Animation is Compose-native.** The bird is drawn on a `Canvas` from a pure function (`birdPose(mood, phase)`) that returns wing angle, body offset, eye opening, scale and tilt, so it needs no animation library, adds nothing to the APK, and can be tested without a device. Four moods: idle (a slow bob and an occasional blink), sleeping (eyes closed, breathing, floating z's), happy (one hop with flapping wings) and flying.
+- **Less motion is honored twice:** when the system animation scale is zero the bird is drawn still, and a new switch in Settings ("Bird animations") turns the movement off inside the app. The static picture stays.
+- **Where the bird appears.** The adaptive launcher icon (with a single-color version for themed icons), the launch screen (Android 12 splash with a wing-flap animated icon; a still bird before Android 12), the empty states (idle for "no tasks yet", sleeping for "all clear" and the trash), a short hop over the list when a task is finished, the empty state of the two list widgets, the About row, and a bird silhouette as the small notification icon. The bell stays as the "has a reminder" marker on a task row.
+- **Voice.** The copy stays plain and warm. Only the "nothing here" screen gets a line about the bird napping. There are no sounds, no streaks and no characters that talk; donations never unlock anything, so there is nothing to "evolve".
+- **Store graphics** are delivered as SVG (icon and feature graphic) in `store/graphics/`, built from the same paths; exporting them to the PNG sizes the stores ask for needs a vector tool.
+
+### Steps
+1. **Palette and bird shapes.** Brand colors in the light and dark schemes, Material You off by default, the shared path data and the full-color bird drawable.
+2. **The animated bird.** `birdPose`, the `Canvas` drawing, the reduced-motion check, the in-app switch.
+3. **Icon, launch screen and notification icon.**
+4. **The bird in the app.** Empty states, the finish-a-task hop, the widgets, the About row, the napping copy in both languages.
+5. **Store graphics.** SVG icon and feature graphic.
+6. **Tests and docs.**
+
+### Deferred from M8
+A designer's artwork, more moods (waiting, sad), the bird reacting to streaks or counts, sounds, a Lottie or Rive pipeline, an animated widget, dark-mode variants of the artwork, and localized store graphics.
