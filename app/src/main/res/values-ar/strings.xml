@@ -465,4 +465,10 @@
         <item quantity="many">تم حذف %d مهمة</item>
         <item quantity="other">تم حذف %d مهمة</item>
     </plurals>
+
+    <!-- Manual order -->
+    <string name="sort_manual">يدوي</string>
+    <string name="reorder_handle">اسحب لإعادة الترتيب</string>
+    <string name="action_move_up">تحريك للأعلى</string>
+    <string name="action_move_down">تحريك للأسفل</string>
 </resources>

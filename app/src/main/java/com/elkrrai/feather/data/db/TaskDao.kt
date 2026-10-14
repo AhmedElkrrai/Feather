@@ -59,6 +59,9 @@ interface TaskDao {
     )
     suspend fun reopenSubtasks(parentId: String, updatedAt: Long)
 
+    @Query("UPDATE tasks SET sortOrder = :sortOrder, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun setSortOrder(id: String, sortOrder: Long, updatedAt: Long)
+
     @Query("UPDATE tasks SET isPinned = :pinned, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setPinned(id: String, pinned: Boolean, updatedAt: Long)
 

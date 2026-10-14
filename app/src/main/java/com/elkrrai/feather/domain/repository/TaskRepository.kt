@@ -41,6 +41,13 @@ interface TaskRepository {
 
     suspend fun setPinned(id: String, pinned: Boolean)
 
+    /**
+     * Puts the tasks in [orderedIds] into that order for the Manual sort. They swap the
+     * `sortOrder` values they already have among themselves, so tasks that are not in the list
+     * keep their place relative to them.
+     */
+    suspend fun reorderTasks(orderedIds: List<String>)
+
     /** Soft delete (with the task's subtasks); [restoreTask] undoes it. */
     suspend fun deleteTask(id: String)
 

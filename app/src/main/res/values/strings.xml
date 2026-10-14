@@ -397,4 +397,10 @@
         <item quantity="one">%d task deleted</item>
         <item quantity="other">%d tasks deleted</item>
     </plurals>
+
+    <!-- Manual order -->
+    <string name="sort_manual">Manual</string>
+    <string name="reorder_handle">Drag to reorder</string>
+    <string name="action_move_up">Move up</string>
+    <string name="action_move_down">Move down</string>
 </resources>

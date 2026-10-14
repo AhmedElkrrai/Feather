@@ -25,7 +25,7 @@ sealed interface TaskScope {
 }
 
 enum class TaskSort {
-    /** Creation order, oldest first. */
+    /** Creation order, oldest first (not changed by dragging). */
     CREATED,
 
     /** Earliest due date first; tasks without a date last. */
@@ -33,4 +33,7 @@ enum class TaskSort {
 
     /** Highest priority first, then by due date. */
     PRIORITY,
+
+    /** The order the user dragged the tasks into. */
+    MANUAL,
 }

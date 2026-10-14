@@ -34,7 +34,8 @@ fun TaskSort.comparator(): Comparator<Task> {
     val noDate = Long.MAX_VALUE
     val noTime = Int.MAX_VALUE
     val byChoice: Comparator<Task> = when (this) {
-        TaskSort.CREATED -> compareBy<Task> { it.sortOrder }.thenBy { it.createdAt }
+        TaskSort.CREATED -> compareBy<Task> { it.createdAt }.thenBy { it.sortOrder }
+        TaskSort.MANUAL -> compareBy<Task> { it.sortOrder }.thenBy { it.createdAt }
         TaskSort.DUE_DATE -> compareBy<Task> { it.dueDate?.toEpochDay() ?: noDate }
             .thenBy { it.dueTime?.toSecondOfDay() ?: noTime }
             .thenBy { it.sortOrder }

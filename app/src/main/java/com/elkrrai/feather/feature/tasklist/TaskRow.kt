@@ -60,6 +60,11 @@ fun TaskRow(
     selected: Boolean = false,
     /** A long press, used to start selecting; null leaves the row without one. */
     onLongClick: (() -> Unit)? = null,
+    /** The grip shown at the end of the row while the list can be reordered. */
+    dragHandle: (@Composable () -> Unit)? = null,
+    /** TalkBack actions that stand in for dragging. */
+    onMoveUp: (() -> Unit)? = null,
+    onMoveDown: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
@@ -88,6 +93,8 @@ fun TaskRow(
     val deleteLabel = stringResource(R.string.action_delete)
     val pinActionLabel = stringResource(if (task.isPinned) R.string.action_unpin else R.string.action_pin)
     val overdueLabel = stringResource(R.string.scope_overdue)
+    val moveUpLabel = stringResource(R.string.action_move_up)
+    val moveDownLabel = stringResource(R.string.action_move_down)
 
     val metaLine = listOfNotNull(listName, dueText).joinToString(" · ").ifEmpty { null }
     val subtaskTotal = task.subtasks.size
@@ -111,6 +118,8 @@ fun TaskRow(
                     if (onPinChange != null) {
                         add(CustomAccessibilityAction(pinActionLabel) { onPinChange(!task.isPinned); true })
                     }
+                    if (onMoveUp != null) add(CustomAccessibilityAction(moveUpLabel) { onMoveUp(); true })
+                    if (onMoveDown != null) add(CustomAccessibilityAction(moveDownLabel) { onMoveDown(); true })
                 }
             },
         colors = ListItemDefaults.colors(
@@ -178,7 +187,7 @@ fun TaskRow(
         } else {
             null
         },
-        trailingContent = if (task.isPinned || hasReminder || repeats || markerColor != null) {
+        trailingContent = if (task.isPinned || hasReminder || repeats || markerColor != null || dragHandle != null) {
             {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -216,6 +225,7 @@ fun TaskRow(
                                 .semantics { contentDescription = priorityLabel }
                         )
                     }
+                    dragHandle?.invoke()
                 }
             }
         } else {

@@ -68,6 +68,15 @@ class FakeTaskRepository : TaskRepository {
         row.copy(task = row.task.copy(completedAt = if (completed) Instant.ofEpochSecond(1_000) else null))
     }
 
+    override suspend fun reorderTasks(orderedIds: List<String>) {
+        val slots = orderedIds.mapNotNull { id -> rows.value.firstOrNull { it.task.id == id } }
+            .map { it.task.sortOrder }
+            .sorted()
+        orderedIds.forEachIndexed { index, id ->
+            if (index < slots.size) change(id) { row -> row.copy(task = row.task.copy(sortOrder = slots[index])) }
+        }
+    }
+
     override suspend fun setPinned(id: String, pinned: Boolean) = change(id) { row ->
         row.copy(task = row.task.copy(isPinned = pinned))
     }

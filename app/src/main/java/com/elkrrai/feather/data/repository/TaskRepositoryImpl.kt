@@ -228,6 +228,19 @@ class TaskRepositoryImpl @Inject constructor(
         if (moved.isNotEmpty()) reminderDao.upsertAll(moved)
     }
 
+    override suspend fun reorderTasks(orderedIds: List<String>) {
+        tx.run {
+            val rows = orderedIds.distinct().mapNotNull { taskDao.getById(it) }
+            // The slots are the tasks' own sort values, strictly increasing so two tasks never tie.
+            val slots = rows.map { it.sortOrder }.sorted().toMutableList()
+            for (i in 1 until slots.size) if (slots[i] <= slots[i - 1]) slots[i] = slots[i - 1] + 1
+            val now = clock.millis()
+            rows.forEachIndexed { index, row ->
+                if (row.sortOrder != slots[index]) taskDao.setSortOrder(row.id, slots[index], now)
+            }
+        }
+    }
+
     override suspend fun setPinned(id: String, pinned: Boolean) {
         taskDao.setPinned(id, pinned, updatedAt = clock.millis())
     }

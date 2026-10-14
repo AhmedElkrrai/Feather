@@ -231,6 +231,10 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch { taskRepository.setCompleted(taskId, completed) }
     }
 
+    fun reorderTasks(orderedIds: List<String>) {
+        viewModelScope.launch { taskRepository.reorderTasks(orderedIds) }
+    }
+
     fun setPinned(taskId: String, pinned: Boolean) {
         viewModelScope.launch { taskRepository.setPinned(taskId, pinned) }
     }

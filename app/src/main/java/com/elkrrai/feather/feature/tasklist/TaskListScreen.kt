@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,14 +30,18 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.zIndex
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -174,6 +179,7 @@ fun TaskListScreen(
             onSortChange = viewModel::setSort,
             onPinChange = { task, pinned -> viewModel.setPinned(task.id, pinned) },
             selectionActions = selectionActions,
+            onReorder = viewModel::reorderTasks,
         )
     }
 
@@ -237,11 +243,23 @@ fun TaskListContent(
     today: LocalDate = LocalDate.now(),
     onPinChange: (Task, Boolean) -> Unit = { _, _ -> },
     selectionActions: SelectionActions = SelectionActions(),
+    onReorder: (List<String>) -> Unit = {},
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
     val selecting = state.selection.isNotEmpty()
     val haptics = rememberHaptics()
+
+    // Manual order: while a row is dragged the list shows a local copy of the saved order.
+    val listState = rememberLazyListState()
+    val reorderable = state.sort == TaskSort.MANUAL && state.sections.size == 1 &&
+        state.sections.single().date == null && !selecting
+    val savedOrder = state.sections.flatMap { it.tasks }
+    val order = remember(savedOrder) { mutableStateListOf<Task>().apply { addAll(savedOrder) } }
+    val currentOnReorder by rememberUpdatedState(onReorder)
+    val reorder = remember(listState, order, haptics) {
+        ReorderState(listState, order, haptics) { ids -> currentOnReorder(ids) }
+    }
 
     // Back leaves selection mode before it leaves the screen.
     BackHandler(enabled = selecting) { selectionActions.onClear() }
@@ -318,6 +336,7 @@ fun TaskListContent(
             }
 
             else -> LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 // Extra bottom space so the last row can scroll clear of the FAB.
                 contentPadding = PaddingValues(
@@ -338,8 +357,17 @@ fun TaskListContent(
                             )
                         }
                     }
-                    items(section.tasks, key = { it.id }) { task ->
-                        SwipeToDeleteRow(enabled = !selecting, onDelete = { onDelete(task) }) {
+                    items(if (reorderable) order else section.tasks, key = { it.id }) { task ->
+                        val dragging = reorder.draggingId == task.id
+                        SwipeToDeleteRow(
+                            enabled = !selecting && reorder.draggingId == null,
+                            onDelete = { onDelete(task) },
+                            modifier = if (dragging) {
+                                Modifier.zIndex(1f).graphicsLayer { translationY = reorder.offset }
+                            } else {
+                                Modifier.animateItem()
+                            },
+                        ) {
                             TaskRow(
                                 task = task,
                                 today = today,
@@ -348,6 +376,9 @@ fun TaskListContent(
                                     if (selecting) selectionActions.onToggle(task.id) else onOpenTask(task.id)
                                 },
                                 selected = task.id in state.selection,
+                                dragHandle = if (reorderable) ({ DragHandle(reorder, task.id) }) else null,
+                                onMoveUp = if (reorderable) ({ reorder.moveBy(task.id, -1) }) else null,
+                                onMoveDown = if (reorderable) ({ reorder.moveBy(task.id, 1) }) else null,
                                 onLongClick = {
                                     haptics.longPress()
                                     selectionActions.onToggle(task.id)
@@ -368,6 +399,7 @@ private fun TaskSort.labelRes(): Int = when (this) {
     TaskSort.CREATED -> R.string.sort_created
     TaskSort.DUE_DATE -> R.string.sort_due_date
     TaskSort.PRIORITY -> R.string.sort_priority
+    TaskSort.MANUAL -> R.string.sort_manual
 }
 
 /** Swipe in either direction deletes. Direction-aware, so it mirrors correctly in RTL. */
@@ -376,6 +408,7 @@ private fun TaskSort.labelRes(): Int = when (this) {
 private fun SwipeToDeleteRow(
     onDelete: () -> Unit,
     enabled: Boolean,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
@@ -391,6 +424,7 @@ private fun SwipeToDeleteRow(
 
     SwipeToDismissBox(
         state = dismissState,
+        modifier = modifier,
         enableDismissFromStartToEnd = enabled,
         enableDismissFromEndToStart = enabled,
         backgroundContent = {
