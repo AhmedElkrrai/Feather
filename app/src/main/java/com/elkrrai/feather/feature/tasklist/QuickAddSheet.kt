@@ -52,14 +52,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.TaskList
@@ -68,7 +62,6 @@ import com.elkrrai.feather.domain.quickadd.QuickAddEdits
 import com.elkrrai.feather.domain.quickadd.QuickAddField
 import com.elkrrai.feather.domain.quickadd.QuickAddHint
 import com.elkrrai.feather.domain.quickadd.QuickAddParser
-import com.elkrrai.feather.domain.quickadd.TokenSpan
 import com.elkrrai.feather.ui.format.displayName
 import com.elkrrai.feather.ui.format.formatDueDate
 import com.elkrrai.feather.ui.format.formatDueTime
@@ -82,6 +75,10 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.heightIn
+import com.elkrrai.feather.domain.model.Priority
+import com.elkrrai.feather.domain.recurrence.Frequency
+import com.elkrrai.feather.domain.recurrence.Recurrence
 
 /** How many tasks have been added from the sheet, to know when the example hint can go. */
 private class QuickAddHintStore(context: Context) {
@@ -98,32 +95,12 @@ private class QuickAddHintStore(context: Context) {
     }
 }
 
-/** Shows the words that were understood in their tint, right in the text field. */
-private class TokenTintTransformation(
-    private val spans: List<TokenSpan>,
-    private val tints: Map<QuickAddField, FieldTint>,
-) : VisualTransformation {
-    override fun filter(text: AnnotatedString): TransformedText {
-        val styled = buildAnnotatedString {
-            append(text)
-            for (span in spans) {
-                val tint = tints[span.field] ?: continue
-                val start = span.start.coerceIn(0, text.length)
-                val end = span.end.coerceIn(start, text.length)
-                if (end > start) addStyle(SpanStyle(color = tint.content, background = tint.container), start, end)
-            }
-        }
-        return TransformedText(styled, OffsetMapping.Identity)
-    }
-}
-
-private val priorityTokens = listOf("!high", "!medium", "!low")
-
 /**
  * Quick add with understanding: the text is parsed as it is typed ("Call mom tomorrow 5pm
- * !high #family"), the words that were understood are tinted in place, and each shows as a chip
- * that can be tapped away. A row of tools (date, priority, tag, repeat, voice) writes into the text.
- * [onAdd] gets the parsed task and the id of the list named with `@`, if any.
+ * !high #family") and each part that was understood shows as a badge under the text field, which
+ * can be tapped away. The tools (date, priority, repeat) do not write into the text: what they
+ * choose appears as a badge too. [onAdd] gets the parsed task and the id of the list named with
+ * `@`, if any.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,6 +117,10 @@ fun QuickAddSheet(
     val haptics = rememberHaptics()
     var text by rememberSaveable { mutableStateOf(initialText) }
     var ignored by remember { mutableStateOf(emptySet<QuickAddField>()) }
+    // What the tools chose; it shows as a badge and wins over what the text says.
+    var toolDate by remember { mutableStateOf<LocalDate?>(null) }
+    var toolPriority by remember { mutableStateOf<Priority?>(null) }
+    var toolRepeat by remember { mutableStateOf<Frequency?>(null) }
     val focusRequester = remember { FocusRequester() }
     val hintStore = remember { QuickAddHintStore(context) }
     var addsSoFar by remember { mutableIntStateOf(hintStore.count()) }
@@ -174,8 +155,11 @@ fun QuickAddSheet(
     }
 
     val listNames = lists.map { it.displayName() }
-    val parsed = remember(text, ignored, listNames) {
+    val fromText = remember(text, ignored, listNames) {
         QuickAddParser.parse(text, LocalDateTime.now(), listNames, ignored)
+    }
+    val parsed = remember(fromText, toolDate, toolPriority, toolRepeat) {
+        fromText.withTools(toolDate, toolPriority, toolRepeat)
     }
     val today = LocalDate.now()
 
@@ -189,17 +173,23 @@ fun QuickAddSheet(
         scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
     }
 
-    /** A tool wrote into the text: the part it wrote must not stay switched off from an earlier tap. */
-    fun edited(newText: String, field: QuickAddField) {
-        text = newText
+    /** A tool chose a value: that part must not stay switched off from an earlier tap on its badge. */
+    fun chosen(field: QuickAddField) {
         ignored = ignored - field
     }
 
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    /** A badge was tapped away: the tool's choice goes, and so does what the text said about it. */
+    fun dismissed(field: QuickAddField) {
+        when (field) {
+            QuickAddField.DATE -> toolDate = null
+            QuickAddField.PRIORITY -> toolPriority = null
+            QuickAddField.REPEAT -> toolRepeat = null
+            else -> Unit
+        }
+        ignored = ignored + field
+    }
 
-    val scheme = MaterialTheme.colorScheme
-    val tints = remember(scheme) { QuickAddField.entries.associateWith { fieldTint(it, scheme) } }
-    val tintTransformation = remember(parsed.spans, tints) { TokenTintTransformation(parsed.spans, tints) }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState, shape = SheetShape) {
         Column(
@@ -207,8 +197,9 @@ fun QuickAddSheet(
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .imePadding()
+                .heightIn(min = SHEET_MIN_HEIGHT)
                 .padding(start = Space.gutter, end = Space.gutter, bottom = Space.x4),
-            verticalArrangement = Arrangement.spacedBy(Space.x3),
+            verticalArrangement = Arrangement.spacedBy(Space.x4),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -231,7 +222,6 @@ fun QuickAddSheet(
                     } else {
                         null
                     },
-                    visualTransformation = tintTransformation,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
@@ -251,17 +241,6 @@ fun QuickAddSheet(
                     )
                 }
             }
-
-            QuickAddTools(
-                spans = parsed.spans,
-                onText = ::edited,
-                currentText = text,
-                onVoice = ::startVoice,
-                onTag = {
-                    edited(QuickAddEdits.append(text, "#"), QuickAddField.TAGS)
-                    focusRequester.requestFocus()
-                },
-            )
 
             val chips = buildList {
                 val date = parsed.dueDate
@@ -284,21 +263,46 @@ fun QuickAddSheet(
                 }
                 parsed.listName?.let { add(QuickAddChip(QuickAddField.LIST, "@$it")) }
             }
-            QuickAddChips(chips = chips, onIgnore = { field -> ignored = ignored + field })
+            QuickAddChips(
+                chips = chips,
+                onIgnore = ::dismissed,
+                modifier = Modifier.heightIn(min = 40.dp),
+            )
+
+            QuickAddTools(
+                onDate = { date ->
+                    toolDate = date
+                    chosen(QuickAddField.DATE)
+                },
+                onPriority = { priority ->
+                    toolPriority = priority
+                    chosen(QuickAddField.PRIORITY)
+                },
+                onRepeat = { frequency ->
+                    toolRepeat = frequency
+                    chosen(QuickAddField.REPEAT)
+                },
+                onVoice = ::startVoice,
+                onTag = {
+                    text = QuickAddEdits.append(text, "#")
+                    chosen(QuickAddField.TAGS)
+                    focusRequester.requestFocus()
+                },
+            )
         }
     }
 }
 
 /**
- * Date, priority, tag, repeat and voice: 48dp tools that write into the text. They never keep a
- * setting of their own: the parser reads the text again and the chips show what it understood.
+ * Date, priority, tag, repeat and voice: 48dp tools. Date, priority and repeat hand their choice up
+ * to be shown as a badge; the tag tool starts a `#` in the text, and voice adds what it hears.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun QuickAddTools(
-    spans: List<TokenSpan>,
-    currentText: String,
-    onText: (newText: String, field: QuickAddField) -> Unit,
+    onDate: (LocalDate) -> Unit,
+    onPriority: (Priority) -> Unit,
+    onRepeat: (Frequency) -> Unit,
     onVoice: () -> Unit,
     onTag: () -> Unit,
 ) {
@@ -316,23 +320,21 @@ private fun QuickAddTools(
                 Icon(painterResource(R.drawable.ic_flag), stringResource(R.string.quick_add_tool_priority))
             }
             DropdownMenu(expanded = priorityMenu, onDismissRequest = { priorityMenu = false }) {
-                val labels = listOf(R.string.priority_high, R.string.priority_medium, R.string.priority_low)
-                priorityTokens.forEachIndexed { index, token ->
+                val levels = listOf(
+                    R.string.priority_high to Priority.HIGH,
+                    R.string.priority_medium to Priority.MEDIUM,
+                    R.string.priority_low to Priority.LOW,
+                    R.string.priority_none to Priority.NONE,
+                )
+                levels.forEach { (label, priority) ->
                     DropdownMenuItem(
-                        text = { Text(stringResource(labels[index])) },
+                        text = { Text(stringResource(label)) },
                         onClick = {
                             priorityMenu = false
-                            onText(QuickAddEdits.replacing(currentText, spans, QuickAddField.PRIORITY, token), QuickAddField.PRIORITY)
+                            onPriority(priority)
                         },
                     )
                 }
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.priority_none)) },
-                    onClick = {
-                        priorityMenu = false
-                        onText(QuickAddEdits.without(currentText, spans, QuickAddField.PRIORITY), QuickAddField.PRIORITY)
-                    },
-                )
             }
         }
 
@@ -346,18 +348,17 @@ private fun QuickAddTools(
             }
             DropdownMenu(expanded = repeatMenu, onDismissRequest = { repeatMenu = false }) {
                 val options = listOf(
-                    R.string.repeat_freq_daily to R.string.quick_add_insert_every_day,
-                    R.string.repeat_freq_weekly to R.string.quick_add_insert_every_week,
-                    R.string.repeat_freq_monthly to R.string.quick_add_insert_every_month,
-                    R.string.repeat_freq_yearly to R.string.quick_add_insert_every_year,
+                    R.string.repeat_freq_daily to Frequency.DAILY,
+                    R.string.repeat_freq_weekly to Frequency.WEEKLY,
+                    R.string.repeat_freq_monthly to Frequency.MONTHLY,
+                    R.string.repeat_freq_yearly to Frequency.YEARLY,
                 )
-                options.forEach { (label, phrase) ->
-                    val words = stringResource(phrase)
+                options.forEach { (label, frequency) ->
                     DropdownMenuItem(
                         text = { Text(stringResource(label)) },
                         onClick = {
                             repeatMenu = false
-                            onText(QuickAddEdits.replacing(currentText, spans, QuickAddField.REPEAT, words), QuickAddField.REPEAT)
+                            onRepeat(frequency)
                         },
                     )
                 }
@@ -379,10 +380,7 @@ private fun QuickAddTools(
                         pickerState.selectedDateMillis?.let { millis ->
                             // The picker works in UTC midnights; the date written is the day that was tapped.
                             val date = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
-                            onText(
-                                QuickAddEdits.replacing(currentText, spans, QuickAddField.DATE, date.toString()),
-                                QuickAddField.DATE,
-                            )
+                            onDate(date)
                         }
                         showDatePicker = false
                     },
@@ -395,4 +393,23 @@ private fun QuickAddTools(
             DatePicker(state = pickerState)
         }
     }
+}
+
+/** Height the sheet keeps even when it is nearly empty, so it does not jump as badges come and go. */
+private val SHEET_MIN_HEIGHT = 320.dp
+
+/** The tools' choices on top of what the text said; a repeat with no date starts today. */
+private fun ParsedQuickAdd.withTools(date: LocalDate?, priority: Priority?, repeat: Frequency?): ParsedQuickAdd {
+    var result = this
+    if (date != null) result = result.copy(dueDate = date, dateIsImplied = false)
+    if (priority != null) result = result.copy(priority = priority)
+    if (repeat != null) {
+        val due = result.dueDate ?: LocalDate.now()
+        result = result.copy(
+            dueDate = due,
+            dateIsImplied = result.dueDate == null || result.dateIsImplied,
+            recurrence = Recurrence(repeat),
+        )
+    }
+    return result
 }
