@@ -18,6 +18,9 @@ class Haptics(private val feedback: HapticFeedback) {
     /** A dragged task passed over a neighbor. */
     fun tick() = perform(HapticFeedbackType.SegmentTick)
 
+    /** A task was sent from quick add: a soft thud. */
+    fun thud() = perform(HapticFeedbackType.VirtualKey)
+
     private fun perform(type: HapticFeedbackType) {
         if (DisplayPrefs.haptics) feedback.performHapticFeedback(type)
     }
