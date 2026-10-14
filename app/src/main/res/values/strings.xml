@@ -61,8 +61,8 @@
     <string name="drawer_section_tags">Tags</string>
     <string name="action_open_menu">Open menu</string>
     <string name="trash">Trash</string>
-    <string name="empty_view_title">Nothing here</string>
-    <string name="empty_view_body">No tasks match this view right now.</string>
+    <string name="empty_view_title">All clear</string>
+    <string name="empty_view_body">Your bird is napping. Nothing to do in this view.</string>
 
     <!-- Sorting -->
     <string name="sort_created">Sort by creation order</string>

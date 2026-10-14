@@ -57,8 +57,8 @@
     <string name="drawer_section_tags">الوسوم</string>
     <string name="action_open_menu">فتح القائمة</string>
     <string name="trash">سلة المحذوفات</string>
-    <string name="empty_view_title">لا شيء هنا</string>
-    <string name="empty_view_body">لا توجد مهام تطابق هذا العرض الآن.</string>
+    <string name="empty_view_title">كل شيء على ما يرام</string>
+    <string name="empty_view_body">العصفور يغفو. لا شيء ليُنجز في هذا العرض.</string>
 
     <!-- Sorting -->
     <string name="sort_created">الترتيب حسب الإنشاء</string>

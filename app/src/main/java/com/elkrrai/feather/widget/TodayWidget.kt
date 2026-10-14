@@ -135,7 +135,17 @@ class TodayWidget : GlanceAppWidget() {
             Spacer(GlanceModifier.size(4.dp))
 
             if (rows.isEmpty()) {
-                Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(
+                    modifier = GlanceModifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Image(
+                        provider = ImageProvider(R.drawable.ic_bird_mark),
+                        contentDescription = null,
+                        modifier = GlanceModifier.size(56.dp),
+                    )
+                    Spacer(GlanceModifier.size(4.dp))
                     Text(
                         text = empty,
                         style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 14.sp),

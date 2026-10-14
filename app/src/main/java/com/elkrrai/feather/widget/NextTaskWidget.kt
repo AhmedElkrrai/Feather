@@ -6,6 +6,8 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.CheckBox
@@ -25,6 +27,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -79,11 +82,22 @@ class NextTaskWidget : GlanceAppWidget() {
                     )
                     Spacer(GlanceModifier.height(4.dp))
                     if (title == null || taskId == null || intent == null) {
-                        Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(
+                            modifier = GlanceModifier
+                                .fillMaxSize()
+                                .clickable(actionStartActivity<MainActivity>()),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Image(
+                                provider = ImageProvider(R.drawable.ic_bird_mark),
+                                contentDescription = null,
+                                modifier = GlanceModifier.size(48.dp),
+                            )
+                            Spacer(GlanceModifier.height(4.dp))
                             Text(
                                 text = empty,
                                 style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 14.sp),
-                                modifier = GlanceModifier.clickable(actionStartActivity<MainActivity>()),
                             )
                         }
                     } else {

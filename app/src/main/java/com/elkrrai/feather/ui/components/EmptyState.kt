@@ -6,28 +6,27 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.elkrrai.feather.ui.brand.BirdIllustration
+import com.elkrrai.feather.ui.brand.BirdMood
 
 /**
- * Centered empty-state layout. [illustration] is the slot where the bird artwork goes
- * (brand work, M8); until then it shows a plain tonal circle.
+ * Centered empty-state layout with the Feather bird above the text. [mood] is how the bird
+ * looks (idle for "nothing yet", sleeping for "all clear"); [illustration] replaces the bird.
  */
 @Composable
 fun EmptyState(
     title: String,
     body: String,
     modifier: Modifier = Modifier,
-    illustration: @Composable () -> Unit = { IllustrationPlaceholder() },
+    mood: BirdMood = BirdMood.IDLE,
+    illustration: @Composable () -> Unit = { BirdIllustration(mood = mood) },
 ) {
     Column(
         modifier = modifier
@@ -50,16 +49,5 @@ fun EmptyState(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-    }
-}
-
-@Composable
-private fun IllustrationPlaceholder() {
-    Surface(
-        modifier = Modifier.size(96.dp),
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-    ) {
-        Box(Modifier.size(96.dp))
     }
 }

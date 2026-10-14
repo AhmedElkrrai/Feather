@@ -32,6 +32,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +60,8 @@ import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.TaskSort
 import com.elkrrai.feather.feature.taskedit.ListPickerDialog
+import com.elkrrai.feather.ui.brand.BirdMood
+import com.elkrrai.feather.ui.brand.CompletionBird
 import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.rememberHaptics
 import com.elkrrai.feather.ui.components.MenuAction
@@ -90,12 +93,17 @@ fun TaskListScreen(
     val resources = LocalContext.current.resources
     var selectionDialog by remember { mutableStateOf<SelectionDialog?>(null) }
     var filterDialog by remember { mutableStateOf<FilterDialogState?>(null) }
+    // Counts up each time a task is finished; the bird hops over the list for each step.
+    var celebration by remember { mutableIntStateOf(0) }
 
     val selectionActions = SelectionActions(
         onToggle = viewModel::toggleSelected,
         onClear = viewModel::clearSelection,
         onSelectAll = viewModel::selectAll,
-        onComplete = viewModel::completeSelected,
+        onComplete = {
+            celebration++
+            viewModel.completeSelected()
+        },
         onMove = { selectionDialog = SelectionDialog.Move },
         onTag = { selectionDialog = SelectionDialog.Tag },
         onDelete = {
@@ -163,12 +171,16 @@ fun TaskListScreen(
         },
         modifier = modifier,
     ) {
+        Box {
         TaskListContent(
             state = state,
             snackbarHostState = snackbarHostState,
             onMenuClick = { coroutineScope.launch { drawerState.open() } },
             onAddClick = { showQuickAdd = true },
-            onToggle = { task, completed -> viewModel.setCompleted(task.id, completed) },
+            onToggle = { task, completed ->
+                viewModel.setCompleted(task.id, completed)
+                if (completed) celebration++
+            },
             onDelete = { task ->
                 viewModel.deleteTask(task.id)
                 coroutineScope.launch {
@@ -188,6 +200,11 @@ fun TaskListScreen(
             selectionActions = selectionActions,
             onReorder = viewModel::reorderTasks,
         )
+        CompletionBird(
+            trigger = celebration,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
+        )
+        }
     }
 
     OrganizeDialogHost(
@@ -376,6 +393,7 @@ fun TaskListContent(
             state.isEmpty -> {
                 val isList = state.scope is TaskScope.InList
                 EmptyState(
+                    mood = if (isList) BirdMood.IDLE else BirdMood.SLEEPING,
                     title = stringResource(
                         if (isList) R.string.task_list_empty_title else R.string.empty_view_title
                     ),

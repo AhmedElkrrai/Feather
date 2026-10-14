@@ -32,6 +32,7 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.repository.TRASH_RETENTION_DAYS
 import com.elkrrai.feather.feature.tasklist.ConfirmDialog
+import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
@@ -99,6 +100,7 @@ fun TrashContent(
             state.isLoading -> Box(Modifier.fillMaxSize().padding(padding))
 
             state.tasks.isEmpty() -> EmptyState(
+                mood = BirdMood.SLEEPING,
                 title = stringResource(R.string.trash_empty_title),
                 body = stringResource(R.string.trash_empty_body, TRASH_RETENTION_DAYS.toInt()),
                 modifier = Modifier.padding(padding),

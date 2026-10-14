@@ -7,11 +7,13 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -288,6 +290,13 @@ fun SettingsContent(
                 )
             }
             ListItem(
+                leadingContent = {
+                    Image(
+                        painter = painterResource(R.drawable.ic_bird_mark),
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                    )
+                },
                 headlineContent = { Text(stringResource(R.string.settings_about)) },
                 supportingContent = {
                     Column {
