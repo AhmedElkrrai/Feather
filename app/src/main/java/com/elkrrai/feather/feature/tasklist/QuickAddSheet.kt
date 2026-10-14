@@ -202,8 +202,8 @@ fun QuickAddSheet(
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .imePadding()
-                .padding(start = Space.gutter, end = Space.gutter, bottom = Space.x4),
-            verticalArrangement = Arrangement.spacedBy(Space.x4),
+                .padding(start = Space.gutter, end = Space.gutter, bottom = Space.x2),
+            verticalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -270,7 +270,6 @@ fun QuickAddSheet(
             QuickAddChips(
                 chips = chips,
                 onIgnore = ::dismissed,
-                modifier = Modifier.heightIn(min = 40.dp),
             )
 
             QuickAddTools(
