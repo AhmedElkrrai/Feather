@@ -373,5 +373,21 @@ Known gaps after M9 step 3 (flash workflow: nothing has been compiled or run):
 - The Arabic text added in this step (greetings, counts, the pill, "Waiting since") is a draft for a native speaker.
 - New tests (written, not run): `TodayLogicTest`, `FriendlyDueTest`, `ListColorsTest`, `RowPiecesTest`.
 
+### M9 step 4 in detail: the illustration kit (DESIGN_SPEC.md section 4)
+Flash workflow: written, not built, installed or tested. No SVG files came from the designer, so every scene is drawn in code from the spec's descriptions; expect to refine proportions once they can be seen.
+- **Eight scenes** on a 200 by 200 board: empty list (bird beside an empty nest, a leaf that sways), all done (happy bird on a nest with three eggs, sun, sparkles), nothing due (sleeping bird on a branch, cloud, small sun), no results (bird tilting its head, a loupe over bare twigs), backup saved (woven basket with the lid ajar, moss check badge, a sky-blue feather), reminders blocked (amber bell crossed by a twig, a small bird peeking), first launch (a cracked egg with the bird's head, the sun rising 24 dp over 600 ms) and trash empty (woven bin with its lid off, happy bird on the rim, a leaf).
+- **Drawn with Compose, not XML.** The bird must stay animated and a few props move (the sway, the sunrise), so each scene is a back layer, the live bird, and a front layer, all on the same board. The props (nest bowl, eggs, basket, bell, loupe, twigs, sun, moon, leaf, sparkle, cloud) are small drawing functions shared by the scenes. Colors come from the theme (the ground shadow is `#F1E2C2` in light and `#0B1114` in dark; the nest is twig brown `#B08A5A` with `#8A6A43` weave).
+- **Behavior.** A scene fades in and rises 12 dp over 320 ms; reduced motion gives a fade only and no sway. It is shown at 190 dp, at 140 dp when the font is at 200 percent, and hidden when less than 320 dp is free.
+- **Where they appear.** Empty list: the Inbox shows the first-launch scene ("Hello! I'm Feather"), other lists the empty-list scene. Today, Upcoming and the other smart views: nothing due; Waiting for you: all done. Search with no results: no results (with the query in the sentence). Trash: trash empty. Reminder reliability: reminders blocked, above the checks, when something is wrong. A manual backup export: a small "backup saved" dialog instead of a toast.
+- **Not in this step:** a real first-launch welcome (there is no flag for "first time", so the Inbox shows the first-launch scene whenever it is empty), the quick-add and other screens, and any scene art from a designer.
+
+Sub-steps:
+1. Plan (this section).
+2. Foundations: scene layout rules, the palette, the props, and the `Illustration` composable.
+3. Scenes: empty list, all done, nothing due, no results.
+4. Scenes: backup saved, reminders blocked, first launch, trash empty.
+5. Strings (English and Arabic) and putting the scenes into the screens.
+6. Tests and docs.
+
 ### Where the project stands
 All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.
