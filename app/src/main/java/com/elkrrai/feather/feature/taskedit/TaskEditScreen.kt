@@ -72,6 +72,7 @@ import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.TaskList
+import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.feature.tasklist.NameDialog
 import com.elkrrai.feather.reminders.ReminderHealth
 import com.elkrrai.feather.ui.components.DurationDialog
@@ -109,6 +110,7 @@ class TaskEditActions(
     val onAddAtTime: (LocalDateTime) -> Unit,
     val onRemoveReminder: (String) -> Unit,
     val onOpenReliability: () -> Unit,
+    val onRecurrenceChange: (Recurrence?) -> Unit = {},
 )
 
 @Composable
@@ -161,6 +163,7 @@ fun TaskEditScreen(
             onAddAtTime = viewModel::onAddAtTime,
             onRemoveReminder = viewModel::onRemoveReminder,
             onOpenReliability = onOpenReliability,
+            onRecurrenceChange = viewModel::onRecurrenceChange,
         ),
         health = health,
         onRequestNotificationPermission = requestNotificationPermission,
@@ -184,6 +187,7 @@ fun TaskEditContent(
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
     var showListPicker by rememberSaveable { mutableStateOf(false) }
+    var showRecurrence by rememberSaveable { mutableStateOf(false) }
     var showNewTag by rememberSaveable { mutableStateOf(false) }
     var reminderStep by remember { mutableStateOf<ReminderStep>(ReminderStep.None) }
 
@@ -300,6 +304,25 @@ fun TaskEditContent(
                 }
             }
 
+            FieldSection(label = stringResource(R.string.field_repeat)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedButton(onClick = { showRecurrence = true }) {
+                        Text(
+                            state.recurrence?.label(state.dueDate ?: today)
+                                ?: stringResource(R.string.repeat_none)
+                        )
+                    }
+                    if (state.recurrence != null) {
+                        TextButton(onClick = { actions.onRecurrenceChange(null) }) {
+                            Text(stringResource(R.string.action_clear))
+                        }
+                    }
+                }
+            }
+
             FieldSection(label = stringResource(R.string.field_reminders)) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     if (state.reminders.isNotEmpty() && !health.canDeliverOnTime) {
@@ -395,6 +418,18 @@ fun TaskEditContent(
                 showTimePicker = false
             },
             onDismiss = { showTimePicker = false },
+        )
+    }
+
+    if (showRecurrence) {
+        RecurrenceDialog(
+            initial = state.recurrence,
+            reference = state.dueDate ?: today,
+            onConfirm = {
+                actions.onRecurrenceChange(it)
+                showRecurrence = false
+            },
+            onDismiss = { showRecurrence = false },
         )
     }
 
@@ -544,7 +579,7 @@ private fun ListPickerDialog(
 /** The Material date picker works in UTC millis; a due date is a plain local date. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DueDatePickerDialog(
+internal fun DueDatePickerDialog(
     initial: LocalDate,
     onConfirm: (LocalDate) -> Unit,
     onDismiss: () -> Unit,

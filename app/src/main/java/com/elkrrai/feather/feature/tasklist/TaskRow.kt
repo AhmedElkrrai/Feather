@@ -62,6 +62,8 @@ fun TaskRow(
     val reminderLabel = stringResource(R.string.has_reminder)
     // A finished task no longer reminds anyone.
     val hasReminder = !task.isCompleted && task.reminders.isNotEmpty()
+    val repeatLabel = stringResource(R.string.repeat_has)
+    val repeats = !task.isCompleted && task.recurrence != null
 
     val metaLine = listOfNotNull(listName, dueText).joinToString(" · ").ifEmpty { null }
     val subtaskTotal = task.subtasks.size
@@ -120,7 +122,7 @@ fun TaskRow(
         } else {
             null
         },
-        trailingContent = if (task.isPinned || hasReminder || markerColor != null) {
+        trailingContent = if (task.isPinned || hasReminder || repeats || markerColor != null) {
             {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -132,6 +134,14 @@ fun TaskRow(
                             contentDescription = pinnedLabel,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    if (repeats) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_repeat),
+                            contentDescription = repeatLabel,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     if (hasReminder) {
