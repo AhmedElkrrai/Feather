@@ -21,3 +21,6 @@ data object SettingsRoute
 
 @Serializable
 data object ReliabilityRoute
+
+@Serializable
+data object RhythmRoute

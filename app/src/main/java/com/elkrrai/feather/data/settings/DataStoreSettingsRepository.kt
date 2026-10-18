@@ -16,6 +16,8 @@ import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import androidx.datastore.preferences.core.stringSetPreferencesKey
+import java.time.LocalDate
 
 /** Times are stored as minutes since midnight, which is all the precision the UI offers. */
 class DataStoreSettingsRepository @Inject constructor(
@@ -39,6 +41,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val birdAnimations = booleanPreferencesKey("bird_animations")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val celebrations = booleanPreferencesKey("celebrations")
+        val rhythmPausedDays = stringSetPreferencesKey("rhythm_paused_days")
     }
 
     override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
@@ -60,6 +63,7 @@ class DataStoreSettingsRepository @Inject constructor(
             birdAnimations = prefs[Keys.birdAnimations] ?: defaults.birdAnimations,
             reduceMotion = prefs[Keys.reduceMotion] ?: defaults.reduceMotion,
             celebrations = prefs[Keys.celebrations] ?: defaults.celebrations,
+            rhythmPausedDays = prefs[Keys.rhythmPausedDays].orEmpty().mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }.toSet(),
         )
     }
 
@@ -125,6 +129,10 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setCelebrations(enabled: Boolean) {
         dataStore.edit { it[Keys.celebrations] = enabled }
+    }
+
+    override suspend fun setRhythmPausedDays(days: Set<LocalDate>) {
+        dataStore.edit { it[Keys.rhythmPausedDays] = days.map { day -> day.toString() }.toSet() }
     }
 
     /** A stored enum by name; a missing or unknown name (say, from a newer version) gives [default]. */

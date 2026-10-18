@@ -51,6 +51,7 @@ class DrawerActions(
     val onRenameTag: (Tag) -> Unit,
     val onDeleteTag: (Tag) -> Unit,
     val onOpenTrash: () -> Unit,
+    val onOpenRhythm: () -> Unit = {},
     val onOpenSettings: () -> Unit,
     val onClose: () -> Unit = {},
     val onNewFilter: () -> Unit = {},
@@ -193,6 +194,12 @@ fun TaskDrawerContent(
         }
 
         HorizontalDivider(Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
+        NavigationDrawerItem(
+            label = { Text(stringResource(R.string.rhythm_title)) },
+            selected = false,
+            onClick = actions.onOpenRhythm,
+            modifier = Modifier.padding(itemPadding),
+        )
         NavigationDrawerItem(
             label = { Text(stringResource(R.string.trash)) },
             selected = false,

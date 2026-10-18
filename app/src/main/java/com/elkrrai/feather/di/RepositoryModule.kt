@@ -18,6 +18,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import com.elkrrai.feather.data.repository.RhythmRepositoryImpl
+import com.elkrrai.feather.domain.rhythm.RhythmRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -37,6 +39,9 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindSavedFilterRepository(impl: SavedFilterRepositoryImpl): SavedFilterRepository
+
+    @Binds
+    abstract fun bindRhythmRepository(impl: RhythmRepositoryImpl): RhythmRepository
 
     @Binds
     abstract fun bindBackupRepository(impl: BackupRepositoryImpl): BackupRepository

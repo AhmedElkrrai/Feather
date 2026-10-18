@@ -491,4 +491,43 @@
     <string name="quick_add_insert_every_week">every week</string>
     <string name="quick_add_insert_every_month">every month</string>
     <string name="quick_add_insert_every_year">every year</string>
+    <!-- M9 step 6: your rhythm -->
+
+    <string name="rhythm_title">Your rhythm</string>
+    <string name="rhythm_hero_label">finished in the last 7 days</string>
+    <string name="rhythm_hero_none">A quiet week. Rest is part of the rhythm.</string>
+    <string name="rhythm_hero_few">A few small steps. They add up.</string>
+    <string name="rhythm_hero_steady">A steady week. Nicely done.</string>
+    <string name="rhythm_hero_busy">A busy, bright week.</string>
+    <string name="rhythm_new_title">Your rhythm starts here</string>
+    <string name="rhythm_new_body">Finish a task and the first egg will appear.</string>
+    <string name="rhythm_last_seven">Last 7 days</string>
+    <string name="rhythm_last_seven_summary">Last 7 days: %1$s</string>
+    <string name="rhythm_day_count">%1$s %2$d</string>
+    <string name="rhythm_dots_title">Showing up</string>
+    <string name="rhythm_dots_headline">%1$d of the last %2$d days</string>
+    <string name="rhythm_dots_hint">A filled dot is a day you finished something. A ring is a day of rest.</string>
+    <string name="rhythm_pause">Pause my rhythm</string>
+    <string name="rhythm_resume">Resume my rhythm</string>
+    <string name="rhythm_pause_note">Paused days are left out. They never count as gaps.</string>
+    <string name="rhythm_pause_title">Pause for how long?</string>
+    <string name="rhythm_pause_today">Today only</string>
+    <string name="rhythm_pause_three">3 days</string>
+    <string name="rhythm_pause_week">A week</string>
+    <string name="rhythm_month_summary">%1$s: %2$d days with something finished, %3$d finished in all</string>
+    <string name="rhythm_day_sheet_empty">Nothing finished that day. Rest counts too.</string>
+    <string name="rhythm_busiest">%1$s tends to be your busiest day.</string>
+    <string name="rhythm_when_title">When you finish things</string>
+    <string name="rhythm_time_morning">Morning</string>
+    <string name="rhythm_time_afternoon">Afternoon</string>
+    <string name="rhythm_time_evening">Evening</string>
+    <string name="rhythm_time_night">Night</string>
+    <string name="rhythm_best_time">Most of it happens in the %1$s.</string>
+    <string name="rhythm_lists_title">Where it happens</string>
+    <string name="rhythm_steady_title">Going well</string>
+    <string name="rhythm_steady_hint">Repeating tasks you keep coming back to.</string>
+    <plurals name="rhythm_finished_on_day">
+        <item quantity="one">%d finished</item>
+        <item quantity="other">%d finished</item>
+    </plurals>
 </resources>

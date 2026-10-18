@@ -563,4 +563,47 @@
     <string name="quick_add_insert_every_week">كل أسبوع</string>
     <string name="quick_add_insert_every_month">كل شهر</string>
     <string name="quick_add_insert_every_year">كل سنة</string>
+    <!-- M9 step 6: your rhythm -->
+
+    <string name="rhythm_title">إيقاعك</string>
+    <string name="rhythm_hero_label">أُنجزت خلال آخر 7 أيام</string>
+    <string name="rhythm_hero_none">أسبوع هادئ. الراحة جزء من الإيقاع.</string>
+    <string name="rhythm_hero_few">خطوات صغيرة، وتتراكم مع الوقت.</string>
+    <string name="rhythm_hero_steady">أسبوع ثابت. أحسنت.</string>
+    <string name="rhythm_hero_busy">أسبوع مزدحم ومشرق.</string>
+    <string name="rhythm_new_title">إيقاعك يبدأ من هنا</string>
+    <string name="rhythm_new_body">أنهِ مهمة وسيظهر أول بيضة.</string>
+    <string name="rhythm_last_seven">آخر 7 أيام</string>
+    <string name="rhythm_last_seven_summary">آخر 7 أيام: %1$s</string>
+    <string name="rhythm_day_count">%1$s %2$d</string>
+    <string name="rhythm_dots_title">حضورك</string>
+    <string name="rhythm_dots_headline">%1$d من آخر %2$d يومًا</string>
+    <string name="rhythm_dots_hint">النقطة المملوءة يوم أنجزت فيه شيئًا. والحلقة يوم راحة.</string>
+    <string name="rhythm_pause">أوقف إيقاعي مؤقتًا</string>
+    <string name="rhythm_resume">استئناف إيقاعي</string>
+    <string name="rhythm_pause_note">الأيام الموقوفة لا تُحسب، ولا تظهر كفراغ.</string>
+    <string name="rhythm_pause_title">لكم من الوقت؟</string>
+    <string name="rhythm_pause_today">اليوم فقط</string>
+    <string name="rhythm_pause_three">3 أيام</string>
+    <string name="rhythm_pause_week">أسبوع</string>
+    <string name="rhythm_month_summary">%1$s: %2$d أيام فيها مهام منجزة، و%3$d منجزة في المجموع</string>
+    <string name="rhythm_day_sheet_empty">لم تُنهَ مهمة في ذلك اليوم. الراحة تُحسب أيضًا.</string>
+    <string name="rhythm_busiest">%1$s هو عادةً يومك الأكثر ازدحامًا.</string>
+    <string name="rhythm_when_title">متى تُنجز مهامك</string>
+    <string name="rhythm_time_morning">الصباح</string>
+    <string name="rhythm_time_afternoon">بعد الظهر</string>
+    <string name="rhythm_time_evening">المساء</string>
+    <string name="rhythm_time_night">الليل</string>
+    <string name="rhythm_best_time">معظم ذلك يحدث في %1$s.</string>
+    <string name="rhythm_lists_title">أين يحدث ذلك</string>
+    <string name="rhythm_steady_title">تسير على ما يرام</string>
+    <string name="rhythm_steady_hint">مهام متكررة تعود إليها باستمرار.</string>
+    <plurals name="rhythm_finished_on_day">
+        <item quantity="zero">لا مهام منجزة</item>
+        <item quantity="one">مهمة واحدة منجزة</item>
+        <item quantity="two">مهمتان منجزتان</item>
+        <item quantity="few">%d مهام منجزة</item>
+        <item quantity="many">%d مهمة منجزة</item>
+        <item quantity="other">%d مهمة منجزة</item>
+    </plurals>
 </resources>

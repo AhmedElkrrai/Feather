@@ -103,6 +103,7 @@ fun TaskListScreen(
     onOpenTrash: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenRhythm: () -> Unit = {},
     viewModel: TaskListViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -175,6 +176,10 @@ fun TaskListScreen(
         onOpenSettings = {
             closeDrawer()
             onOpenSettings()
+        },
+        onOpenRhythm = {
+            closeDrawer()
+            onOpenRhythm()
         },
         onClose = ::closeDrawer,
         onNewFilter = { filterDialog = FilterDialogState.New },

@@ -3,6 +3,7 @@ package com.elkrrai.feather.domain.settings
 import java.time.LocalTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import java.time.LocalDate
 
 /** The app's own light or dark choice, applied through AppCompat's night mode. */
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
@@ -39,6 +40,8 @@ data class AppSettings(
     val reduceMotion: Boolean = false,
     /** The feathers and the bird's hop when a task is finished. Independent of [reduceMotion]. */
     val celebrations: Boolean = true,
+    /** Days that do not count against the rhythm (a break, a trip); never shown as gaps. */
+    val rhythmPausedDays: Set<LocalDate> = emptySet(),
 )
 
 /** Snooze lengths offered in settings, in minutes. */
@@ -80,4 +83,6 @@ interface SettingsRepository {
     suspend fun setReduceMotion(enabled: Boolean)
 
     suspend fun setCelebrations(enabled: Boolean)
+
+    suspend fun setRhythmPausedDays(days: Set<LocalDate>)
 }

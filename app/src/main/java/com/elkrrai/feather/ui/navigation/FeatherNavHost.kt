@@ -12,6 +12,7 @@ import com.elkrrai.feather.feature.settings.SettingsScreen
 import com.elkrrai.feather.feature.taskedit.TaskEditScreen
 import com.elkrrai.feather.feature.tasklist.TaskListScreen
 import com.elkrrai.feather.feature.trash.TrashScreen
+import com.elkrrai.feather.feature.rhythm.RhythmScreen
 
 /**
  * @param openTaskId a task to open straight in the editor (from a reminder notification), or null
@@ -43,6 +44,7 @@ fun FeatherNavHost(
                 onOpenSearch = { navController.navigate(SearchRoute) },
                 onOpenTrash = { navController.navigate(TrashRoute) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
+                onOpenRhythm = { navController.navigate(RhythmRoute) },
             )
         }
         // The editor's ViewModel reads the task id from the route itself.
@@ -72,6 +74,9 @@ fun FeatherNavHost(
                 onBack = { navController.popBackStack() },
                 onOpenReliability = { navController.navigate(ReliabilityRoute) },
             )
+        }
+        composable<RhythmRoute> {
+            RhythmScreen(onBack = { navController.popBackStack() })
         }
         composable<ReliabilityRoute> {
             ReliabilityScreen(onBack = { navController.popBackStack() })
