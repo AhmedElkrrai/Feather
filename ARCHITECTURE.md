@@ -165,6 +165,14 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Fonts are variable.** One file per family serves every weight through `FontVariation.weight`; fine because minSdk is 26.
 - **The window background is the paper color** (`nest_paper`), so there is no white flash before the first frame.
 
+#### M9 steps 6 to 11
+- **Your rhythm is computed, not stored.** `RhythmRepository.observeCompletions()` joins `completion_history` with `tasks` (title, list) and `rhythmStats` (pure, in `domain/rhythm`) turns the list into everything the screen draws; the screen calls it with its own locale's first weekday. Paused days are the one thing saved (a string set in DataStore).
+- **One clock for the charts.** `rememberEntry()` is a single 0 to 1 `Animatable`; each Canvas takes a slice with `segment(entry, startMs, durMs)`, so the whole entrance is 1.1 s and charts never run their own timers.
+- **A repeating task rests.** `Task.lastCompletedAt` comes from the latest completion row (`observeTasks` combines two flows); a repeating task finished today whose next date is later is "resting": the list view leaves it out of the open tasks and shows it, ticked, in Done. Unticking it calls `undoAdvance` in the repository.
+- **Cards and celebrations are small view models and logs.** `DayCardsViewModel` owns the morning and evening cards (and the nest's quiet dot); `DayCelebrationLog` keeps the once-a-day "all done" in the hints preferences. The header owns the celebration's animation (`flourish`) and tells the screen where the bird is so the screen can throw the warm feathers.
+- **The nest is tracked in the data layer.** `NestTracker` (a singleton started with the app) combines completions, tasks, lists and settings into `NestFacts`; whatever `earnedNestItems` says is earned is saved to DataStore once and kept. `NestScene` draws the items in the same scene kit as the empty states.
+- **Widgets cannot read the theme,** so they carry their own day and night values (`WidgetColors`, `values/widget_colors.xml`) from the same Nest palette.
+
 #### M9 step 5: quick-add polish
 - **Spans from the parser.** `QuickText.runAs(field) { ... }` notes which characters a rule consumed and turns them into `TokenSpan`s over the user's own text (diacritics stay with their letter, like in the title). `ParsedQuickAdd.spans` is a body property of the data class, so it is not part of equality and a `copy` forgets it; whatever shows the text asks the parser again.
 - **Tinting is a `VisualTransformation`.** The text field's value stays a plain string; the transformation adds a color and background to the spans and keeps the cursor mapping the identity. Chips and tinted words share one `fieldTint` per field.

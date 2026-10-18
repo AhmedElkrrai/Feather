@@ -20,7 +20,7 @@ Companion to [FEATURES.md](FEATURES.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 | M6 | Widgets and backup | Glance widgets, JSON export and import, automatic backup | Code complete (flash workflow: not built, installed or tested) |
 | M7 | Polish | Accessibility pass, performance, drag to reorder, bulk select, store preparation | Code complete (flash workflow: not built, installed or tested) |
 | M8 | Brand | Bird identity and animation | Code complete (flash workflow: not built, installed or tested) |
-| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | In progress (steps 1 to 5 done) |
+| M9 | Cozy Nest | The look and feel redesign (DESIGN_SPEC.md) | Built (steps 1 to 11), waiting for a pass on the phone |
 
 Reminders (M3) come before recurrence and the parser because they carry the most real-world risk (vendor battery policies).
 
@@ -427,6 +427,31 @@ Known gaps after M9 step 5 (flash workflow: this step was written, not built or 
 - The share sheet and Quick Settings tile open a separate quick-add screen that has not been given the new sheet's look.
 - Arabic names and phrases for the new tools are drafts for a native speaker.
 - New tests (written, not run): `QuickAddSpansTest`, `QuickAddEditsTest`, `QuickAddChipsTest`.
+
+### M9 steps 6 to 11 in detail
+Written one commit per step, each compiled with `assembleDebug`; the unit and instrumented test sources compile too, but no test was run and the phone was not connected while these were written, so none of the screens below has been looked at yet.
+
+**Step 6: Your rhythm** (DESIGN_SPEC.md section 6). A new screen from the drawer ("Your rhythm"). The numbers come from the completions table through `RhythmRepository` (one query that joins the finishes with their task's title and list); `rhythmStats` in `domain/rhythm` is pure and works out the last seven days, fourteen rhythm dots, the month grid, the busiest weekday, the best part of the day, finished per list and the repeating tasks going well. The screen has the hero (count-up, one kind sentence, the bird), the seven bars, the dots, the month nest (tap a day for a sheet of what was finished), when you finish things, list bars, and "Going well". Before three finished tasks only the hero and a "Your rhythm starts here" card show. Every chart is one Canvas and they all play from one 1.1 s entrance clock (`rememberEntry`); with reduced motion they start finished. "Pause my rhythm" leaves today (or the next three or seven days) out of the dots instead of counting them as gaps; the days are kept in Settings (`rhythmPausedDays`). No streaks, no comparison with other weeks, no red.
+
+**Step 7: widgets.** Quick add is 4x1 (bird, hint, plus), Next task 4x2 and Today 4x4 sit on a flat sky that follows the time of day (shape drawables, with day and night colors in `values/widget_colors.xml`), with a bird whose mood is chosen when the widget is drawn (`ic_bird_mark`, `ic_bird_sleeping`, `ic_bird_happy`). Rows have a priority-colored ring (`ic_widget_ring`, tinted at draw time) that says "Mark <title> as done". Waiting tasks say "Waiting since Mon" in neutral colors.
+
+**Step 8: morning and evening cards.** `DayCardsViewModel` decides which card Today shows (`dayCardFor`, pure): "Your day" from 05:00 to 11:59 when something is planned, a wind-down from 19:00 when the day had something in it. Each is put away until tomorrow (the date is stored), each has its own switch in Settings ("Gentle company"). The evening card can move everything still open to tomorrow, with an Undo.
+
+**Step 9: the last task and the repeating task.** Once a calendar day (kept in `feather_ui_hints`), finishing the last open task warms the header, opens a halo, hops the bird twice, throws 12 warm feathers, settles five eggs one after another and turns the headline into "All done." (a confirm haptic and a tick at 420 ms). Moving tasks to tomorrow empties the day too but does not count. Finishing a repeating task now sends a leaf-feather along a curve to the Done pill and shows "Back tomorrow" with Undo. Together with the earlier change a repeating task finished today rests in Done until its next date, and unticking it takes the finish back (`undoAdvance`: the due date and the remaining repeat count come back).
+
+**Step 10: ambient life and seasons.** Leaves turn amber in October and November and blossom pink in spring (a static recolor). The Today sky, sun and moon cross-fade over 600 ms when the part of the day changes. `rememberLowEndMode()` (low-memory phone or battery saver) stops the bird's loop, snaps the sky and shrinks a burst to 7 feathers.
+
+**Step 11: weekly feather and Your nest.** On the first day of the week Your rhythm shows a feather made from the week before: the color is the busiest list, each day has a barb per finished task (up to four) and a rest day is a notch. Your nest is a screen (Settings, "Gentle company") with the bird's nest and everything it has been given: a scarf at 10 finished tasks, fairy lights after the first backup, bunting after a repeating task kept up for four weeks, a lantern after 10 reminders, a moss patch after 3 lists, tiny glasses at 25 tasks, a flower pot after the first task added by voice and a party hat at 100 tasks. `NestTracker` keeps score from the data and saves what is earned for good; a quiet dot on Settings (the drawer and the row) says something is new until the nest has been looked at.
+
+Known gaps after M9 steps 6 to 11:
+- **Nothing here has been seen on a screen.** Expect layout tuning, above all on Your rhythm (bar and dot sizes, the month grid on a 360 dp phone, text over the sky) and the nest scene (where the scarf, glasses and hat sit on the bird: they are drawn from the bird's 96-unit box).
+- **Not done from the spec:** the grain texture, the janky-frame detection for low-end mode (only low-memory phones and battery saver count), a Baseline Profile and macrobenchmarks, the Numerals setting, per-cell TalkBack sentences on the month nest beyond custom actions for days with something finished, the optional notification for the morning card, idle head tilt and tail flick (ambient motion is capped at five seconds by choice), and the level-driven microphone waveform.
+- **The pause dialog is plain** (three buttons), and "Pause my rhythm" marks days, not a range.
+- **Bunting** uses weeks that start on Monday; "Weekly feather" follows the first-day-of-week setting.
+- **Backups** do not carry the finish history, the nest or the paused days, so a restore on a new phone starts those over (the tasks come back).
+- **Widgets** use system fonts (Glance cannot load the app's fonts) and are not previewed in this milestone.
+- **Arabic copy** for everything new is a draft for a native speaker.
+- New tests (written, not run): `RhythmStatsTest`, `DayCardsTest`, `LastTaskMotionTest`, `SeasonTest`, `NestItemTest`, `WeeklyFeatherTest`, `TaskRestingTest`.
 
 ### Where the project stands
 All eight milestones are written. The next step is not a feature: build, fix, test, install over the old build (the database upgrades from version 2 to 5), go through `store/RELEASE.md` on a real phone, and then decide what a first public release needs.
