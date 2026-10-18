@@ -101,6 +101,13 @@ import com.elkrrai.feather.ui.theme.Dur
 import kotlin.math.abs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import com.elkrrai.feather.ui.rememberLowEndMode
+import com.elkrrai.feather.ui.theme.Ease
+import com.elkrrai.feather.ui.theme.leafColor
+import com.elkrrai.feather.ui.theme.rememberSeason
 
 /** The header is this tall (below the status bar) when open, and this tall when scrolled away. */
 private val HeaderOpenHeight = 236.dp
@@ -201,9 +208,16 @@ fun TodayHeader(
             }
         }
     }
-    val (skyTop, skyBottom) = feather.sky.getValue(phase)
+    val (targetTop, targetBottom) = feather.sky.getValue(phase)
     // The night wash is dark even in the light theme, so its text is cream there.
-    val ink = if (phase == DayPhase.Night && feather.skyText == LightFeatherColors.skyText) NightSkyText else feather.skyText
+    val targetInk = if (phase == DayPhase.Night && feather.skyText == LightFeatherColors.skyText) NightSkyText else feather.skyText
+    // When the part of the day changes while the screen is open, the sky cross-fades over 600 ms (it just changes
+    // with reduced motion, and on a phone in low-end mode).
+    val lowEnd = rememberLowEndMode()
+    val skyFade = if (reduceMotion || lowEnd) snap<Color>() else tween(SKY_FADE_MILLIS, easing = Ease.InOut)
+    val skyTop by animateColorAsState(targetTop, skyFade, label = "skyTop")
+    val skyBottom by animateColorAsState(targetBottom, skyFade, label = "skyBottom")
+    val ink by animateColorAsState(targetInk, skyFade, label = "skyInk")
 
     val insetTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val openHeightPx = with(LocalDensity.current) { (insetTop + HeaderOpenHeight).toPx() }
@@ -416,6 +430,13 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, hopDp: () -> Float,
     val moon = showsMoon(phase)
     val moonPath = remember { moonShape() }
     val leaf = remember { leafShape() }
+    val leafColor = feather.leafColor(rememberSeason())
+    // The sun and the moon swap with the sky.
+    val moonness by animateFloatAsState(
+        targetValue = if (moon) 1f else 0f,
+        animationSpec = if (rememberReduceMotion() || rememberLowEndMode()) snap() else tween(SKY_FADE_MILLIS, easing = Ease.InOut),
+        label = "moonness",
+    )
     // Five eggs settle onto the branch, one after another, when the day is done. Already done when the
     // screen opens: they are just there.
     val reduceMotion = rememberReduceMotion()
@@ -436,15 +457,14 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, hopDp: () -> Float,
         Canvas(Modifier.size(SceneWidth, SceneHeight)) {
             // Everything below is drawn in dp units on a 150 by 110 board.
             scale(size.width / 150f, pivot = Offset.Zero) {
-                if (moon) {
-                    translateAndScale(124f, 12f, 26f) { drawPath(moonPath, Nest.Cream) }
-                } else {
-                    drawSun(Offset(128f, 24f), 12f)
+                if (moonness > 0f) {
+                    translateAndScale(124f, 12f, 26f) { drawPath(moonPath, Nest.Cream.copy(alpha = moonness)) }
                 }
+                if (moonness < 1f) drawSun(Offset(128f, 24f), 12f, alpha = 1f - moonness)
                 // the branch, a twig and a leaf
                 drawLine(feather.twig, Offset(6f, 96f), Offset(142f, 92f), strokeWidth = 7f, cap = StrokeCap.Round)
                 drawLine(feather.twig, Offset(104f, 94f), Offset(128f, 80f), strokeWidth = 4f, cap = StrokeCap.Round)
-                translateAndScale(124f, 66f, 16f) { drawLeaf(leaf, feather.listColors[3], filled = true) }
+                translateAndScale(124f, 66f, 16f) { drawLeaf(leaf, leafColor, filled = true) }
                 // eggs on the branch
                 val total = settle.value * EGG_SETTLE_MILLIS
                 repeat(EGGS) { index ->
@@ -478,12 +498,12 @@ private fun DrawScope.translateAndScale(x: Float, y: Float, size: Float, block: 
     }
 }
 
-private fun DrawScope.drawSun(center: Offset, radius: Float) {
-    drawCircle(Nest.Amber, radius = radius, center = center)
+private fun DrawScope.drawSun(center: Offset, radius: Float, alpha: Float = 1f) {
+    drawCircle(Nest.Amber.copy(alpha = alpha), radius = radius, center = center)
     for (ray in 0 until 8) {
         val angle = ray * PI / 4
         drawLine(
-            color = Nest.Amber,
+            color = Nest.Amber.copy(alpha = alpha),
             start = Offset(center.x + (cos(angle) * (radius + 4f)).toFloat(), center.y + (sin(angle) * (radius + 4f)).toFloat()),
             end = Offset(center.x + (cos(angle) * (radius + 9f)).toFloat(), center.y + (sin(angle) * (radius + 9f)).toFloat()),
             strokeWidth = 2.4f,
@@ -499,6 +519,9 @@ private fun DrawScope.drawEgg(topLeft: Offset, alpha: Float = 1f) {
 }
 
 private const val EGGS = 5
+
+/** The sky, the sun and the moon change over this long. */
+private const val SKY_FADE_MILLIS = 600
 private const val EGG_STAGGER_MILLIS = 60f
 private const val EGG_POP_MILLIS = 260f
 private const val EGG_SETTLE_MILLIS = 560

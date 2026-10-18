@@ -33,6 +33,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import com.elkrrai.feather.ui.theme.Ease
+import com.elkrrai.feather.ui.LOW_END_FEATHERS
+import com.elkrrai.feather.ui.rememberLowEndMode
 
 /**
  * One feather in the confetti. The numbers are fixed, not random, so every burst looks the same and
@@ -161,11 +163,12 @@ class ConfettiController internal constructor() {
     var flight by mutableStateOf<ConfettiFlight?>(null)
         private set
     internal var reduceMotion: Boolean = false
+    internal var lowEnd: Boolean = false
     private var count = 0
 
     fun celebrate(origin: Offset, scale: Float = 1f, count: Int = 28, warm: Boolean = false) {
         if (!DisplayPrefs.celebrations || reduceMotion) return
-        burst = ConfettiBurst(++this.count, origin, scale, count, warm)
+        burst = ConfettiBurst(++this.count, origin, scale, if (lowEnd) minOf(count, LOW_END_FEATHERS) else count, warm)
     }
 
     /** A leaf-feather flies from [from] to [to]; with reduced motion nothing flies. */
@@ -179,6 +182,7 @@ class ConfettiController internal constructor() {
 fun rememberConfettiController(): ConfettiController {
     val controller = remember { ConfettiController() }
     controller.reduceMotion = rememberReduceMotion()
+    controller.lowEnd = rememberLowEndMode()
     return controller
 }
 

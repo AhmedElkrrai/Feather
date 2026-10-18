@@ -54,7 +54,7 @@ private fun EmptyListScene(size: Dp, modifier: Modifier) = SceneFrame(size, modi
         val stemBase = Offset(176f, 138f)
         rotate(sway(), pivot = stemBase) {
             drawLine(p.bowl, stemBase, Offset(176f, 114f), 3f, StrokeCap.Round)
-            drawLeaf(Offset(176f, 118f), 26f, -20f, p.moss)
+            drawLeaf(Offset(176f, 118f), 26f, -20f, p.leaf)
         }
     }
 }
@@ -88,7 +88,7 @@ private fun NothingDueScene(size: Dp, modifier: Modifier) = SceneFrame(size, mod
         drawCloud(p, Offset(46f, 38f))
         drawSun(p, Offset(174f, 34f), 9f)
         drawBranch(p, Offset(30f, 126f), Offset(170f, 122f))
-        drawLeaf(Offset(150f, 123f), 20f, -30f, p.moss)
+        drawLeaf(Offset(150f, 123f), 20f, -30f, p.leaf)
     }
     SceneBird(BirdMood.SLEEPING, NothingDueBird)
 }
@@ -143,7 +143,7 @@ private fun RemindersBlockedScene(size: Dp, modifier: Modifier) = SceneFrame(siz
     Layer {
         drawBell(p, 100f, 30f)
         drawLine(p.bowl, Offset(56f, 160f), Offset(150f, 70f), 7f, StrokeCap.Round)
-        drawLeaf(Offset(146f, 74f), 24f, -10f, p.moss)
+        drawLeaf(Offset(146f, 74f), 24f, -10f, p.leaf)
     }
 }
 
@@ -192,7 +192,7 @@ private fun TrashEmptyScene(size: Dp, modifier: Modifier) = SceneFrame(size, mod
             drawRoundRect(p.bowl, topLeft = Offset(60f, 162f), size = Size(60f, 12f), cornerRadius = CornerRadius(6f, 6f))
         }
         drawLine(p.bowl, Offset(172f, 168f), Offset(172f, 148f), 3f, StrokeCap.Round)
-        drawLeaf(Offset(172f, 152f), 26f, -10f, p.moss)
+        drawLeaf(Offset(172f, 152f), 26f, -10f, p.leaf)
     }
     SceneBird(BirdMood.HAPPY, TrashEmptyBird)
 }

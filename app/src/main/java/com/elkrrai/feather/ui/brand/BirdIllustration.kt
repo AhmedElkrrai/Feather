@@ -36,6 +36,7 @@ import kotlin.math.sin
 import kotlin.math.min
 import android.os.SystemClock
 import androidx.compose.animation.core.AnimationVector1D
+import com.elkrrai.feather.ui.rememberLowEndMode
 
 /** The bird's shapes, parsed once from the path data. */
 private class BirdPaths {
@@ -51,11 +52,12 @@ private class BirdPaths {
 }
 
 /**
- * Whether the bird may move: not when the person turned bird animations off in Settings, and not
- * when motion is reduced (the phone's animation scale is zero, or Reduce motion is on).
+ * Whether the bird may move: not when the person turned bird animations off in Settings, not
+ * when motion is reduced (the phone's animation scale is zero, or Reduce motion is on), and not on a
+ * low-memory phone or in battery saver.
  */
 @Composable
-fun rememberBirdMotionAllowed(): Boolean = DisplayPrefs.birdAnimations && !rememberReduceMotion()
+fun rememberBirdMotionAllowed(): Boolean = DisplayPrefs.birdAnimations && !rememberReduceMotion() && !rememberLowEndMode()
 
 /** Ambient movement (the idle bird, a swaying leaf) runs for this long at most, then comes to rest. */
 internal const val AMBIENT_MAX_MILLIS = 5_000L

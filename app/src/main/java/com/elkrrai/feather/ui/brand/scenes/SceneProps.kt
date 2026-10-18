@@ -27,6 +27,8 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
+import com.elkrrai.feather.ui.theme.leafColor
+import com.elkrrai.feather.ui.theme.rememberSeason
 
 /** The colors the scenes use, resolved for the current theme. */
 internal class ScenePalette(
@@ -38,6 +40,8 @@ internal class ScenePalette(
     val coral: Color,
     val sky: Color,
     val moss: Color,
+    /** The leaves of the scenes: green, amber in autumn, blossom in spring. */
+    val leaf: Color,
     /** Outlines and the loupe's ring: dark in the light theme, light in the dark ones. */
     val ink: Color,
     val cloud: Color,
@@ -48,7 +52,8 @@ internal class ScenePalette(
 internal fun rememberScenePalette(): ScenePalette {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val feather = MaterialTheme.featherColors
-    return remember(dark, feather) {
+    val season = rememberSeason()
+    return remember(dark, feather, season) {
         ScenePalette(
             ground = if (dark) nest(0x0B1114) else nest(0xF1E2C2),
             bowl = nest(0xB08A5A),
@@ -58,6 +63,7 @@ internal fun rememberScenePalette(): ScenePalette {
             coral = Nest.Coral,
             sky = Nest.SkyWing,
             moss = feather.listColors[3],
+            leaf = feather.leafColor(season),
             ink = if (dark) Nest.SkyWing else Nest.DeepTeal,
             cloud = if (dark) lerp(nest(0x121E24), Nest.SkyWing, 0.32f) else Color.White,
             dawnGround = feather.sky.getValue(DayPhase.Dawn).second,
