@@ -17,7 +17,7 @@ enum class NestItem(val id: String) {
     /** A lantern, after ten reminders have been set. */
     LANTERN("lantern"),
 
-    /** A patch of moss, after three lists of your own. */
+    /** A patch of moss, after three tags of your own. */
     MOSS("moss"),
 
     /** Tiny glasses, after the 25th finished task. */
@@ -38,7 +38,7 @@ const val SCARF_AT = 10
 const val GLASSES_AT = 25
 const val PARTY_HAT_AT = 100
 const val LANTERN_REMINDERS = 10
-const val MOSS_LISTS = 3
+const val MOSS_TAGS = 3
 const val BUNTING_WEEKS = 4
 
 /** What the person has done so far, as far as the nest cares. */
@@ -47,7 +47,7 @@ data class NestFacts(
     val backedUp: Boolean = false,
     val keptRepeaterFourWeeks: Boolean = false,
     val remindersSet: Int = 0,
-    val listsMade: Int = 0,
+    val tagsMade: Int = 0,
     val voiceUsed: Boolean = false,
 )
 
@@ -57,7 +57,7 @@ fun NestItem.isEarnedBy(fact: NestFacts): Boolean = when (this) {
     NestItem.FAIRY_LIGHTS -> fact.backedUp
     NestItem.BUNTING -> fact.keptRepeaterFourWeeks
     NestItem.LANTERN -> fact.remindersSet >= LANTERN_REMINDERS
-    NestItem.MOSS -> fact.listsMade >= MOSS_LISTS
+    NestItem.MOSS -> fact.tagsMade >= MOSS_TAGS
     NestItem.GLASSES -> fact.tasksFinished >= GLASSES_AT
     NestItem.FLOWER_POT -> fact.voiceUsed
     NestItem.PARTY_HAT -> fact.tasksFinished >= PARTY_HAT_AT
@@ -70,7 +70,7 @@ fun earnedNestItems(fact: NestFacts): Set<NestItem> = NestItem.entries.filter { 
 fun NestItem.progress(fact: NestFacts): Pair<Int, Int>? = when (this) {
     NestItem.SCARF -> fact.tasksFinished.coerceAtMost(SCARF_AT) to SCARF_AT
     NestItem.LANTERN -> fact.remindersSet.coerceAtMost(LANTERN_REMINDERS) to LANTERN_REMINDERS
-    NestItem.MOSS -> fact.listsMade.coerceAtMost(MOSS_LISTS) to MOSS_LISTS
+    NestItem.MOSS -> fact.tagsMade.coerceAtMost(MOSS_TAGS) to MOSS_TAGS
     NestItem.GLASSES -> fact.tasksFinished.coerceAtMost(GLASSES_AT) to GLASSES_AT
     NestItem.PARTY_HAT -> fact.tasksFinished.coerceAtMost(PARTY_HAT_AT) to PARTY_HAT_AT
     NestItem.FAIRY_LIGHTS, NestItem.BUNTING, NestItem.FLOWER_POT -> null

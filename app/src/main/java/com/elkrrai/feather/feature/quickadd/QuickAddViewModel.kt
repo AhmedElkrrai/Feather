@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
-import com.elkrrai.feather.domain.repository.ListRepository
 import com.elkrrai.feather.domain.repository.TagRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,17 +17,13 @@ import kotlinx.coroutines.withContext
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.settings.SettingsRepository
 
-/** Behind [QuickAddActivity]: the lists for `@list`, and saving the task. */
+/** Behind [QuickAddActivity]: the tags to offer, and saving the task. */
 @HiltViewModel
 class QuickAddViewModel @Inject constructor(
     private val tasks: TaskRepository,
     private val tags: TagRepository,
-    listRepository: ListRepository,
     private val settings: SettingsRepository,
 ) : ViewModel() {
-
-    val lists: StateFlow<List<TaskList>> = listRepository.observeLists()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val existingTags: StateFlow<List<Tag>> = tags.observeTags()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -39,13 +34,13 @@ class QuickAddViewModel @Inject constructor(
     }
 
     /**
-     * Saves the task in [listId] (the Inbox when null) and then calls [onDone]. The write is
+     * Saves the task (every task lives in the Inbox now) and then calls [onDone]. The write is
      * protected from cancellation, so it completes even if the screen is closing.
      */
-    fun add(parsed: ParsedQuickAdd, listId: String?, onDone: () -> Unit) {
+    fun add(parsed: ParsedQuickAdd, onDone: () -> Unit) {
         viewModelScope.launch {
             withContext(NonCancellable) {
-                QuickAddTask(tasks, tags)(parsed, listId = listId ?: TaskList.INBOX_ID)
+                QuickAddTask(tasks, tags)(parsed, listId = TaskList.INBOX_ID)
             }
             onDone()
         }

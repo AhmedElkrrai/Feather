@@ -20,7 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
 /**
  * A see-through screen that shows only the quick-add sheet on top of whatever the user was doing.
  * It is opened by the share sheet (text from another app), the Quick Settings tile and the
- * launcher shortcut, adds the task to the Inbox (or the list named with `@`) and closes.
+ * launcher shortcut, adds the task and closes.
  */
 @AndroidEntryPoint
 class QuickAddActivity : AppCompatActivity() {
@@ -32,19 +32,17 @@ class QuickAddActivity : AppCompatActivity() {
         val shared = sharedText(intent)
         setContent {
             FeatherTheme {
-                val lists by viewModel.lists.collectAsStateWithLifecycle()
                 val tags by viewModel.existingTags.collectAsStateWithLifecycle()
                 var adding by remember { mutableStateOf(false) }
                 QuickAddSheet(
-                    lists = lists,
                     tags = tags,
                     initialText = shared,
                     onVoiceUsed = viewModel::voiceUsed,
                     // Closing the sheet after adding must not end the activity before the save is done.
                     onDismiss = { if (!adding) finish() },
-                    onAdd = { parsed, listId ->
+                    onAdd = { parsed ->
                         adding = true
-                        viewModel.add(parsed, listId) {
+                        viewModel.add(parsed) {
                             Toast.makeText(this@QuickAddActivity, R.string.quick_add_done, Toast.LENGTH_SHORT).show()
                             finish()
                         }

@@ -58,7 +58,7 @@ class SearchContentTest {
 
     @Test
     fun resultsAreListedAndOpenable() {
-        show(SearchUiState(query = "milk", results = listOf(task("1", "Buy milk")), lists = listOf(inbox)))
+        show(SearchUiState(query = "milk", results = listOf(task("1", "Buy milk"))))
 
         rule.onNodeWithText("Buy milk").assertIsDisplayed().performClick()
 
@@ -67,7 +67,7 @@ class SearchContentTest {
 
     @Test
     fun aQueryWithNoMatchesShowsTheNoResultsMessage() {
-        show(SearchUiState(query = "zzz", results = emptyList(), lists = listOf(inbox)))
+        show(SearchUiState(query = "zzz", results = emptyList()))
 
         rule.onNodeWithText(string(R.string.search_no_results_body)).assertIsDisplayed()
     }

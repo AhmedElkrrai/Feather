@@ -71,7 +71,6 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenReliability: () -> Unit,
     modifier: Modifier = Modifier,
-    onOpenNest: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
     backupViewModel: BackupViewModel = hiltViewModel(),
 ) {
@@ -129,7 +128,6 @@ fun SettingsScreen(
         remindersHealthy = health.canDeliverOnTime && health.batteryUnrestricted,
         onBack = onBack,
         onOpenReliability = onOpenReliability,
-        onOpenNest = onOpenNest,
         onDefaultTimeChange = viewModel::setDefaultReminderTime,
         onSnoozeMinutesChange = viewModel::setSnoozeMinutes,
         onDailySummaryChange = viewModel::setDailySummaryEnabled,
@@ -202,7 +200,6 @@ fun SettingsContent(
     supportUrl: String = SupportLinks.DONATION_URL,
     onOpenSupport: () -> Unit = {},
     versionName: String = "",
-    onOpenNest: () -> Unit = {},
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val resources = LocalContext.current.resources
@@ -284,7 +281,6 @@ fun SettingsContent(
                 onPickTheme = { dialog = SettingsDialog.Theme },
                 onPickTimeFormat = { dialog = SettingsDialog.TimeFormat },
                 onPickWeekStart = { dialog = SettingsDialog.WeekStart },
-                onOpenNest = onOpenNest,
             )
 
             BackupRows(backup, settings)

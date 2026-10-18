@@ -12,12 +12,8 @@ fun Task.matches(scope: TaskScope, today: LocalDate): Boolean = when (scope) {
     TaskScope.Upcoming -> !isCompleted && dueDate != null &&
         dueDate.isAfter(today) && !dueDate.isAfter(today.plusDays(UPCOMING_DAYS))
     TaskScope.Overdue -> !isCompleted && dueDate != null && dueDate.isBefore(today)
-    TaskScope.All -> true
     TaskScope.Completed -> isCompleted
     TaskScope.NoDate -> !isCompleted && dueDate == null
-    is TaskScope.InList -> listId == scope.listId
-    is TaskScope.WithTag -> tags.any { it.id == scope.tagId }
-    is TaskScope.Filtered -> scope.filter.accepts(this, today)
 }
 
 fun List<Task>.inScope(scope: TaskScope, today: LocalDate): List<Task> =

@@ -62,7 +62,6 @@ import com.elkrrai.feather.domain.model.SavedFilter
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.TaskSort
-import com.elkrrai.feather.feature.taskedit.ListPickerDialog
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.brand.CompletionBird
 import com.elkrrai.feather.ui.components.EmptyState
@@ -110,6 +109,7 @@ fun TaskListScreen(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenRhythm: () -> Unit = {},
+    onOpenNest: () -> Unit = {},
     viewModel: TaskListViewModel = hiltViewModel(),
     dayCards: DayCardsViewModel = hiltViewModel(),
 ) {
@@ -120,13 +120,11 @@ fun TaskListScreen(
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
     var showQuickAdd by rememberSaveable { mutableStateOf(false) }
-    var organizeDialog by remember { mutableStateOf<OrganizeDialog?>(null) }
     val deletedMessage = stringResource(R.string.task_deleted)
     val undoLabel = stringResource(R.string.action_undo)
     val context = LocalContext.current
     val resources = context.resources
     var selectionDialog by remember { mutableStateOf<SelectionDialog?>(null) }
-    var filterDialog by remember { mutableStateOf<FilterDialogState?>(null) }
     // Counts up each time a task is finished; the bird hops over the list for each step.
     var celebration by remember { mutableIntStateOf(0) }
     // Feather confetti for every checkbox finished on this screen.
@@ -154,7 +152,6 @@ fun TaskListScreen(
             celebration++
             viewModel.completeSelected()
         },
-        onMove = { selectionDialog = SelectionDialog.Move },
         onTag = { selectionDialog = SelectionDialog.Tag },
         onDelete = { deleteWithUndo(state.selection.toList()) },
     )
@@ -171,14 +168,6 @@ fun TaskListScreen(
             viewModel.selectScope(scope)
             closeDrawer()
         },
-        onNewList = { organizeDialog = OrganizeDialog.NewList },
-        onNewFolder = { organizeDialog = OrganizeDialog.NewFolder },
-        onEditList = { organizeDialog = OrganizeDialog.EditList(it) },
-        onDeleteList = { organizeDialog = OrganizeDialog.DeleteList(it) },
-        onRenameFolder = { organizeDialog = OrganizeDialog.RenameFolder(it) },
-        onDeleteFolder = { organizeDialog = OrganizeDialog.DeleteFolder(it) },
-        onRenameTag = { organizeDialog = OrganizeDialog.RenameTag(it) },
-        onDeleteTag = { organizeDialog = OrganizeDialog.DeleteTag(it) },
         onOpenTrash = {
             closeDrawer()
             onOpenTrash()
@@ -191,28 +180,18 @@ fun TaskListScreen(
             closeDrawer()
             onOpenRhythm()
         },
+        onOpenNest = {
+            closeDrawer()
+            onOpenNest()
+        },
         onClose = ::closeDrawer,
-        onNewFilter = { filterDialog = FilterDialogState.New },
-        onEditFilter = { filterDialog = FilterDialogState.Edit(it) },
-        onDeleteFilter = { filterDialog = FilterDialogState.Delete(it) },
-    )
-
-    val organizeActions = OrganizeActions(
-        createList = viewModel::createList,
-        updateList = viewModel::updateList,
-        deleteList = viewModel::deleteList,
-        createFolder = viewModel::createFolder,
-        renameFolder = viewModel::renameFolder,
-        deleteFolder = viewModel::deleteFolder,
-        renameTag = viewModel::renameTag,
-        deleteTag = viewModel::deleteTag,
     )
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                TaskDrawerContent(state = state, actions = drawerActions, settingsDot = nestNews)
+                TaskDrawerContent(state = state, actions = drawerActions, nestDot = nestNews)
             }
         },
         modifier = modifier,
@@ -289,69 +268,8 @@ fun TaskListScreen(
         }
     }
 
-    OrganizeDialogHost(
-        dialog = organizeDialog,
-        folders = state.folders,
-        actions = organizeActions,
-        onDismiss = { organizeDialog = null },
-    )
-
-    when (val dialog = filterDialog) {
-        null -> Unit
-
-        FilterDialogState.New -> FilterDialog(
-            initial = null,
-            lists = state.lists,
-            tags = state.tags,
-            onConfirm = {
-                viewModel.createFilter(it)
-                filterDialog = null
-                closeDrawer()
-            },
-            onDismiss = { filterDialog = null },
-        )
-
-        is FilterDialogState.Edit -> FilterDialog(
-            initial = dialog.filter,
-            lists = state.lists,
-            tags = state.tags,
-            onConfirm = {
-                viewModel.updateFilter(dialog.filter, it)
-                filterDialog = null
-            },
-            onDismiss = { filterDialog = null },
-        )
-
-        is FilterDialogState.Delete -> AlertDialog(
-            onDismissRequest = { filterDialog = null },
-            title = { Text(stringResource(R.string.delete_filter_title)) },
-            text = { Text(stringResource(R.string.delete_filter_message, dialog.filter.name)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteFilter(dialog.filter)
-                        filterDialog = null
-                    },
-                ) { Text(stringResource(R.string.action_delete)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { filterDialog = null }) { Text(stringResource(R.string.action_cancel)) }
-            },
-        )
-    }
-
     when (selectionDialog) {
         null -> Unit
-
-        SelectionDialog.Move -> ListPickerDialog(
-            lists = state.lists,
-            selectedId = "",
-            onSelect = {
-                viewModel.moveSelectedTo(it)
-                selectionDialog = null
-            },
-            onDismiss = { selectionDialog = null },
-        )
 
         SelectionDialog.Tag -> TagPickerDialog(
             tags = state.tags,
@@ -369,7 +287,6 @@ fun TaskListScreen(
 
     if (showQuickAdd) {
         QuickAddSheet(
-            lists = state.lists,
             tags = state.tags,
             onDismiss = { showQuickAdd = false },
             onAdd = viewModel::addParsed,
@@ -430,13 +347,6 @@ fun TaskListContent(
     // Back leaves selection mode before it leaves the screen.
     BackHandler(enabled = selecting) { selectionActions.onClear() }
 
-    // Only mixed views (smart views, tags) show which list a task belongs to.
-    val listLabels: Map<String, ListLabel> = if (state.scope is TaskScope.InList) {
-        emptyMap()
-    } else {
-        state.lists.associate { it.id to ListLabel(it.displayName(), listColorIndex(it.colorArgb)) }
-    }
-
     val sortActions = TaskSort.entries.map { sort ->
         MenuAction(
             label = stringResource(sort.labelRes()),
@@ -482,7 +392,7 @@ fun TaskListContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = state.scope.title(state.lists, state.tags),
+                        text = state.scope.title(),
                         style = MaterialTheme.typography.headlineSmall,
                         maxLines = 1,
                     )
@@ -651,7 +561,6 @@ fun TaskListContent(
                                     haptics.longPress()
                                     selectionActions.onToggle(task.id)
                                 },
-                                list = listLabels[task.listId],
                                 onDelete = { onDelete(task) },
                                 onPinChange = { pinned -> onPinChange(task, pinned) },
                             )
@@ -680,7 +589,6 @@ fun TaskListContent(
                                 today = today,
                                 onToggle = { onToggle(task, it) },
                                 onClick = { onOpenTask(task.id) },
-                                list = listLabels[task.listId],
                                 modifier = Modifier.animateItem(),
                             )
                         }
@@ -698,7 +606,7 @@ fun TaskListContent(
                     date = today,
                     time = now,
                     collapse = collapse.state,
-                    title = state.scope.title(state.lists, state.tags),
+                    title = state.scope.title(),
                     onMenuClick = onMenuClick,
                     onSearchClick = onSearchClick,
                     sortActions = sortActions,
@@ -719,22 +627,14 @@ fun TaskListContent(
 private class EmptyCopy(val scene: SceneKind, @StringRes val title: Int, @StringRes val body: Int?)
 
 /**
- * What an empty view says. The Inbox is where a new user starts, so it greets; other lists invite
- * a first task; Waiting for you is a happy place to be; the date views say nothing is due.
+ * What an empty view says. Overdue is a happy place to be; Goals invite a first one; Upcoming
+ * says nothing is due; Completed says nothing is finished yet.
  */
 private fun TaskScope.emptyCopy(): EmptyCopy = when (this) {
-    is TaskScope.InList ->
-        if (listId == TaskList.INBOX_ID) {
-            EmptyCopy(SceneKind.FirstLaunch, R.string.scene_first_launch, R.string.task_list_empty_body)
-        } else {
-            EmptyCopy(SceneKind.EmptyList, R.string.scene_empty_list, R.string.task_list_empty_body)
-        }
-
     TaskScope.Overdue -> EmptyCopy(SceneKind.AllDone, R.string.scene_all_done, null)
-    TaskScope.Today, TaskScope.Upcoming, TaskScope.NoDate ->
-        EmptyCopy(SceneKind.NothingDue, R.string.scene_nothing_due, null)
-
-    else -> EmptyCopy(SceneKind.NothingDue, R.string.empty_view_title, R.string.empty_view_body)
+    TaskScope.NoDate -> EmptyCopy(SceneKind.EmptyList, R.string.scene_empty_list, R.string.task_list_empty_body)
+    TaskScope.Today, TaskScope.Upcoming -> EmptyCopy(SceneKind.NothingDue, R.string.scene_nothing_due, null)
+    TaskScope.Completed -> EmptyCopy(SceneKind.NothingDue, R.string.empty_view_title, R.string.empty_view_body)
 }
 
 private fun TaskSort.labelRes(): Int = when (this) {
@@ -832,7 +732,6 @@ private fun SelectionTopBar(count: Int, actions: SelectionActions) {
             OverflowButton(
                 actions = listOf(
                     MenuAction(stringResource(R.string.selection_select_all)) { actions.onSelectAll() },
-                    MenuAction(stringResource(R.string.selection_move)) { actions.onMove() },
                     MenuAction(stringResource(R.string.selection_tag)) { actions.onTag() },
                 ),
             )
@@ -840,14 +739,7 @@ private fun SelectionTopBar(count: Int, actions: SelectionActions) {
     )
 }
 
-private enum class SelectionDialog { Move, Tag }
-
-/** Which saved-filter dialog is open. */
-private sealed interface FilterDialogState {
-    data object New : FilterDialogState
-    data class Edit(val filter: SavedFilter) : FilterDialogState
-    data class Delete(val filter: SavedFilter) : FilterDialogState
-}
+private enum class SelectionDialog { Tag }
 
 /** "Back tomorrow" or "Back Fri" or "Back Nov 16, 2026": when a repeating task that was just finished returns. */
 private fun backMessage(context: android.content.Context, date: LocalDate): String {

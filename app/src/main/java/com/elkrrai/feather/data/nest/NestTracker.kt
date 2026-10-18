@@ -3,7 +3,7 @@ package com.elkrrai.feather.data.nest
 import com.elkrrai.feather.domain.nest.NestFacts
 import com.elkrrai.feather.domain.nest.NestItem
 import com.elkrrai.feather.domain.nest.earnedNestItems
-import com.elkrrai.feather.domain.repository.ListRepository
+import com.elkrrai.feather.domain.repository.TagRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
 import com.elkrrai.feather.domain.rhythm.RhythmRepository
 import com.elkrrai.feather.domain.rhythm.keptRepeaterFourWeeks
@@ -23,15 +23,15 @@ import kotlinx.coroutines.launch
 
 /**
  * Keeps score for the bird's nest. It works out what has been done (tasks finished, a backup made,
- * lists and reminders) and, whenever that earns something new, saves it: an earned item stays for
- * good, even if the lists or reminders that earned it are deleted later. Nothing here is ever
+ * tags and reminders) and, whenever that earns something new, saves it: an earned item stays for
+ * good, even if the tags or reminders that earned it are deleted later. Nothing here is ever
  * time-limited, random or paid.
  */
 @Singleton
 class NestTracker @Inject constructor(
     private val rhythm: RhythmRepository,
     private val tasks: TaskRepository,
-    private val lists: ListRepository,
+    private val tagRepository: TagRepository,
     private val settings: SettingsRepository,
     private val clock: Clock,
 ) {
@@ -39,16 +39,16 @@ class NestTracker @Inject constructor(
     fun facts(firstDay: DayOfWeek = DayOfWeek.MONDAY): Flow<NestFacts> = combine(
         rhythm.observeCompletions(),
         tasks.observeTasks(),
-        lists.observeLists(),
+        tagRepository.observeTags(),
         settings.settings,
-    ) { records, openAndDone, allLists, current ->
+    ) { records, openAndDone, allTags, current ->
         val today = LocalDate.now(clock.withZone(ZoneId.systemDefault()))
         NestFacts(
             tasksFinished = records.size,
             backedUp = current.backedUp || current.lastBackupAt != null,
             keptRepeaterFourWeeks = keptRepeaterFourWeeks(records, today, ZoneId.systemDefault(), firstDay),
             remindersSet = openAndDone.sumOf { it.reminders.size },
-            listsMade = allLists.count { !it.isInbox },
+            tagsMade = allTags.size,
             voiceUsed = current.voiceUsed,
         )
     }.distinctUntilChanged()

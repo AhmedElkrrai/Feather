@@ -3,8 +3,6 @@ package com.elkrrai.feather.feature.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elkrrai.feather.domain.model.Task
-import com.elkrrai.feather.domain.model.TaskList
-import com.elkrrai.feather.domain.repository.ListRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
 import com.elkrrai.feather.domain.view.TaskSort
 import com.elkrrai.feather.domain.view.comparator
@@ -21,7 +19,6 @@ import kotlinx.coroutines.launch
 data class SearchUiState(
     val query: String = "",
     val results: List<Task> = emptyList(),
-    val lists: List<TaskList> = emptyList(),
 ) {
     val hasQuery: Boolean get() = query.isNotBlank()
 }
@@ -29,20 +26,17 @@ data class SearchUiState(
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val tasks: TaskRepository,
-    lists: ListRepository,
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")
 
     val uiState: StateFlow<SearchUiState> = combine(
         tasks.observeTasks(),
-        lists.observeLists(),
         query,
-    ) { all, allLists, q ->
+    ) { all, q ->
         SearchUiState(
             query = q,
             results = all.search(q).sortedWith(TaskSort.CREATED.comparator()),
-            lists = allLists,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchUiState())
 

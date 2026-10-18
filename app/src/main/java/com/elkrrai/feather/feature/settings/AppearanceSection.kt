@@ -90,7 +90,6 @@ internal fun AppearanceRows(
     onPickTheme: () -> Unit,
     onPickTimeFormat: () -> Unit,
     onPickWeekStart: () -> Unit,
-    onOpenNest: () -> Unit = {},
 ) {
     SectionTitle(stringResource(R.string.settings_section_appearance))
     SettingsRow(
@@ -164,28 +163,6 @@ internal fun AppearanceRows(
         trailing = { Switch(checked = settings.reduceMotion, onCheckedChange = actions.onReduceMotionChange) },
     )
     SectionTitle(stringResource(R.string.settings_section_company))
-    // A quiet dot says there is something new in the nest; it goes when the nest has been looked at.
-    val nestNews = (settings.nestUnlocked - settings.nestSeen).isNotEmpty()
-    SettingsRow(
-        title = stringResource(R.string.nest_title),
-        summary = null,
-        supporting = stringResource(R.string.nest_row_summary),
-        onClick = onOpenNest,
-        trailing = if (nestNews) {
-            {
-                val dotDescription = stringResource(R.string.nest_new_dot)
-                Box(
-                    Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .semantics { contentDescription = dotDescription },
-                )
-            }
-        } else {
-            null
-        },
-    )
     SettingsRow(
         title = stringResource(R.string.settings_weekly_feather),
         summary = null,

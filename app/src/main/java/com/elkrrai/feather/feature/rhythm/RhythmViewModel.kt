@@ -2,8 +2,6 @@ package com.elkrrai.feather.feature.rhythm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.elkrrai.feather.domain.model.TaskList
-import com.elkrrai.feather.domain.repository.ListRepository
 import com.elkrrai.feather.domain.rhythm.CompletionRecord
 import com.elkrrai.feather.domain.rhythm.RhythmRepository
 import com.elkrrai.feather.domain.settings.SettingsRepository
@@ -22,7 +20,6 @@ import kotlinx.coroutines.launch
 data class RhythmUiState(
     val isLoading: Boolean = true,
     val records: List<CompletionRecord> = emptyList(),
-    val lists: List<TaskList> = emptyList(),
     val pausedDays: Set<LocalDate> = emptySet(),
     val weeklyFeather: Boolean = true,
 )
@@ -30,20 +27,17 @@ data class RhythmUiState(
 @HiltViewModel
 class RhythmViewModel @Inject constructor(
     rhythm: RhythmRepository,
-    listRepository: ListRepository,
     private val settingsRepository: SettingsRepository,
     private val clock: Clock,
 ) : ViewModel() {
 
     val uiState: StateFlow<RhythmUiState> = combine(
         rhythm.observeCompletions(),
-        listRepository.observeLists(),
         settingsRepository.settings,
-    ) { records, lists, settings ->
+    ) { records, settings ->
         RhythmUiState(
             isLoading = false,
             records = records,
-            lists = lists,
             pausedDays = settings.rhythmPausedDays,
             weeklyFeather = settings.weeklyFeather,
         )

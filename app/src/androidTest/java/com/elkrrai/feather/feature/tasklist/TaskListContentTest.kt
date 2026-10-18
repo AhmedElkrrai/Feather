@@ -70,7 +70,7 @@ class TaskListContentTest {
     private fun show(
         tasks: List<Task> = emptyList(),
         sections: List<TaskSection> = listOf(TaskSection(null, tasks)),
-        scope: TaskScope = TaskScope.InList("list"),
+        scope: TaskScope = TaskScope.NoDate,
         direction: LayoutDirection = LayoutDirection.Ltr,
     ) {
         rule.setContent {
@@ -98,7 +98,7 @@ class TaskListContentTest {
         show(emptyList())
 
         // The Inbox is where a new user starts, so it greets.
-        rule.onNodeWithText(string(R.string.scene_first_launch)).assertIsDisplayed()
+        rule.onNodeWithText(string(R.string.scene_empty_list)).assertIsDisplayed()
     }
 
     @Test

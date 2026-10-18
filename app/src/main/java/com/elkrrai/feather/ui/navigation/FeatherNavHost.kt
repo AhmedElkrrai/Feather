@@ -46,6 +46,7 @@ fun FeatherNavHost(
                 onOpenTrash = { navController.navigate(TrashRoute) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
                 onOpenRhythm = { navController.navigate(RhythmRoute) },
+                onOpenNest = { navController.navigate(NestRoute) },
             )
         }
         // The editor's ViewModel reads the task id from the route itself.
@@ -74,7 +75,6 @@ fun FeatherNavHost(
             SettingsScreen(
                 onBack = { navController.popBackStack() },
                 onOpenReliability = { navController.navigate(ReliabilityRoute) },
-                onOpenNest = { navController.navigate(NestRoute) },
             )
         }
         composable<NestRoute> {

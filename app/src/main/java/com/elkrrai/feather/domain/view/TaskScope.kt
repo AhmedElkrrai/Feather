@@ -1,8 +1,6 @@
 package com.elkrrai.feather.domain.view
 
-import com.elkrrai.feather.domain.model.SavedFilter
-
-/** What the task screen is showing: a smart view, one list, or one tag. */
+/** What the task screen is showing: one of the five views. */
 sealed interface TaskScope {
     /** Open tasks due today or earlier. */
     data object Today : TaskScope
@@ -13,20 +11,10 @@ sealed interface TaskScope {
     /** Open tasks due before today. */
     data object Overdue : TaskScope
 
-    /** Every task, completed ones last. */
-    data object All : TaskScope
-
     data object Completed : TaskScope
 
-    /** Open tasks without a due date. */
+    /** Open tasks without a due date: the Goals view. */
     data object NoDate : TaskScope
-
-    data class InList(val listId: String) : TaskScope
-
-    data class WithTag(val tagId: String) : TaskScope
-
-    /** A saved filter; it carries its definition, so showing it needs no lookup. */
-    data class Filtered(val filter: SavedFilter) : TaskScope
 }
 
 enum class TaskSort {

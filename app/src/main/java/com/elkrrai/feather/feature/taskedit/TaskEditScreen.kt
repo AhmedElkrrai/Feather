@@ -113,7 +113,6 @@ class TaskEditActions(
     val onDueDateChange: (LocalDate?) -> Unit,
     val onDueTimeChange: (LocalTime?) -> Unit,
     val onPriorityChange: (Priority) -> Unit,
-    val onListChange: (String) -> Unit,
     val onTagToggle: (Tag) -> Unit,
     val onCreateTag: (String) -> Unit,
     val onPinnedChange: (Boolean) -> Unit,
@@ -172,7 +171,6 @@ fun TaskEditScreen(
             onDueDateChange = viewModel::onDueDateChange,
             onDueTimeChange = viewModel::onDueTimeChange,
             onPriorityChange = viewModel::onPriorityChange,
-            onListChange = viewModel::onListChange,
             onTagToggle = viewModel::onTagToggle,
             onCreateTag = viewModel::onCreateTag,
             onPinnedChange = viewModel::onPinnedChange,
@@ -208,7 +206,6 @@ fun TaskEditContent(
     val locale = LocalConfiguration.current.locales[0]
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
-    var showListPicker by rememberSaveable { mutableStateOf(false) }
     var showRecurrence by rememberSaveable { mutableStateOf(false) }
     var showNewTag by rememberSaveable { mutableStateOf(false) }
     var reminderStep by remember { mutableStateOf<ReminderStep>(ReminderStep.None) }
@@ -306,15 +303,6 @@ fun TaskEditContent(
                             },
                         )
                     }
-                }
-            }
-
-            FieldSection(label = stringResource(R.string.field_list)) {
-                OutlinedButton(onClick = { showListPicker = true }) {
-                    Text(
-                        state.availableLists.firstOrNull { it.id == state.listId }?.displayName()
-                            ?: stringResource(R.string.inbox)
-                    )
                 }
             }
 
@@ -500,18 +488,6 @@ fun TaskEditContent(
         onAddAtTime = actions.onAddAtTime,
     )
 
-    if (showListPicker) {
-        ListPickerDialog(
-            lists = state.availableLists,
-            selectedId = state.listId,
-            onSelect = {
-                actions.onListChange(it)
-                showListPicker = false
-            },
-            onDismiss = { showListPicker = false },
-        )
-    }
-
     if (showNewTag) {
         NameDialog(
             title = stringResource(R.string.new_tag),
@@ -602,43 +578,6 @@ private fun SubtasksEditor(
             },
         )
     }
-}
-
-@Composable
-internal fun ListPickerDialog(
-    lists: List<TaskList>,
-    selectedId: String,
-    onSelect: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.choose_list)) },
-        text = {
-            Column(Modifier.selectableGroup().verticalScroll(rememberScrollState())) {
-                lists.forEach { list ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .selectable(
-                                selected = list.id == selectedId,
-                                onClick = { onSelect(list.id) },
-                                role = Role.RadioButton,
-                            )
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = list.id == selectedId, onClick = null)
-                        Spacer(Modifier.width(16.dp))
-                        Text(list.displayName())
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-        },
-    )
 }
 
 /** Only today and later can be picked as a due date; the picker hands out UTC midnights. */

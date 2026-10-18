@@ -12,7 +12,6 @@ import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.recurrence.Recurrence
-import com.elkrrai.feather.domain.repository.ListRepository
 import com.elkrrai.feather.domain.repository.TagRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
 import com.elkrrai.feather.ui.navigation.TaskEditRoute
@@ -46,7 +45,6 @@ data class TaskEditUiState(
     val reminders: List<Reminder> = emptyList(),
     /** How the task repeats, or null. A repeating task always has a due date. */
     val recurrence: Recurrence? = null,
-    val availableLists: List<TaskList> = emptyList(),
     val availableTags: List<Tag> = emptyList(),
     val isSaving: Boolean = false,
     /** Set once the task was duplicated; the screen then opens the copy. */
@@ -61,7 +59,6 @@ data class TaskEditUiState(
 class TaskEditViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val tasks: TaskRepository,
-    private val lists: ListRepository,
     private val tagRepository: TagRepository,
 ) : ViewModel() {
 
@@ -76,9 +73,6 @@ class TaskEditViewModel @Inject constructor(
     private var original: Task? = null
 
     init {
-        viewModelScope.launch {
-            lists.observeLists().collect { all -> _uiState.update { it.copy(availableLists = all) } }
-        }
         viewModelScope.launch {
             tagRepository.observeTags().collect { all -> _uiState.update { it.copy(availableTags = all) } }
         }
@@ -143,7 +137,6 @@ class TaskEditViewModel @Inject constructor(
 
     fun onPriorityChange(priority: Priority) = _uiState.update { it.copy(priority = priority) }
 
-    fun onListChange(listId: String) = _uiState.update { it.copy(listId = listId) }
 
     fun onPinnedChange(pinned: Boolean) = _uiState.update { it.copy(isPinned = pinned) }
 

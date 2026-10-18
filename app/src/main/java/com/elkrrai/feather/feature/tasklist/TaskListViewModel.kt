@@ -2,16 +2,10 @@ package com.elkrrai.feather.feature.tasklist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.elkrrai.feather.domain.model.DueWindow
-import com.elkrrai.feather.domain.model.Folder
-import com.elkrrai.feather.domain.model.Priority
-import com.elkrrai.feather.domain.model.SavedFilter
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
-import com.elkrrai.feather.domain.repository.ListRepository
-import com.elkrrai.feather.domain.repository.SavedFilterRepository
 import com.elkrrai.feather.domain.repository.TagRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
 import com.elkrrai.feather.domain.view.TaskScope
@@ -46,14 +40,11 @@ data class TaskSection(val date: LocalDate?, val tasks: List<Task>)
 
 data class TaskListUiState(
     val isLoading: Boolean = true,
-    val scope: TaskScope = TaskScope.InList(TaskList.INBOX_ID),
+    val scope: TaskScope = TaskScope.Today,
     val sort: TaskSort = TaskSort.CREATED,
     val sections: List<TaskSection> = emptyList(),
-    val lists: List<TaskList> = emptyList(),
-    val folders: List<Folder> = emptyList(),
     val tags: List<Tag> = emptyList(),
-    val filters: List<SavedFilter> = emptyList(),
-    /** Open-task counts for every smart view, list and tag, for the drawer badges. */
+    /** Open-task counts for the views, for the drawer badges. */
     val counts: Map<TaskScope, Int> = emptyMap(),
     /** Ids of the tasks picked with a long press; always a subset of what is on screen. */
     val selection: Set<String> = emptySet(),
@@ -61,8 +52,7 @@ data class TaskListUiState(
     val today: TodayStatus = TodayStatus(),
     /**
      * The finished tasks of this view, newest first, shown in the Done section under the list: the
-     * tasks finished today in the Today view, and the completed tasks of a list, tag, filter or
-     * All. Empty for the Completed view (which is all of them) and for views that never list them.
+     * tasks finished today in the Today view. Empty for every other view.
      */
     val doneTasks: List<Task> = emptyList(),
     /** The task that was just added from quick add; its card glows for a moment. */
@@ -74,33 +64,24 @@ data class TaskListUiState(
 @HiltViewModel
 class TaskListViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
-    private val listRepository: ListRepository,
     private val tagRepository: TagRepository,
-    private val filterRepository: SavedFilterRepository,
     private val clock: Clock,
 ) : ViewModel() {
 
-    private val inbox = TaskScope.InList(TaskList.INBOX_ID)
-    private val selectedScope = MutableStateFlow<TaskScope>(inbox)
+    private val selectedScope = MutableStateFlow<TaskScope>(TaskScope.Today)
     private val selectedSort = MutableStateFlow(TaskSort.CREATED)
     private val pickedIds = MutableStateFlow<Set<String>>(emptySet())
     private val justAdded = MutableStateFlow<String?>(null)
 
     private data class Data(
         val tasks: List<Task>,
-        val lists: List<TaskList>,
-        val folders: List<Folder>,
         val tags: List<Tag>,
-        val filters: List<SavedFilter>,
     )
 
     private val data = combine(
         taskRepository.observeTasks(),
-        listRepository.observeLists(),
-        listRepository.observeFolders(),
         tagRepository.observeTags(),
-        filterRepository.observeFilters(),
-    ) { tasks, lists, folders, tags, filters -> Data(tasks, lists, folders, tags, filters) }
+    ) { tasks, tags -> Data(tasks, tags) }
 
     val uiState: StateFlow<TaskListUiState> = combine(data, selectedScope, selectedSort, pickedIds, justAdded) { d, scope, sort, picked, added ->
         buildState(d, scope, sort, picked).copy(justAddedId = added)
@@ -117,41 +98,21 @@ class TaskListViewModel @Inject constructor(
         val restingIds = resting.map { it.id }.toSet()
         val allTasks = d.tasks.filter { it.id !in restingIds }
         val restingDone = resting.map { it.asFinishedToday() }
-        // A deleted list or tag falls back to the Inbox.
-        val scope = when (selected) {
-            is TaskScope.InList -> if (d.lists.any { it.id == selected.listId }) selected else inbox
-            is TaskScope.WithTag -> if (d.tags.any { it.id == selected.tagId }) selected else inbox
-            // An edited filter is shown with its new definition; a deleted one falls back to the Inbox.
-            is TaskScope.Filtered -> d.filters.firstOrNull { it.id == selected.filter.id }
-                ?.let { TaskScope.Filtered(it) } ?: inbox
-            else -> selected
-        }
+        val scope = selected
 
         val visible = allTasks.inScope(scope, today).sortedWith(sort.comparator())
-        // Lists, tags, filters and All keep their finished tasks apart, in the Done section.
-        val splitsDone = scope is TaskScope.InList || scope is TaskScope.WithTag ||
-            scope is TaskScope.Filtered || scope == TaskScope.All
-        val open = if (splitsDone) visible.filter { !it.isCompleted } else visible
-        val doneInView = if (splitsDone) {
-            (visible.filter { it.isCompleted } + restingDone.inScope(scope, today))
-                .sortedByDescending { it.completedAt }
-        } else {
-            emptyList()
-        }
         val sections = if (scope == TaskScope.Upcoming) {
-            open.groupedByDay().map { TaskSection(it.date, it.tasks) }
+            visible.groupedByDay().map { TaskSection(it.date, it.tasks) }
         } else {
-            listOf(TaskSection(null, open))
+            listOf(TaskSection(null, visible))
         }
 
         val countedScopes: List<TaskScope> = listOf(
             TaskScope.Today,
             TaskScope.Upcoming,
             TaskScope.Overdue,
-            TaskScope.All,
             TaskScope.NoDate,
-        ) + d.lists.map { TaskScope.InList(it.id) } + d.tags.map { TaskScope.WithTag(it.id) } +
-            d.filters.map { TaskScope.Filtered(it) }
+        )
 
         val finishedToday = (
             allTasks.filter { task -> task.completedAt?.atZone(zone)?.toLocalDate() == today } + restingDone
@@ -162,18 +123,11 @@ class TaskListViewModel @Inject constructor(
             scope = scope,
             sort = sort,
             sections = sections,
-            lists = d.lists,
-            folders = d.folders,
             tags = d.tags,
-            filters = d.filters,
             counts = countedScopes.associateWith { allTasks.openCountIn(it, today) },
             selection = picked.intersect(visible.map { it.id }.toSet()),
             today = TodayStatus(left = allTasks.openCountIn(TaskScope.Today, today), done = finishedToday.size),
-            doneTasks = when {
-                scope == TaskScope.Today -> finishedToday
-                splitsDone -> doneInView
-                else -> emptyList()
-            },
+            doneTasks = if (scope == TaskScope.Today) finishedToday else emptyList(),
         )
     }
 
@@ -187,37 +141,26 @@ class TaskListViewModel @Inject constructor(
     }
 
     /**
-     * Quick add follows the current view: a list view adds to that list; Today and Overdue add
-     * a task due today, Upcoming one due tomorrow; a tag view tags the new task. Things the text
-     * itself says (a date, an `@list`, tags) win over what the view suggests.
+     * Quick add follows the current view: Today and Overdue add a task due today, Upcoming one due
+     * tomorrow, Goals one with no date. Things the text itself says (a date, tags) win over what
+     * the view suggests. Every task lives in the Inbox.
      */
-    fun addTask(title: String) = addParsed(ParsedQuickAdd(title = title.trim()), listId = null)
+    fun addTask(title: String) = addParsed(ParsedQuickAdd(title = title.trim()))
 
-    /** [listId] is the list named in the text, or null to follow the current view. */
-    fun addParsed(parsed: ParsedQuickAdd, listId: String?) {
+    fun addParsed(parsed: ParsedQuickAdd) {
         if (parsed.title.isBlank()) return
         val current = uiState.value
         viewModelScope.launch {
             val today = today()
-            val scope = current.scope
-            val (viewList, viewDate) = when (scope) {
-                is TaskScope.InList -> scope.listId to null
-                is TaskScope.Filtered -> (scope.filter.listId ?: TaskList.INBOX_ID) to null
-                TaskScope.Today, TaskScope.Overdue -> TaskList.INBOX_ID to today
-                TaskScope.Upcoming -> TaskList.INBOX_ID to today.plusDays(1)
-                else -> TaskList.INBOX_ID to null
-            }
-            val viewedTagId = when (scope) {
-                is TaskScope.WithTag -> scope.tagId
-                is TaskScope.Filtered -> scope.filter.tagId
+            val viewDate = when (current.scope) {
+                TaskScope.Today, TaskScope.Overdue -> today
+                TaskScope.Upcoming -> today.plusDays(1)
                 else -> null
             }
-            val viewedTag = current.tags.firstOrNull { it.id == viewedTagId }
             val added = QuickAddTask(taskRepository, tagRepository)(
                 parsed = parsed,
-                listId = listId ?: viewList,
+                listId = TaskList.INBOX_ID,
                 fallbackDate = viewDate,
-                extraTags = listOfNotNull(viewedTag),
             )
             // The new card is tinted for a moment, then fades back (the screen animates the fade).
             justAdded.value = added.id
@@ -272,17 +215,6 @@ class TaskListViewModel @Inject constructor(
         val ids = uiState.value.selection.toList()
         clearSelection()
         viewModelScope.launch { ids.forEach { taskRepository.setCompleted(it, true) } }
-    }
-
-    /** Moves the selected tasks (with their checklists, tags and reminders) to [listId]. */
-    fun moveSelectedTo(listId: String) {
-        val ids = uiState.value.selection.toList()
-        clearSelection()
-        viewModelScope.launch {
-            ids.forEach { id ->
-                taskRepository.getTask(id)?.let { taskRepository.saveTaskDetails(it.copy(listId = listId)) }
-            }
-        }
     }
 
     fun addTagToSelected(tag: Tag) {
@@ -347,85 +279,4 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch { taskRepository.restoreTask(taskId) }
     }
 
-    // --- Saved filters ---
-
-    fun createFilter(draft: FilterDraft) {
-        viewModelScope.launch {
-            val filter = filterRepository.createFilter(
-                name = draft.name,
-                listId = draft.listId,
-                tagId = draft.tagId,
-                minPriority = draft.minPriority,
-                due = draft.due,
-                hideCompleted = draft.hideCompleted,
-            )
-            selectedScope.value = TaskScope.Filtered(filter)
-            pickedIds.value = emptySet()
-        }
-    }
-
-    fun updateFilter(filter: SavedFilter, draft: FilterDraft) {
-        viewModelScope.launch {
-            filterRepository.updateFilter(
-                filter.copy(
-                    name = draft.name,
-                    listId = draft.listId,
-                    tagId = draft.tagId,
-                    minPriority = draft.minPriority,
-                    due = draft.due,
-                    hideCompleted = draft.hideCompleted,
-                )
-            )
-        }
-    }
-
-    fun deleteFilter(filter: SavedFilter) {
-        val selected = selectedScope.value
-        if (selected is TaskScope.Filtered && selected.filter.id == filter.id) selectedScope.value = inbox
-        viewModelScope.launch { filterRepository.deleteFilter(filter.id) }
-    }
-
-    // --- Lists, folders and tags ---
-
-    fun createList(name: String, folderId: String?, colorArgb: Int?) {
-        if (name.isBlank()) return
-        viewModelScope.launch {
-            val list = listRepository.createList(name, folderId, colorArgb)
-            selectedScope.value = TaskScope.InList(list.id)
-        }
-    }
-
-    fun updateList(list: TaskList, name: String, colorArgb: Int?, folderId: String?) {
-        viewModelScope.launch { listRepository.updateList(list.id, name, colorArgb, folderId) }
-    }
-
-    fun deleteList(list: TaskList) {
-        if (list.isInbox) return
-        val selected = selectedScope.value
-        if (selected is TaskScope.InList && selected.listId == list.id) selectedScope.value = inbox
-        viewModelScope.launch { listRepository.deleteList(list.id) }
-    }
-
-    fun createFolder(name: String) {
-        if (name.isBlank()) return
-        viewModelScope.launch { listRepository.createFolder(name) }
-    }
-
-    fun renameFolder(folder: Folder, name: String) {
-        viewModelScope.launch { listRepository.renameFolder(folder.id, name) }
-    }
-
-    fun deleteFolder(folder: Folder) {
-        viewModelScope.launch { listRepository.deleteFolder(folder.id) }
-    }
-
-    fun renameTag(tag: Tag, name: String) {
-        viewModelScope.launch { tagRepository.renameTag(tag.id, name) }
-    }
-
-    fun deleteTag(tag: Tag) {
-        val selected = selectedScope.value
-        if (selected is TaskScope.WithTag && selected.tagId == tag.id) selectedScope.value = inbox
-        viewModelScope.launch { tagRepository.deleteTag(tag.id) }
-    }
 }

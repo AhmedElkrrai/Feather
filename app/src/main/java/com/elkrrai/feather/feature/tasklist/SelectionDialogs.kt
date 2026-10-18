@@ -27,7 +27,6 @@ class SelectionActions(
     val onClear: () -> Unit = {},
     val onSelectAll: () -> Unit = {},
     val onComplete: () -> Unit = {},
-    val onMove: () -> Unit = {},
     val onTag: () -> Unit = {},
     val onDelete: () -> Unit = {},
 )

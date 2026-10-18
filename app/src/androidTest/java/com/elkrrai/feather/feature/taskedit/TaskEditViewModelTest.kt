@@ -71,10 +71,10 @@ class TaskEditViewModelTest {
     }
 
     private fun newTaskViewModel() =
-        TaskEditViewModel(SavedStateHandle(mapOf<String, Any?>("taskId" to null)), tasks, lists, tags)
+        TaskEditViewModel(SavedStateHandle(mapOf<String, Any?>("taskId" to null)), tasks, tags)
 
     private fun editViewModel(taskId: String) =
-        TaskEditViewModel(SavedStateHandle(mapOf<String, Any?>("taskId" to taskId)), tasks, lists, tags)
+        TaskEditViewModel(SavedStateHandle(mapOf<String, Any?>("taskId" to taskId)), tasks, tags)
 
     @Test
     fun newTaskStartsEmptyAndCannotBeSaved() {
@@ -194,17 +194,15 @@ class TaskEditViewModelTest {
     }
 
     @Test
-    fun theTaskCanBeMovedToAnotherListAndPinned() = runTest {
-        val work = lists.createList("Work")
+    fun theTaskCanBePinnedAndStaysInItsList() = runTest {
         val existing = tasks.addTask(inbox, "Task")
         val viewModel = editViewModel(existing.id)
 
-        viewModel.onListChange(work.id)
         viewModel.onPinnedChange(true)
         viewModel.save()
 
         val saved = tasks.getTask(existing.id)!!
-        assertEquals(work.id, saved.listId)
+        assertEquals(inbox, saved.listId)
         assertTrue(saved.isPinned)
     }
 

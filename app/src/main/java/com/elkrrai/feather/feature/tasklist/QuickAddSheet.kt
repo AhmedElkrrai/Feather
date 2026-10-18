@@ -101,16 +101,14 @@ private class QuickAddHintStore(context: Context) {
  * Quick add with understanding: the text is parsed as it is typed ("Call mom tomorrow 5pm
  * !high #family") and each part that was understood shows as a badge under the text field, which
  * can be tapped away. The tools (date, priority, repeat) do not write into the text: what they
- * choose appears as a badge too. [onAdd] gets the parsed task and the id of the list named with
- * `@`, if any.
+ * choose appears as a badge too. [onAdd] gets the parsed task.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuickAddSheet(
-    lists: List<TaskList>,
     tags: List<Tag>,
     onDismiss: () -> Unit,
-    onAdd: (parsed: ParsedQuickAdd, listId: String?) -> Unit,
+    onAdd: (parsed: ParsedQuickAdd) -> Unit,
     initialText: String = "",
     /** Called when something was dictated into the sheet. */
     onVoiceUsed: () -> Unit = {},
@@ -161,9 +159,9 @@ fun QuickAddSheet(
         }
     }
 
-    val listNames = lists.map { it.displayName() }
-    val fromText = remember(text, ignored, listNames) {
-        QuickAddParser.parse(text, LocalDateTime.now(), listNames, ignored)
+    // There are no lists to name with `@`, so the parser is given none.
+    val fromText = remember(text, ignored) {
+        QuickAddParser.parse(text, LocalDateTime.now(), emptyList(), ignored)
     }
     val parsed = remember(fromText, toolDate, toolPriority, toolRepeat, toolTags) {
         fromText.withTools(toolDate, toolPriority, toolRepeat, toolTags)
@@ -172,11 +170,10 @@ fun QuickAddSheet(
 
     fun submit() {
         if (parsed.title.isBlank()) return
-        val listId = parsed.listName?.let { name -> lists.getOrNull(listNames.indexOf(name))?.id }
         haptics.thud()
         hintStore.recordAdd()
         addsSoFar = hintStore.count()
-        onAdd(parsed, listId)
+        onAdd(parsed)
         scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
     }
 
@@ -268,7 +265,6 @@ fun QuickAddSheet(
                 if (parsed.tags.isNotEmpty()) {
                     add(QuickAddChip(QuickAddField.TAGS, parsed.tags.joinToString(" ") { "#$it" }))
                 }
-                parsed.listName?.let { add(QuickAddChip(QuickAddField.LIST, "@$it")) }
             }
             QuickAddChips(
                 chips = chips,

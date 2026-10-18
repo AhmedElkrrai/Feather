@@ -51,11 +51,10 @@
     <string name="inbox">الوارد</string>
     <string name="scope_today">اليوم</string>
     <string name="scope_upcoming">القادمة</string>
-    <string name="scope_overdue">بانتظارك</string>
-    <string name="scope_all">كل المهام</string>
+    <string name="scope_overdue">متأخرة</string>
     <string name="scope_completed">المكتملة</string>
     <string name="action_clear_completed">مسح كل المكتملة</string>
-    <string name="scope_no_date">بدون تاريخ</string>
+    <string name="scope_no_date">الأهداف</string>
     <string name="drawer_section_views">العروض</string>
     <string name="drawer_section_lists">القوائم</string>
     <string name="drawer_section_tags">الوسوم</string>
@@ -668,7 +667,6 @@
     <string name="repeat_back_on">تعود %1$s</string>
     <!-- M9 step 11: weekly feather and your nest -->
     <string name="nest_title">عشّك</string>
-    <string name="nest_row_summary">ما أُهدي إلى الطائر</string>
     <string name="nest_intro">أشياء صغيرة للطائر، تأتي من الأيام العادية. تبقى للأبد، ولا تنفد.</string>
     <string name="nest_item_scarf">وشاح</string>
     <string name="nest_item_fairy_lights">أضواء الجنيات</string>
@@ -682,7 +680,7 @@
     <string name="nest_how_fairy_lights">أنشئ أول نسخة احتياطية</string>
     <string name="nest_how_bunting">حافظ على مهمة متكررة لأربعة أسابيع</string>
     <string name="nest_how_lantern">اضبط 10 تذكيرات</string>
-    <string name="nest_how_moss">أنشئ 3 قوائم خاصة بك</string>
+    <string name="nest_how_moss">أنشئ 3 وسوم خاصة بك</string>
     <string name="nest_how_glasses">أنهِ 25 مهمة</string>
     <string name="nest_how_flower_pot">أضف مهمة بالصوت</string>
     <string name="nest_how_party_hat">أنهِ 100 مهمة</string>

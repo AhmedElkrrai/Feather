@@ -141,7 +141,6 @@ fun RhythmContent(
     val haptics = rememberHaptics()
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
     var showPause by remember { mutableStateOf(false) }
-    val listsById = remember(state.lists) { state.lists.associateBy { it.id } }
     val paused = state.pausedDays.any { !it.isBefore(today) }
 
     Scaffold(
@@ -175,7 +174,7 @@ fun RhythmContent(
 
             // On the first day of the week: the feather made from the week that just ended.
             if (feather != null) {
-                item(key = "feather") { WeeklyFeatherCard(feather, listsById) }
+                item(key = "feather") { WeeklyFeatherCard(feather) }
             }
 
             if (stats.isNew) {
@@ -258,15 +257,6 @@ fun RhythmContent(
                 item(key = "when") {
                     SectionCard(title = stringResource(R.string.rhythm_when_title)) {
                         WhenSection(stats, entry, locale)
-                    }
-                }
-
-                val shown = stats.lists.filter { listsById.containsKey(it.listId) }.take(5)
-                if (shown.isNotEmpty()) {
-                    item(key = "lists") {
-                        SectionCard(title = stringResource(R.string.rhythm_lists_title)) {
-                            ListBars(shown, listsById, entry, locale)
-                        }
                     }
                 }
 
@@ -379,7 +369,7 @@ private fun RhythmHero(stats: RhythmStats, entry: Animatable<Float, AnimationVec
             if (stats.isNew) {
                 DashedEgg(ink.copy(alpha = 0.6f))
             } else {
-                BirdIllustration(Modifier.size(92.dp), mood = if (stats.weekTotal > 0) BirdMood.HAPPY else BirdMood.IDLE)
+                BirdIllustration(Modifier.size(92.dp), mood = BirdMood.IDLE)
             }
         }
     }
@@ -400,16 +390,9 @@ private fun DashedEgg(color: androidx.compose.ui.graphics.Color) {
 
 /** The feather of the week that just ended, with a sentence about it. */
 @Composable
-private fun WeeklyFeatherCard(feather: WeeklyFeather, listsById: Map<String, TaskList>) {
-    val colors = MaterialTheme.featherColors
-    val topList = feather.topListId?.let { listsById[it] }
-    val colorIndex = listColorIndex(topList?.colorArgb)
-    val color = colorIndex?.let { colors.listColors[it % colors.listColors.size] } ?: colors.amberFill
-    val body = if (topList != null) {
-        stringResource(R.string.weekly_feather_body, feather.total, feather.restDays, topList.displayName())
-    } else {
-        stringResource(R.string.weekly_feather_body_plain, feather.total, feather.restDays)
-    }
+private fun WeeklyFeatherCard(feather: WeeklyFeather) {
+    val color = MaterialTheme.featherColors.amberFill
+    val body = stringResource(R.string.weekly_feather_body_plain, feather.total, feather.restDays)
     SectionCard(title = stringResource(R.string.weekly_feather_title)) {
         Row(
             modifier = Modifier.padding(horizontal = Space.x4).semantics(mergeDescendants = true) { contentDescription = body },
@@ -495,57 +478,6 @@ private fun WhenSection(stats: RhythmStats, entry: Animatable<Float, AnimationVe
                 entry = entry,
                 modifier = Modifier.padding(top = Space.x2).semantics { contentDescription = sentence },
             )
-        }
-    }
-}
-
-@Composable
-private fun ListBars(
-    shares: List<ListShare>,
-    listsById: Map<String, TaskList>,
-    entry: Animatable<Float, AnimationVector1D>,
-    locale: Locale,
-) {
-    val feather = MaterialTheme.featherColors
-    val scheme = MaterialTheme.colorScheme
-    val numbers = remember(locale) { NumberFormat.getIntegerInstance(locale) }
-    val most = (shares.maxOfOrNull { it.count } ?: 1).coerceAtLeast(1)
-    Column(Modifier.padding(horizontal = Space.x4), verticalArrangement = Arrangement.spacedBy(Space.x3)) {
-        shares.forEachIndexed { index, share ->
-            val list = listsById[share.listId] ?: return@forEachIndexed
-            val colorIndex = listColorIndex(list.colorArgb)
-            val color = colorIndex?.let { feather.listColors[it % feather.listColors.size] } ?: feather.prioNone
-            val grow = Ease.Settle.transform(segment(entry.value, 380f + index * 60f, 420f))
-            Column(Modifier.semantics(mergeDescendants = true) { }) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    ListShapeIcon(listShapeFor(colorIndex), color, size = 14.dp)
-                    Text(
-                        text = list.displayName(),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = scheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f).padding(start = Space.x2),
-                    )
-                    Text(
-                        text = numbers.format(share.count),
-                        style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
-                        color = scheme.onSurfaceVariant,
-                    )
-                }
-                Canvas(Modifier.fillMaxWidth().height(10.dp).padding(top = Space.x1)) {
-                    val rtl = layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl
-                    val radius = CornerRadius(size.height / 2f)
-                    drawRoundRect(scheme.surfaceContainer, size = size, cornerRadius = radius)
-                    val width = size.width * share.count / most * grow
-                    drawRoundRect(
-                        color = color,
-                        topLeft = Offset(if (rtl) size.width - width else 0f, 0f),
-                        size = Size(width, size.height),
-                        cornerRadius = radius,
-                    )
-                }
-            }
         }
     }
 }

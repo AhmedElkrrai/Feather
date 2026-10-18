@@ -1,13 +1,9 @@
 package com.elkrrai.feather.feature.tasklist
 
-import com.elkrrai.feather.domain.model.DueWindow
-import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
 import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.TaskSort
-import com.elkrrai.feather.testutil.FakeListRepository
-import com.elkrrai.feather.testutil.FakeSavedFilterRepository
 import com.elkrrai.feather.testutil.FakeTagRepository
 import com.elkrrai.feather.testutil.FakeTaskRepository
 import com.elkrrai.feather.testutil.MainDispatcherRule
@@ -33,9 +29,7 @@ class TaskListViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val tasks = FakeTaskRepository()
-    private val lists = FakeListRepository()
     private val tags = FakeTagRepository()
-    private val filters = FakeSavedFilterRepository()
     private val clock: Clock = Clock.fixed(Instant.parse("2026-10-12T12:00:00Z"), ZoneId.of("UTC"))
 
     /** Same rule the ViewModel uses for "today". */
@@ -46,12 +40,16 @@ class TaskListViewModelTest {
     /**
      * `uiState` is `WhileSubscribed`, so something has to collect it for the test. The collector
      * must run on an unconfined dispatcher: on `runTest`'s default one it would never start.
+     *
+     * The app opens on Today, but most of these tests use tasks without a date, which live in the
+     * Goals view, so the new ViewModel is moved there unless [startOnToday] is set.
      */
-    private fun TestScope.newViewModel(): TaskListViewModel {
-        val viewModel = TaskListViewModel(tasks, lists, tags, filters, clock)
+    private fun TestScope.newViewModel(startOnToday: Boolean = false): TaskListViewModel {
+        val viewModel = TaskListViewModel(tasks, tags, clock)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.uiState.collect {}
         }
+        if (!startOnToday) viewModel.selectScope(TaskScope.NoDate)
         return viewModel
     }
 
@@ -59,17 +57,17 @@ class TaskListViewModelTest {
         uiState.value.sections.flatMap { section -> section.tasks.map { it.title } }
 
     @Test
-    fun startsOnTheInboxAndStopsLoading() = runTest {
-        val viewModel = newViewModel()
+    fun startsOnTodayAndStopsLoading() = runTest {
+        val viewModel = newViewModel(startOnToday = true)
 
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
-        assertEquals(TaskScope.InList(inbox), state.scope)
+        assertEquals(TaskScope.Today, state.scope)
         assertTrue(state.isEmpty)
     }
 
     @Test
-    fun addTaskAppearsInTheInboxWithTrimmedTitle() = runTest {
+    fun addTaskAppearsWithTrimmedTitle() = runTest {
         val viewModel = newViewModel()
 
         viewModel.addTask("  Buy milk ")
@@ -88,17 +86,13 @@ class TaskListViewModelTest {
     }
 
     @Test
-    fun aListViewShowsOnlyThatListAndQuickAddTargetsIt() = runTest {
-        val work = lists.createList("Work")
-        tasks.addTask(inbox, "In inbox")
-        tasks.addTask(work.id, "At work")
+    fun everyNewTaskLivesInTheInbox() = runTest {
         val viewModel = newViewModel()
 
-        viewModel.selectScope(TaskScope.InList(work.id))
-        assertEquals(listOf("At work"), viewModel.titles())
+        viewModel.addTask("Anywhere")
+        viewModel.addParsed(ParsedQuickAdd(title = "Parsed"))
 
-        viewModel.addTask("Another work task")
-        assertEquals(listOf("At work", "Another work task"), viewModel.titles())
+        assertTrue(tasks.getActiveTasks().all { it.listId == inbox })
     }
 
     @Test
@@ -118,6 +112,31 @@ class TaskListViewModelTest {
             today,
             viewModel.uiState.value.sections.flatMap { it.tasks }.first { it.title == "New for today" }.dueDate,
         )
+    }
+
+    @Test
+    fun overdueViewHoldsOnlyTasksBeforeToday() = runTest {
+        tasks.addTask(inbox, "Overdue", today.minusDays(2))
+        tasks.addTask(inbox, "Due today", today)
+        val viewModel = newViewModel()
+
+        viewModel.selectScope(TaskScope.Overdue)
+
+        assertEquals(listOf("Overdue"), viewModel.titles())
+    }
+
+    @Test
+    fun goalsViewHoldsOpenTasksWithoutADateAndQuickAddLeavesThemUndated() = runTest {
+        tasks.addTask(inbox, "Dated", today)
+        tasks.addTask(inbox, "A goal")
+        val viewModel = newViewModel()
+
+        viewModel.selectScope(TaskScope.NoDate)
+        assertEquals(listOf("A goal"), viewModel.titles())
+
+        viewModel.addTask("Another goal")
+        assertEquals(setOf("A goal", "Another goal"), viewModel.titles().toSet())
+        assertEquals(null, tasks.getActiveTasks().first { it.title == "Another goal" }.dueDate)
     }
 
     @Test
@@ -148,9 +167,11 @@ class TaskListViewModelTest {
     }
 
     @Test
-    fun countsReflectOpenTasks() = runTest {
+    fun countsReflectOpenTasksInEveryView() = runTest {
         tasks.addTask(inbox, "Due today", today)
         tasks.addTask(inbox, "Overdue", today.minusDays(1))
+        tasks.addTask(inbox, "Tomorrow", today.plusDays(1))
+        tasks.addTask(inbox, "A goal")
         val done = tasks.addTask(inbox, "Done", today)
         tasks.setCompleted(done.id, true)
         val viewModel = newViewModel()
@@ -158,69 +179,33 @@ class TaskListViewModelTest {
         val counts = viewModel.uiState.value.counts
         assertEquals(2, counts[TaskScope.Today])
         assertEquals(1, counts[TaskScope.Overdue])
-        assertEquals(2, counts[TaskScope.InList(inbox)])
+        assertEquals(1, counts[TaskScope.Upcoming])
+        assertEquals(1, counts[TaskScope.NoDate])
     }
 
     @Test
-    fun deletingTheSelectedListFallsBackToTheInbox() = runTest {
-        val work = lists.createList("Work")
+    fun sortByDueDateOrdersTasksEarliestFirst() = runTest {
+        tasks.addTask(inbox, "Today", today)
+        tasks.addTask(inbox, "Long ago", today.minusDays(5))
+        tasks.addTask(inbox, "Yesterday", today.minusDays(1))
         val viewModel = newViewModel()
-        viewModel.selectScope(TaskScope.InList(work.id))
-        assertEquals(TaskScope.InList(work.id), viewModel.uiState.value.scope)
-
-        viewModel.deleteList(work)
-
-        assertEquals(TaskScope.InList(inbox), viewModel.uiState.value.scope)
-    }
-
-    @Test
-    fun theInboxCannotBeDeleted() = runTest {
-        val viewModel = newViewModel()
-        val inboxList = viewModel.uiState.value.lists.single { it.isInbox }
-
-        viewModel.deleteList(inboxList)
-
-        assertTrue(viewModel.uiState.value.lists.any { it.isInbox })
-    }
-
-    @Test
-    fun aTagViewShowsTaggedTasksAndQuickAddTagsTheNewTask() = runTest {
-        val urgent = tags.createTag("urgent")
-        val tagged = tasks.addTask(inbox, "Tagged")
-        tasks.saveTaskDetails(tagged.copy(tags = listOf(urgent)))
-        tasks.addTask(inbox, "Untagged")
-        val viewModel = newViewModel()
-
-        viewModel.selectScope(TaskScope.WithTag(urgent.id))
-        assertEquals(listOf("Tagged"), viewModel.titles())
-
-        viewModel.addTask("Also urgent")
-        val added = viewModel.uiState.value.sections.flatMap { it.tasks }.first { it.title == "Also urgent" }
-        assertEquals(listOf(urgent), added.tags)
-    }
-
-    @Test
-    fun sortByDueDateOrdersTasksAndKeepsUndatedLast() = runTest {
-        tasks.addTask(inbox, "No date")
-        tasks.addTask(inbox, "Later", today.plusDays(5))
-        tasks.addTask(inbox, "Soon", today.plusDays(1))
-        val viewModel = newViewModel()
+        viewModel.selectScope(TaskScope.Today)
 
         viewModel.setSort(TaskSort.DUE_DATE)
 
-        assertEquals(listOf("Soon", "Later", "No date"), viewModel.titles())
+        assertEquals(listOf("Long ago", "Yesterday", "Today"), viewModel.titles())
     }
 
     @Test
-    fun completingMovesTheTaskToTheDoneSection() = runTest {
-        val first = tasks.addTask(inbox, "First")
-        tasks.addTask(inbox, "Second")
+    fun finishingATaskTakesItOutOfTheOpenList() = runTest {
+        val first = tasks.addTask(inbox, "First", today)
+        tasks.addTask(inbox, "Second", today)
         val viewModel = newViewModel()
+        viewModel.selectScope(TaskScope.Today)
 
         viewModel.setCompleted(first.id, true)
 
         assertEquals(listOf("Second"), viewModel.titles())
-        assertEquals(listOf("First"), viewModel.uiState.value.doneTasks.map { it.title })
     }
 
     @Test
@@ -236,23 +221,13 @@ class TaskListViewModelTest {
     }
 
     @Test
-    fun aListNamedInTheTextWinsOverTheCurrentView() = runTest {
-        val work = lists.createList("Work")
-        val viewModel = newViewModel()
-
-        viewModel.addParsed(ParsedQuickAdd(title = "Draft report"), listId = work.id)
-
-        assertEquals(listOf("Draft report"), tasks.getActiveTasks().filter { it.listId == work.id }.map { it.title })
-    }
-
-    @Test
     fun aDateInTheTextWinsOverTheTodayView() = runTest {
         val viewModel = newViewModel()
         viewModel.selectScope(TaskScope.Today)
         val written = today.plusDays(5)
 
-        viewModel.addParsed(ParsedQuickAdd(title = "Later", dueDate = written), listId = null)
-        viewModel.addParsed(ParsedQuickAdd(title = "No date"), listId = null)
+        viewModel.addParsed(ParsedQuickAdd(title = "Later", dueDate = written))
+        viewModel.addParsed(ParsedQuickAdd(title = "No date"))
 
         val byTitle = tasks.getActiveTasks().associateBy { it.title }
         assertEquals(written, byTitle.getValue("Later").dueDate)
@@ -260,12 +235,10 @@ class TaskListViewModelTest {
     }
 
     @Test
-    fun aTagViewAddsItsTagBesidesTheOnesInTheText() = runTest {
-        val work = tags.createTag("work")
+    fun tagsInTheTextAreAddedToTheTask() = runTest {
         val viewModel = newViewModel()
-        viewModel.selectScope(TaskScope.WithTag(work.id))
 
-        viewModel.addParsed(ParsedQuickAdd(title = "Report", tags = listOf("urgent")), listId = null)
+        viewModel.addParsed(ParsedQuickAdd(title = "Report", tags = listOf("urgent", "work")))
 
         val saved = tasks.getActiveTasks().single()
         assertEquals(setOf("work", "urgent"), saved.tags.map { it.name }.toSet())
@@ -305,7 +278,7 @@ class TaskListViewModelTest {
         val viewModel = newViewModel()
         viewModel.toggleSelected(a.id)
 
-        viewModel.selectScope(TaskScope.All)
+        viewModel.selectScope(TaskScope.Overdue)
 
         assertTrue(viewModel.uiState.value.selection.isEmpty())
     }
@@ -325,18 +298,6 @@ class TaskListViewModelTest {
         assertTrue(tasks.getTask(b.id)!!.isCompleted)
         assertFalse(tasks.getTask(c.id)!!.isCompleted)
         assertTrue(viewModel.uiState.value.selection.isEmpty())
-    }
-
-    @Test
-    fun moveSelectedGoesToTheChosenList() = runTest {
-        val work = lists.createList("Work")
-        val a = tasks.addTask(inbox, "A")
-        val viewModel = newViewModel()
-        viewModel.toggleSelected(a.id)
-
-        viewModel.moveSelectedTo(work.id)
-
-        assertEquals(work.id, tasks.getTask(a.id)!!.listId)
     }
 
     @Test
@@ -405,72 +366,7 @@ class TaskListViewModelTest {
         assertEquals(listOf("B", "A"), viewModel.titles())
     }
 
-    // --- Saved filters ---
-
-    private fun draft(
-        name: String = "Filter",
-        listId: String? = null,
-        tagId: String? = null,
-        minPriority: Priority = Priority.NONE,
-        due: DueWindow = DueWindow.ANY,
-        hideCompleted: Boolean = true,
-    ) = FilterDraft(name, listId, tagId, minPriority, due, hideCompleted)
-
-    @Test
-    fun creatingAFilterOpensItAndShowsOnlyMatchingTasks() = runTest {
-        val urgent = tasks.addTask(inbox, "Urgent")
-        tasks.saveTask(urgent.copy(priority = Priority.HIGH))
-        tasks.addTask(inbox, "Whenever")
-        val viewModel = newViewModel()
-
-        viewModel.createFilter(draft(name = "Important", minPriority = Priority.HIGH))
-
-        val state = viewModel.uiState.value
-        assertTrue(state.scope is TaskScope.Filtered)
-        assertEquals(listOf("Urgent"), viewModel.titles())
-        assertEquals(1, state.filters.size)
-        assertEquals(1, state.counts[state.scope])
-    }
-
-    @Test
-    fun editingTheOpenFilterUpdatesTheView() = runTest {
-        val high = tasks.addTask(inbox, "High")
-        tasks.saveTask(high.copy(priority = Priority.HIGH))
-        tasks.addTask(inbox, "Plain")
-        val viewModel = newViewModel()
-        viewModel.createFilter(draft(minPriority = Priority.HIGH))
-        val filter = viewModel.uiState.value.filters.single()
-
-        viewModel.updateFilter(filter, draft(minPriority = Priority.NONE))
-
-        assertEquals(setOf("High", "Plain"), viewModel.titles().toSet())
-    }
-
-    @Test
-    fun deletingTheOpenFilterFallsBackToTheInbox() = runTest {
-        val viewModel = newViewModel()
-        viewModel.createFilter(draft())
-        val filter = viewModel.uiState.value.filters.single()
-
-        viewModel.deleteFilter(filter)
-
-        assertEquals(TaskScope.InList(inbox), viewModel.uiState.value.scope)
-        assertTrue(viewModel.uiState.value.filters.isEmpty())
-    }
-
-    @Test
-    fun quickAddInsideAFilterUsesItsListAndTag() = runTest {
-        val work = lists.createList("Work")
-        val tag = tags.createTag("urgent")
-        val viewModel = newViewModel()
-        viewModel.createFilter(draft(listId = work.id, tagId = tag.id))
-
-        viewModel.addTask("From the filter")
-
-        val added = tasks.getActiveTasks().single()
-        assertEquals(work.id, added.listId)
-        assertEquals(listOf("urgent"), added.tags.map { it.name })
-    }
+    // --- Subtasks from the list ---
 
     @Test
     fun aSubtaskAddedFromTheListIsSavedOnTheTask() = runTest {
@@ -524,17 +420,6 @@ class TaskListViewModelTest {
 
         viewModel.toggleSubtask(task.id, second.id)
         assertEquals(true, tasks.getTask(task.id)!!.isCompleted)
-    }
-
-    @Test
-    fun aListWithOnlyFinishedTasksHasNothingOpenAndAllOfThemInTheDoneSection() = runTest {
-        val done = tasks.addTask(inbox, "Done")
-        tasks.setCompleted(done.id, true)
-        val viewModel = newViewModel()
-
-        val state = viewModel.uiState.value
-        assertTrue(state.isEmpty)
-        assertEquals(listOf("Done"), state.doneTasks.map { it.title })
     }
 
     @Test

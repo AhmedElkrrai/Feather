@@ -81,25 +81,14 @@ class TaskSelectionTest {
     }
 
     @Test
-    fun completedAndAllScopes() {
+    fun completedHoldsOnlyFinishedTasks() {
         assertEquals(listOf("done"), all.titles(TaskScope.Completed))
-        assertEquals(all.size, all.inScope(TaskScope.All, today).size)
-    }
-
-    @Test
-    fun listAndTagScopesIncludeCompletedTasks() {
-        val inWork = task("w1", listId = "work", completed = true)
-        val tagged = task("t1", tags = listOf(work))
-        val tasks = listOf(task("other"), inWork, tagged)
-
-        assertEquals(listOf("w1"), tasks.titles(TaskScope.InList("work")))
-        assertEquals(listOf("t1"), tasks.titles(TaskScope.WithTag(work.id)))
     }
 
     @Test
     fun openCountIgnoresCompletedTasks() {
         assertEquals(2, all.openCountIn(TaskScope.Today, today))
-        assertEquals(6, all.openCountIn(TaskScope.All, today))
+        assertEquals(1, all.openCountIn(TaskScope.NoDate, today))
     }
 
     @Test

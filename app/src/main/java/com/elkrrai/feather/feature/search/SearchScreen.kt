@@ -35,8 +35,6 @@ import com.elkrrai.feather.feature.tasklist.TaskRow
 import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.format.displayName
 import java.time.LocalDate
-import com.elkrrai.feather.feature.tasklist.ListLabel
-import com.elkrrai.feather.ui.theme.listColorIndex
 import com.elkrrai.feather.ui.brand.scenes.SceneKind
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Box
@@ -75,7 +73,6 @@ fun SearchContent(
 ) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
-    val listLabels = state.lists.associate { it.id to ListLabel(it.displayName(), listColorIndex(it.colorArgb)) }
     val confetti = rememberConfettiController()
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -151,7 +148,6 @@ fun SearchContent(
                         today = today,
                         onToggle = { onToggle(task, it) },
                         onClick = { onOpenTask(task.id) },
-                        list = listLabels[task.listId],
                         onCelebrate = confetti::celebrate,
                     )
                 }

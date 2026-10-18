@@ -55,11 +55,10 @@
     <string name="inbox">Inbox</string>
     <string name="scope_today">Today</string>
     <string name="scope_upcoming">Upcoming</string>
-    <string name="scope_overdue">Waiting for you</string>
-    <string name="scope_all">All tasks</string>
+    <string name="scope_overdue">Overdue</string>
     <string name="scope_completed">Completed</string>
     <string name="action_clear_completed">Clear all completed</string>
-    <string name="scope_no_date">No date</string>
+    <string name="scope_no_date">Goals</string>
     <string name="drawer_section_views">Views</string>
     <string name="drawer_section_lists">Lists</string>
     <string name="drawer_section_tags">Tags</string>
@@ -572,7 +571,6 @@
     <string name="repeat_back_on">Back %1$s</string>
     <!-- M9 step 11: weekly feather and your nest -->
     <string name="nest_title">Your nest</string>
-    <string name="nest_row_summary">What the bird has been given</string>
     <string name="nest_intro">Little things for the bird, earned by ordinary days. They stay for good, and they never run out.</string>
     <string name="nest_item_scarf">Scarf</string>
     <string name="nest_item_fairy_lights">Fairy lights</string>
@@ -586,7 +584,7 @@
     <string name="nest_how_fairy_lights">Make your first backup</string>
     <string name="nest_how_bunting">Keep a repeating task going for four weeks</string>
     <string name="nest_how_lantern">Set 10 reminders</string>
-    <string name="nest_how_moss">Make 3 lists of your own</string>
+    <string name="nest_how_moss">Make 3 tags of your own</string>
     <string name="nest_how_glasses">Finish 25 tasks</string>
     <string name="nest_how_flower_pot">Add a task by voice</string>
     <string name="nest_how_party_hat">Finish 100 tasks</string>

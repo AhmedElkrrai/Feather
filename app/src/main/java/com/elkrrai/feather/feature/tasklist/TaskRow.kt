@@ -70,13 +70,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import com.elkrrai.feather.ui.components.SubtaskProgressBar
 import com.elkrrai.feather.ui.theme.Dur
 
-/** The list a task belongs to, as the row shows it: its name and which of the eight list colors it has. */
-data class ListLabel(val name: String, val colorIndex: Int?)
-
 /**
- * One task, as a card: the completion ring, the title, and a row of small chips (date, list,
- * repeat, tags, subtask progress). [list] is shown only when the view mixes several lists (smart
- * views and tag views); pass null inside a single list.
+ * One task, as a card: the completion ring, the title, and a row of small chips (date, repeat,
+ * tags, subtask progress).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -86,7 +82,6 @@ fun TaskRow(
     onToggle: (completed: Boolean) -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    list: ListLabel? = null,
     /** When set, TalkBack offers "Delete" as an action (the swipe is not reachable with it). */
     onDelete: (() -> Unit)? = null,
     /** When set, TalkBack offers pin and unpin. */
@@ -135,7 +130,7 @@ fun TaskRow(
 
     val subtaskTotal = task.subtasks.size
     val subtasksDone = task.subtasks.count { it.isCompleted }
-    val hasChips = due != null || list != null || recurrence != null || task.tags.isNotEmpty()
+    val hasChips = due != null || recurrence != null || task.tags.isNotEmpty()
     val canExpand = onAddSubtask != null && onToggleSubtask != null && !task.isCompleted
     var expanded by rememberSaveable(task.id) { mutableStateOf(false) }
 
@@ -218,16 +213,6 @@ fun TaskRow(
                             }
                             val content = if (due.isToday) scheme.onSecondaryContainer else scheme.onSurfaceVariant
                             MetaChip(text = due.chipText(), container = container, content = content)
-                        }
-                        if (list != null) {
-                            val color = list.colorIndex?.let { feather.listColors[it % feather.listColors.size] }
-                                ?: feather.prioNone
-                            MetaChip(
-                                text = list.name,
-                                container = scheme.surfaceContainer,
-                                content = scheme.onSurfaceVariant,
-                                leading = { ListShapeIcon(listShapeFor(list.colorIndex), color) },
-                            )
                         }
                         if (recurrence != null) {
                             val plain = recurrence.interval == 1 && recurrence.weekdays.isEmpty() &&

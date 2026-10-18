@@ -55,7 +55,6 @@ class TaskEditContentTest {
                         onDueDateChange = {},
                         onDueTimeChange = {},
                         onPriorityChange = {},
-                        onListChange = {},
                         onTagToggle = { toggledTag = it },
                         onCreateTag = {},
                         onPinnedChange = {},
