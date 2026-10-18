@@ -609,4 +609,58 @@
     <!-- M9 step 7: widgets -->
     <string name="widget_mark_done">علّم «%1$s» كمنجزة</string>
     <string name="widget_more">+%1$d أخرى</string>
+    <!-- M9 step 8: day cards -->
+    <string name="settings_section_company">رفقة لطيفة</string>
+    <string name="settings_morning_card">بطاقة الصباح</string>
+    <string name="settings_morning_card_summary">نظرة سريعة على يومك، مرة كل صباح. يمكنك إخفاؤها.</string>
+    <string name="settings_evening_card">بطاقة المساء</string>
+    <string name="settings_evening_card_summary">تهدئة هادئة بعد السابعة مساءً، مع إمكانية نقل ما تبقّى إلى الغد.</string>
+    <string name="day_card_morning_title">يومك</string>
+    <plurals name="day_card_morning_count">
+        <item quantity="zero">لا شيء مخطط لليوم.</item>
+        <item quantity="one">مهمة واحدة مخططة لليوم.</item>
+        <item quantity="two">مهمتان مخططتان لليوم.</item>
+        <item quantity="few">%d مهام مخططة لليوم.</item>
+        <item quantity="many">%d مهمة مخططة لليوم.</item>
+        <item quantity="other">%d مهمة مخططة لليوم.</item>
+    </plurals>
+    <plurals name="day_card_waiting">
+        <item quantity="zero">لا شيء ينتظرك.</item>
+        <item quantity="one">مهمة واحدة تنتظرك.</item>
+        <item quantity="two">مهمتان تنتظرانك.</item>
+        <item quantity="few">%d مهام تنتظرك.</item>
+        <item quantity="many">%d مهمة تنتظرك.</item>
+        <item quantity="other">%d مهمة تنتظرك.</item>
+    </plurals>
+    <string name="day_card_first_up">أولًا: %1$s</string>
+    <string name="day_card_got_it">حسنًا</string>
+    <string name="day_card_evening_title">وقت الهدوء</string>
+    <plurals name="day_card_evening_done">
+        <item quantity="zero">لم تُنهِ شيئًا اليوم.</item>
+        <item quantity="one">أنهيت مهمة واحدة اليوم.</item>
+        <item quantity="two">أنهيت مهمتين اليوم.</item>
+        <item quantity="few">أنهيت %d مهام اليوم.</item>
+        <item quantity="many">أنهيت %d مهمة اليوم.</item>
+        <item quantity="other">أنهيت %d مهمة اليوم.</item>
+    </plurals>
+    <plurals name="day_card_evening_left">
+        <item quantity="zero">لا شيء ينتظر.</item>
+        <item quantity="one">لا تزال مهمة واحدة تنتظر. لم يضع شيء. أتريدها غدًا؟</item>
+        <item quantity="two">لا تزال مهمتان تنتظران. لم يضع شيء. أتريدهما غدًا؟</item>
+        <item quantity="few">لا تزال %d مهام تنتظر. لم يضع شيء. أتريدها غدًا؟</item>
+        <item quantity="many">لا تزال %d مهمة تنتظر. لم يضع شيء. أتريدها غدًا؟</item>
+        <item quantity="other">لا تزال %d مهمة تنتظر. لم يضع شيء. أتريدها غدًا؟</item>
+    </plurals>
+    <string name="day_card_evening_rest">نمْ قرير العين.</string>
+    <string name="day_card_move_to_tomorrow">انقلها إلى الغد</string>
+    <string name="day_card_leave_them">اتركها</string>
+    <string name="day_card_thanks">شكرًا</string>
+    <plurals name="day_card_moved">
+        <item quantity="zero">لم تُنقل مهام إلى الغد</item>
+        <item quantity="one">نُقلت مهمة واحدة إلى الغد</item>
+        <item quantity="two">نُقلت مهمتان إلى الغد</item>
+        <item quantity="few">نُقلت %d مهام إلى الغد</item>
+        <item quantity="many">نُقلت %d مهمة إلى الغد</item>
+        <item quantity="other">نُقلت %d مهمة إلى الغد</item>
+    </plurals>
 </resources>

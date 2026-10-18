@@ -40,6 +40,12 @@ data class AppSettings(
     val reduceMotion: Boolean = false,
     /** The feathers and the bird's hop when a task is finished. Independent of [reduceMotion]. */
     val celebrations: Boolean = true,
+    /** The "your day" card on Today in the morning, and the wind-down card in the evening. */
+    val morningCard: Boolean = true,
+    val eveningCard: Boolean = true,
+    /** The day each card was last put away, so it shows once a day. */
+    val morningCardDismissedOn: LocalDate? = null,
+    val eveningCardDismissedOn: LocalDate? = null,
     /** Days that do not count against the rhythm (a break, a trip); never shown as gaps. */
     val rhythmPausedDays: Set<LocalDate> = emptySet(),
 )
@@ -85,4 +91,12 @@ interface SettingsRepository {
     suspend fun setCelebrations(enabled: Boolean)
 
     suspend fun setRhythmPausedDays(days: Set<LocalDate>)
+
+    suspend fun setMorningCard(enabled: Boolean)
+
+    suspend fun setEveningCard(enabled: Boolean)
+
+    suspend fun setMorningCardDismissedOn(date: LocalDate?)
+
+    suspend fun setEveningCardDismissedOn(date: LocalDate?)
 }

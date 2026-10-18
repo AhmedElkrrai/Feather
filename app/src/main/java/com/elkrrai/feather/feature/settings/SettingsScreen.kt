@@ -158,6 +158,8 @@ fun SettingsScreen(
             onBirdAnimationsChange = viewModel::setBirdAnimations,
             onReduceMotionChange = viewModel::setReduceMotion,
             onCelebrationsChange = viewModel::setCelebrations,
+            onMorningCardChange = viewModel::setMorningCard,
+            onEveningCardChange = viewModel::setEveningCard,
         ),
         supportUrl = SupportLinks.DONATION_URL,
         onOpenSupport = {

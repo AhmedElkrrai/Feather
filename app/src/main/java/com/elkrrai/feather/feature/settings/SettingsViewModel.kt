@@ -71,6 +71,14 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repository.setCelebrations(enabled) }
     }
 
+    fun setMorningCard(enabled: Boolean) {
+        viewModelScope.launch { repository.setMorningCard(enabled) }
+    }
+
+    fun setEveningCard(enabled: Boolean) {
+        viewModelScope.launch { repository.setEveningCard(enabled) }
+    }
+
     fun setHaptics(enabled: Boolean) {
         viewModelScope.launch { repository.setHaptics(enabled) }
     }

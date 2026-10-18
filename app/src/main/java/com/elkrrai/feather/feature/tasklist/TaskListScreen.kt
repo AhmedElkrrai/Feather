@@ -95,6 +95,8 @@ import com.elkrrai.feather.ui.DisplayPrefs
 import com.elkrrai.feather.ui.components.ConfettiBurst
 import com.elkrrai.feather.ui.components.FeatherConfettiOverlay
 import com.elkrrai.feather.ui.components.rememberConfettiController
+import com.elkrrai.feather.ui.today.DayCard
+import com.elkrrai.feather.ui.today.DayCardKind
 
 @Composable
 fun TaskListScreen(
@@ -105,8 +107,10 @@ fun TaskListScreen(
     modifier: Modifier = Modifier,
     onOpenRhythm: () -> Unit = {},
     viewModel: TaskListViewModel = hiltViewModel(),
+    dayCards: DayCardsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val dayCard by dayCards.card.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
@@ -237,6 +241,21 @@ fun TaskListScreen(
             onReorder = viewModel::reorderTasks,
             onCelebrate = confetti::celebrate,
             onClearCompleted = { deleteWithUndo(state.sections.flatMap { it.tasks }.map { it.id }) },
+            dayCard = dayCard,
+            onDismissDayCard = dayCards::dismiss,
+            onMoveToTomorrow = {
+                dayCards.moveToTomorrow { moved ->
+                    coroutineScope.launch {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                        val result = snackbarHostState.showSnackbar(
+                            message = resources.getQuantityString(R.plurals.day_card_moved, moved.size, moved.size),
+                            actionLabel = undoLabel,
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) dayCards.undoMove(moved)
+                    }
+                }
+            },
             onAddSubtask = viewModel::addSubtask,
             onToggleSubtask = viewModel::toggleSubtask,
         )
@@ -358,6 +377,9 @@ fun TaskListContent(
     onAddSubtask: (taskId: String, title: String) -> Unit = { _, _ -> },
     onToggleSubtask: (taskId: String, subtaskId: String) -> Unit = { _, _ -> },
     onClearCompleted: () -> Unit = {},
+    dayCard: DayCard? = null,
+    onDismissDayCard: (DayCardKind) -> Unit = {},
+    onMoveToTomorrow: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
@@ -483,6 +505,17 @@ fun TaskListContent(
                     bottom = padding.calculateBottomPadding() + 88.dp,
                 ),
             ) {
+                // The morning and evening cards sit on top of Today, one a day.
+                if (todayView && dayCard != null) {
+                    item(key = "day-card") {
+                        DayCardView(
+                            card = dayCard,
+                            onDismiss = { onDismissDayCard(dayCard.kind) },
+                            onMoveToTomorrow = onMoveToTomorrow,
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
+                }
                 // Everything here is finished: say so, above the Done section.
                 if (state.isEmpty && !todayView && state.doneTasks.isNotEmpty()) {
                     item(key = "all-done-note") { AllDoneNote() }

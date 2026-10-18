@@ -42,6 +42,10 @@ class DataStoreSettingsRepository @Inject constructor(
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val celebrations = booleanPreferencesKey("celebrations")
         val rhythmPausedDays = stringSetPreferencesKey("rhythm_paused_days")
+        val morningCard = booleanPreferencesKey("morning_card")
+        val eveningCard = booleanPreferencesKey("evening_card")
+        val morningCardDismissedOn = stringPreferencesKey("morning_card_dismissed_on")
+        val eveningCardDismissedOn = stringPreferencesKey("evening_card_dismissed_on")
     }
 
     override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
@@ -63,6 +67,10 @@ class DataStoreSettingsRepository @Inject constructor(
             birdAnimations = prefs[Keys.birdAnimations] ?: defaults.birdAnimations,
             reduceMotion = prefs[Keys.reduceMotion] ?: defaults.reduceMotion,
             celebrations = prefs[Keys.celebrations] ?: defaults.celebrations,
+            morningCard = prefs[Keys.morningCard] ?: defaults.morningCard,
+            eveningCard = prefs[Keys.eveningCard] ?: defaults.eveningCard,
+            morningCardDismissedOn = prefs[Keys.morningCardDismissedOn]?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
+            eveningCardDismissedOn = prefs[Keys.eveningCardDismissedOn]?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
             rhythmPausedDays = prefs[Keys.rhythmPausedDays].orEmpty().mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }.toSet(),
         )
     }
@@ -129,6 +137,22 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setCelebrations(enabled: Boolean) {
         dataStore.edit { it[Keys.celebrations] = enabled }
+    }
+
+    override suspend fun setMorningCard(enabled: Boolean) {
+        dataStore.edit { it[Keys.morningCard] = enabled }
+    }
+
+    override suspend fun setEveningCard(enabled: Boolean) {
+        dataStore.edit { it[Keys.eveningCard] = enabled }
+    }
+
+    override suspend fun setMorningCardDismissedOn(date: LocalDate?) {
+        dataStore.edit { if (date == null) it.remove(Keys.morningCardDismissedOn) else it[Keys.morningCardDismissedOn] = date.toString() }
+    }
+
+    override suspend fun setEveningCardDismissedOn(date: LocalDate?) {
+        dataStore.edit { if (date == null) it.remove(Keys.eveningCardDismissedOn) else it[Keys.eveningCardDismissedOn] = date.toString() }
     }
 
     override suspend fun setRhythmPausedDays(days: Set<LocalDate>) {

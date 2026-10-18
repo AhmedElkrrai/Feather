@@ -533,4 +533,38 @@
     <!-- M9 step 7: widgets -->
     <string name="widget_mark_done">Mark %1$s as done</string>
     <string name="widget_more">+%1$d more</string>
+    <!-- M9 step 8: day cards -->
+    <string name="settings_section_company">Gentle company</string>
+    <string name="settings_morning_card">Morning card</string>
+    <string name="settings_morning_card_summary">A short look at your day, once each morning. You can put it away.</string>
+    <string name="settings_evening_card">Evening card</string>
+    <string name="settings_evening_card_summary">A quiet wind-down after 7 PM, with a way to move what is left to tomorrow.</string>
+    <string name="day_card_morning_title">Your day</string>
+    <plurals name="day_card_morning_count">
+        <item quantity="one">One thing is planned for today.</item>
+        <item quantity="other">%d things are planned for today.</item>
+    </plurals>
+    <plurals name="day_card_waiting">
+        <item quantity="one">One is waiting for you.</item>
+        <item quantity="other">%d are waiting for you.</item>
+    </plurals>
+    <string name="day_card_first_up">First up: %1$s</string>
+    <string name="day_card_got_it">Got it</string>
+    <string name="day_card_evening_title">Winding down</string>
+    <plurals name="day_card_evening_done">
+        <item quantity="one">You finished one thing today.</item>
+        <item quantity="other">You finished %d things today.</item>
+    </plurals>
+    <plurals name="day_card_evening_left">
+        <item quantity="one">One is still waiting. Nothing is lost. Want it tomorrow?</item>
+        <item quantity="other">%d are still waiting. Nothing is lost. Want them tomorrow?</item>
+    </plurals>
+    <string name="day_card_evening_rest">Rest well.</string>
+    <string name="day_card_move_to_tomorrow">Move to tomorrow</string>
+    <string name="day_card_leave_them">Leave them</string>
+    <string name="day_card_thanks">Thanks</string>
+    <plurals name="day_card_moved">
+        <item quantity="one">One task moved to tomorrow</item>
+        <item quantity="other">%d tasks moved to tomorrow</item>
+    </plurals>
 </resources>
