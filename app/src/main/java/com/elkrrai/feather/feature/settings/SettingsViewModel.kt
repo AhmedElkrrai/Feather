@@ -71,6 +71,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repository.setCelebrations(enabled) }
     }
 
+    fun setWeeklyFeather(enabled: Boolean) {
+        viewModelScope.launch { repository.setWeeklyFeather(enabled) }
+    }
+
     fun setMorningCard(enabled: Boolean) {
         viewModelScope.launch { repository.setMorningCard(enabled) }
     }

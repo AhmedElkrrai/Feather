@@ -39,6 +39,7 @@ class QuickAddActivity : AppCompatActivity() {
                     lists = lists,
                     tags = tags,
                     initialText = shared,
+                    onVoiceUsed = viewModel::voiceUsed,
                     // Closing the sheet after adding must not end the activity before the save is done.
                     onDismiss = { if (!adding) finish() },
                     onAdd = { parsed, listId ->

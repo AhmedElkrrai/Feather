@@ -115,6 +115,7 @@ fun TaskListScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val dayCard by dayCards.card.collectAsStateWithLifecycle()
+    val nestNews by dayCards.nestNews.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
@@ -211,7 +212,7 @@ fun TaskListScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                TaskDrawerContent(state = state, actions = drawerActions)
+                TaskDrawerContent(state = state, actions = drawerActions, settingsDot = nestNews)
             }
         },
         modifier = modifier,
@@ -372,6 +373,7 @@ fun TaskListScreen(
             tags = state.tags,
             onDismiss = { showQuickAdd = false },
             onAdd = viewModel::addParsed,
+            onVoiceUsed = dayCards::voiceUsed,
         )
     }
 }

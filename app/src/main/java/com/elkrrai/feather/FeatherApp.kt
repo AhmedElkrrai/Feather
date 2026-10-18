@@ -24,6 +24,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import com.elkrrai.feather.data.nest.NestTracker
 
 @HiltAndroidApp
 class FeatherApp : Application() {
@@ -33,6 +34,7 @@ class FeatherApp : Application() {
     @Inject lateinit var reminderSyncer: ReminderSyncer
     @Inject lateinit var settingsRepository: SettingsRepository
     @Inject lateinit var widgetUpdater: WidgetUpdater
+    @Inject lateinit var nestTracker: NestTracker
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -58,6 +60,8 @@ class FeatherApp : Application() {
         ReminderWorker.schedule(this)
         // Keeps the home-screen widgets in step with the tasks.
         widgetUpdater.start(appScope)
+        // Keeps score for the bird's nest: what is earned stays earned.
+        nestTracker.start(appScope)
         // The daily backup job runs only while automatic backup is on and a folder is chosen.
         appScope.launch {
             settingsRepository.settings

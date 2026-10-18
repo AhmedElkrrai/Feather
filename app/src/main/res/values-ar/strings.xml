@@ -666,4 +666,33 @@
     <!-- M9 step 9: repeating task flight -->
     <string name="repeat_back_tomorrow">تعود غدًا</string>
     <string name="repeat_back_on">تعود %1$s</string>
+    <!-- M9 step 11: weekly feather and your nest -->
+    <string name="nest_title">عشّك</string>
+    <string name="nest_row_summary">ما أُهدي إلى الطائر</string>
+    <string name="nest_intro">أشياء صغيرة للطائر، تأتي من الأيام العادية. تبقى للأبد، ولا تنفد.</string>
+    <string name="nest_item_scarf">وشاح</string>
+    <string name="nest_item_fairy_lights">أضواء الجنيات</string>
+    <string name="nest_item_bunting">رايات صغيرة</string>
+    <string name="nest_item_lantern">فانوس</string>
+    <string name="nest_item_moss">بقعة طحلب</string>
+    <string name="nest_item_glasses">نظارة صغيرة</string>
+    <string name="nest_item_flower_pot">أصيص زهور</string>
+    <string name="nest_item_party_hat">قبعة حفلة</string>
+    <string name="nest_how_scarf">أنهِ 10 مهام</string>
+    <string name="nest_how_fairy_lights">أنشئ أول نسخة احتياطية</string>
+    <string name="nest_how_bunting">حافظ على مهمة متكررة لأربعة أسابيع</string>
+    <string name="nest_how_lantern">اضبط 10 تذكيرات</string>
+    <string name="nest_how_moss">أنشئ 3 قوائم خاصة بك</string>
+    <string name="nest_how_glasses">أنهِ 25 مهمة</string>
+    <string name="nest_how_flower_pot">أضف مهمة بالصوت</string>
+    <string name="nest_how_party_hat">أنهِ 100 مهمة</string>
+    <string name="nest_progress">%1$d من %2$d</string>
+    <string name="nest_earned">في العش</string>
+    <string name="nest_not_yet">ليس بعد</string>
+    <string name="nest_new_dot">جديد في عشّك</string>
+    <string name="settings_weekly_feather">ريشة الأسبوع</string>
+    <string name="settings_weekly_feather_summary">في أول يوم من الأسبوع، ريشة مصنوعة من الأسبوع الماضي، في إيقاعك.</string>
+    <string name="weekly_feather_title">ريشة الأسبوع الماضي</string>
+    <string name="weekly_feather_body">أُنجزت %1$d مهمة و%2$d أيام راحة. لونها لون %3$s، حيث حدث معظم ذلك.</string>
+    <string name="weekly_feather_body_plain">أُنجزت %1$d مهمة و%2$d أيام راحة.</string>
 </resources>

@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.elkrrai.feather.domain.settings.SettingsRepository
 
 /** What to tell the user after a backup action. The screen turns it into a message. */
 sealed interface BackupResult {
@@ -42,6 +43,7 @@ class BackupViewModel @Inject constructor(
     private val backup: BackupRepository,
     private val files: BackupFiles,
     private val autoBackup: AutoBackup,
+    private val settings: SettingsRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BackupUiState())
@@ -79,6 +81,8 @@ class BackupViewModel @Inject constructor(
 
     private fun launchWrite(success: BackupResult, action: suspend () -> Unit) = launchAction {
         action()
+        // The first backup of any kind brings fairy lights to the nest.
+        settings.setBackedUp(true)
         success
     }
 

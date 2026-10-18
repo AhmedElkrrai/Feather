@@ -29,6 +29,14 @@ import com.elkrrai.feather.domain.settings.TimeFormat
 import com.elkrrai.feather.domain.settings.WeekStart
 import java.time.DayOfWeek
 import java.time.format.TextStyle
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 /** What the appearance rows of the settings screen can change; the stateful screen supplies them. */
 class AppearanceActions(
@@ -43,6 +51,7 @@ class AppearanceActions(
     val onCelebrationsChange: (Boolean) -> Unit = {},
     val onMorningCardChange: (Boolean) -> Unit = {},
     val onEveningCardChange: (Boolean) -> Unit = {},
+    val onWeeklyFeatherChange: (Boolean) -> Unit = {},
 )
 
 @StringRes
@@ -81,6 +90,7 @@ internal fun AppearanceRows(
     onPickTheme: () -> Unit,
     onPickTimeFormat: () -> Unit,
     onPickWeekStart: () -> Unit,
+    onOpenNest: () -> Unit = {},
 ) {
     SectionTitle(stringResource(R.string.settings_section_appearance))
     SettingsRow(
@@ -154,6 +164,35 @@ internal fun AppearanceRows(
         trailing = { Switch(checked = settings.reduceMotion, onCheckedChange = actions.onReduceMotionChange) },
     )
     SectionTitle(stringResource(R.string.settings_section_company))
+    // A quiet dot says there is something new in the nest; it goes when the nest has been looked at.
+    val nestNews = (settings.nestUnlocked - settings.nestSeen).isNotEmpty()
+    SettingsRow(
+        title = stringResource(R.string.nest_title),
+        summary = null,
+        supporting = stringResource(R.string.nest_row_summary),
+        onClick = onOpenNest,
+        trailing = if (nestNews) {
+            {
+                val dotDescription = stringResource(R.string.nest_new_dot)
+                Box(
+                    Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                        .semantics { contentDescription = dotDescription },
+                )
+            }
+        } else {
+            null
+        },
+    )
+    SettingsRow(
+        title = stringResource(R.string.settings_weekly_feather),
+        summary = null,
+        supporting = stringResource(R.string.settings_weekly_feather_summary),
+        onClick = { actions.onWeeklyFeatherChange(!settings.weeklyFeather) },
+        trailing = { Switch(checked = settings.weeklyFeather, onCheckedChange = actions.onWeeklyFeatherChange) },
+    )
     SettingsRow(
         title = stringResource(R.string.settings_morning_card),
         summary = null,

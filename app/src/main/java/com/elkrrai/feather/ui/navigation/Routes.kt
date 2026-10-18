@@ -24,3 +24,6 @@ data object ReliabilityRoute
 
 @Serializable
 data object RhythmRoute
+
+@Serializable
+data object NestRoute

@@ -24,6 +24,7 @@ data class RhythmUiState(
     val records: List<CompletionRecord> = emptyList(),
     val lists: List<TaskList> = emptyList(),
     val pausedDays: Set<LocalDate> = emptySet(),
+    val weeklyFeather: Boolean = true,
 )
 
 @HiltViewModel
@@ -39,7 +40,13 @@ class RhythmViewModel @Inject constructor(
         listRepository.observeLists(),
         settingsRepository.settings,
     ) { records, lists, settings ->
-        RhythmUiState(isLoading = false, records = records, lists = lists, pausedDays = settings.rhythmPausedDays)
+        RhythmUiState(
+            isLoading = false,
+            records = records,
+            lists = lists,
+            pausedDays = settings.rhythmPausedDays,
+            weeklyFeather = settings.weeklyFeather,
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RhythmUiState())
 
     private fun today(): LocalDate = LocalDate.now(clock.withZone(ZoneId.systemDefault()))

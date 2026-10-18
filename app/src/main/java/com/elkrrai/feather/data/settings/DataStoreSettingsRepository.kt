@@ -42,6 +42,11 @@ class DataStoreSettingsRepository @Inject constructor(
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val celebrations = booleanPreferencesKey("celebrations")
         val rhythmPausedDays = stringSetPreferencesKey("rhythm_paused_days")
+        val weeklyFeather = booleanPreferencesKey("weekly_feather")
+        val nestUnlocked = stringSetPreferencesKey("nest_unlocked")
+        val nestSeen = stringSetPreferencesKey("nest_seen")
+        val voiceUsed = booleanPreferencesKey("voice_used")
+        val backedUp = booleanPreferencesKey("backed_up")
         val morningCard = booleanPreferencesKey("morning_card")
         val eveningCard = booleanPreferencesKey("evening_card")
         val morningCardDismissedOn = stringPreferencesKey("morning_card_dismissed_on")
@@ -67,6 +72,11 @@ class DataStoreSettingsRepository @Inject constructor(
             birdAnimations = prefs[Keys.birdAnimations] ?: defaults.birdAnimations,
             reduceMotion = prefs[Keys.reduceMotion] ?: defaults.reduceMotion,
             celebrations = prefs[Keys.celebrations] ?: defaults.celebrations,
+            weeklyFeather = prefs[Keys.weeklyFeather] ?: defaults.weeklyFeather,
+            nestUnlocked = prefs[Keys.nestUnlocked].orEmpty(),
+            nestSeen = prefs[Keys.nestSeen].orEmpty(),
+            voiceUsed = prefs[Keys.voiceUsed] ?: defaults.voiceUsed,
+            backedUp = prefs[Keys.backedUp] ?: defaults.backedUp,
             morningCard = prefs[Keys.morningCard] ?: defaults.morningCard,
             eveningCard = prefs[Keys.eveningCard] ?: defaults.eveningCard,
             morningCardDismissedOn = prefs[Keys.morningCardDismissedOn]?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
@@ -137,6 +147,26 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setCelebrations(enabled: Boolean) {
         dataStore.edit { it[Keys.celebrations] = enabled }
+    }
+
+    override suspend fun setWeeklyFeather(enabled: Boolean) {
+        dataStore.edit { it[Keys.weeklyFeather] = enabled }
+    }
+
+    override suspend fun setNestUnlocked(ids: Set<String>) {
+        dataStore.edit { it[Keys.nestUnlocked] = ids }
+    }
+
+    override suspend fun setNestSeen(ids: Set<String>) {
+        dataStore.edit { it[Keys.nestSeen] = ids }
+    }
+
+    override suspend fun setVoiceUsed(used: Boolean) {
+        dataStore.edit { it[Keys.voiceUsed] = used }
+    }
+
+    override suspend fun setBackedUp(done: Boolean) {
+        dataStore.edit { it[Keys.backedUp] = done }
     }
 
     override suspend fun setMorningCard(enabled: Boolean) {

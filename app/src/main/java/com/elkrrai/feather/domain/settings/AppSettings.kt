@@ -46,6 +46,14 @@ data class AppSettings(
     /** The day each card was last put away, so it shows once a day. */
     val morningCardDismissedOn: LocalDate? = null,
     val eveningCardDismissedOn: LocalDate? = null,
+    /** The feather for last week, shown on Your rhythm on the first day of the week. */
+    val weeklyFeather: Boolean = true,
+    /** Ids of the nest items earned so far (permanent), and the ones whose news was looked at. */
+    val nestUnlocked: Set<String> = emptySet(),
+    val nestSeen: Set<String> = emptySet(),
+    /** A task was added by voice at least once; a backup was made at least once. Both are milestones for the nest. */
+    val voiceUsed: Boolean = false,
+    val backedUp: Boolean = false,
     /** Days that do not count against the rhythm (a break, a trip); never shown as gaps. */
     val rhythmPausedDays: Set<LocalDate> = emptySet(),
 )
@@ -91,6 +99,16 @@ interface SettingsRepository {
     suspend fun setCelebrations(enabled: Boolean)
 
     suspend fun setRhythmPausedDays(days: Set<LocalDate>)
+
+    suspend fun setWeeklyFeather(enabled: Boolean)
+
+    suspend fun setNestUnlocked(ids: Set<String>)
+
+    suspend fun setNestSeen(ids: Set<String>)
+
+    suspend fun setVoiceUsed(used: Boolean)
+
+    suspend fun setBackedUp(done: Boolean)
 
     suspend fun setMorningCard(enabled: Boolean)
 

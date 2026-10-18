@@ -38,6 +38,8 @@ import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
 import com.elkrrai.feather.ui.format.displayName
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
 
 /** What the drawer can ask the screen to do with lists, folders and tags. */
 class DrawerActions(
@@ -73,8 +75,11 @@ fun TaskDrawerContent(
     state: TaskListUiState,
     actions: DrawerActions,
     modifier: Modifier = Modifier,
+    /** A quiet dot on Settings: something new has come to the nest. */
+    settingsDot: Boolean = false,
 ) {
     val itemPadding = NavigationDrawerItemDefaults.ItemPadding
+    val nestNewDescription = stringResource(R.string.nest_new_dot)
 
     Column(
         modifier = modifier
@@ -210,6 +215,19 @@ fun TaskDrawerContent(
             label = { Text(stringResource(R.string.settings)) },
             selected = false,
             onClick = actions.onOpenSettings,
+            badge = if (settingsDot) {
+                {
+                    Box(
+                        Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .semantics { contentDescription = nestNewDescription },
+                    )
+                }
+            } else {
+                null
+            },
             modifier = Modifier.padding(itemPadding),
         )
     }

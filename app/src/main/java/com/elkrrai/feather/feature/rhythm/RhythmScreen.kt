@@ -93,6 +93,9 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.roundToInt
+import com.elkrrai.feather.domain.rhythm.WeeklyFeather
+import com.elkrrai.feather.domain.rhythm.isFeatherDay
+import com.elkrrai.feather.domain.rhythm.weeklyFeather
 
 @Composable
 fun RhythmScreen(
@@ -131,6 +134,9 @@ fun RhythmContent(
     val stats = remember(state.records, state.pausedDays, today, firstDay) {
         rhythmStats(state.records, today, zone, firstDay, state.pausedDays)
     }
+    val feather = remember(state.records, state.weeklyFeather, today, firstDay) {
+        if (state.weeklyFeather && isFeatherDay(today, firstDay)) weeklyFeather(state.records, today, zone, firstDay) else null
+    }
     val entry = rememberEntry()
     val haptics = rememberHaptics()
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
@@ -166,6 +172,11 @@ fun RhythmContent(
             verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             item(key = "hero") { RhythmHero(stats, entry) }
+
+            // On the first day of the week: the feather made from the week that just ended.
+            if (feather != null) {
+                item(key = "feather") { WeeklyFeatherCard(feather, listsById) }
+            }
 
             if (stats.isNew) {
                 item(key = "new") {
@@ -384,6 +395,35 @@ private fun DashedEgg(color: androidx.compose.ui.graphics.Color) {
             size = Size(size.width - 4.dp.toPx(), size.height - 4.dp.toPx()),
             style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(7.dp.toPx(), 5.dp.toPx()))),
         )
+    }
+}
+
+/** The feather of the week that just ended, with a sentence about it. */
+@Composable
+private fun WeeklyFeatherCard(feather: WeeklyFeather, listsById: Map<String, TaskList>) {
+    val colors = MaterialTheme.featherColors
+    val topList = feather.topListId?.let { listsById[it] }
+    val colorIndex = listColorIndex(topList?.colorArgb)
+    val color = colorIndex?.let { colors.listColors[it % colors.listColors.size] } ?: colors.amberFill
+    val body = if (topList != null) {
+        stringResource(R.string.weekly_feather_body, feather.total, feather.restDays, topList.displayName())
+    } else {
+        stringResource(R.string.weekly_feather_body_plain, feather.total, feather.restDays)
+    }
+    SectionCard(title = stringResource(R.string.weekly_feather_title)) {
+        Row(
+            modifier = Modifier.padding(horizontal = Space.x4).semantics(mergeDescendants = true) { contentDescription = body },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.x4),
+        ) {
+            WeeklyFeatherView(feather, color)
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
 

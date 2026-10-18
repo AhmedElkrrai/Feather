@@ -112,6 +112,8 @@ fun QuickAddSheet(
     onDismiss: () -> Unit,
     onAdd: (parsed: ParsedQuickAdd, listId: String?) -> Unit,
     initialText: String = "",
+    /** Called when something was dictated into the sheet. */
+    onVoiceUsed: () -> Unit = {},
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -141,6 +143,7 @@ fun QuickAddSheet(
                 ?.trim()
             if (!spoken.isNullOrEmpty()) {
                 text = if (text.isBlank()) spoken else text.trimEnd() + " " + spoken
+                onVoiceUsed()
             }
         }
     }

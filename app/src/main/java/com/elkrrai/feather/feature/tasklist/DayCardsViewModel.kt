@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
 
 /** Behind the morning and evening cards on Today: which one to show, and what its buttons do. */
 @HiltViewModel
@@ -69,6 +70,16 @@ class DayCardsViewModel @Inject constructor(
             ),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Whether the nest has something new, for the quiet dot on Settings. */
+    val nestNews: StateFlow<Boolean> = settingsRepository.settings
+        .map { (it.nestUnlocked - it.nestSeen).isNotEmpty() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    /** A task was dictated: that is a milestone for the nest (a flower pot). */
+    fun voiceUsed() {
+        viewModelScope.launch { settingsRepository.setVoiceUsed(true) }
+    }
 
     /** Puts the card away until tomorrow. */
     fun dismiss(kind: DayCardKind) {

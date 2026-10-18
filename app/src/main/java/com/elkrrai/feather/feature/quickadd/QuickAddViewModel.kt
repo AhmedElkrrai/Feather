@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.elkrrai.feather.domain.model.Tag
+import com.elkrrai.feather.domain.settings.SettingsRepository
 
 /** Behind [QuickAddActivity]: the lists for `@list`, and saving the task. */
 @HiltViewModel
@@ -23,6 +24,7 @@ class QuickAddViewModel @Inject constructor(
     private val tasks: TaskRepository,
     private val tags: TagRepository,
     listRepository: ListRepository,
+    private val settings: SettingsRepository,
 ) : ViewModel() {
 
     val lists: StateFlow<List<TaskList>> = listRepository.observeLists()
@@ -30,6 +32,11 @@ class QuickAddViewModel @Inject constructor(
 
     val existingTags: StateFlow<List<Tag>> = tags.observeTags()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** A task was dictated: a milestone for the nest. */
+    fun voiceUsed() {
+        viewModelScope.launch { settings.setVoiceUsed(true) }
+    }
 
     /**
      * Saves the task in [listId] (the Inbox when null) and then calls [onDone]. The write is

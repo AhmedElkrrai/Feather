@@ -570,4 +570,33 @@
     <!-- M9 step 9: repeating task flight -->
     <string name="repeat_back_tomorrow">Back tomorrow</string>
     <string name="repeat_back_on">Back %1$s</string>
+    <!-- M9 step 11: weekly feather and your nest -->
+    <string name="nest_title">Your nest</string>
+    <string name="nest_row_summary">What the bird has been given</string>
+    <string name="nest_intro">Little things for the bird, earned by ordinary days. They stay for good, and they never run out.</string>
+    <string name="nest_item_scarf">Scarf</string>
+    <string name="nest_item_fairy_lights">Fairy lights</string>
+    <string name="nest_item_bunting">Bunting</string>
+    <string name="nest_item_lantern">Lantern</string>
+    <string name="nest_item_moss">Moss patch</string>
+    <string name="nest_item_glasses">Tiny glasses</string>
+    <string name="nest_item_flower_pot">Flower pot</string>
+    <string name="nest_item_party_hat">Party hat</string>
+    <string name="nest_how_scarf">Finish 10 tasks</string>
+    <string name="nest_how_fairy_lights">Make your first backup</string>
+    <string name="nest_how_bunting">Keep a repeating task going for four weeks</string>
+    <string name="nest_how_lantern">Set 10 reminders</string>
+    <string name="nest_how_moss">Make 3 lists of your own</string>
+    <string name="nest_how_glasses">Finish 25 tasks</string>
+    <string name="nest_how_flower_pot">Add a task by voice</string>
+    <string name="nest_how_party_hat">Finish 100 tasks</string>
+    <string name="nest_progress">%1$d of %2$d</string>
+    <string name="nest_earned">In the nest</string>
+    <string name="nest_not_yet">Not yet</string>
+    <string name="nest_new_dot">New in your nest</string>
+    <string name="settings_weekly_feather">Weekly feather</string>
+    <string name="settings_weekly_feather_summary">On the first day of the week, a feather made from last week, on Your rhythm.</string>
+    <string name="weekly_feather_title">Last week\'s feather</string>
+    <string name="weekly_feather_body">%1$d finished and %2$d days of rest. It is the color of %3$s, where most of it happened.</string>
+    <string name="weekly_feather_body_plain">%1$d finished and %2$d days of rest.</string>
 </resources>
