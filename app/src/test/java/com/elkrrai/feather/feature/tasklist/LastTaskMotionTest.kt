@@ -11,16 +11,6 @@ class LastTaskMotionTest {
     private val tolerance = 0.001f
 
     @Test
-    fun theBirdHopsTwiceThenRests() {
-        assertEquals(0f, doubleHop(0f), tolerance)
-        assertEquals(14f, doubleHop(0.15f), tolerance) // top of the first hop
-        assertEquals(0f, doubleHop(0.3f), tolerance) // landed
-        assertEquals(14f, doubleHop(0.45f), tolerance) // top of the second hop
-        assertEquals(0f, doubleHop(0.6f), tolerance)
-        assertEquals(0f, doubleHop(0.9f), tolerance)
-    }
-
-    @Test
     fun theFlightStartsAndEndsWhereItShould() {
         val from = Offset(10f, 400f)
         val to = Offset(200f, 50f)

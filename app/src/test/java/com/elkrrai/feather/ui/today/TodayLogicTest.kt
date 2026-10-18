@@ -63,9 +63,9 @@ class TodayLogicTest {
     }
 
     @Test
-    fun theBirdIsHappyWhenEverythingIsDone() {
-        assertEquals(BirdMood.HAPPY, todayBirdMood(TodayStatus(0, 3), DayPhase.Day))
-        assertEquals(BirdMood.HAPPY, todayBirdMood(TodayStatus(0, 3), DayPhase.Night))
+    fun theBirdSitsCalmlyWhenEverythingIsDone() {
+        assertEquals(BirdMood.IDLE, todayBirdMood(TodayStatus(0, 3), DayPhase.Day))
+        assertEquals(BirdMood.IDLE, todayBirdMood(TodayStatus(0, 3), DayPhase.Night))
     }
 
     @Test

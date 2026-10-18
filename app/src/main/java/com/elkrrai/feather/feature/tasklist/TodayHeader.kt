@@ -186,7 +186,7 @@ fun TodayHeader(
     val phase = remember(time.hour) { dayPhaseFor(time) }
     val reduceMotion = rememberReduceMotion()
     val haptics = rememberHaptics()
-    // 0 to 1 over the 1.1 s celebration: the header warms, a halo opens, the bird hops twice.
+    // 0 to 1 over the 1.1 s celebration: the header warms and a halo opens (the bird's lap lasts longer: see FLIGHT_MILLIS).
     val flourish = remember { Animatable(0f) }
     var birdCenter by remember { mutableStateOf(Offset.Zero) }
     val currentOnWarmFeathers by rememberUpdatedState(onWarmFeathers)
@@ -273,7 +273,7 @@ fun TodayHeader(
             TodayScene(
                 status = status,
                 phase = phase,
-                hopDp = { if (DisplayPrefs.celebrations && !reduceMotion) doubleHop(flourish.value) else 0f },
+                flightTrigger = celebration,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .onGloballyPositioned {
@@ -424,7 +424,7 @@ private val SceneHeight = 110.dp
  * picture is not mirrored in right-to-left languages (only where it sits is). Decoration only.
  */
 @Composable
-private fun TodayScene(status: TodayStatus, phase: DayPhase, hopDp: () -> Float, modifier: Modifier = Modifier) {
+private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int, modifier: Modifier = Modifier) {
     val feather = MaterialTheme.featherColors
     val mood = todayBirdMood(status, phase)
     val moon = showsMoon(phase)
@@ -484,9 +484,9 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, hopDp: () -> Float,
         BirdIllustration(
             modifier = Modifier
                 .size(84.dp)
-                .offset(x = 36.dp, y = 17.dp)
-                .graphicsLayer { translationY = -hopDp().dp.toPx() },
+                .offset(x = 36.dp, y = 17.dp),
             mood = mood,
+            flightTrigger = flightTrigger,
         )
     }
 }
@@ -531,12 +531,3 @@ private const val LAST_TASK_TICK_MILLIS = 420L
 
 /** A little overshoot, so an egg pops into place. */
 private val EggPop = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)
-
-/**
- * How high the bird is above its perch, in dp, [progress] of the way through the celebration: two
- * hops of 14dp in the first 60 percent, then still.
- */
-internal fun doubleHop(progress: Float): Float {
-    if (progress <= 0f || progress >= 0.6f) return 0f
-    return 14f * abs(sin(PI * progress / 0.3)).toFloat()
-}

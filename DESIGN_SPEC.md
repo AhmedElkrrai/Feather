@@ -98,7 +98,7 @@ Curves: Settle (0.2,0,0,1) arrivals · Soft (0.3,0,0.2,1) moves · Leave (0.4,0,
 | Same | feather burst: 6-7 leaf-feathers (sky, amber, coral, moss), 28-52dp out, spin +/-40deg, fall 10dp, fade over last 40%; one Canvas | 580ms from 120ms (ends 700ms) | Settle | skipped; 120ms halo instead | n/a |
 | Same | bird hop -14dp (45%) -> 0, squash 0.92 on landing, happy eyes 800ms | 400ms from 160ms | Settle up/Leave down | swap to happy eyes, 120ms fade | n/a |
 | After strike | row fades (first 140ms) + collapses; neighbours slide; Done count pulses +1 | 280ms from 420ms | Soft; Nestle | 120ms fade-out | n/a |
-| Last open task of the day (once per calendar day) | header warms +15% amber, halo r44->62, bird double hop, 12 warm feathers, 5 eggs settle 60ms apart, headline -> "All done." | 1100ms, interruptible | Settle; eggs Pop | headline+eggs fade 160ms | CONFIRM, + CLOCK_TICK at 420ms |
+| Last open task of the day (once per calendar day) | header warms +15% amber, halo r44->62, bird flies one lap over its perch and lands (then the idle loop starts again), 12 warm feathers at take-off, 5 eggs settle 60ms apart, headline -> "All done." | 1100ms for the warmth and halo, 2200ms for the bird's lap, interruptible | Settle; eggs Pop | headline+eggs fade 160ms | CONFIRM, + CLOCK_TICK at 420ms |
 | Complete repeating task | row fades 140ms; leaf-feather flies quad-bezier to date chip/Upcoming; collapse; reappears with new chip; snackbar "Back tomorrow" + Undo | 360 + 220 + 200ms | Soft; Settle | 140ms crossfade | CLOCK_TICK |
 | Undo | row expands, check erases | 240ms | Settle | instant | CLOCK_TICK |
 | Tap FAB | pebble morphs into sheet (radius 20->32 top), scrim 0->45% | 320ms open / 240ms close | Settle / Leave | 160ms crossfade | n/a |

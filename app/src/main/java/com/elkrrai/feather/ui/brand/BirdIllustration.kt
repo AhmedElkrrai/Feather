@@ -34,7 +34,7 @@ import com.elkrrai.feather.ui.rememberReduceMotion
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.math.min
-import android.os.SystemClock
+import kotlin.math.withSign
 import androidx.compose.animation.core.AnimationVector1D
 import com.elkrrai.feather.ui.rememberLowEndMode
 
@@ -59,22 +59,10 @@ private class BirdPaths {
 @Composable
 fun rememberBirdMotionAllowed(): Boolean = DisplayPrefs.birdAnimations && !rememberReduceMotion() && !rememberLowEndMode()
 
-/** Ambient movement (the idle bird, a swaying leaf) runs for this long at most, then comes to rest. */
-internal const val AMBIENT_MAX_MILLIS = 5_000L
-
 /**
- * Whether an ambient loop that started at [startMillis] should begin another cycle at [nowMillis]:
- * it stops starting new cycles after [AMBIENT_MAX_MILLIS], and the cycle in progress is finished, so
- * the movement ends at rest instead of freezing in mid-motion.
- */
-internal fun ambientShouldContinue(startMillis: Long, nowMillis: Long): Boolean =
-    nowMillis - startMillis < AMBIENT_MAX_MILLIS
-
-/**
- * A phase that runs from 0 to 1 over [periodMillis], again and again, for at most 5 seconds
- * after the screen appears (and for good only while [enabled]); then it stays at 0, the calm
- * pose. Nothing that is only decoration should keep waking the screen for as long as someone
- * looks at it. Read its value while drawing so a running loop redraws without recomposing.
+ * A phase that runs from 0 to 1 over [periodMillis], again and again, for as long as the screen is
+ * shown and [enabled]; otherwise it stays at 0, the calm pose. Read its value while drawing so a
+ * running loop redraws without recomposing.
  */
 @Composable
 internal fun rememberAmbientPhase(periodMillis: Int, enabled: Boolean): Animatable<Float, AnimationVector1D> {
@@ -82,12 +70,10 @@ internal fun rememberAmbientPhase(periodMillis: Int, enabled: Boolean): Animatab
     LaunchedEffect(periodMillis, enabled) {
         phase.snapTo(0f)
         if (!enabled) return@LaunchedEffect
-        val start = SystemClock.elapsedRealtime()
-        do {
+        while (true) {
             phase.snapTo(0f)
             phase.animateTo(1f, tween(durationMillis = periodMillis, easing = LinearEasing))
-        } while (ambientShouldContinue(start, SystemClock.elapsedRealtime()))
-        // 1 and 0 are the same pose: it comes to rest where a cycle begins.
+        }
     }
     return phase
 }
@@ -102,15 +88,40 @@ fun BirdIllustration(
     modifier: Modifier = Modifier.size(120.dp),
     mood: BirdMood = BirdMood.IDLE,
     contentDescription: String? = null,
+    /**
+     * Counts up each time the bird should fly a lap over its perch and land again (see
+     * [birdFlightPose]); the idle movement starts afresh when it has landed. Nothing happens when
+     * movement is not allowed or Little celebrations is off.
+     */
+    flightTrigger: Int = 0,
 ) {
-    val phase = rememberAmbientPhase(periodMillis(mood), enabled = rememberBirdMotionAllowed())
+    val allowed = rememberBirdMotionAllowed()
+    val flight = remember { Animatable(0f) }
+    var flying by remember { mutableStateOf(false) }
+    LaunchedEffect(flightTrigger) {
+        if (flightTrigger > 0 && allowed && DisplayPrefs.celebrations) {
+            flying = true
+            try {
+                flight.snapTo(0f)
+                flight.animateTo(1f, tween(durationMillis = FLIGHT_MILLIS, easing = LinearEasing))
+            } finally {
+                flying = false
+            }
+        }
+    }
+    // The idle loop waits while the bird is in the air and begins again from its calm pose.
+    val phase = rememberAmbientPhase(periodMillis(mood), enabled = allowed && !flying)
     BirdCanvas(
         mood = mood,
         // Read inside the drawing, so each frame redraws the picture and recomposes nothing.
         phase = { phase.value },
         modifier = modifier.describedAs(contentDescription),
+        flight = { if (flying) flight.value else NOT_FLYING },
     )
 }
+
+/** What a [BirdCanvas] is given as its flight progress when the bird is not in the air. */
+private const val NOT_FLYING = -1f
 
 /** A short hop of the bird over the screen each time [trigger] changes (a task was finished). */
 @Composable
@@ -142,21 +153,31 @@ internal fun fade(progress: Float): Float =
     min(1f, min(progress / FADE_IN, (1f - progress) / FADE_OUT)).coerceIn(0f, 1f)
 
 @Composable
-internal fun BirdCanvas(mood: BirdMood, phase: () -> Float, modifier: Modifier = Modifier) {
+internal fun BirdCanvas(
+    mood: BirdMood,
+    phase: () -> Float,
+    modifier: Modifier = Modifier,
+    /** How far through a flight the bird is, 0 to 1; a negative value means it is not flying. */
+    flight: () -> Float = { NOT_FLYING },
+) {
     val paths = remember { BirdPaths() }
     Canvas(modifier = modifier) {
         val unit = min(size.width, size.height) / BirdShapes.SIZE
         val left = (size.width - unit * BirdShapes.SIZE) / 2f
         val top = (size.height - unit * BirdShapes.SIZE) / 2f
         val currentPhase = phase()
-        val pose = birdPose(mood, currentPhase)
+        val flightProgress = flight()
+        val pose = if (flightProgress >= 0f) birdFlightPose(flightProgress) else birdPose(mood, currentPhase)
         val bodyPivot = Offset(BirdShapes.BODY_PIVOT_X, BirdShapes.BODY_PIVOT_Y)
+        // Turning round passes through nothing, which draws nothing; keep a sliver.
+        val facing = if (kotlin.math.abs(pose.facing) < MIN_FACING) MIN_FACING.withSign(pose.facing) else pose.facing
 
         withTransform({
-            translate(left = left, top = top + pose.bodyOffsetY * unit)
+            translate(left = left + pose.bodyOffsetX * unit, top = top + pose.bodyOffsetY * unit)
             scale(unit, unit, pivot = Offset.Zero)
             rotate(pose.tilt, pivot = bodyPivot)
             scale(pose.bodyScale, pose.bodyScale, pivot = bodyPivot)
+            scale(facing, 1f, pivot = bodyPivot)
         }) {
             drawBird(paths, pose)
             if (mood == BirdMood.SLEEPING) drawSleepingZs(currentPhase)
@@ -174,21 +195,26 @@ private fun DrawScope.drawBird(paths: BirdPaths, pose: BirdPose) {
             cap = StrokeCap.Round,
         )
     }
-    drawPath(paths.tail, BirdColors.Deep)
+    withTransform({ rotate(pose.tailFlick, pivot = Offset(BirdShapes.TAIL_PIVOT_X, BirdShapes.TAIL_PIVOT_Y)) }) {
+        drawPath(paths.tail, BirdColors.Deep)
+    }
     drawPath(paths.body, BirdColors.Plumage)
-    drawPath(paths.head, BirdColors.Plumage)
     drawPath(paths.belly, BirdColors.Cream)
     withTransform({ rotate(pose.wingAngle, pivot = Offset(BirdShapes.WING_PIVOT_X, BirdShapes.WING_PIVOT_Y)) }) {
         drawPath(paths.wing, BirdColors.Wing)
     }
-    drawPath(paths.beak, BirdColors.Amber)
-    drawPath(paths.crest, BirdColors.Amber)
-    drawCircle(
-        color = BirdColors.Coral.copy(alpha = CHEEK_ALPHA),
-        radius = BirdShapes.CHEEK_RADIUS,
-        center = Offset(BirdShapes.CHEEK_X, BirdShapes.CHEEK_Y),
-    )
-    drawEye(pose.eyeOpen)
+    // the head and everything on it turn together on the neck
+    withTransform({ rotate(pose.headTilt, pivot = Offset(BirdShapes.NECK_PIVOT_X, BirdShapes.NECK_PIVOT_Y)) }) {
+        drawPath(paths.head, BirdColors.Plumage)
+        drawPath(paths.beak, BirdColors.Amber)
+        drawPath(paths.crest, BirdColors.Amber)
+        drawCircle(
+            color = BirdColors.Coral.copy(alpha = CHEEK_ALPHA),
+            radius = BirdShapes.CHEEK_RADIUS,
+            center = Offset(BirdShapes.CHEEK_X, BirdShapes.CHEEK_Y),
+        )
+        drawEye(pose.eyeOpen)
+    }
 }
 
 /** An open eye with a glint, a squint, or (nearly shut) a curved line. */
@@ -232,12 +258,13 @@ private fun Modifier.describedAs(description: String?): Modifier =
     if (description == null) clearAndSetSemantics { } else semantics { contentDescription = description }
 
 internal fun periodMillis(mood: BirdMood): Int = when (mood) {
-    BirdMood.IDLE -> 4000
+    BirdMood.IDLE -> 8000
     BirdMood.SLEEPING -> 3600
     BirdMood.HAPPY -> 1100
     BirdMood.FLYING -> 700
 }
 
+private const val MIN_FACING = 0.04f
 private const val HOP_MILLIS = 1100
 private const val FADE_IN = 0.10f
 private const val FADE_OUT = 0.25f

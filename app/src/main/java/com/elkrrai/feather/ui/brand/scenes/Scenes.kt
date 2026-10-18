@@ -70,7 +70,7 @@ private fun AllDoneScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifi
         drawGround(p, y = 176f, halfWidth = 66f)
         drawNestBack(p, 100f, 152f, 54f)
     }
-    SceneBird(BirdMood.HAPPY, AllDoneBird)
+    SceneBird(BirdMood.IDLE, AllDoneBird)
     Layer {
         // The eggs sit in the bowl: their lower halves are hidden by its front.
         drawEgg(p, Offset(64f, 142f), size = 1.9f)
@@ -194,5 +194,5 @@ private fun TrashEmptyScene(size: Dp, modifier: Modifier) = SceneFrame(size, mod
         drawLine(p.bowl, Offset(172f, 168f), Offset(172f, 148f), 3f, StrokeCap.Round)
         drawLeaf(Offset(172f, 152f), 26f, -10f, p.leaf)
     }
-    SceneBird(BirdMood.HAPPY, TrashEmptyBird)
+    SceneBird(BirdMood.IDLE, TrashEmptyBird)
 }

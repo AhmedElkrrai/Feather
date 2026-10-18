@@ -7,5 +7,17 @@
             android:exported="true"
             android:label="Bird lab"
             android:theme="@style/Theme.Feather" />
+
+        <!-- Debug builds only: pick any animation from a bottom sheet and replay it. It has its own launcher icon. -->
+        <activity
+            android:name=".debug.AnimationLabActivity"
+            android:exported="true"
+            android:label="Animation lab"
+            android:theme="@style/Theme.Feather">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

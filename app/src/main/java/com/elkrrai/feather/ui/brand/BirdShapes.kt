@@ -34,6 +34,14 @@ object BirdShapes {
     const val WING_PIVOT_X = 44f
     const val WING_PIVOT_Y = 52f
 
+    /** Where the head turns: the neck, under the head. */
+    const val NECK_PIVOT_X = 60f
+    const val NECK_PIVOT_Y = 52f
+
+    /** Where the tail flicks from: its root, on the body. */
+    const val TAIL_PIVOT_X = 29f
+    const val TAIL_PIVOT_Y = 58f
+
     /** Where the whole bird tilts and breathes from: just above its feet. */
     const val BODY_PIVOT_X = 47f
     const val BODY_PIVOT_Y = 76f
