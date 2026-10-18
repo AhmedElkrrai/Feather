@@ -530,4 +530,7 @@
         <item quantity="one">%d finished</item>
         <item quantity="other">%d finished</item>
     </plurals>
+    <!-- M9 step 7: widgets -->
+    <string name="widget_mark_done">Mark %1$s as done</string>
+    <string name="widget_more">+%1$d more</string>
 </resources>

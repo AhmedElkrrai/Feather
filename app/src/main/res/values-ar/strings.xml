@@ -606,4 +606,7 @@
         <item quantity="many">%d مهمة منجزة</item>
         <item quantity="other">%d مهمة منجزة</item>
     </plurals>
+    <!-- M9 step 7: widgets -->
+    <string name="widget_mark_done">علّم «%1$s» كمنجزة</string>
+    <string name="widget_more">+%1$d أخرى</string>
 </resources>

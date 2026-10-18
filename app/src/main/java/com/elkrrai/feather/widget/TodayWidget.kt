@@ -2,30 +2,24 @@ package com.elkrrai.feather.widget
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.ActionParameters
-import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
-import androidx.glance.appwidget.CheckBox
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.ActionCallback
-import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -42,117 +36,149 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.elkrrai.feather.MainActivity
 import com.elkrrai.feather.R
-import com.elkrrai.feather.domain.model.Task
+import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.TaskSort
 import com.elkrrai.feather.domain.view.comparator
 import com.elkrrai.feather.domain.view.inScope
 import com.elkrrai.feather.feature.quickadd.QuickAddActivity
 import com.elkrrai.feather.reminders.withAppLocale
-import com.elkrrai.feather.ui.format.formatDueDate
-import com.elkrrai.feather.ui.format.formatDueTime
+import com.elkrrai.feather.ui.brand.BirdMood
+import com.elkrrai.feather.ui.theme.DayPhase
+import com.elkrrai.feather.ui.today.Greeting
+import com.elkrrai.feather.ui.today.TodayStatus
+import com.elkrrai.feather.ui.today.dayPhaseFor
+import com.elkrrai.feather.ui.today.greetingFor
+import com.elkrrai.feather.ui.today.todayBirdMood
 import dagger.hilt.android.EntryPointAccessors
 import java.time.LocalDate
-import java.util.Locale
+import java.time.LocalTime
+import java.time.ZoneId
 
 /**
- * Home-screen list of what is due today or overdue: tick a task to finish it, tap its title to
- * open it, tap the plus to add one. It is redrawn by [WidgetUpdater] whenever tasks change.
+ * The 4 by 4 widget: a sky header with the greeting, how many things are left and the bird in the
+ * mood of the day, then the tasks due today or waiting, each with a ring to finish it. A plus
+ * button adds one. It is redrawn by [WidgetUpdater] whenever tasks change, and by the system every
+ * half hour (which also moves the sky along).
  */
 class TodayWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val entry = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
         val today = LocalDate.now()
+        val now = LocalTime.now()
         val localized = context.withAppLocale()
         val locale = localized.resources.configuration.locales[0]
 
-        val tasks = entry.taskRepository().getActiveTasks()
-            .inScope(TaskScope.Today, today)
-            .sortedWith(TaskSort.DUE_DATE.comparator())
-        val rows = tasks.take(MAX_ROWS).map { task ->
-            TodayRow(task.id, task.title, dueLabel(localized, task, today, locale), overdue = task.dueDate?.isBefore(today) == true)
+        val all = entry.taskRepository().getActiveTasks()
+        val open = all.inScope(TaskScope.Today, today).sortedWith(TaskSort.DUE_DATE.comparator())
+        val zone = ZoneId.systemDefault()
+        val doneToday = all.count { it.completedAt?.atZone(zone)?.toLocalDate() == today }
+        val status = TodayStatus(left = open.size, done = doneToday)
+        val phase = dayPhaseFor(now)
+        val mood = todayBirdMood(status, phase)
+
+        val rows = open.take(MAX_ROWS).map { task ->
+            TodayRow(task.id, task.title, dueLabel(localized, task, today, locale), task.priority)
         }
-        val title = localized.getString(R.string.scope_today)
+        val greeting = localized.getString(
+            when (greetingFor(now)) {
+                Greeting.Morning -> R.string.greeting_morning
+                Greeting.Afternoon -> R.string.greeting_afternoon
+                Greeting.Evening -> R.string.greeting_evening
+                Greeting.Night -> R.string.greeting_night
+            }
+        )
+        val countLine = when {
+            status.planned == 0 -> localized.getString(R.string.today_nothing_planned)
+            status.left == 0 -> localized.getString(R.string.today_all_done)
+            status.done == 0 -> localized.resources.getQuantityString(R.plurals.today_left, status.left, status.left)
+            else -> localized.resources.getQuantityString(R.plurals.today_left, status.left, status.left) +
+                " · " + localized.getString(R.string.today_done_count, status.done)
+        }
         val empty = localized.getString(R.string.widget_today_empty)
         val addLabel = localized.getString(R.string.action_add_task)
 
         provideContent {
-            GlanceTheme {
-                TodayContent(
-                    context = localized,
-                    title = title,
-                    count = tasks.size,
-                    rows = rows,
-                    empty = empty,
-                    addLabel = addLabel,
-                )
-            }
+            TodayContent(localized, phase, greeting, countLine, mood, rows, empty, addLabel)
         }
     }
 
-    private data class TodayRow(val id: String, val title: String, val due: String, val overdue: Boolean)
+    private data class TodayRow(val id: String, val title: String, val due: String, val priority: Priority)
 
     @Composable
     private fun TodayContent(
         context: Context,
-        title: String,
-        count: Int,
+        phase: DayPhase,
+        greeting: String,
+        countLine: String,
+        mood: BirdMood,
         rows: List<TodayRow>,
         empty: String,
         addLabel: String,
     ) {
+        val onSky = WidgetColors.onSky(phase)
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(GlanceTheme.colors.widgetBackground)
-                .cornerRadius(24.dp)
-                .padding(12.dp),
+                .background(ImageProvider(R.drawable.widget_bg_card)),
         ) {
-            Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = if (count > 0) "$title · $count" else title,
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurface,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
+            // The sky: greeting and count on the start side, the bird and the add button at the end.
+            Row(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .background(ImageProvider(skyTopDrawable(phase)))
+                    .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
                     modifier = GlanceModifier
                         .defaultWeight()
                         .clickable(actionStartActivity(Intent(context, MainActivity::class.java))),
-                )
+                ) {
+                    Text(
+                        text = greeting,
+                        maxLines = 1,
+                        style = TextStyle(color = onSky, fontSize = 20.sp, fontWeight = FontWeight.Bold),
+                    )
+                    Text(
+                        text = countLine,
+                        maxLines = 1,
+                        style = TextStyle(color = onSky, fontSize = 13.sp, fontWeight = FontWeight.Medium),
+                    )
+                }
                 Image(
-                    provider = ImageProvider(R.drawable.ic_add),
-                    contentDescription = addLabel,
-                    colorFilter = ColorFilter.tint(GlanceTheme.colors.primary),
-                    modifier = GlanceModifier
-                        .size(32.dp)
-                        .padding(4.dp)
-                        .clickable(actionStartActivity(Intent(context, QuickAddActivity::class.java))),
+                    provider = ImageProvider(birdDrawable(mood)),
+                    contentDescription = null,
+                    modifier = GlanceModifier.size(52.dp),
                 )
-            }
-
-            Spacer(GlanceModifier.size(4.dp))
-
-            if (rows.isEmpty()) {
-                Column(
-                    modifier = GlanceModifier.fillMaxSize(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                Spacer(GlanceModifier.width(8.dp))
+                Box(
+                    modifier = GlanceModifier
+                        .size(44.dp)
+                        .background(WidgetColors.primary)
+                        .cornerRadius(16.dp)
+                        .clickable(actionStartActivity(Intent(context, QuickAddActivity::class.java))),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Image(
-                        provider = ImageProvider(R.drawable.ic_bird_mark),
-                        contentDescription = null,
-                        modifier = GlanceModifier.size(56.dp),
+                        provider = ImageProvider(R.drawable.ic_add),
+                        contentDescription = addLabel,
+                        colorFilter = ColorFilter.tint(WidgetColors.onPrimary),
+                        modifier = GlanceModifier.size(24.dp),
                     )
-                    Spacer(GlanceModifier.size(4.dp))
+                }
+            }
+
+            if (rows.isEmpty()) {
+                Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
                         text = empty,
-                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 14.sp),
+                        style = TextStyle(color = WidgetColors.inkSoft, fontSize = 14.sp),
                     )
                 }
             } else {
-                LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
+                LazyColumn(modifier = GlanceModifier.fillMaxSize().padding(horizontal = 4.dp, vertical = 4.dp)) {
                     items(rows, itemId = { it.id.hashCode().toLong() }) { row ->
                         TaskLine(context, row)
                     }
@@ -164,33 +190,26 @@ class TodayWidget : GlanceAppWidget() {
     @Composable
     private fun TaskLine(context: Context, row: TodayRow) {
         Row(
-            modifier = GlanceModifier.fillMaxWidth().padding(vertical = 2.dp),
+            modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CheckBox(
-                checked = false,
-                onCheckedChange = actionRunCallback<CompleteTaskAction>(
-                    actionParametersOf(CompleteTaskAction.TaskIdKey to row.id)
-                ),
-            )
-            Spacer(GlanceModifier.width(4.dp))
+            CompleteRing(context, row.id, row.title, row.priority)
             Column(
                 modifier = GlanceModifier
                     .defaultWeight()
+                    .padding(end = 8.dp)
                     .clickable(actionStartActivity(openTaskIntent(context, row.id))),
             ) {
                 Text(
                     text = row.title,
                     maxLines = 2,
-                    style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp),
+                    style = TextStyle(color = WidgetColors.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium),
                 )
                 if (row.due.isNotEmpty()) {
                     Text(
                         text = row.due,
-                        style = TextStyle(
-                            color = if (row.overdue) GlanceTheme.colors.error else GlanceTheme.colors.onSurfaceVariant,
-                            fontSize = 12.sp,
-                        ),
+                        maxLines = 1,
+                        style = TextStyle(color = WidgetColors.inkSoft, fontSize = 12.sp),
                     )
                 }
             }
@@ -206,7 +225,7 @@ class TodayWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = TodayWidget()
 }
 
-/** The checkbox of a row: finishes the task (a repeating one moves on) and redraws the widget. */
+/** The ring of a row: finishes the task (a repeating one moves on) and redraws the widgets. */
 class CompleteTaskAction : ActionCallback {
 
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {

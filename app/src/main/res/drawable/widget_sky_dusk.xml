@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A flat two-stop dusk sky with 28dp corners, for a whole widget. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="@color/widget_sky_dusk_top"
+        android:endColor="@color/widget_sky_dusk_bottom" />
+    <corners android:radius="28dp" />
+</shape>

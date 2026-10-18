@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget surfaces: the card and the four skies (DESIGN_SPEC.md, colour). -->
+<resources>
+    <color name="widget_card">#FFFDF8</color>
+    <color name="widget_sky_dawn_top">#FFE3C4</color>
+    <color name="widget_sky_dawn_bottom">#FBD0C2</color>
+    <color name="widget_sky_day_top">#CFE9F2</color>
+    <color name="widget_sky_day_bottom">#FFF3DC</color>
+    <color name="widget_sky_dusk_top">#F9C9A0</color>
+    <color name="widget_sky_dusk_bottom">#EBA9A0</color>
+    <color name="widget_sky_night_top">#1E3A4C</color>
+    <color name="widget_sky_night_bottom">#17485E</color>
+</resources>
