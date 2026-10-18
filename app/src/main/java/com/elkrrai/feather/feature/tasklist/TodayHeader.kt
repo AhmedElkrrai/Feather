@@ -82,6 +82,25 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import com.elkrrai.feather.ui.DisplayPrefs
+import com.elkrrai.feather.ui.rememberHaptics
+import com.elkrrai.feather.ui.rememberReduceMotion
+import com.elkrrai.feather.ui.theme.Dur
+import kotlin.math.abs
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** The header is this tall (below the status bar) when open, and this tall when scrolled away. */
 private val HeaderOpenHeight = 236.dp
@@ -151,9 +170,37 @@ fun TodayHeader(
     onSearchClick: () -> Unit,
     sortActions: List<MenuAction>,
     modifier: Modifier = Modifier,
+    /** Counts up each time the last open task of the day is finished (once a day); it starts the celebration. */
+    celebration: Int = 0,
+    /** Called with the bird's position (window pixels) when the celebration starts, to throw the warm feathers. */
+    onWarmFeathers: (Offset) -> Unit = {},
 ) {
     val feather = MaterialTheme.featherColors
     val phase = remember(time.hour) { dayPhaseFor(time) }
+    val reduceMotion = rememberReduceMotion()
+    val haptics = rememberHaptics()
+    // 0 to 1 over the 1.1 s celebration: the header warms, a halo opens, the bird hops twice.
+    val flourish = remember { Animatable(0f) }
+    var birdCenter by remember { mutableStateOf(Offset.Zero) }
+    val currentOnWarmFeathers by rememberUpdatedState(onWarmFeathers)
+    LaunchedEffect(celebration) {
+        if (celebration > 0) {
+            haptics.confirm()
+            if (reduceMotion) {
+                delay(LAST_TASK_TICK_MILLIS)
+                haptics.tick()
+            } else {
+                currentOnWarmFeathers(birdCenter)
+                launch {
+                    delay(LAST_TASK_TICK_MILLIS)
+                    haptics.tick()
+                }
+                flourish.snapTo(0f)
+                flourish.animateTo(1f, tween(Dur.LastTask, easing = LinearEasing))
+                flourish.snapTo(0f)
+            }
+        }
+    }
     val (skyTop, skyBottom) = feather.sky.getValue(phase)
     // The night wash is dark even in the light theme, so its text is cream there.
     val ink = if (phase == DayPhase.Night && feather.skyText == LightFeatherColors.skyText) NightSkyText else feather.skyText
@@ -184,13 +231,40 @@ fun TodayHeader(
             }
             .clipToBounds(),
     ) {
+        if (DisplayPrefs.celebrations && !reduceMotion) {
+            val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+            Canvas(Modifier.matchParentSize()) {
+                val p = flourish.value
+                if (p <= 0f) return@Canvas
+                // The sky warms by 15 percent amber and cools again; a soft halo opens behind the bird.
+                val bell = sin(PI * p).toFloat()
+                drawRect(Nest.Amber.copy(alpha = 0.15f * bell))
+                val gutter = Space.gutter.toPx()
+                val centerX = if (rtl) gutter + 78.dp.toPx() else size.width - gutter - 150.dp.toPx() + 78.dp.toPx()
+                val center = Offset(centerX, size.height - 79.dp.toPx())
+                val radius = (44f + 18f * p).dp.toPx()
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Nest.Amber.copy(alpha = 0.38f * (1f - p)), Color.Transparent),
+                        center = center,
+                        radius = radius,
+                    ),
+                    radius = radius,
+                    center = center,
+                )
+            }
+        }
         CompositionLocalProvider(LocalContentColor provides ink) {
             // The bird's scene drifts up at 0.4 times the scroll, shrinks to 0.6 and fades out.
             TodayScene(
                 status = status,
                 phase = phase,
+                hopDp = { if (DisplayPrefs.celebrations && !reduceMotion) doubleHop(flourish.value) else 0f },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
+                    .onGloballyPositioned {
+                        birdCenter = it.positionInRoot() + Offset(it.size.width * 0.52f, it.size.height * 0.54f)
+                    }
                     .padding(end = Space.gutter, bottom = NestLip + Space.x1)
                     .graphicsLayer {
                         val fraction = collapse.fraction
@@ -209,14 +283,21 @@ fun TodayHeader(
                     .widthIn(max = 230.dp)
                     .graphicsLayer { alpha = (1f - collapse.fraction * 2f).coerceIn(0f, 1f) },
             ) {
-                Text(
-                    text = stringResource(greetingFor(time).label()),
-                    style = MaterialTheme.typography.displaySmall,
-                    color = ink,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.semantics { heading() },
-                )
+                // When the day is done the greeting gives way to "All done."
+                Crossfade(
+                    targetState = status.allDone,
+                    animationSpec = tween(if (reduceMotion) Dur.Short2 else Dur.Medium1),
+                    label = "headline",
+                ) { done ->
+                    Text(
+                        text = stringResource(if (done) R.string.today_all_done else greetingFor(time).label()),
+                        style = MaterialTheme.typography.displaySmall,
+                        color = ink,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                }
                 Text(
                     text = rememberDateLine(date),
                     style = MaterialTheme.typography.bodyMedium,
@@ -296,7 +377,7 @@ private fun todayCountLine(status: TodayStatus): String {
     val resources = LocalContext.current.resources
     return when {
         status.planned == 0 -> stringResource(R.string.today_nothing_planned)
-        status.left == 0 -> stringResource(R.string.today_all_done)
+        status.left == 0 -> stringResource(R.string.today_done_count, status.done)
         status.done == 0 -> resources.getQuantityString(R.plurals.today_left, status.left, status.left)
         else -> resources.getQuantityString(R.plurals.today_left, status.left, status.left) +
             " · " + stringResource(R.string.today_done_count, status.done)
@@ -329,13 +410,23 @@ private val SceneHeight = 110.dp
  * picture is not mirrored in right-to-left languages (only where it sits is). Decoration only.
  */
 @Composable
-private fun TodayScene(status: TodayStatus, phase: DayPhase, modifier: Modifier = Modifier) {
+private fun TodayScene(status: TodayStatus, phase: DayPhase, hopDp: () -> Float, modifier: Modifier = Modifier) {
     val feather = MaterialTheme.featherColors
     val mood = todayBirdMood(status, phase)
     val moon = showsMoon(phase)
     val moonPath = remember { moonShape() }
     val leaf = remember { leafShape() }
-    val eggs = if (status.allDone) 3 else 0
+    // Five eggs settle onto the branch, one after another, when the day is done. Already done when the
+    // screen opens: they are just there.
+    val reduceMotion = rememberReduceMotion()
+    val settle = remember { Animatable(if (status.allDone) 1f else 0f) }
+    LaunchedEffect(status.allDone, reduceMotion) {
+        if (status.allDone) {
+            if (settle.value < 1f) settle.animateTo(1f, tween(if (reduceMotion) Dur.Short2 else EGG_SETTLE_MILLIS, easing = LinearEasing))
+        } else {
+            settle.snapTo(0f)
+        }
+    }
 
     Box(
         modifier = modifier
@@ -355,16 +446,26 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, modifier: Modifier 
                 drawLine(feather.twig, Offset(104f, 94f), Offset(128f, 80f), strokeWidth = 4f, cap = StrokeCap.Round)
                 translateAndScale(124f, 66f, 16f) { drawLeaf(leaf, feather.listColors[3], filled = true) }
                 // eggs on the branch
-                repeat(eggs) { index ->
-                    val x = 10f + index * 13f
-                    drawEgg(Offset(x, 84f))
+                val total = settle.value * EGG_SETTLE_MILLIS
+                repeat(EGGS) { index ->
+                    val t = if (reduceMotion) settle.value else ((total - index * EGG_STAGGER_MILLIS) / EGG_POP_MILLIS).coerceIn(0f, 1f)
+                    if (t > 0f) {
+                        val x = 6f + index * 10.5f
+                        val pop = if (reduceMotion) 1f else EggPop.transform(t)
+                        translateAndScale(x + 5.5f, 98f, 1f) {
+                            scale(pop, pop, pivot = Offset.Zero) {
+                                translate(left = -5.5f, top = -14f) { drawEgg(Offset.Zero, alpha = t) }
+                            }
+                        }
+                    }
                 }
             }
         }
         BirdIllustration(
             modifier = Modifier
                 .size(84.dp)
-                .offset(x = 36.dp, y = 17.dp),
+                .offset(x = 36.dp, y = 17.dp)
+                .graphicsLayer { translationY = -hopDp().dp.toPx() },
             mood = mood,
         )
     }
@@ -391,8 +492,28 @@ private fun DrawScope.drawSun(center: Offset, radius: Float) {
     }
 }
 
-private fun DrawScope.drawEgg(topLeft: Offset) {
-    drawOval(Nest.Cream, topLeft = topLeft, size = androidx.compose.ui.geometry.Size(11f, 14f))
-    drawCircle(Nest.Amber.copy(alpha = 0.5f), radius = 0.9f, center = Offset(topLeft.x + 4f, topLeft.y + 5f))
-    drawCircle(Nest.Coral.copy(alpha = 0.5f), radius = 0.8f, center = Offset(topLeft.x + 7f, topLeft.y + 9f))
+private fun DrawScope.drawEgg(topLeft: Offset, alpha: Float = 1f) {
+    drawOval(Nest.Cream.copy(alpha = alpha), topLeft = topLeft, size = androidx.compose.ui.geometry.Size(11f, 14f))
+    drawCircle(Nest.Amber.copy(alpha = 0.5f * alpha), radius = 0.9f, center = Offset(topLeft.x + 4f, topLeft.y + 5f))
+    drawCircle(Nest.Coral.copy(alpha = 0.5f * alpha), radius = 0.8f, center = Offset(topLeft.x + 7f, topLeft.y + 9f))
+}
+
+private const val EGGS = 5
+private const val EGG_STAGGER_MILLIS = 60f
+private const val EGG_POP_MILLIS = 260f
+private const val EGG_SETTLE_MILLIS = 560
+
+/** The second tick of the celebration's haptics, this long after the first. */
+private const val LAST_TASK_TICK_MILLIS = 420L
+
+/** A little overshoot, so an egg pops into place. */
+private val EggPop = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)
+
+/**
+ * How high the bird is above its perch, in dp, [progress] of the way through the celebration: two
+ * hops of 14dp in the first 60 percent, then still.
+ */
+internal fun doubleHop(progress: Float): Float {
+    if (progress <= 0f || progress >= 0.6f) return 0f
+    return 14f * abs(sin(PI * progress / 0.3)).toFloat()
 }

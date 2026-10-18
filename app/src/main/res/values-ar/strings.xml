@@ -663,4 +663,7 @@
         <item quantity="many">نُقلت %d مهمة إلى الغد</item>
         <item quantity="other">نُقلت %d مهمة إلى الغد</item>
     </plurals>
+    <!-- M9 step 9: repeating task flight -->
+    <string name="repeat_back_tomorrow">تعود غدًا</string>
+    <string name="repeat_back_on">تعود %1$s</string>
 </resources>

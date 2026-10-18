@@ -97,6 +97,10 @@ import com.elkrrai.feather.ui.components.FeatherConfettiOverlay
 import com.elkrrai.feather.ui.components.rememberConfettiController
 import com.elkrrai.feather.ui.today.DayCard
 import com.elkrrai.feather.ui.today.DayCardKind
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 
 @Composable
 fun TaskListScreen(
@@ -118,7 +122,8 @@ fun TaskListScreen(
     var organizeDialog by remember { mutableStateOf<OrganizeDialog?>(null) }
     val deletedMessage = stringResource(R.string.task_deleted)
     val undoLabel = stringResource(R.string.action_undo)
-    val resources = LocalContext.current.resources
+    val context = LocalContext.current
+    val resources = context.resources
     var selectionDialog by remember { mutableStateOf<SelectionDialog?>(null) }
     var filterDialog by remember { mutableStateOf<FilterDialogState?>(null) }
     // Counts up each time a task is finished; the bird hops over the list for each step.
@@ -218,7 +223,21 @@ fun TaskListScreen(
             onMenuClick = { coroutineScope.launch { drawerState.open() } },
             onAddClick = { showQuickAdd = true },
             onToggle = { task, completed ->
-                viewModel.setCompleted(task.id, completed)
+                viewModel.setCompleted(task.id, completed) { after ->
+                    // A repeating task is not finished for good: it rests and comes back on its next day.
+                    val comesBack = after?.dueDate
+                    if (completed && task.recurrence != null && after != null && !after.isCompleted && comesBack != null) {
+                        coroutineScope.launch {
+                            snackbarHostState.currentSnackbarData?.dismiss()
+                            val result = snackbarHostState.showSnackbar(
+                                message = backMessage(context, comesBack),
+                                actionLabel = undoLabel,
+                                duration = SnackbarDuration.Short,
+                            )
+                            if (result == SnackbarResult.ActionPerformed) viewModel.setCompleted(task.id, false)
+                        }
+                    }
+                }
                 if (completed) celebration++
             },
             onDelete = { task ->
@@ -240,6 +259,8 @@ fun TaskListScreen(
             selectionActions = selectionActions,
             onReorder = viewModel::reorderTasks,
             onCelebrate = confetti::celebrate,
+            onFly = confetti::fly,
+            onWarmFeathers = { origin -> confetti.celebrate(origin, 1f, 12, true) },
             onClearCompleted = { deleteWithUndo(state.sections.flatMap { it.tasks }.map { it.id }) },
             dayCard = dayCard,
             onDismissDayCard = dayCards::dismiss,
@@ -377,6 +398,8 @@ fun TaskListContent(
     onAddSubtask: (taskId: String, title: String) -> Unit = { _, _ -> },
     onToggleSubtask: (taskId: String, subtaskId: String) -> Unit = { _, _ -> },
     onClearCompleted: () -> Unit = {},
+    onFly: (from: Offset, to: Offset?) -> Unit = { _, _ -> },
+    onWarmFeathers: (Offset) -> Unit = {},
     dayCard: DayCard? = null,
     onDismissDayCard: (DayCardKind) -> Unit = {},
     onMoveToTomorrow: () -> Unit = {},
@@ -426,6 +449,24 @@ fun TaskListContent(
     // Each time the Today view is shown, its header starts open.
     LaunchedEffect(state.scope) { collapse.state.offset = 0f }
     var doneExpanded by rememberSaveable { mutableStateOf(false) }
+    // Where the Done pill is, for the feather a repeating task sends there when it rests.
+    var doneTarget by remember { mutableStateOf<Offset?>(null) }
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    // The last open task of the day: the header celebrates, once a calendar day. Moving tasks to
+    // tomorrow also empties the day, but it is not finishing, so only a rise in finished tasks counts.
+    val dayLog = remember { DayCelebrationLog(context) }
+    var allDoneCelebration by remember { mutableIntStateOf(0) }
+    var previousLeft by remember { mutableIntStateOf(state.today.left) }
+    var previousDone by remember { mutableIntStateOf(state.today.done) }
+    LaunchedEffect(state.today.left, state.today.done, todayView) {
+        val finishedTheLast = previousLeft > 0 && state.today.left == 0 && state.today.done > previousDone
+        previousLeft = state.today.left
+        previousDone = state.today.done
+        if (todayView && finishedTheLast && !dayLog.celebratedOn(today)) {
+            dayLog.mark(today)
+            allDoneCelebration++
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -586,7 +627,10 @@ fun TaskListContent(
                                 },
                                 selected = task.id in state.selection,
                                 highlighted = task.id == state.justAddedId,
-                                onCelebrate = onCelebrate,
+                                onCelebrate = { origin, scale ->
+                                    onCelebrate(origin, scale)
+                                    if (task.recurrence != null && scale == 1f) onFly(origin, doneTarget)
+                                },
                                 onAddSubtask = { title -> onAddSubtask(task.id, title) },
                                 onToggleSubtask = { subtaskId ->
                                     // Ticking the last open subtask finishes the task: let the row linger like a ring tick.
@@ -621,7 +665,10 @@ fun TaskListContent(
                             ),
                             expanded = doneExpanded,
                             onClick = { doneExpanded = !doneExpanded },
-                            modifier = Modifier.animateItem(),
+                            modifier = Modifier.animateItem().onGloballyPositioned {
+                                val share = if (rtl) 0.88f else 0.12f
+                                doneTarget = it.positionInRoot() + Offset(it.size.width * share, it.size.height / 2f)
+                            },
                         )
                     }
                     if (doneExpanded) {
@@ -653,6 +700,8 @@ fun TaskListContent(
                     onMenuClick = onMenuClick,
                     onSearchClick = onSearchClick,
                     sortActions = sortActions,
+                    celebration = allDoneCelebration,
+                    onWarmFeathers = onWarmFeathers,
                 )
                 Box(Modifier.weight(1f)) {
                     listBody(PaddingValues(bottom = scaffoldPadding.calculateBottomPadding()))
@@ -796,4 +845,18 @@ private sealed interface FilterDialogState {
     data object New : FilterDialogState
     data class Edit(val filter: SavedFilter) : FilterDialogState
     data class Delete(val filter: SavedFilter) : FilterDialogState
+}
+
+/** "Back tomorrow" or "Back Fri" or "Back Nov 16, 2026": when a repeating task that was just finished returns. */
+private fun backMessage(context: android.content.Context, date: LocalDate): String {
+    val today = LocalDate.now()
+    val locale = context.resources.configuration.locales[0]
+    return if (date == today.plusDays(1)) {
+        context.getString(R.string.repeat_back_tomorrow)
+    } else {
+        context.getString(
+            R.string.repeat_back_on,
+            com.elkrrai.feather.ui.format.dueChipText(context, com.elkrrai.feather.ui.format.dueLabelFor(date, null, today, false), locale),
+        )
+    }
 }

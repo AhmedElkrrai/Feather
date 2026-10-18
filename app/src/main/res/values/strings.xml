@@ -567,4 +567,7 @@
         <item quantity="one">One task moved to tomorrow</item>
         <item quantity="other">%d tasks moved to tomorrow</item>
     </plurals>
+    <!-- M9 step 9: repeating task flight -->
+    <string name="repeat_back_tomorrow">Back tomorrow</string>
+    <string name="repeat_back_on">Back %1$s</string>
 </resources>

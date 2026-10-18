@@ -29,6 +29,10 @@ import kotlin.math.sin
 import androidx.compose.runtime.Stable
 import com.elkrrai.feather.ui.DisplayPrefs
 import com.elkrrai.feather.ui.rememberReduceMotion
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import com.elkrrai.feather.ui.theme.Ease
 
 /**
  * One feather in the confetti. The numbers are fixed, not random, so every burst looks the same and
@@ -113,9 +117,38 @@ internal fun confettiAlpha(piece: ConfettiPiece, progress: Float): Float {
 
 /**
  * A burst of confetti: its number (a new number starts a new burst), where it starts in window
- * pixels, and how big it is: 1 for a task, a smaller one for a subtask.
+ * pixels, how big it is (1 for a task, a smaller one for a subtask), how many feathers there are,
+ * and whether they are the warm ones of the once-a-day "all done" moment.
  */
-class ConfettiBurst(val id: Int, val origin: Offset, val scale: Float = 1f)
+class ConfettiBurst(
+    val id: Int,
+    val origin: Offset,
+    val scale: Float = 1f,
+    val count: Int = 28,
+    val warm: Boolean = false,
+)
+
+/**
+ * One leaf-feather flying from [from] to [to] (window pixels) along a curve: where a repeating
+ * task goes when it is finished and rests until its next day. A null [to] means the corner where
+ * the menu is.
+ */
+class ConfettiFlight(val id: Int, val from: Offset, val to: Offset?)
+
+/** How long the flight takes. */
+internal const val FLIGHT_MILLIS = 360
+
+/**
+ * A point on the quadratic curve from [from] to [to] that bows up through [control], at [t] from 0
+ * to 1. The flight is drawn along it, and the test checks its ends.
+ */
+internal fun quadraticPoint(from: Offset, control: Offset, to: Offset, t: Float): Offset {
+    val u = 1f - t
+    return Offset(
+        u * u * from.x + 2f * u * t * control.x + t * t * to.x,
+        u * u * from.y + 2f * u * t * control.y + t * t * to.y,
+    )
+}
 
 /**
  * Starts the feather confetti for one screen. Every checkbox on the screen that gets finished calls
@@ -125,12 +158,20 @@ class ConfettiBurst(val id: Int, val origin: Offset, val scale: Float = 1f)
 class ConfettiController internal constructor() {
     var burst by mutableStateOf<ConfettiBurst?>(null)
         private set
+    var flight by mutableStateOf<ConfettiFlight?>(null)
+        private set
     internal var reduceMotion: Boolean = false
     private var count = 0
 
-    fun celebrate(origin: Offset, scale: Float = 1f) {
+    fun celebrate(origin: Offset, scale: Float = 1f, count: Int = 28, warm: Boolean = false) {
         if (!DisplayPrefs.celebrations || reduceMotion) return
-        burst = ConfettiBurst(++count, origin, scale)
+        burst = ConfettiBurst(++this.count, origin, scale, count, warm)
+    }
+
+    /** A leaf-feather flies from [from] to [to]; with reduced motion nothing flies. */
+    fun fly(from: Offset, to: Offset?) {
+        if (!DisplayPrefs.celebrations || reduceMotion) return
+        flight = ConfettiFlight(++count, from, to)
     }
 }
 
@@ -144,24 +185,27 @@ fun rememberConfettiController(): ConfettiController {
 /** The overlay for a screen's [controller]; put it last, over everything else. */
 @Composable
 fun FeatherConfettiOverlay(controller: ConfettiController, modifier: Modifier = Modifier) {
-    FeatherConfettiOverlay(controller.burst, modifier)
+    FeatherConfettiOverlay(controller.burst, modifier, controller.flight)
 }
 
 /**
- * Feather confetti over the whole screen: about 28 small leaf-feathers thrown in random
- * directions from [burst]'s origin that flutter, spin, fall and fade over 1.8 seconds. It draws above everything, takes no
- * touches, and keeps playing after the row it started from has left the list.
+ * Feather confetti over the whole screen: small leaf-feathers thrown in random directions from
+ * [burst]'s origin that flutter, spin, fall and fade over 1.8 seconds, and a single feather
+ * flying along [flight]. It draws above everything, takes no touches, and keeps playing after the
+ * row it started from has left the list.
  */
 @Composable
-fun FeatherConfettiOverlay(burst: ConfettiBurst?, modifier: Modifier = Modifier) {
+fun FeatherConfettiOverlay(burst: ConfettiBurst?, modifier: Modifier = Modifier, flight: ConfettiFlight? = null) {
     // A new burst throws its feathers in new directions.
-    val pieces = remember(burst?.id) { confettiPieces(seed = burst?.id ?: 0) }
+    val pieces = remember(burst?.id, burst?.count) { confettiPieces(count = burst?.count ?: 28, seed = burst?.id ?: 0) }
     val feather = MaterialTheme.featherColors
     val colors = remember(feather) {
         listOf(Nest.SkyWing, Nest.Amber, Nest.Coral, feather.listColors[3], Nest.Cream, Nest.Plumage)
     }
+    val warmColors = remember { listOf(Nest.Amber, Nest.Coral, Nest.Cream, Nest.Amber, Nest.Coral, Nest.Cream) }
     val leaf = remember { leafShape() }
     val progress = remember { Animatable(0f) }
+    val flying = remember { Animatable(0f) }
     var topLeft by remember { mutableStateOf(Offset.Zero) }
 
     LaunchedEffect(burst?.id) {
@@ -171,39 +215,66 @@ fun FeatherConfettiOverlay(burst: ConfettiBurst?, modifier: Modifier = Modifier)
             progress.snapTo(0f)
         }
     }
+    LaunchedEffect(flight?.id) {
+        if (flight != null) {
+            flying.snapTo(0f)
+            flying.animateTo(1f, tween(FLIGHT_MILLIS, easing = Ease.Soft))
+            flying.snapTo(0f)
+        }
+    }
 
     Canvas(
         modifier = modifier
             .fillMaxSize()
             .onGloballyPositioned { topLeft = it.positionInRoot() },
     ) {
-        val current = burst ?: return@Canvas
+        val current = burst
         val p = progress.value
-        if (p <= 0f || p >= 1f) return@Canvas
-        val seconds = p * CONFETTI_SECONDS
-        for (piece in pieces) {
-            val alpha = confettiAlpha(piece, p)
-            if (alpha <= 0f) continue
-            val (dx, dy) = confettiOffset(piece, seconds)
-            val cx = current.origin.x - topLeft.x + dx.dp.toPx() * current.scale
-            val cy = current.origin.y - topLeft.y + dy.dp.toPx() * current.scale
-            val length = piece.sizeDp.dp.toPx() * (0.5f + 0.5f * current.scale)
-            val color = colors[piece.colorIndex % colors.size].copy(alpha = alpha)
-            withTransform({
-                translate(left = cx, top = cy)
-                rotate(piece.angleDegrees + 90f + piece.spinDegreesPerSecond * seconds, pivot = Offset.Zero)
-                scale(length, length, pivot = Offset.Zero)
-                translate(left = -0.51f, top = -0.49f)
-            }) {
-                drawPath(leaf, color)
-                drawLine(
-                    color = Nest.Cream.copy(alpha = alpha * 0.6f),
-                    start = Offset(0.12f, 0.88f),
-                    end = Offset(0.9f, 0.1f),
-                    strokeWidth = 0.05f,
-                    cap = StrokeCap.Round,
-                )
+        if (current != null && p > 0f && p < 1f) {
+            val seconds = p * CONFETTI_SECONDS
+            val palette = if (current.warm) warmColors else colors
+            for (piece in pieces) {
+                val alpha = confettiAlpha(piece, p)
+                if (alpha <= 0f) continue
+                val (dx, dy) = confettiOffset(piece, seconds)
+                val cx = current.origin.x - topLeft.x + dx.dp.toPx() * current.scale
+                val cy = current.origin.y - topLeft.y + dy.dp.toPx() * current.scale
+                val length = piece.sizeDp.dp.toPx() * (0.5f + 0.5f * current.scale)
+                drawFeather(leaf, Offset(cx, cy), length, piece.angleDegrees + 90f + piece.spinDegreesPerSecond * seconds, palette[piece.colorIndex % palette.size].copy(alpha = alpha))
             }
         }
+
+        val trip = flight
+        val t = flying.value
+        if (trip != null && t > 0f && t < 1f) {
+            val start = Offset(trip.from.x - topLeft.x, trip.from.y - topLeft.y)
+            // Without a target the feather heads for the menu corner, where Upcoming lives.
+            val end = trip.to?.let { Offset(it.x - topLeft.x, it.y - topLeft.y) } ?: Offset(size.width * 0.12f, size.height * 0.06f)
+            val control = Offset((start.x + end.x) / 2f, minOf(start.y, end.y) - 120.dp.toPx())
+            val at = quadraticPoint(start, control, end, t)
+            val ahead = quadraticPoint(start, control, end, (t + 0.02f).coerceAtMost(1f))
+            val heading = Math.toDegrees(Math.atan2((ahead.y - at.y).toDouble(), (ahead.x - at.x).toDouble())).toFloat()
+            val fade = if (t > 0.8f) (1f - t) / 0.2f else 1f
+            drawFeather(leaf, at, 26.dp.toPx() * (1f - 0.35f * t), heading + 45f + 200f * t, Nest.SkyWing.copy(alpha = fade))
+        }
+    }
+}
+
+/** One leaf-feather of [length] centered on [center], turned [degrees], with its pale spine. */
+private fun DrawScope.drawFeather(leaf: Path, center: Offset, length: Float, degrees: Float, color: Color) {
+    withTransform({
+        translate(left = center.x, top = center.y)
+        rotate(degrees, pivot = Offset.Zero)
+        scale(length, length, pivot = Offset.Zero)
+        translate(left = -0.51f, top = -0.49f)
+    }) {
+        drawPath(leaf, color)
+        drawLine(
+            color = Nest.Cream.copy(alpha = color.alpha * 0.6f),
+            start = Offset(0.12f, 0.88f),
+            end = Offset(0.9f, 0.1f),
+            strokeWidth = 0.05f,
+            cap = StrokeCap.Round,
+        )
     }
 }

@@ -320,8 +320,15 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch { taskIds.forEach { taskRepository.restoreTask(it) } }
     }
 
-    fun setCompleted(taskId: String, completed: Boolean) {
-        viewModelScope.launch { taskRepository.setCompleted(taskId, completed) }
+    /**
+     * Finishes or reopens a task. [onResult] gets the task as it is afterwards, which tells the screen
+     * where a repeating task went (it is still open, on its next date).
+     */
+    fun setCompleted(taskId: String, completed: Boolean, onResult: (Task?) -> Unit = {}) {
+        viewModelScope.launch {
+            taskRepository.setCompleted(taskId, completed)
+            onResult(taskRepository.getTask(taskId))
+        }
     }
 
     fun reorderTasks(orderedIds: List<String>) {
