@@ -13,16 +13,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.ui.brand.BirdMood
+import com.elkrrai.feather.ui.brand.RecraftOwlIllustration
 import com.elkrrai.feather.R
 
 // Where the bird stands in each scene: its 96 by 96 box is moved and scaled by one transform. The
 // numbers put its feet on the ground, the branch or the rim of the nest or bin.
-internal val EmptyListBird = BirdPlacement(x = 31f, y = 116f, scale = 0.68f)
+internal val EmptyListBird = BirdPlacement(x = 32f, y = 44f, scale = 1.4f)
 internal val AllDoneBird = BirdPlacement(x = 52f, y = 66f, scale = 0.95f)
 internal val NothingDueBird = BirdPlacement(x = 52f, y = 36f, scale = 1f)
 internal val NoResultsBird = BirdPlacement(x = 14f, y = 94f, scale = 0.9f, tilt = -10f)
@@ -48,33 +50,33 @@ fun Illustration(kind: SceneKind, modifier: Modifier = Modifier, size: Dp = 190.
     }
 }
 
-/** The bird beside an empty nest, with a leafy tree behind it. */
+/** The owl beneath the leafy goal tree. */
 @Composable
 private fun EmptyListScene(size: Dp, modifier: Modifier) = SceneFrame(
     size,
     modifier,
     height = size * 2.5f,
 ) {
-    val p = palette
     Image(
         painter = painterResource(R.drawable.goal_tree),
         contentDescription = null,
         contentScale = ContentScale.Fit,
         alignment = Alignment.BottomCenter,
         modifier = Modifier
-            .offset(x = unit * -37f, y = unit * 40f)
-            .size(width = unit * 274f, height = unit * 480f),
+            .offset(y = unit * -52f)
+            .size(width = unit * 200f, height = unit * 500f)
+            .graphicsLayer {
+                scaleX = 2f
+                scaleY = 2f
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
+            },
     )
-    Layer {
-        translate(0f, 270f) {
-            drawGround(p)
-            drawNestBack(p, 146f, 150f, 38f)
-        }
-    }
-    SceneBird(BirdMood.IDLE, EmptyListBird.copy(y = EmptyListBird.y + 270f))
-    Layer {
-        translate(0f, 270f) { drawNestFront(p, 146f, 150f, 38f) }
-    }
+    val owl = EmptyListBird.copy(y = EmptyListBird.y + 270f)
+    RecraftOwlIllustration(
+        modifier = Modifier
+            .offset(x = unit * owl.x, y = unit * owl.y)
+            .size(unit * owl.side),
+    )
 }
 
 /** A happy bird on a nest with three eggs, under a sun, with two sparkles. */

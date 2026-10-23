@@ -56,7 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
-import com.elkrrai.feather.ui.brand.BirdIllustration
+import com.elkrrai.feather.ui.brand.RecraftOwlIllustration
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
 import com.elkrrai.feather.ui.components.drawLeaf
@@ -74,7 +74,6 @@ import com.elkrrai.feather.ui.today.dayPhaseFor
 import com.elkrrai.feather.ui.today.greetingFor
 import com.elkrrai.feather.ui.today.leavesFilled
 import com.elkrrai.feather.ui.today.showsMoon
-import com.elkrrai.feather.ui.today.todayBirdMood
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -277,7 +276,6 @@ fun TodayHeader(
             TodayScene(
                 status = status,
                 phase = phase,
-                flightTrigger = fresh,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .onGloballyPositioned {
@@ -428,9 +426,8 @@ private val SceneHeight = 110.dp
  * picture is not mirrored in right-to-left languages (only where it sits is). Decoration only.
  */
 @Composable
-private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int, modifier: Modifier = Modifier) {
+private fun TodayScene(status: TodayStatus, phase: DayPhase, modifier: Modifier = Modifier) {
     val feather = MaterialTheme.featherColors
-    val mood = todayBirdMood(status, phase)
     val moon = showsMoon(phase)
     val moonPath = remember { moonShape() }
     val leaf = remember { leafShape() }
@@ -485,12 +482,10 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
                 }
             }
         }
-        BirdIllustration(
+        RecraftOwlIllustration(
             modifier = Modifier
                 .size(84.dp)
                 .offset(x = 36.dp, y = 17.dp),
-            mood = mood,
-            flightTrigger = flightTrigger,
         )
     }
 }
