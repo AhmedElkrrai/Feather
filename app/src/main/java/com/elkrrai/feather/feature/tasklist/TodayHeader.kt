@@ -188,10 +188,14 @@ fun TodayHeader(
     val haptics = rememberHaptics()
     // 0 to 1 over the 1.1 s celebration: the header warms and a halo opens (the bird's lap lasts longer: see FLIGHT_MILLIS).
     val flourish = remember { Animatable(0f) }
+    // Only a celebration that starts while this header is on screen plays: coming back to Today later
+    // (from Goals, say) must not replay one that already happened.
+    val baseline = remember { celebration }
+    val fresh = (celebration - baseline).coerceAtLeast(0)
     var birdCenter by remember { mutableStateOf(Offset.Zero) }
     val currentOnWarmFeathers by rememberUpdatedState(onWarmFeathers)
     LaunchedEffect(celebration) {
-        if (celebration > 0) {
+        if (fresh > 0) {
             haptics.confirm()
             if (reduceMotion) {
                 delay(LAST_TASK_TICK_MILLIS)
@@ -273,7 +277,7 @@ fun TodayHeader(
             TodayScene(
                 status = status,
                 phase = phase,
-                flightTrigger = celebration,
+                flightTrigger = fresh,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .onGloballyPositioned {

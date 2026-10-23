@@ -62,17 +62,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
-import com.elkrrai.feather.domain.model.TaskList
-import com.elkrrai.feather.domain.rhythm.ListShare
 import com.elkrrai.feather.domain.rhythm.RhythmStats
 import com.elkrrai.feather.domain.rhythm.SteadyTask
 import com.elkrrai.feather.domain.rhythm.TimeOfDay
 import com.elkrrai.feather.domain.rhythm.rhythmStats
 import com.elkrrai.feather.ui.brand.BirdIllustration
 import com.elkrrai.feather.ui.brand.BirdMood
-import com.elkrrai.feather.ui.components.ListShapeIcon
 import com.elkrrai.feather.ui.firstDayOfWeek
-import com.elkrrai.feather.ui.format.displayName
 import com.elkrrai.feather.ui.rememberHaptics
 import com.elkrrai.feather.ui.theme.DayPhase
 import com.elkrrai.feather.ui.theme.Ease
@@ -81,8 +77,6 @@ import com.elkrrai.feather.ui.theme.NestShapes
 import com.elkrrai.feather.ui.theme.NightSkyText
 import com.elkrrai.feather.ui.theme.Space
 import com.elkrrai.feather.ui.theme.featherColors
-import com.elkrrai.feather.ui.theme.listColorIndex
-import com.elkrrai.feather.ui.theme.listShapeFor
 import com.elkrrai.feather.ui.today.dayPhaseFor
 import java.text.NumberFormat
 import java.time.DayOfWeek

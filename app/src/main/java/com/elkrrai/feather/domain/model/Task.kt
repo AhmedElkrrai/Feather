@@ -14,7 +14,6 @@ import java.time.ZoneId
  */
 data class Task(
     val id: String,
-    val listId: String,
     val title: String,
     val notes: String = "",
     val dueDate: LocalDate? = null,

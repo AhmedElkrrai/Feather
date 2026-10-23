@@ -10,8 +10,7 @@ const val TRASH_RETENTION_DAYS = 30L
 
 interface TaskRepository {
     /**
-     * Every non-deleted top-level task of every list, each with its tags and subtasks, in
-     * creation order. Views, sorting and search are applied on top by `domain/view`.
+     * Every non-deleted top-level task, each with its tags and subtasks, in creation order. Views, sorting and search are applied on top by `domain/view`.
      */
     fun observeTasks(): Flow<List<Task>>
 
@@ -25,7 +24,7 @@ interface TaskRepository {
     suspend fun getTask(id: String): Task?
 
     /** Creates a task with just a title (quick add). The title must not be blank. */
-    suspend fun addTask(listId: String, title: String, dueDate: LocalDate? = null): Task
+    suspend fun addTask(title: String, dueDate: LocalDate? = null): Task
 
     /** Inserts or updates the task's own fields; stamps `updatedAt`. Does not touch tags or subtasks. */
     suspend fun saveTask(task: Task)
@@ -40,7 +39,7 @@ interface TaskRepository {
     suspend fun setCompleted(id: String, completed: Boolean)
 
     /**
-     * Copies a task under the title [title]: notes, date and time, priority, pin, list, tags,
+     * Copies a task under the title [title]: notes, date and time, priority, pin, tags,
      * repeat rule, reminders and a fresh, unchecked checklist. The copy is open and new, its
      * reminders have not fired. Returns the copy, or null if [id] is not an existing task.
      */

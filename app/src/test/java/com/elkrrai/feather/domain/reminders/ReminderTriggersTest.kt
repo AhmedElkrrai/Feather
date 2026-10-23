@@ -41,7 +41,6 @@ class ReminderTriggersTest {
         reminders: List<Reminder> = emptyList(),
     ) = Task(
         id = id,
-        listId = "list",
         title = "Task $id",
         dueDate = dueDate,
         dueTime = dueTime,

@@ -74,7 +74,7 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 
 ### 7. Data model (sketch)
 - `task`: id (UUID), listId, parentTaskId (subtasks), title, notes, dueDate, dueTime, priority, rrule, repeatMode, completedAt, sortOrder, updatedAt, deletedAt
-- `list`, `folder` (one level), `tag`, `task_tag`, `reminder`, `completion_history`
+- `task_list` (only the hidden Inbox, see below), `tag`, `task_tag`, `reminder`, `completion_history`
 - **Every table:** UUID primary key, `updatedAt`, soft delete, so sync can be added later without a rewrite.
 - Trash purges soft-deleted rows after 30 days.
 
@@ -108,7 +108,7 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Schema v2** adds `folders`, `tags`, `task_tags`, `tasks.parentTaskId`/`isPinned` and `task_lists.folderId`/`colorArgb`, migrated with `@AutoMigration(1, 2)`. Subtasks are rows of `tasks` that point at their parent; they are grouped under it when read and are soft-deleted and restored together with it.
 - **Views are pure functions.** The repository exposes every non-deleted top-level task with its tags and subtasks; `domain/view` (`TaskScope`, `inScope`, `comparator`, `groupedByDay`, `search`, `openCountIn`) turns that into Today, Upcoming, list, tag and search results. Nothing in it touches Android or the database.
 - **Transactions** go through `TransactionRunner` (Room's `withTransaction` underneath) so repositories stay testable.
-- **Deleting** a list moves its tasks to the Inbox; deleting a folder keeps its lists; deleting a tag hides it everywhere (soft delete). The Inbox is protected.
+- **Deleting** a tag hides it everywhere (soft delete) and moves the tags under it up one level.
 - **"Today"** is computed in the user's time zone (`Clock` is UTC, so the ViewModel converts).
 
 ### M3 (reminders)
@@ -136,7 +136,7 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 
 ### M6 (widgets and backup)
 - **The backup file is its own format** (`data/backup/BackupFile`): versioned JSON records that mirror the tables but are separate classes, so Room can change without breaking old files. Soft-deleted rows are included. Reading checks `format` and `version` before decoding the rest (every record field has a default, so a random JSON object would otherwise pass as an empty backup), ignores unknown fields, and refuses newer versions.
-- **Merging is a pure function** (`BackupMerger`): per record the newer `updatedAt` wins, same-named live tags are joined, unknown lists fall back to the Inbox, and tag links and reminders are taken only for tasks whose record came from the file. Replace is "delete everything, then merge into an empty phone". The whole import is one transaction, and the file is decoded before anything is touched.
+- **Merging is a pure function** (`BackupMerger`): per record the newer `updatedAt` wins, same-named live tags are joined, every imported task goes into the Inbox (older files name lists, which are ignored), and tag links and reminders are taken only for tasks whose record came from the file. Replace is "delete everything, then merge into an empty phone". The whole import is one transaction, and the file is decoded before anything is touched.
 - **Writes are upserts**, never delete-and-insert, so cascading foreign keys cannot remove a task's reminders or history while it is rewritten.
 - **Files go through the Storage Access Framework** (`BackupFiles`, `DocumentFile`); the app needs no storage permission and no network. The automatic backup keeps a persisted tree permission, writes `feather-auto-backup-DATE.json` (a prefix of its own, so manual exports in the same folder are never pruned), keeps 7, and runs from a daily WorkManager job that exists only while it is switched on and a folder is set.
 - **Widgets are Jetpack Glance** (`widget/`): `TodayWidget` reads through a Hilt entry point, `CompleteTaskAction` finishes a task through the same `setCompleted` as everywhere else, `WidgetUpdater` redraws on task changes (debounced), and the system refreshes every 30 minutes, which rolls the list over at midnight. `QuickAddWidget` only opens `QuickAddActivity`.
@@ -147,7 +147,7 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **Light and dark go through `AppCompatDelegate.setDefaultNightMode`**, not a flag passed to the theme, so system bars, dialogs and `isSystemInDarkTheme()` agree. Pure black and Material You are theme parameters that default to `DisplayPrefs`. The saved settings are read once, blocking, in `Application.onCreate` so the first frame already has the right colors.
 - **Selection** is ViewModel state (`pickedIds`), always intersected with what is on screen, and cleared when the view changes. Bulk actions go through the same repository calls as single ones.
 - **Manual order** swaps the `sortOrder` values the dragged tasks already have, so tasks that are not in the list keep their place. `Created` sorts by `createdAt` only, otherwise dragging would rewrite creation order. The list being dragged is a local copy (`ReorderState`) committed when the finger lifts; TalkBack users get Move up and Move down actions instead of a drag.
-- **A saved filter is data, and the scope carries it** (`TaskScope.Filtered(filter)`), so matching is a pure function like the other scopes and the ViewModel only re-resolves it by id when the filter changes. `saved_filters` has no foreign keys: a filter outlives a deleted list or tag and then matches nothing. Schema v5, `@AutoMigration(4, 5)`, and an optional `filters` field in the backup file (still version 1, because older files simply lack it).
+- **Saved filters were removed** (schema v7 drops `saved_filters` and `folders`): the menu has five fixed views and the tag tabs narrow them, so a filter had nothing left to do.
 - **Links in notes** are found by a pure function (`findLinks`) and shown as chips; the notes field stays plain text.
 - **Release.** `proguard-rules.pro` lists only what the libraries do not bring (serializers by name, the two workers); the signing details come from an untracked `keystore.properties`; only English and Arabic library resources are kept.
 
@@ -170,7 +170,7 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - **One clock for the charts.** `rememberEntry()` is a single 0 to 1 `Animatable`; each Canvas takes a slice with `segment(entry, startMs, durMs)`, so the whole entrance is 1.1 s and charts never run their own timers.
 - **A repeating task rests.** `Task.lastCompletedAt` comes from the latest completion row (`observeTasks` combines two flows); a repeating task finished today whose next date is later is "resting": the list view leaves it out of the open tasks and shows it, ticked, in Done. Unticking it calls `undoAdvance` in the repository.
 - **Cards and celebrations are small view models and logs.** `DayCardsViewModel` owns the morning and evening cards (and the nest's quiet dot); `DayCelebrationLog` keeps the once-a-day "all done" in the hints preferences. The header owns the celebration's animation (`flourish`) and tells the screen where the bird is so the screen can throw the warm feathers.
-- **The nest is tracked in the data layer.** `NestTracker` (a singleton started with the app) combines completions, tasks, lists and settings into `NestFacts`; whatever `earnedNestItems` says is earned is saved to DataStore once and kept. `NestScene` draws the items in the same scene kit as the empty states.
+- **The nest is tracked in the data layer.** `NestTracker` (a singleton started with the app) combines completions, tasks, tags and settings into `NestFacts`; whatever `earnedNestItems` says is earned is saved to DataStore once and kept. `NestScene` draws the items in the same scene kit as the empty states.
 - **Widgets cannot read the theme,** so they carry their own day and night values (`WidgetColors`, `values/widget_colors.xml`) from the same Nest palette.
 
 #### M9 step 5: quick-add polish
@@ -206,3 +206,9 @@ A task due at "5pm" stays at 5pm if the user changes timezone. Due dates are sto
 - Donation mechanism (external link vs. Play flow) and Play policy implications
 - Exact-alarm permission strategy (see Reminders)
 - Animation technology and bird brand direction
+
+### After M9: no lists, folders or saved filters
+- **Why `task_lists` and `tasks.listId` are still in the database.** `tasks.listId` is a foreign key to `task_lists`, and SQLite can only remove a foreign key by rebuilding the `tasks` table. Rebuilding a table that tags, reminders and history point to (with cascading deletes) is the one migration that could wipe a person's data, so it is not done. Every task is kept in one hidden list, the Inbox (`INBOX_LIST_ID`, created by `InboxRepository.ensureInbox()` at start); `Task` has no `listId`, `Task.toEntity()` always writes the Inbox, and lists made earlier stay as unused rows.
+- **Schema v7** (`AutoMigration(6, 7)` with `@DeleteTable` for `folders` and `saved_filters`) only drops two tables nothing refers to.
+- **Tags form a tree** (`tags.parentId`, schema v6): `branchIds` gives a tag and everything under it, `wouldLoop` refuses a move that would make a loop, and the tag tabs, the tag filter and search use the branch.
+- **Backup files** no longer carry folders, lists or filters; older files that do are still read (unknown fields are ignored) and their tasks go into the Inbox.

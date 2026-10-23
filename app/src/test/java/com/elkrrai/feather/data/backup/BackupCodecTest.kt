@@ -23,13 +23,10 @@ class BackupCodecTest {
     fun aBackupSurvivesAWriteAndRead() {
         val file = BackupFile(
             exportedAt = 123,
-            folders = listOf(FolderRecord("f", "Folder", sortOrder = 2)),
-            lists = listOf(ListRecord("l", "قائمة", folderId = "f", colorArgb = -16711936)),
             tags = listOf(TagRecord("t", "عمل", deletedAt = 9)),
             tasks = listOf(
                 TaskRecord(
                     id = "a",
-                    listId = "l",
                     title = "Call mom \"today\"\nnow",
                     dueDate = "2026-10-14",
                     dueTime = "17:00",
@@ -96,18 +93,31 @@ class BackupCodecTest {
     }
 
     @Test
-    fun aFileWithoutFiltersStillReads() {
-        // Written before saved filters existed.
-        val text = "{\"format\": \"feather-backup\", \"version\": 1, \"tasks\": []}"
+    fun anOlderFileWithListsFoldersAndFiltersStillReads() {
+        // Written before lists, folders and saved filters left the app: those parts are ignored and the
+        // tasks (and their tags) are all still read.
+        val text = """
+            {
+              "format": "feather-backup",
+              "version": 1,
+              "folders": [{ "id": "f", "name": "Areas" }],
+              "lists": [{ "id": "l", "name": "Work", "folderId": "f" }],
+              "filters": [{ "id": "x", "name": "Important", "minPriority": 3 }],
+              "tags": [{ "id": "t", "name": "work", "parentId": "p" }],
+              "tasks": [{ "id": "a", "listId": "l", "title": "Report" }]
+            }
+        """.trimIndent()
 
-        assertEquals(emptyList<FilterRecord>(), BackupCodec.decode(text).filters)
+        val file = BackupCodec.decode(text)
+
+        assertEquals("Report", file.tasks.single().title)
+        assertEquals("work", file.tags.single().name)
+        assertEquals("p", file.tags.single().parentId)
     }
 
     @Test
-    fun filtersSurviveAWriteAndRead() {
-        val file = BackupFile(
-            filters = listOf(FilterRecord("f", "Important", listId = "l", tagId = "t", minPriority = 3, dueWindow = 3)),
-        )
+    fun aTagThatSitsUnderAnotherSurvivesAWriteAndRead() {
+        val file = BackupFile(tags = listOf(TagRecord("t", "bugfix", parentId = "w"), TagRecord("w", "work")))
 
         assertEquals(file, BackupCodec.decode(BackupCodec.encode(file)))
     }

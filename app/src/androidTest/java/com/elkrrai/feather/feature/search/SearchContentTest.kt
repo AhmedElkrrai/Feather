@@ -7,7 +7,6 @@ import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Task
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.ui.theme.FeatherTheme
 import java.time.Instant
 import org.junit.Assert.assertEquals
@@ -21,11 +20,9 @@ class SearchContentTest {
 
     private fun string(id: Int) = InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
 
-    private val inbox = TaskList(TaskList.INBOX_ID, "Inbox", isInbox = true, sortOrder = 0)
 
     private fun task(id: String, title: String) = Task(
         id = id,
-        listId = TaskList.INBOX_ID,
         title = title,
         sortOrder = 0,
         createdAt = Instant.EPOCH,

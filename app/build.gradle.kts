@@ -86,6 +86,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.play.billing.ktx)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.documentfile)
     implementation(libs.androidx.glance.appwidget)

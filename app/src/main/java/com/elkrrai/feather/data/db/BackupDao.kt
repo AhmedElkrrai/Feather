@@ -13,12 +13,6 @@ import androidx.room.Upsert
  */
 @Dao
 interface BackupDao {
-    @Query("SELECT * FROM folders")
-    suspend fun folders(): List<FolderEntity>
-
-    @Query("SELECT * FROM task_lists")
-    suspend fun lists(): List<ListEntity>
-
     @Query("SELECT * FROM tags")
     suspend fun tags(): List<TagEntity>
 
@@ -33,21 +27,6 @@ interface BackupDao {
 
     @Query("SELECT * FROM completion_history")
     suspend fun completions(): List<CompletionEntity>
-
-    @Query("SELECT * FROM saved_filters")
-    suspend fun filters(): List<SavedFilterEntity>
-
-    @Upsert
-    suspend fun upsertFilters(rows: List<SavedFilterEntity>)
-
-    @Query("DELETE FROM saved_filters")
-    suspend fun deleteAllFilters()
-
-    @Upsert
-    suspend fun upsertFolders(rows: List<FolderEntity>)
-
-    @Upsert
-    suspend fun upsertLists(rows: List<ListEntity>)
 
     @Upsert
     suspend fun upsertTags(rows: List<TagEntity>)
@@ -70,12 +49,6 @@ interface BackupDao {
     /** Removes every task with its tag links, reminders and history (they cascade). */
     @Query("DELETE FROM tasks")
     suspend fun deleteAllTasks()
-
-    @Query("DELETE FROM task_lists")
-    suspend fun deleteAllLists()
-
-    @Query("DELETE FROM folders")
-    suspend fun deleteAllFolders()
 
     @Query("DELETE FROM tags")
     suspend fun deleteAllTags()

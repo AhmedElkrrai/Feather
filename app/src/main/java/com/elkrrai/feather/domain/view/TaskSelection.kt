@@ -1,7 +1,10 @@
 package com.elkrrai.feather.domain.view
 
+import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
+import com.elkrrai.feather.domain.model.branchIds
 import java.time.LocalDate
+import java.time.ZoneId
 
 /** How many days ahead the Upcoming view reaches. */
 const val UPCOMING_DAYS = 7L
@@ -70,4 +73,56 @@ fun List<Task>.search(query: String): List<Task> {
             task.tags.any { it.name.contains(q, ignoreCase = true) } ||
             task.subtasks.any { it.title.contains(q, ignoreCase = true) }
     }
+}
+
+/**
+ * The order inside one day of the Completed view: the newest finished first for the default sort
+ * (creation order says little about finished tasks), otherwise the sort the person chose.
+ */
+fun TaskSort.doneComparator(): Comparator<Task> =
+    if (this == TaskSort.CREATED) {
+        compareBy<Task> { !it.isPinned }.thenByDescending { it.completedAt }
+    } else {
+        comparator()
+    }
+
+/**
+ * Finished tasks grouped by the day they were finished on (in [zone]), the latest day first, each
+ * day ordered by [sort]. Tasks that are not finished are left out.
+ */
+fun List<Task>.groupedByDoneDay(zone: ZoneId, sort: TaskSort): List<DayGroup> =
+    filter { it.completedAt != null }
+        .groupBy { it.completedAt!!.atZone(zone).toLocalDate() }
+        .entries
+        .sortedByDescending { it.key.toEpochDay() }
+        .map { DayGroup(date = it.key, tasks = it.value.sortedWith(sort.doneComparator())) }
+
+/**
+ * Search with tags. [selectedTagId] (a tag picked as a filter) and a query that starts with `#`
+ * (such as `#work`, matched on the start of a tag's name so it works while typing) both narrow the
+ * search to tasks that carry that tag or any tag under it, so searching "work" also finds the tasks
+ * tagged "bugfix" when "bugfix" extends "work". Anything else typed is searched in titles, notes,
+ * tag names and subtasks as before. With a tag filter and no text, every task of the branch is listed;
+ * with neither, nothing is.
+ */
+fun List<Task>.searchTasks(query: String, allTags: List<Tag>, selectedTagId: String?): List<Task> {
+    val q = query.trim()
+    val branches = mutableListOf<Set<String>>()
+    var text = q
+
+    if (selectedTagId != null) branches += allTags.branchIds(selectedTagId)
+    if (q.startsWith("#")) {
+        val name = q.removePrefix("#").trim()
+        if (name.isNotEmpty()) {
+            val hits = allTags.filter { it.name.startsWith(name, ignoreCase = true) }
+            if (hits.isNotEmpty()) {
+                branches += hits.flatMapTo(LinkedHashSet()) { allTags.branchIds(it.id) }
+                text = ""
+            }
+        }
+    }
+
+    if (branches.isEmpty()) return search(text)
+    val tagged = filter { task -> branches.all { branch -> task.tags.any { it.id in branch } } }
+    return if (text.isBlank()) tagged else tagged.search(text)
 }

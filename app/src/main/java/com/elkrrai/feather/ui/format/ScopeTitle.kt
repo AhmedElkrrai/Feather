@@ -3,12 +3,7 @@ package com.elkrrai.feather.ui.format
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.elkrrai.feather.R
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.view.TaskScope
-
-/** The Inbox is a system list, so its name comes from a localized resource. */
-@Composable
-fun TaskList.displayName(): String = if (isInbox) stringResource(R.string.inbox) else name
 
 @Composable
 fun TaskScope.title(): String = when (this) {

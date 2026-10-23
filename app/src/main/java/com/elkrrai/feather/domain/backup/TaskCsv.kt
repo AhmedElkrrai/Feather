@@ -15,17 +15,15 @@ object TaskCsv {
     private const val LINE_BREAK = "\r\n"
 
     val HEADER: List<String> = listOf(
-        "Title", "Notes", "List", "Due date", "Due time", "Priority", "Status",
+        "Title", "Notes", "Due date", "Due time", "Priority", "Status",
         "Completed at", "Tags", "Repeat", "Subtasks",
     )
 
-    /** @param listNames list id to the name to print (the Inbox name is the caller's to choose) */
-    fun build(tasks: List<Task>, listNames: Map<String, String>): String {
+    fun build(tasks: List<Task>): String {
         val rows = tasks.map { task ->
             listOf(
                 task.title,
                 task.notes,
-                listNames[task.listId].orEmpty(),
                 task.dueDate?.toString().orEmpty(),
                 task.dueTime?.toString().orEmpty(),
                 priorityName(task.priority),

@@ -1,7 +1,5 @@
 package com.elkrrai.feather.data
 
-import com.elkrrai.feather.data.repository.SavedFilterRepositoryImpl
-import com.elkrrai.feather.domain.model.DueWindow
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -11,7 +9,7 @@ import com.elkrrai.feather.data.backup.BackupFile
 import com.elkrrai.feather.data.db.FeatherDatabase
 import com.elkrrai.feather.data.db.RoomTransactionRunner
 import com.elkrrai.feather.data.repository.BackupRepositoryImpl
-import com.elkrrai.feather.data.repository.ListRepositoryImpl
+import com.elkrrai.feather.data.repository.InboxRepositoryImpl
 import com.elkrrai.feather.data.repository.TagRepositoryImpl
 import com.elkrrai.feather.data.repository.TaskRepositoryImpl
 import com.elkrrai.feather.domain.backup.BackupFormatException
@@ -20,7 +18,6 @@ import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.Reminder
 import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.recurrence.Frequency
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import java.time.LocalDate
@@ -40,11 +37,10 @@ class BackupRepositoryTest {
     private lateinit var db: FeatherDatabase
     private lateinit var clock: TestClock
     private lateinit var tasks: TaskRepositoryImpl
-    private lateinit var lists: ListRepositoryImpl
+    private lateinit var inboxRepo: InboxRepositoryImpl
     private lateinit var tags: TagRepositoryImpl
     private lateinit var backup: BackupRepositoryImpl
 
-    private val inbox = TaskList.INBOX_ID
 
     @Before
     fun setUp() = runTest {
@@ -53,10 +49,10 @@ class BackupRepositoryTest {
         clock = TestClock()
         val tx = RoomTransactionRunner(db)
         tasks = TaskRepositoryImpl(db.taskDao(), db.reminderDao(), db.completionDao(), tx, clock)
-        lists = ListRepositoryImpl(db.listDao(), db.folderDao(), db.taskDao(), tx, clock)
+        inboxRepo = InboxRepositoryImpl(db.listDao(), clock)
         tags = TagRepositoryImpl(db.tagDao(), clock)
-        backup = BackupRepositoryImpl(db.backupDao(), tx, clock, tasks, lists, context)
-        lists.ensureInbox()
+        backup = BackupRepositoryImpl(db.backupDao(), tx, clock, tasks, inboxRepo)
+        inboxRepo.ensureInbox()
     }
 
     @After
@@ -66,9 +62,8 @@ class BackupRepositoryTest {
 
     /** A task with a tag, a subtask, a reminder, a repeat rule and one recorded completion. */
     private suspend fun fullTask(): String {
-        val work = lists.createList("Work")
         val tag = tags.createTag("urgent")
-        val created = tasks.addTask(work.id, "Report", LocalDate.of(2026, 10, 20))
+        val created = tasks.addTask("Report", LocalDate.of(2026, 10, 20))
         tasks.saveTaskDetails(
             created.copy(
                 priority = Priority.HIGH,
@@ -90,7 +85,7 @@ class BackupRepositoryTest {
         val json = backup.exportJson()
         clock.advance()
         tasks.saveTask(tasks.getTask(id)!!.copy(title = "Changed"))
-        tasks.addTask(inbox, "Added later")
+        tasks.addTask("Added later")
 
         backup.importJson(json, ImportMode.REPLACE)
 
@@ -107,15 +102,30 @@ class BackupRepositoryTest {
     }
 
     @Test
-    fun aReplaceImportWithAnEmptyFileStillLeavesTheInbox() = runTest {
+    fun aReplaceImportWithAnEmptyFileStillLeavesRoomForNewTasks() = runTest {
         fullTask()
 
         backup.importJson(BackupCodec.encode(BackupFile()), ImportMode.REPLACE)
 
         assertTrue(tasks.getActiveTasks().isEmpty())
-        val remaining = lists.observeLists().first().single()
-        assertEquals(inbox, remaining.id)
-        assertTrue(remaining.isInbox)
+        // the Inbox is still there, so a new task can be saved
+        tasks.addTask("After the import")
+        assertEquals(listOf("After the import"), tasks.getActiveTasks().map { it.title })
+    }
+
+    @Test
+    fun anOldBackupWithListsAndFoldersImportsEveryTaskIntoTheInbox() = runTest {
+        val json = """
+            {"format":"feather-backup","version":1,
+             "folders":[{"id":"f","name":"Areas"}],
+             "lists":[{"id":"w","name":"Work","folderId":"f"}],
+             "filters":[{"id":"x","name":"Important"}],
+             "tasks":[{"id":"a","listId":"w","title":"Report"}]}
+        """.trimIndent()
+
+        backup.importJson(json, ImportMode.REPLACE)
+
+        assertEquals(listOf("Report"), tasks.getActiveTasks().map { it.title })
     }
 
     @Test
@@ -124,7 +134,7 @@ class BackupRepositoryTest {
         val json = backup.exportJson()
         clock.advance()
         tasks.saveTask(tasks.getTask(id)!!.copy(title = "Edited after the backup"))
-        val extra = tasks.addTask(inbox, "Added after the backup")
+        val extra = tasks.addTask("Added after the backup")
 
         backup.importJson(json, ImportMode.MERGE)
 
@@ -180,7 +190,6 @@ class BackupRepositoryTest {
         val summary = backup.importJson(json, ImportMode.MERGE)
 
         assertEquals(1, summary.tasks)
-        assertEquals(1, summary.lists)
         assertEquals(1, summary.tags)
     }
 
@@ -191,23 +200,6 @@ class BackupRepositoryTest {
         val csv = backup.exportCsv()
 
         assertTrue(csv.contains("Report"))
-        assertTrue(csv.contains("Work"))
         assertTrue(csv.contains("urgent"))
-    }
-
-    @Test
-    fun savedFiltersTravelInTheBackup() = runTest {
-        val filters = SavedFilterRepositoryImpl(db.savedFilterDao(), clock)
-        filters.createFilter("Important", null, null, Priority.HIGH, DueWindow.OVERDUE, hideCompleted = true)
-        val json = backup.exportJson()
-
-        backup.importJson(BackupCodec.encode(BackupFile()), ImportMode.REPLACE)
-        assertTrue(filters.observeFilters().first().isEmpty())
-
-        backup.importJson(json, ImportMode.MERGE)
-        val restored = filters.observeFilters().first().single()
-        assertEquals("Important", restored.name)
-        assertEquals(Priority.HIGH, restored.minPriority)
-        assertEquals(DueWindow.OVERDUE, restored.due)
     }
 }

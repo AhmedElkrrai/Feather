@@ -14,7 +14,6 @@ class MappersTest {
 
     private val task = Task(
         id = "t1",
-        listId = "l1",
         title = "Buy milk",
         notes = "2 liters",
         dueDate = LocalDate.of(2026, 10, 12),
@@ -55,6 +54,11 @@ class MappersTest {
     @Test
     fun taskRoundTripsThroughEntity() {
         assertEquals(task, task.toEntity().toDomain())
+    }
+
+    @Test
+    fun everyTaskIsKeptInTheInbox() {
+        assertEquals(INBOX_LIST_ID, task.toEntity().listId)
     }
 
     @Test

@@ -6,25 +6,19 @@ import org.junit.Test
 
 class BackupMergerTest {
 
-    private val inbox = "inbox"
-
-    private fun task(id: String, updatedAt: Long, listId: String = inbox, title: String = id) =
-        TaskRecord(id = id, listId = listId, title = title, updatedAt = updatedAt)
-
-    private fun list(id: String, updatedAt: Long = 1) = ListRecord(id = id, name = id, updatedAt = updatedAt)
+    private fun task(id: String, updatedAt: Long, title: String = id) =
+        TaskRecord(id = id, title = title, updatedAt = updatedAt)
 
     private fun tag(id: String, name: String, updatedAt: Long = 1, deletedAt: Long? = null) =
         TagRecord(id = id, name = name, updatedAt = updatedAt, deletedAt = deletedAt)
 
-    private fun plan(local: BackupFile, incoming: BackupFile) = BackupMerger.plan(local, incoming, inbox)
+    private fun plan(local: BackupFile, incoming: BackupFile) = BackupMerger.plan(local, incoming)
 
     @Test
     fun anEmptyPhoneTakesEverythingInTheFile() {
         val file = BackupFile(
-            folders = listOf(FolderRecord("f", "Folder")),
-            lists = listOf(list("l")),
             tags = listOf(tag("t", "work")),
-            tasks = listOf(task("a", 1, listId = "l")),
+            tasks = listOf(task("a", 1)),
             taskTags = listOf(TaskTagRecord("a", "t")),
             reminders = listOf(ReminderRecord("r", "a", kind = 0)),
             completions = listOf(CompletionRecord("c", "a", completedAt = 5)),
@@ -32,8 +26,6 @@ class BackupMergerTest {
 
         val plan = plan(BackupFile(), file)
 
-        assertEquals(file.folders, plan.folders)
-        assertEquals(file.lists, plan.lists)
         assertEquals(file.tags, plan.tags)
         assertEquals(file.tasks, plan.tasks)
         assertEquals(file.taskTags, plan.tagLinks)
@@ -90,27 +82,6 @@ class BackupMergerTest {
         val incoming = BackupFile(tags = listOf(tag("t9", "work", deletedAt = 5)))
 
         assertEquals(listOf("t9"), plan(local, incoming).tags.map { it.id })
-    }
-
-    @Test
-    fun aTaskInAnUnknownListGoesToTheInbox() {
-        val incoming = BackupFile(
-            lists = listOf(list("known")),
-            tasks = listOf(task("a", 1, listId = "known"), task("b", 1, listId = "missing")),
-        )
-
-        val byId = plan(BackupFile(), incoming).tasks.associateBy { it.id }
-
-        assertEquals("known", byId.getValue("a").listId)
-        assertEquals(inbox, byId.getValue("b").listId)
-    }
-
-    @Test
-    fun aListThatIsOnlyOnThePhoneIsStillKnown() {
-        val local = BackupFile(lists = listOf(list("here")))
-        val incoming = BackupFile(tasks = listOf(task("a", 1, listId = "here")))
-
-        assertEquals("here", plan(local, incoming).tasks.single().listId)
     }
 
     @Test

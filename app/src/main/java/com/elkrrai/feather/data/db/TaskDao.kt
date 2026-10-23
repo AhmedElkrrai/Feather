@@ -96,10 +96,6 @@ interface TaskDao {
     )
     suspend fun softDeleteByIds(ids: List<String>, deletedAt: Long)
 
-    /** Moves every task (and subtask) of a list, used when a list is deleted. */
-    @Query("UPDATE tasks SET listId = :toListId, updatedAt = :updatedAt WHERE listId = :fromListId")
-    suspend fun moveAllToList(fromListId: String, toListId: String, updatedAt: Long)
-
     /** Permanently removes a task and its subtasks (cross-refs go with them by cascade). */
     @Query("DELETE FROM tasks WHERE id = :id OR parentTaskId = :id")
     suspend fun hardDelete(id: String)

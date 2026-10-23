@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
 /** When a task was last finished, epoch millis. */
 data class LatestCompletion(val taskId: String, val completedAt: Long)
 
-/** One finish with the task's title and list, for the Your rhythm screen. */
-data class CompletionRow(val taskId: String, val title: String, val listId: String, val completedAt: Long)
+/** One finish with the task's title, for the Your rhythm screen. */
+data class CompletionRow(val taskId: String, val title: String, val completedAt: Long)
 
 @Dao
 interface CompletionDao {
@@ -22,7 +22,7 @@ interface CompletionDao {
 
     /** Every finish of a top-level task (a deleted one included: it still happened), newest first. */
     @Query(
-        "SELECT c.taskId AS taskId, t.title AS title, t.listId AS listId, c.completedAt AS completedAt " +
+        "SELECT c.taskId AS taskId, t.title AS title, c.completedAt AS completedAt " +
             "FROM completion_history c JOIN tasks t ON t.id = c.taskId " +
             "WHERE t.parentTaskId IS NULL ORDER BY c.completedAt DESC"
     )

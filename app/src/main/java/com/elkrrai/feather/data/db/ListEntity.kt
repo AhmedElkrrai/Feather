@@ -3,9 +3,15 @@ package com.elkrrai.feather.data.db
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+/** The id of the one list every task is kept in. */
+const val INBOX_LIST_ID = "00000000-0000-0000-0000-000000000001"
+
 /**
- * Timestamps are epoch millis. `deletedAt != null` means soft-deleted.
- * [colorArgb] is an optional list color; [folderId] is the optional containing folder.
+ * Tasks have no lists in the app any more, but the table stays: `tasks.listId` is a foreign key to
+ * it, and SQLite can only drop a foreign key by rebuilding the `tasks` table, which would also wipe
+ * everything that hangs on tasks (tags, reminders, history) if it went wrong. So every task is kept
+ * in one hidden list, the Inbox, and the columns for lists of your own ([folderId], [colorArgb]) are
+ * unused. Lists made before the change stay as unused rows. Timestamps are epoch millis.
  */
 @Entity(tableName = "task_lists")
 data class ListEntity(

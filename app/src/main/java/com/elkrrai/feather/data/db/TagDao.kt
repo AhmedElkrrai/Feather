@@ -10,6 +10,13 @@ interface TagDao {
     @Query("SELECT * FROM tags WHERE deletedAt IS NULL ORDER BY name COLLATE NOCASE")
     fun observeActive(): Flow<List<TagEntity>>
 
+    @Query("SELECT * FROM tags WHERE deletedAt IS NULL")
+    suspend fun getActive(): List<TagEntity>
+
+    /** The non-deleted tags that extend [parentId]. */
+    @Query("SELECT * FROM tags WHERE parentId = :parentId AND deletedAt IS NULL")
+    suspend fun activeChildren(parentId: String): List<TagEntity>
+
     @Query("SELECT * FROM tags WHERE id = :id")
     suspend fun getById(id: String): TagEntity?
 

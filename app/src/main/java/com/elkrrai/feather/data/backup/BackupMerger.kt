@@ -8,14 +8,11 @@ package com.elkrrai.feather.data.backup
  * phone's tag links are replaced by [tagLinks]. [reminders] are upserted by id.
  */
 data class MergePlan(
-    val folders: List<FolderRecord>,
-    val lists: List<ListRecord>,
     val tags: List<TagRecord>,
     val tasks: List<TaskRecord>,
     val tagLinks: List<TaskTagRecord>,
     val reminders: List<ReminderRecord>,
     val completions: List<CompletionRecord>,
-    val filters: List<FilterRecord>,
     val rewrittenTaskIds: Set<String>,
 )
 
@@ -28,17 +25,12 @@ data class MergePlan(
  *   later `updatedAt`; on a tie the phone's copy stays.
  * - A tag in the file that has the same name as a live tag on the phone (ignoring case) is
  *   joined to the phone's tag instead of being added a second time.
- * - A task whose list is unknown goes to the Inbox ([inboxId]).
  * - Tag links and reminders come from the file only for tasks that were taken from it.
  *   Completion history is a union.
  */
 object BackupMerger {
 
-    fun plan(local: BackupFile, incoming: BackupFile, inboxId: String): MergePlan {
-        val folders = newer(local.folders, incoming.folders, { it.id }, { it.updatedAt })
-        val lists = newer(local.lists, incoming.lists, { it.id }, { it.updatedAt })
-        val filters = newer(local.filters, incoming.filters, { it.id }, { it.updatedAt })
-
+    fun plan(local: BackupFile, incoming: BackupFile): MergePlan {
         // Same-named tags are one tag.
         val liveLocalTags = local.tags.filter { it.deletedAt == null }.associateBy { normalizedName(it.name) }
         val tagRemap = HashMap<String, String>()
@@ -50,9 +42,7 @@ object BackupMerger {
         }
         val tags = newer(local.tags, candidateTags, { it.id }, { it.updatedAt })
 
-        val knownLists = local.lists.map { it.id }.toSet() + lists.map { it.id } + inboxId
         val tasks = newer(local.tasks, incoming.tasks, { it.id }, { it.updatedAt })
-            .map { if (it.listId in knownLists) it else it.copy(listId = inboxId) }
         val rewritten = tasks.map { it.id }.toSet()
 
         val knownTags = local.tags.map { it.id }.toSet() + tags.map { it.id }
@@ -71,14 +61,11 @@ object BackupMerger {
             .distinctBy { it.id }
 
         return MergePlan(
-            folders = folders,
-            lists = lists,
             tags = tags,
             tasks = tasks,
             tagLinks = tagLinks,
             reminders = reminders,
             completions = completions,
-            filters = filters,
             rewrittenTaskIds = rewritten,
         )
     }

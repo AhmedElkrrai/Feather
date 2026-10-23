@@ -26,6 +26,14 @@ fun formatDayHeader(context: Context, date: LocalDate, today: LocalDate, locale:
         else -> DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(date)
     }
 
+/** The header over a day of the Completed view: "Today", "Yesterday" or the full date. */
+fun formatDoneHeader(context: Context, date: LocalDate, today: LocalDate, locale: Locale): String =
+    when (date) {
+        today -> context.getString(R.string.due_today)
+        today.minusDays(1) -> context.getString(R.string.done_yesterday)
+        else -> DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(date)
+    }
+
 fun formatDueTime(time: LocalTime, locale: Locale): String {
     val formatter = when (DisplayPrefs.timeFormat) {
         TimeFormat.SYSTEM -> DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)

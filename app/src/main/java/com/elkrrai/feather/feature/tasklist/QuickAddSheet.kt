@@ -56,13 +56,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
 import com.elkrrai.feather.domain.quickadd.QuickAddEdits
 import com.elkrrai.feather.domain.quickadd.QuickAddField
 import com.elkrrai.feather.domain.quickadd.QuickAddHint
 import com.elkrrai.feather.domain.quickadd.QuickAddParser
-import com.elkrrai.feather.ui.format.displayName
 import com.elkrrai.feather.ui.format.formatDueDate
 import com.elkrrai.feather.ui.format.formatDueTime
 import com.elkrrai.feather.ui.format.label

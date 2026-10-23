@@ -13,7 +13,6 @@ class FinishingRowsTest {
 
     private fun task(id: String, done: Boolean = false) = Task(
         id = id,
-        listId = "inbox",
         title = id,
         completedAt = if (done) now else null,
         sortOrder = 0,

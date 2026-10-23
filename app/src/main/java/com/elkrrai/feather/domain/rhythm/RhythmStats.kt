@@ -6,11 +6,10 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 
-/** One finished task: which, what it was called, the list it was in, and when. */
+/** One finished task: which, what it was called, and when. */
 data class CompletionRecord(
     val taskId: String,
     val title: String,
-    val listId: String,
     val completedAt: Instant,
 )
 
@@ -45,8 +44,6 @@ data class MonthCell(
 /** A month as a grid of weeks: [leadingBlanks] empty cells come before the first of the month. */
 data class MonthGrid(val month: YearMonth, val leadingBlanks: Int, val cells: List<MonthCell>)
 
-data class ListShare(val listId: String, val count: Int)
-
 /** A repeating task that is going well, with a dot for each of the last seven days. */
 data class SteadyTask(val taskId: String, val title: String, val lastSeven: List<Boolean>)
 
@@ -70,8 +67,6 @@ data class RhythmStats(
     val timeOfDay: Map<TimeOfDay, Int>,
     /** The part of the day with the most, or null when nothing was finished. */
     val bestTime: TimeOfDay?,
-    /** Finished per list over the last 30 days, the most first. */
-    val lists: List<ListShare>,
     val steady: List<SteadyTask>,
     /** Everything finished, by day, for the month sheet. */
     val byDay: Map<LocalDate, List<CompletionRecord>>,
@@ -143,9 +138,6 @@ fun rhythmStats(
         recent.count { timeOfDayFor(it.first.completedAt.atZone(zone).hour) == slot }
     }
     val bestTime = times.maxByOrNull { it.value }?.takeIf { it.value > 0 }?.key
-    val lists = recent.groupingBy { it.first.listId }.eachCount()
-        .map { ListShare(it.key, it.value) }
-        .sortedWith(compareByDescending<ListShare> { it.count }.thenBy { it.listId })
 
     return RhythmStats(
         total = records.size,
@@ -156,7 +148,6 @@ fun rhythmStats(
         busiestWeekday = busiest,
         timeOfDay = times,
         bestTime = bestTime,
-        lists = lists,
         steady = steadyTasks(dated, today, firstDay),
         byDay = byDay,
     )

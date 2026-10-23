@@ -9,7 +9,6 @@ class TaskSortOrderTest {
 
     private fun task(title: String, createdAt: Long, sortOrder: Long, pinned: Boolean = false) = Task(
         id = title,
-        listId = "inbox",
         title = title,
         sortOrder = sortOrder,
         createdAt = Instant.ofEpochSecond(createdAt),

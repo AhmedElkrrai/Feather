@@ -8,14 +8,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.elkrrai.feather.data.TestClock
 import com.elkrrai.feather.data.db.FeatherDatabase
 import com.elkrrai.feather.data.db.RoomTransactionRunner
-import com.elkrrai.feather.data.repository.ListRepositoryImpl
+import com.elkrrai.feather.data.repository.InboxRepositoryImpl
 import com.elkrrai.feather.data.repository.ReminderRepositoryImpl
 import com.elkrrai.feather.data.repository.TagRepositoryImpl
 import com.elkrrai.feather.data.repository.TaskRepositoryImpl
 import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.recurrence.Frequency
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.testutil.MainDispatcherRule
@@ -47,10 +46,9 @@ class TaskEditViewModelTest {
 
     private lateinit var db: FeatherDatabase
     private lateinit var tasks: TaskRepositoryImpl
-    private lateinit var lists: ListRepositoryImpl
+    private lateinit var inboxRepo: InboxRepositoryImpl
     private lateinit var tags: TagRepositoryImpl
     private lateinit var reminderRepo: ReminderRepositoryImpl
-    private val inbox = TaskList.INBOX_ID
 
     @Before
     fun setUp() = runTest {
@@ -60,9 +58,9 @@ class TaskEditViewModelTest {
         val tx = RoomTransactionRunner(db)
         tasks = TaskRepositoryImpl(db.taskDao(), db.reminderDao(), db.completionDao(), tx, clock)
         reminderRepo = ReminderRepositoryImpl(db.reminderDao(), tx, clock)
-        lists = ListRepositoryImpl(db.listDao(), db.folderDao(), db.taskDao(), tx, clock)
+        inboxRepo = InboxRepositoryImpl(db.listDao(), clock)
         tags = TagRepositoryImpl(db.tagDao(), clock)
-        lists.ensureInbox()
+        inboxRepo.ensureInbox()
     }
 
     @After
@@ -98,7 +96,6 @@ class TaskEditViewModelTest {
 
         assertTrue(viewModel.uiState.value.finished)
         val saved = tasks.observeTasks().first().single()
-        assertEquals(inbox, saved.listId)
         assertEquals("Dentist", saved.title)
         assertEquals("Bring insurance card", saved.notes)
         assertEquals(LocalDate.of(2026, 10, 20), saved.dueDate)
@@ -120,7 +117,7 @@ class TaskEditViewModelTest {
     @Test
     fun editingLoadsTheExistingTaskWithItsDetails() = runTest {
         val work = tags.createTag("work")
-        val existing = tasks.addTask(inbox, "Existing")
+        val existing = tasks.addTask("Existing")
         tasks.saveTaskDetails(
             existing.copy(
                 notes = "n",
@@ -145,7 +142,7 @@ class TaskEditViewModelTest {
 
     @Test
     fun savingAnEditUpdatesTheSameTaskInsteadOfCreatingAnother() = runTest {
-        val existing = tasks.addTask(inbox, "Old title")
+        val existing = tasks.addTask("Old title")
         val viewModel = editViewModel(existing.id)
 
         viewModel.onTitleChange("New title")
@@ -195,14 +192,13 @@ class TaskEditViewModelTest {
 
     @Test
     fun theTaskCanBePinnedAndStaysInItsList() = runTest {
-        val existing = tasks.addTask(inbox, "Task")
+        val existing = tasks.addTask("Task")
         val viewModel = editViewModel(existing.id)
 
         viewModel.onPinnedChange(true)
         viewModel.save()
 
         val saved = tasks.getTask(existing.id)!!
-        assertEquals(inbox, saved.listId)
         assertTrue(saved.isPinned)
     }
 
@@ -259,7 +255,7 @@ class TaskEditViewModelTest {
 
     @Test
     fun aPendingSnoozeIsNotShownInTheEditorAndSurvivesSaving() = runTest {
-        val existing = tasks.addTask(inbox, "Task")
+        val existing = tasks.addTask("Task")
         reminderRepo.snooze(existing.id, LocalDateTime.of(2026, 10, 20, 9, 0))
         val viewModel = editViewModel(existing.id)
         assertTrue(viewModel.uiState.value.reminders.isEmpty())
@@ -307,7 +303,7 @@ class TaskEditViewModelTest {
 
     @Test
     fun removingTheRuleMakesTheTaskAOneOff() = runTest {
-        val existing = tasks.addTask(inbox, "Task", LocalDate.of(2026, 10, 20))
+        val existing = tasks.addTask("Task", LocalDate.of(2026, 10, 20))
         tasks.saveTaskDetails(existing.copy(recurrence = Recurrence(Frequency.DAILY)))
         val viewModel = editViewModel(existing.id)
 

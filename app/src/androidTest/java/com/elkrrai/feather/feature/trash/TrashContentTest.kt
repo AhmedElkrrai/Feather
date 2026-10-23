@@ -23,7 +23,6 @@ class TrashContentTest {
 
     private fun task(id: String, title: String) = Task(
         id = id,
-        listId = "list",
         title = title,
         sortOrder = 0,
         createdAt = Instant.EPOCH,

@@ -2,7 +2,6 @@ package com.elkrrai.feather.feature.quickadd
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
 import com.elkrrai.feather.domain.repository.TagRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
@@ -34,13 +33,13 @@ class QuickAddViewModel @Inject constructor(
     }
 
     /**
-     * Saves the task (every task lives in the Inbox now) and then calls [onDone]. The write is
+     * Saves the task and then calls [onDone]. The write is
      * protected from cancellation, so it completes even if the screen is closing.
      */
     fun add(parsed: ParsedQuickAdd, onDone: () -> Unit) {
         viewModelScope.launch {
             withContext(NonCancellable) {
-                QuickAddTask(tasks, tags)(parsed, listId = TaskList.INBOX_ID)
+                QuickAddTask(tasks, tags)(parsed)
             }
             onDone()
         }

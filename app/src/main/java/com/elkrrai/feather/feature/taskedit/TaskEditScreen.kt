@@ -77,7 +77,6 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.feature.tasklist.NameDialog
 import com.elkrrai.feather.domain.text.findLinks
@@ -88,7 +87,6 @@ import com.elkrrai.feather.ui.components.OverflowButton
 import com.elkrrai.feather.ui.components.DurationDialog
 import com.elkrrai.feather.ui.components.TimeOfDayDialog
 import com.elkrrai.feather.ui.components.rememberReminderHealth
-import com.elkrrai.feather.ui.format.displayName
 import com.elkrrai.feather.ui.format.formatDueDate
 import com.elkrrai.feather.ui.format.formatDueTime
 import com.elkrrai.feather.ui.format.label

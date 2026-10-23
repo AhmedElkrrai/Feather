@@ -32,13 +32,12 @@ class FakeTaskRepository : TaskRepository {
     override suspend fun getTask(id: String): Task? =
         rows.value.firstOrNull { it.task.id == id && it.deletedAt == null }?.task
 
-    override suspend fun addTask(listId: String, title: String, dueDate: LocalDate?): Task {
+    override suspend fun addTask(title: String, dueDate: LocalDate?): Task {
         require(title.isNotBlank())
         counter++
         val now = Instant.ofEpochSecond(counter)
         val task = Task(
             id = "task-$counter",
-            listId = listId,
             title = title.trim(),
             dueDate = dueDate,
             sortOrder = counter,
@@ -70,7 +69,7 @@ class FakeTaskRepository : TaskRepository {
 
     override suspend fun duplicateTask(id: String, title: String): Task? {
         val source = getTask(id) ?: return null
-        val copy = addTask(source.listId, title, source.dueDate)
+        val copy = addTask(title, source.dueDate)
         val detailed = copy.copy(
             notes = source.notes,
             dueTime = source.dueTime,

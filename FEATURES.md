@@ -11,7 +11,7 @@ Feather is an Android-only, feature-rich todo app for everyone. It is fully free
 
 ## Status (see MILESTONES.md)
 - **Done in M1:** tasks (title, notes, due date and time, priority), swipe to delete with undo, quick add, English and Arabic with RTL, Material You theme.
-- **Done in M2:** lists with colors and one level of folders, tags, subtasks (checklist), pin, move between lists, smart views (Today, Upcoming, Overdue, All, Completed, No date), sort (creation, due date, priority), search, trash with restore and 30-day purge.
+- **Done in M2:** tags, subtasks (checklist), pin, smart views (Today, Upcoming, Overdue, Goals, Completed), sort (creation, due date, priority), search, trash with restore and 30-day purge.
 - **Done in M3:** multiple reminders per task (at due time, before due, at a specific time), notifications with Complete and Snooze, snooze presets and custom, tap to open the task, reminders re-armed after reboot, app update, clock and time zone changes, a reliability helper with a test reminder, settings (default reminder time, snooze length, daily summary), and the optional daily summary.
 - **Done in M4:** repeating tasks: daily, weekly (chosen days), monthly (a date, the last day, or the 2nd Tuesday), yearly, custom intervals, fixed schedule or repeat after completion, ending on a date or after a number of times. Finishing a repeating task moves it to its next date, unchecks its checklist and re-arms its reminders; every completion is kept in a history.
 - **Done in M5:** quick add understands "Call mom tomorrow 5pm !high #family @Home every monday" in English and standard Arabic (date, time, priority, tags, list, repeat) and shows what it understood as chips that can be tapped away; voice input through the phone's speech recognizer; sharing text from any app into Feather; a Quick Settings tile and a launcher shortcut for adding a task.
@@ -24,12 +24,12 @@ Feather is an Android-only, feature-rich todo app for everyone. It is fully free
 - Title, notes (plain text and tappable links), due date and time, priority (4 levels), completion
 - Subtasks and checklists, drag to reorder
 - Swipe to complete or delete, with undo
-- Duplicate task, move between lists, bulk select (complete, move, tag, delete)
+- Duplicate task, bulk select (complete, tag, delete)
 - Trash with restore (auto-purge after 30 days)
 
 ## 2. Organization
-- Lists, with an optional single level of folders
-- Tags (many per task) and colored lists
+- Tags (many per task), which can sit under other tags, with tabs above the task list to filter by tag
+- (Lists, folders and saved filters were built in M2 and removed after M9.)
 - Pin or star important tasks
 - Filter and sort by date, priority, tag, or manual order
 - Full-text search

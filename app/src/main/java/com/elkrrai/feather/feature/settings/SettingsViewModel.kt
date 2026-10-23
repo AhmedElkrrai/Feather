@@ -23,6 +23,7 @@ class SettingsViewModel @Inject constructor(
     val settings: StateFlow<AppSettings> = repository.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
 
+
     fun setDefaultReminderTime(time: LocalTime) {
         viewModelScope.launch { repository.setDefaultReminderTime(time) }
     }

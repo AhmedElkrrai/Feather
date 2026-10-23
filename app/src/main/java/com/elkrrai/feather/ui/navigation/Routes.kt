@@ -27,3 +27,6 @@ data object RhythmRoute
 
 @Serializable
 data object NestRoute
+
+@Serializable
+data object TagsRoute

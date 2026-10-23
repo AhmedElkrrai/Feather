@@ -5,17 +5,14 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /**
- * The week that just ended, as a feather made on the phone: the color is the list that had the
- * most finished tasks, each day has as many barbs as it had finished tasks (up to [MAX_BARBS]), and
- * a day of rest is a small notch.
+ * The week that just ended, as a feather made on the phone: each day has as many barbs as it had
+ * finished tasks (up to [MAX_BARBS]), and a day of rest is a small notch.
  */
 data class WeeklyFeather(
     /** The first day of the week the feather is for. */
     val weekStart: LocalDate,
     /** Finished tasks on each of the seven days, from [weekStart]. */
     val days: List<Int>,
-    /** The list with the most finished tasks that week, or null when there was a tie at nothing. */
-    val topListId: String?,
 ) {
     val total: Int get() = days.sum()
     val restDays: Int get() = days.count { it == 0 }
@@ -47,10 +44,7 @@ fun weeklyFeather(
         val day = lastWeek.plusDays(offset)
         inWeek.count { it.completedAt.atZone(zone).toLocalDate() == day }
     }
-    val top = inWeek.groupingBy { it.listId }.eachCount()
-        .entries.sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
-        .firstOrNull()?.key
-    return WeeklyFeather(lastWeek, days, top)
+    return WeeklyFeather(lastWeek, days)
 }
 
 /** Whether today is the first day of the week, which is when the feather is shown. */

@@ -16,8 +16,8 @@ class RhythmStatsTest {
 
     private fun at(date: LocalDate, hour: Int = 10) = date.atTime(hour, 0).toInstant(zone)
 
-    private fun done(date: LocalDate, hour: Int = 10, taskId: String = "t${date}${hour}", list: String = "inbox") =
-        CompletionRecord(taskId, "Task $taskId", list, at(date, hour))
+    private fun done(date: LocalDate, hour: Int = 10, taskId: String = "t${date}${hour}") =
+        CompletionRecord(taskId, "Task $taskId", at(date, hour))
 
     private fun stats(records: List<CompletionRecord>, paused: Set<LocalDate> = emptySet()) =
         rhythmStats(records, today, zone, DayOfWeek.MONDAY, paused)
@@ -108,13 +108,6 @@ class RhythmStatsTest {
         assertEquals(TimeOfDay.AFTERNOON, timeOfDayFor(12))
         assertEquals(TimeOfDay.EVENING, timeOfDayFor(17))
         assertEquals(TimeOfDay.NIGHT, timeOfDayFor(21))
-    }
-
-    @Test
-    fun listsAreRankedByHowMuchWasFinished() {
-        val s = stats(listOf(done(today, list = "a"), done(today.minusDays(1), list = "b"), done(today.minusDays(2), list = "b")))
-
-        assertEquals(listOf("b", "a"), s.lists.map { it.listId })
     }
 
     @Test

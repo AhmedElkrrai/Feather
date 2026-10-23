@@ -49,7 +49,6 @@ class TaskListContentTest {
         pinned: Boolean = false,
     ) = Task(
         id = id,
-        listId = "list",
         title = title,
         sortOrder = 0,
         createdAt = Instant.EPOCH,

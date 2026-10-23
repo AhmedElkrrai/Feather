@@ -10,7 +10,7 @@ enum class ImportMode {
 }
 
 /** How many records the imported file contained (not how many changed). */
-data class ImportSummary(val tasks: Int, val lists: Int, val tags: Int)
+data class ImportSummary(val tasks: Int, val tags: Int)
 
 /** The file could not be used. */
 class BackupFormatException(val reason: Reason, message: String, cause: Throwable? = null) :

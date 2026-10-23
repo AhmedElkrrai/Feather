@@ -14,6 +14,7 @@ import com.elkrrai.feather.feature.tasklist.TaskListScreen
 import com.elkrrai.feather.feature.trash.TrashScreen
 import com.elkrrai.feather.feature.rhythm.RhythmScreen
 import com.elkrrai.feather.feature.nest.NestScreen
+import com.elkrrai.feather.feature.tags.TagsScreen
 
 /**
  * @param openTaskId a task to open straight in the editor (from a reminder notification), or null
@@ -75,7 +76,11 @@ fun FeatherNavHost(
             SettingsScreen(
                 onBack = { navController.popBackStack() },
                 onOpenReliability = { navController.navigate(ReliabilityRoute) },
+                onOpenTags = { navController.navigate(TagsRoute) },
             )
+        }
+        composable<TagsRoute> {
+            TagsScreen(onBack = { navController.popBackStack() })
         }
         composable<NestRoute> {
             NestScreen(onBack = { navController.popBackStack() })

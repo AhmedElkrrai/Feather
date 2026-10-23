@@ -10,7 +10,6 @@ import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.domain.repository.TagRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
@@ -35,7 +34,6 @@ data class TaskEditUiState(
     val dueDate: LocalDate? = null,
     val dueTime: LocalTime? = null,
     val priority: Priority = Priority.NONE,
-    val listId: String = TaskList.INBOX_ID,
     val isPinned: Boolean = false,
     /** The tags currently attached to the task. */
     val tags: List<Tag> = emptyList(),
@@ -96,7 +94,6 @@ class TaskEditViewModel @Inject constructor(
                     dueDate = task.dueDate,
                     dueTime = task.dueTime,
                     priority = task.priority,
-                    listId = task.listId,
                     isPinned = task.isPinned,
                     tags = task.tags,
                     subtasks = task.subtasks,
@@ -212,7 +209,7 @@ class TaskEditViewModel @Inject constructor(
         if (!state.canSave) return
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
-            val base = original ?: tasks.addTask(state.listId, state.title)
+            val base = original ?: tasks.addTask(state.title)
             tasks.saveTaskDetails(
                 base.copy(
                     title = state.title.trim(),
@@ -220,7 +217,6 @@ class TaskEditViewModel @Inject constructor(
                     dueDate = state.dueDate,
                     dueTime = state.dueTime,
                     priority = state.priority,
-                    listId = state.listId,
                     isPinned = state.isPinned,
                     tags = state.tags,
                     subtasks = state.subtasks,

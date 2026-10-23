@@ -35,6 +35,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -71,6 +72,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenReliability: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenTags: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
     backupViewModel: BackupViewModel = hiltViewModel(),
 ) {
@@ -128,6 +130,7 @@ fun SettingsScreen(
         remindersHealthy = health.canDeliverOnTime && health.batteryUnrestricted,
         onBack = onBack,
         onOpenReliability = onOpenReliability,
+        onOpenTags = onOpenTags,
         onDefaultTimeChange = viewModel::setDefaultReminderTime,
         onSnoozeMinutesChange = viewModel::setSnoozeMinutes,
         onDailySummaryChange = viewModel::setDailySummaryEnabled,
@@ -162,10 +165,6 @@ fun SettingsScreen(
             onEveningCardChange = viewModel::setEveningCard,
             onWeeklyFeatherChange = viewModel::setWeeklyFeather,
         ),
-        supportUrl = SupportLinks.DONATION_URL,
-        onOpenSupport = {
-            context.startActivitySafely(Intent(Intent.ACTION_VIEW, Uri.parse(SupportLinks.DONATION_URL)))
-        },
         versionName = remember { versionNameOf(context) },
         modifier = modifier,
     )
@@ -197,9 +196,8 @@ fun SettingsContent(
     backup: BackupActions = BackupActions(),
     backupBusy: Boolean = false,
     appearance: AppearanceActions = AppearanceActions(),
-    supportUrl: String = SupportLinks.DONATION_URL,
-    onOpenSupport: () -> Unit = {},
     versionName: String = "",
+    onOpenTags: () -> Unit = {},
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val resources = LocalContext.current.resources
@@ -288,20 +286,19 @@ fun SettingsContent(
             SectionTitle(stringResource(R.string.settings_section_general))
 
             SettingsRow(
+                title = stringResource(R.string.tags_title),
+                summary = null,
+                supporting = stringResource(R.string.tags_row_summary),
+                onClick = onOpenTags,
+            )
+
+            SettingsRow(
                 title = stringResource(R.string.settings_language),
                 summary = stringResource(AppLanguage.current().labelRes),
                 supporting = null,
                 onClick = { dialog = SettingsDialog.Language },
             )
 
-            if (supportUrl.isNotBlank()) {
-                SettingsRow(
-                    title = stringResource(R.string.settings_support),
-                    summary = null,
-                    supporting = stringResource(R.string.settings_support_summary),
-                    onClick = onOpenSupport,
-                )
-            }
             ListItem(
                 leadingContent = {
                     Image(

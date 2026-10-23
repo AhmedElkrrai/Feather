@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.ui.components.CompletionRing
-import com.elkrrai.feather.ui.components.ListShapeIcon
 import com.elkrrai.feather.ui.components.MetaChip
 import com.elkrrai.feather.ui.components.StrikeText
 import com.elkrrai.feather.ui.components.SubtaskLeaves
@@ -53,7 +52,6 @@ import com.elkrrai.feather.ui.rememberReduceMotion
 import com.elkrrai.feather.ui.theme.Ease
 import com.elkrrai.feather.ui.theme.Space
 import com.elkrrai.feather.ui.theme.featherColors
-import com.elkrrai.feather.ui.theme.listShapeFor
 import java.time.LocalDate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.animation.AnimatedVisibility
@@ -82,6 +80,8 @@ fun TaskRow(
     onToggle: (completed: Boolean) -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    /** False in the Completed view, where a finished title is shown plainly, not struck through. */
+    strikeTitle: Boolean = true,
     /** When set, TalkBack offers "Delete" as an action (the swipe is not reachable with it). */
     onDelete: (() -> Unit)? = null,
     /** When set, TalkBack offers pin and unpin. */
@@ -192,7 +192,7 @@ fun TaskRow(
                 // The strike grows across the title; a finished title is dimmed to the secondary color.
                 StrikeText(
                     text = task.title,
-                    struck = task.isCompleted,
+                    struck = strikeTitle && task.isCompleted,
                     activeColor = scheme.onSurface,
                     doneColor = scheme.onSurfaceVariant,
                     style = MaterialTheme.typography.titleMedium,

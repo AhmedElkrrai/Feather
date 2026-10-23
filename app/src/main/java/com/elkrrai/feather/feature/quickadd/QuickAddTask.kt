@@ -18,18 +18,16 @@ class QuickAddTask(
     private val tags: TagRepository,
 ) {
     /**
-     * @param listId the list to put the task in
      * @param fallbackDate the due date when the text did not give one (for example "today" while
      *   looking at the Today view)
      * @param extraTags tags to add besides the ones in the text (for example the tag being viewed)
      */
     suspend operator fun invoke(
         parsed: ParsedQuickAdd,
-        listId: String,
         fallbackDate: LocalDate? = null,
         extraTags: List<Tag> = emptyList(),
     ): Task {
-        val created = tasks.addTask(listId, parsed.title, parsed.dueDate ?: fallbackDate)
+        val created = tasks.addTask(parsed.title, parsed.dueDate ?: fallbackDate)
 
         val fromText = parsed.tags.mapNotNull { name ->
             try {

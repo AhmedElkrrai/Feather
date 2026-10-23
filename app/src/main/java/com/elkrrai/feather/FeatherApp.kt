@@ -3,7 +3,7 @@ package com.elkrrai.feather
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import com.elkrrai.feather.data.backup.BackupWorker
-import com.elkrrai.feather.domain.repository.ListRepository
+import com.elkrrai.feather.domain.repository.InboxRepository
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.ui.DisplayPrefs
@@ -29,7 +29,7 @@ import com.elkrrai.feather.data.nest.NestTracker
 @HiltAndroidApp
 class FeatherApp : Application() {
 
-    @Inject lateinit var listRepository: ListRepository
+    @Inject lateinit var inboxRepository: InboxRepository
     @Inject lateinit var taskRepository: TaskRepository
     @Inject lateinit var reminderSyncer: ReminderSyncer
     @Inject lateinit var settingsRepository: SettingsRepository
@@ -51,7 +51,7 @@ class FeatherApp : Application() {
         // Channel names follow the app language, so refresh them on every start.
         ReminderChannels.ensure(withAppLocale())
         appScope.launch {
-            listRepository.ensureInbox()
+            inboxRepository.ensureInbox()
             // Housekeeping: tasks that stayed in the trash past the retention period go for good.
             taskRepository.purgeTrash()
         }

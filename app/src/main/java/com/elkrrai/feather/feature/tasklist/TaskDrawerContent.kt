@@ -37,6 +37,7 @@ class DrawerActions(
     val onOpenRhythm: () -> Unit = {},
     val onOpenNest: () -> Unit = {},
     val onOpenSettings: () -> Unit,
+    val onOpenTips: () -> Unit = {},
     val onClose: () -> Unit = {},
 )
 
@@ -55,6 +56,8 @@ fun TaskDrawerContent(
     modifier: Modifier = Modifier,
     /** A quiet dot on Your nest: something new has come to it. */
     nestDot: Boolean = false,
+    /** Whether tips are possible (the amounts loaded from Google Play); the item is hidden when not. */
+    tipsVisible: Boolean = false,
 ) {
     val itemPadding = NavigationDrawerItemDefaults.ItemPadding
     val nestNewDescription = stringResource(R.string.nest_new_dot)
@@ -139,6 +142,14 @@ fun TaskDrawerContent(
             onClick = actions.onOpenSettings,
             modifier = Modifier.padding(itemPadding),
         )
+        if (tipsVisible) {
+            NavigationDrawerItem(
+                label = { Text(stringResource(R.string.settings_support)) },
+                selected = false,
+                onClick = actions.onOpenTips,
+                modifier = Modifier.padding(itemPadding),
+            )
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 package com.elkrrai.feather.testutil
 
 import com.elkrrai.feather.domain.model.Tag
+import com.elkrrai.feather.domain.model.wouldLoop
 import com.elkrrai.feather.domain.repository.TagRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +34,19 @@ class FakeTagRepository : TagRepository {
         return true
     }
 
+    override suspend fun setParent(id: String, parentId: String?): Boolean {
+        val all = tags.value
+        if (all.none { it.id == id }) return false
+        if (parentId != null && all.none { it.id == parentId }) return false
+        if (all.wouldLoop(id, parentId)) return false
+        tags.update { list -> list.map { if (it.id == id) it.copy(parentId = parentId) else it } }
+        return true
+    }
+
     override suspend fun deleteTag(id: String) {
-        tags.update { all -> all.filterNot { it.id == id } }
+        val parent = tags.value.firstOrNull { it.id == id }?.parentId
+        tags.update { all ->
+            all.filterNot { it.id == id }.map { if (it.parentId == id) it.copy(parentId = parent) else it }
+        }
     }
 }

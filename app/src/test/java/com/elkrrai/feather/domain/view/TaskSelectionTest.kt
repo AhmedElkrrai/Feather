@@ -23,7 +23,6 @@ class TaskSelectionTest {
         dueDate: LocalDate? = null,
         dueTime: LocalTime? = null,
         completed: Boolean = false,
-        listId: String = "inbox",
         priority: Priority = Priority.NONE,
         pinned: Boolean = false,
         tags: List<Tag> = emptyList(),
@@ -33,7 +32,6 @@ class TaskSelectionTest {
         counter++
         return Task(
             id = "id-$title",
-            listId = listId,
             title = title,
             notes = notes,
             dueDate = dueDate,

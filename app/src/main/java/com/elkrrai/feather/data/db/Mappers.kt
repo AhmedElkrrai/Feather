@@ -1,15 +1,11 @@
 package com.elkrrai.feather.data.db
 
-import com.elkrrai.feather.domain.model.Folder
 import com.elkrrai.feather.domain.model.Priority
-import com.elkrrai.feather.domain.model.DueWindow
 import com.elkrrai.feather.domain.model.Reminder
 import com.elkrrai.feather.domain.model.ReminderKind
-import com.elkrrai.feather.domain.model.SavedFilter
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.domain.recurrence.RepeatMode
 import java.time.Instant
@@ -23,7 +19,6 @@ fun TaskEntity.toDomain(
     reminders: List<Reminder> = emptyList(),
 ): Task = Task(
     id = id,
-    listId = listId,
     title = title,
     notes = notes,
     dueDate = dueDate?.let(LocalDate::parse),
@@ -41,10 +36,10 @@ fun TaskEntity.toDomain(
     deletedAt = deletedAt?.let(Instant::ofEpochMilli),
 )
 
-/** Tags and subtasks live in their own rows and are written separately. */
+/** Tags and subtasks live in their own rows and are written separately. Every task is kept in the Inbox. */
 fun Task.toEntity(deletedAt: Long? = null): TaskEntity = TaskEntity(
     id = id,
-    listId = listId,
+    listId = INBOX_LIST_ID,
     title = title,
     notes = notes,
     dueDate = dueDate?.toString(),
@@ -67,18 +62,7 @@ fun TaskEntity.toSubtask(): Subtask = Subtask(
     isCompleted = completedAt != null,
 )
 
-fun TagEntity.toDomain(): Tag = Tag(id = id, name = name)
-
-fun SavedFilterEntity.toDomain(): SavedFilter = SavedFilter(
-    id = id,
-    name = name,
-    listId = listId,
-    tagId = tagId,
-    minPriority = Priority.fromLevel(minPriority),
-    due = DueWindow.fromCode(dueWindow),
-    hideCompleted = hideCompleted,
-    sortOrder = sortOrder,
-)
+fun TagEntity.toDomain(): Tag = Tag(id = id, name = name, parentId = parentId)
 
 fun ReminderEntity.toDomain(): Reminder = Reminder(
     id = id,
@@ -105,17 +89,6 @@ fun Reminder.toEntity(taskId: String, createdAt: Long, updatedAt: Long): Reminde
     createdAt = createdAt,
     updatedAt = updatedAt,
     deletedAt = null,
-)
-
-fun FolderEntity.toDomain(): Folder = Folder(id = id, name = name, sortOrder = sortOrder)
-
-fun ListEntity.toDomain(): TaskList = TaskList(
-    id = id,
-    name = name,
-    isInbox = isInbox,
-    sortOrder = sortOrder,
-    folderId = folderId,
-    colorArgb = colorArgb,
 )
 
 /**

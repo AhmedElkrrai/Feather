@@ -18,8 +18,8 @@ class WeeklyFeatherTest {
 
     private fun at(date: LocalDate): Instant = date.atTime(10, 0).toInstant(zone)
 
-    private fun done(date: LocalDate, list: String = "inbox", task: String = "t$date$list") =
-        CompletionRecord(task, "Task", list, at(date))
+    private fun done(date: LocalDate, task: String = "t$date") =
+        CompletionRecord(task, "Task", at(date))
 
     @Test
     fun theFeatherIsForTheWeekThatJustEnded() {
@@ -35,13 +35,6 @@ class WeeklyFeatherTest {
         assertEquals(listOf(2, 0, 1, 0, 0, 0, 0), feather.days)
         assertEquals(3, feather.total)
         assertEquals(5, feather.restDays)
-    }
-
-    @Test
-    fun itsColorIsTheBusiestList() {
-        val records = listOf(done(lastMonday, "a"), done(lastMonday.plusDays(1), "b"), done(lastMonday.plusDays(2), "b"))
-
-        assertEquals("b", weeklyFeather(records, monday, zone, DayOfWeek.MONDAY)!!.topListId)
     }
 
     @Test

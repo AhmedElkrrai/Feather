@@ -1,6 +1,16 @@
 package com.elkrrai.feather.feature.tasklist
 
 import androidx.activity.compose.BackHandler
+import com.elkrrai.feather.ui.format.formatDoneHeader
+import kotlin.math.abs
+import kotlinx.coroutines.CoroutineStart
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -58,9 +68,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
-import com.elkrrai.feather.domain.model.SavedFilter
 import com.elkrrai.feather.domain.model.Task
+import com.elkrrai.feather.domain.support.TipResult
+import com.elkrrai.feather.domain.view.TagFilter
 import com.elkrrai.feather.domain.view.TaskScope
+import com.elkrrai.feather.feature.tip.TipSheet
+import com.elkrrai.feather.feature.tip.TipViewModel
+import com.elkrrai.feather.feature.tip.findActivity
 import com.elkrrai.feather.domain.view.TaskSort
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.brand.CompletionBird
@@ -68,7 +82,6 @@ import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.rememberHaptics
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
-import com.elkrrai.feather.ui.format.displayName
 import com.elkrrai.feather.ui.format.formatDayHeader
 import com.elkrrai.feather.ui.format.title
 import com.elkrrai.feather.ui.rememberReduceMotion
@@ -78,7 +91,6 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import com.elkrrai.feather.ui.theme.listColorIndex
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
@@ -87,7 +99,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import java.time.LocalTime
 import androidx.compose.runtime.LaunchedEffect
 import androidx.annotation.StringRes
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.ui.brand.scenes.SceneKind
 import androidx.compose.ui.geometry.Offset
 import com.elkrrai.feather.ui.DisplayPrefs
@@ -112,8 +123,20 @@ fun TaskListScreen(
     onOpenNest: () -> Unit = {},
     viewModel: TaskListViewModel = hiltViewModel(),
     dayCards: DayCardsViewModel = hiltViewModel(),
+    tips: TipViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val tipOffers by tips.offers.collectAsStateWithLifecycle()
+    var showTips by rememberSaveable { mutableStateOf(false) }
+    var tipStatus by remember { mutableStateOf<TipResult?>(null) }
+    // Counts the tips that went through; the bird in the sheet flies a lap for each.
+    var thanks by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        tips.results.collect { result ->
+            tipStatus = result
+            if (result == TipResult.THANKS) thanks++
+        }
+    }
     val dayCard by dayCards.card.collectAsStateWithLifecycle()
     val nestNews by dayCards.nestNews.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -184,6 +207,10 @@ fun TaskListScreen(
             closeDrawer()
             onOpenNest()
         },
+        onOpenTips = {
+            closeDrawer()
+            showTips = true
+        },
         onClose = ::closeDrawer,
     )
 
@@ -191,7 +218,7 @@ fun TaskListScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                TaskDrawerContent(state = state, actions = drawerActions, nestDot = nestNews)
+                TaskDrawerContent(state = state, actions = drawerActions, nestDot = nestNews, tipsVisible = tipOffers.isNotEmpty())
             }
         },
         modifier = modifier,
@@ -259,6 +286,7 @@ fun TaskListScreen(
             },
             onAddSubtask = viewModel::addSubtask,
             onToggleSubtask = viewModel::toggleSubtask,
+            onTagFilterChange = viewModel::selectTagFilter,
         )
         FeatherConfettiOverlay(confetti)
         CompletionBird(
@@ -266,6 +294,22 @@ fun TaskListScreen(
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
         )
         }
+    }
+
+    if (showTips && tipOffers.isNotEmpty()) {
+        TipSheet(
+            offers = tipOffers,
+            status = tipStatus,
+            thanks = thanks,
+            onTip = { offerId ->
+                tipStatus = null
+                context.findActivity()?.let { tips.tip(it, offerId) }
+            },
+            onDismiss = {
+                showTips = false
+                tipStatus = null
+            },
+        )
     }
 
     when (selectionDialog) {
@@ -322,6 +366,7 @@ fun TaskListContent(
     dayCard: DayCard? = null,
     onDismissDayCard: (DayCardKind) -> Unit = {},
     onMoveToTomorrow: () -> Unit = {},
+    onTagFilterChange: (TagFilter) -> Unit = {},
 ) {
     val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
@@ -333,16 +378,26 @@ fun TaskListContent(
     val finishing = remember { mutableStateMapOf<String, FinishingRow>() }
     var finishStamp by remember { mutableLongStateOf(0L) }
 
-    // Manual order: while a row is dragged the list shows a local copy of the saved order.
+    // Rows can be dragged into any order in a plain list (not Upcoming, whose rows sit under day headings,
+    // and not Completed): while a row is dragged the list shows a local copy of the saved order, and
+    // dropping it switches the sort to Manual so the list keeps the order that was made.
     val listState = rememberLazyListState()
-    val reorderable = state.sort == TaskSort.MANUAL && state.sections.size == 1 &&
+    val reorderable = state.scope != TaskScope.Completed && state.sections.size == 1 &&
         state.sections.single().date == null && !selecting
     val savedOrder = state.sections.flatMap { it.tasks }
     val order = remember(savedOrder) { mutableStateListOf<Task>().apply { addAll(savedOrder) } }
     val currentOnReorder by rememberUpdatedState(onReorder)
+    val currentOnSortChange by rememberUpdatedState(onSortChange)
+    val currentSort by rememberUpdatedState(state.sort)
     val reorder = remember(listState, order, haptics) {
-        ReorderState(listState, order, haptics) { ids -> currentOnReorder(ids) }
+        ReorderState(listState, order, haptics) { ids ->
+            currentOnReorder(ids)
+            if (currentSort != TaskSort.MANUAL) currentOnSortChange(TaskSort.MANUAL)
+        }
     }
+    // The local copy of the order is what is shown in Manual sort and while a row is being dragged; otherwise
+    // the list shows the saved order, with finished rows lingering for a moment.
+    val usesOrderCopy = reorderable && (state.sort == TaskSort.MANUAL || reorder.draggingId != null)
 
     // Back leaves selection mode before it leaves the screen.
     BackHandler(enabled = selecting) { selectionActions.onClear() }
@@ -360,10 +415,8 @@ fun TaskListContent(
     val collapse = rememberHeaderCollapse()
     // Each time the Today view is shown, its header starts open.
     LaunchedEffect(state.scope) { collapse.state.offset = 0f }
-    var doneExpanded by rememberSaveable { mutableStateOf(false) }
-    // Where the Done pill is, for the feather a repeating task sends there when it rests.
-    var doneTarget by remember { mutableStateOf<Offset?>(null) }
-    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    // The finished task that was tapped in the Completed view, waiting for "mark as not done?".
+    var reopenAsk by remember { mutableStateOf<Task?>(null) }
     // The last open task of the day: the header celebrates, once a calendar day. Moving tasks to
     // tomorrow also empties the day, but it is not finishing, so only a rise in finished tasks counts.
     val dayLog = remember { DayCelebrationLog(context) }
@@ -380,6 +433,59 @@ fun TaskListContent(
         }
     }
 
+    // A task that was just added is brought into view: the list scrolls to wherever the sort put it
+    // (the top for most sorts). Its row is looked up in the same order the list is built in.
+    val addedId = state.justAddedId
+    val addedIndex = if (addedId == null) {
+        -1
+    } else {
+        var index = 0
+        if (todayView && dayCard != null) index++
+        var found = -1
+        for (section in state.sections) {
+            if (section.date != null) index++
+            val at = section.tasks.indexOfFirst { it.id == addedId }
+            if (at >= 0) {
+                found = index + at
+                break
+            }
+            index += section.tasks.size
+        }
+        found
+    }
+    // Run again when the row shows up (the database may be a moment behind the add).
+    LaunchedEffect(addedId, addedIndex) {
+        if (addedIndex >= 0) {
+            if (reduceMotion) listState.scrollToItem(addedIndex) else listState.animateScrollToItem(addedIndex)
+        }
+    }
+
+    // The tag tabs sit right under the header (the top bar, or the Today header).
+    val tagTabs: @Composable () -> Unit = {
+        if (!selecting && !state.isLoading) {
+            TagTabs(state.tags, state.tagFilter, onTagFilterChange, state.tagTaskCounts, state.untaggedCount)
+        }
+    }
+
+    reopenAsk?.let { task ->
+        AlertDialog(
+            onDismissRequest = { reopenAsk = null },
+            title = { Text(stringResource(R.string.reopen_title)) },
+            text = { Text(stringResource(R.string.reopen_message, task.title)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        reopenAsk = null
+                        onToggle(task, false)
+                    },
+                ) { Text(stringResource(R.string.reopen_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { reopenAsk = null }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
+
     Scaffold(
         modifier = modifier,
         contentWindowInsets = if (todayView) WindowInsets.navigationBars else ScaffoldDefaults.contentWindowInsets,
@@ -389,6 +495,7 @@ fun TaskListContent(
             } else if (selecting) {
                 SelectionTopBar(count = state.selection.size, actions = selectionActions)
             } else {
+            Column {
             TopAppBar(
                 title = {
                     Text(
@@ -420,6 +527,8 @@ fun TaskListContent(
                     OverflowButton(actions = sortActions + clearAction)
                 },
             )
+            tagTabs()
+            }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -439,7 +548,7 @@ fun TaskListContent(
             state.isLoading -> Box(Modifier.fillMaxSize().padding(padding))
 
             // Today keeps its header (and its message) instead of an empty-state picture.
-            state.isEmpty && !todayView && state.doneTasks.isEmpty() -> {
+            state.isEmpty && !todayView -> {
                 val copy = state.scope.emptyCopy()
                 EmptyState(
                     scene = copy.scene,
@@ -469,15 +578,16 @@ fun TaskListContent(
                         )
                     }
                 }
-                // Everything here is finished: say so, above the Done section.
-                if (state.isEmpty && !todayView && state.doneTasks.isNotEmpty()) {
-                    item(key = "all-done-note") { AllDoneNote() }
-                }
                 state.sections.forEach { section ->
                     if (section.date != null) {
                         item(key = "header-${section.date}") {
                             Text(
-                                text = formatDayHeader(context, section.date, today, locale),
+                                // Upcoming: the day tasks are due. Completed: the day they were finished.
+                                text = if (state.scope == TaskScope.Completed) {
+                                    formatDoneHeader(context, section.date, today, locale)
+                                } else {
+                                    formatDayHeader(context, section.date, today, locale)
+                                },
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
@@ -487,7 +597,7 @@ fun TaskListContent(
                         }
                     }
                     // Manual order keeps its own copy of the list for dragging, so finished rows leave at once there.
-                    val rows = if (reorderable) order else withFinishing(section.tasks, finishing, section.date)
+                    val rows = if (usesOrderCopy) order else withFinishing(section.tasks, finishing, section.date)
                     items(rows, key = { it.id }) { task ->
                         val dragging = reorder.draggingId == task.id
                         SwipeToDeleteRow(
@@ -523,38 +633,52 @@ fun TaskListContent(
                                     if (finishing[task.id]?.stamp == stamp) finishing.remove(task.id)
                                 }
                             }
+                            // In the Completed view a task is not opened: tapping it (or its ring) asks whether
+                            // it should go back to the list, and the title is not struck through.
+                            val inCompleted = state.scope == TaskScope.Completed
                             TaskRow(
                                 task = task,
                                 today = today,
                                 onToggle = { completed ->
-                                    if (completed && !reduceMotion && !reorderable) {
-                                        lingerFinished()
+                                    if (inCompleted && !completed) {
+                                        reopenAsk = task
                                     } else {
-                                        finishing.remove(task.id)
+                                        if (completed && !reduceMotion && !usesOrderCopy) {
+                                            lingerFinished()
+                                        } else {
+                                            finishing.remove(task.id)
+                                        }
+                                        onToggle(task, completed)
                                     }
-                                    onToggle(task, completed)
                                 },
                                 onClick = {
-                                    if (selecting) selectionActions.onToggle(task.id) else onOpenTask(task.id)
+                                    when {
+                                        selecting -> selectionActions.onToggle(task.id)
+                                        inCompleted -> reopenAsk = task
+                                        else -> onOpenTask(task.id)
+                                    }
                                 },
+                                strikeTitle = !inCompleted,
                                 selected = task.id in state.selection,
                                 highlighted = task.id == state.justAddedId,
                                 onCelebrate = { origin, scale ->
                                     onCelebrate(origin, scale)
-                                    if (task.recurrence != null && scale == 1f) onFly(origin, doneTarget)
+                                    // A repeating task that rests flies to the menu, where Completed is.
+                                    if (task.recurrence != null && scale == 1f) onFly(origin, null)
                                 },
                                 onAddSubtask = { title -> onAddSubtask(task.id, title) },
                                 onToggleSubtask = { subtaskId ->
                                     // Ticking the last open subtask finishes the task: let the row linger like a ring tick.
                                     val open = task.subtasks.filter { !it.isCompleted }
                                     if (!task.isCompleted && open.size == 1 && open.single().id == subtaskId &&
-                                        !reduceMotion && !reorderable
+                                        !reduceMotion && !usesOrderCopy
                                     ) {
                                         lingerFinished()
                                     }
                                     onToggleSubtask(task.id, subtaskId)
                                 },
-                                dragHandle = if (reorderable) ({ DragHandle(reorder, task.id) }) else null,
+                                // No drag grip for now: it felt odd (see TODO.md). TalkBack can still move rows up and down.
+                                dragHandle = null,
                                 onMoveUp = if (reorderable) ({ reorder.moveBy(task.id, -1) }) else null,
                                 onMoveDown = if (reorderable) ({ reorder.moveBy(task.id, 1) }) else null,
                                 onLongClick = {
@@ -563,33 +687,6 @@ fun TaskListContent(
                                 },
                                 onDelete = { onDelete(task) },
                                 onPinChange = { pinned -> onPinChange(task, pinned) },
-                            )
-                        }
-                    }
-                }
-                if (state.doneTasks.isNotEmpty()) {
-                    item(key = "done-today-pill") {
-                        DoneTodayPill(
-                            label = stringResource(
-                                if (todayView) R.string.done_today_pill else R.string.done_pill,
-                                state.doneTasks.size,
-                            ),
-                            expanded = doneExpanded,
-                            onClick = { doneExpanded = !doneExpanded },
-                            modifier = Modifier.animateItem().onGloballyPositioned {
-                                val share = if (rtl) 0.88f else 0.12f
-                                doneTarget = it.positionInRoot() + Offset(it.size.width * share, it.size.height / 2f)
-                            },
-                        )
-                    }
-                    if (doneExpanded) {
-                        items(state.doneTasks, key = { "done-${it.id}" }) { task ->
-                            TaskRow(
-                                task = task,
-                                today = today,
-                                onToggle = { onToggle(task, it) },
-                                onClick = { onOpenTask(task.id) },
-                                modifier = Modifier.animateItem(),
                             )
                         }
                     }
@@ -613,6 +710,7 @@ fun TaskListContent(
                     celebration = allDoneCelebration,
                     onWarmFeathers = onWarmFeathers,
                 )
+                tagTabs()
                 Box(Modifier.weight(1f)) {
                     listBody(PaddingValues(bottom = scaffoldPadding.calculateBottomPadding()))
                 }
@@ -644,8 +742,12 @@ private fun TaskSort.labelRes(): Int = when (this) {
     TaskSort.MANUAL -> R.string.sort_manual
 }
 
-/** Swipe in either direction deletes. Direction-aware, so it mirrors correctly in RTL. */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Swipe a row sideways to delete it, in either direction (it mirrors correctly in RTL). Deleting needs
+ * a deliberate swipe: the row has to be dragged past [SWIPE_DELETE_FRACTION] of its width and let go,
+ * and how fast the finger moved does not count, so a quick flick never deletes by accident. A short
+ * tick tells the finger it has gone far enough; letting go before that brings the row back.
+ */
 @Composable
 private fun SwipeToDeleteRow(
     onDelete: () -> Unit,
@@ -653,53 +755,63 @@ private fun SwipeToDeleteRow(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { target ->
-            if (target == SwipeToDismissBoxValue.Settled) {
-                false
-            } else {
-                onDelete()
-                true
-            }
-        },
-    )
+    val offset = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    val haptics = rememberHaptics()
+    var widthPx by remember { mutableFloatStateOf(0f) }
+    val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
+    val currentOnDelete by rememberUpdatedState(onDelete)
 
-    SwipeToDismissBox(
-        state = dismissState,
-        modifier = modifier,
-        enableDismissFromStartToEnd = enabled,
-        enableDismissFromEndToStart = enabled,
-        backgroundContent = {
-            val direction = dismissState.dismissDirection
+    val progress = if (widthPx > 0f) (abs(offset.value) / (widthPx * SWIPE_DELETE_FRACTION)).coerceIn(0f, 1f) else 0f
+    val armed = progress >= 1f
+    LaunchedEffect(armed) { if (armed) haptics.tick() }
+
+    Box(
+        modifier = modifier
+            .onSizeChanged { widthPx = it.width.toFloat() }
+            .draggable(
+                orientation = Orientation.Horizontal,
+                enabled = enabled,
+                state = rememberDraggableState { delta ->
+                    scope.launch(start = CoroutineStart.UNDISPATCHED) { offset.snapTo(offset.value + delta) }
+                },
+                onDragStopped = {
+                    if (abs(offset.value) >= widthPx * SWIPE_DELETE_FRACTION) {
+                        val target = if (offset.value > 0f) widthPx else -widthPx
+                        offset.animateTo(target, tween(Dur.Short1))
+                        currentOnDelete()
+                        offset.snapTo(0f)
+                    } else {
+                        offset.animateTo(0f, tween(Dur.Short2))
+                    }
+                },
+            ),
+    ) {
+        if (offset.value != 0f) {
+            // The delete background sits behind the row, on the side it was pulled away from.
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .matchParentSize()
                     .background(
-                        if (direction == SwipeToDismissBoxValue.Settled) {
-                            Color.Transparent
-                        } else {
-                            MaterialTheme.colorScheme.errorContainer
-                        }
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f + 0.65f * progress),
+                        RoundedCornerShape(20.dp),
                     )
                     .padding(horizontal = 24.dp),
-                contentAlignment = when (direction) {
-                    SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
-                    SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-                    SwipeToDismissBoxValue.Settled -> Alignment.Center
-                },
+                contentAlignment = if ((offset.value > 0f) == ltr) Alignment.CenterStart else Alignment.CenterEnd,
             ) {
-                if (direction != SwipeToDismissBoxValue.Settled) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_delete),
-                        contentDescription = stringResource(R.string.action_delete),
-                        tint = MaterialTheme.colorScheme.onErrorContainer,
-                    )
-                }
+                Icon(
+                    painter = painterResource(R.drawable.ic_delete),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = progress),
+                )
             }
-        },
-        content = { content() },
-    )
+        }
+        Box(Modifier.graphicsLayer { translationX = offset.value }) { content() }
+    }
 }
+
+/** How far across the row a swipe must go, as a share of its width, before letting go deletes. */
+private const val SWIPE_DELETE_FRACTION = 0.55f
 
 /** Replaces the top bar while tasks are selected: how many, and what can be done with them. */
 @OptIn(ExperimentalMaterial3Api::class)

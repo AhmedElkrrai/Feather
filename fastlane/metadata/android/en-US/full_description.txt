@@ -3,13 +3,13 @@ Feather is a to-do app that stays out of your way. It is completely free, has no
 Type a task the way you would say it, "Call mom tomorrow 5pm !high #family", and Feather fills in the date, time, priority and tag for you. It understands English and Arabic, and you can speak it instead of typing.
 
 What you get
-• Tasks with notes, due dates and times, four priorities, checklists, tags and colored lists, with folders to group them
-• Today, Upcoming, Overdue and other smart views, your own saved filters, and search
+• Tasks with notes, due dates and times, four priorities, checklists and tags, and tags can sit under other tags
+• Today, Upcoming, Overdue, Goals and Completed views, tabs to filter by tag, and search
 • Reminders that arrive on time: several per task, snooze, and Complete from the notification, plus a helper that shows what could stop reminders on your phone
 • Repeating tasks: daily, weekly on chosen days, monthly (including "the 2nd Tuesday"), yearly, or counted from the day you finish
 • Home-screen widgets: today's list, the next task, and a one-tap add button; a Quick Settings tile and a shortcut too
 • Share text from any app straight into Feather
-• Drag to reorder, select several tasks at once, duplicate, and a trash that keeps deleted tasks for 30 days
+• Select several tasks at once, duplicate, and a trash that keeps deleted tasks for 30 days
 • Light, dark and pure black themes, Material You colors, and full right-to-left support in English and Arabic
 
 Your data is yours

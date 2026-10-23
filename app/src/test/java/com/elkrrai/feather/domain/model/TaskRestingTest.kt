@@ -21,7 +21,7 @@ class TaskRestingTest {
         lastCompletedAt: Instant? = noon,
         completedAt: Instant? = null,
     ) = Task(
-        id = "t", listId = "l", title = "Get a life", dueDate = due, recurrence = recurrence,
+        id = "t", title = "Get a life", dueDate = due, recurrence = recurrence,
         lastCompletedAt = lastCompletedAt, completedAt = completedAt, sortOrder = 0,
         createdAt = Instant.EPOCH, updatedAt = Instant.EPOCH,
         subtasks = listOf(Subtask("a", "One"), Subtask("b", "Two")),

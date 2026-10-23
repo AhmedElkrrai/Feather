@@ -1,7 +1,6 @@
 package com.elkrrai.feather.feature.quickadd
 
 import com.elkrrai.feather.domain.model.Priority
-import com.elkrrai.feather.domain.model.TaskList
 import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
 import com.elkrrai.feather.domain.recurrence.Frequency
 import com.elkrrai.feather.domain.recurrence.Recurrence
@@ -21,16 +20,14 @@ class QuickAddTaskTest {
     private val tasks = FakeTaskRepository()
     private val tags = FakeTagRepository()
     private val quickAdd = QuickAddTask(tasks, tags)
-    private val inbox = TaskList.INBOX_ID
     private val tomorrow = LocalDate.of(2026, 10, 15)
 
     @Test
     fun aPlainTitleMakesAPlainTask() = runTest {
-        val task = quickAdd(ParsedQuickAdd(title = "Buy milk"), inbox)
+        val task = quickAdd(ParsedQuickAdd(title = "Buy milk"))
 
         val stored = tasks.getTask(task.id)!!
         assertEquals("Buy milk", stored.title)
-        assertEquals(inbox, stored.listId)
         assertNull(stored.dueDate)
         assertTrue(stored.tags.isEmpty())
     }
@@ -47,7 +44,7 @@ class QuickAddTaskTest {
             recurrence = rule,
         )
 
-        val task = quickAdd(parsed, inbox)
+        val task = quickAdd(parsed)
 
         val stored = tasks.getTask(task.id)!!
         assertEquals(tomorrow, stored.dueDate)
@@ -62,7 +59,7 @@ class QuickAddTaskTest {
     fun anExistingTagIsReusedNotDuplicated() = runTest {
         val existing = tags.createTag("Family")
 
-        val task = quickAdd(ParsedQuickAdd(title = "Call", tags = listOf("family")), inbox)
+        val task = quickAdd(ParsedQuickAdd(title = "Call", tags = listOf("family")))
 
         assertEquals(listOf(existing.id), tasks.getTask(task.id)!!.tags.map { it.id })
         assertEquals(1, tags.observeTags().first().size)
@@ -70,11 +67,11 @@ class QuickAddTaskTest {
 
     @Test
     fun theViewsDateIsUsedOnlyWhenTheTextHasNone() = runTest {
-        val noDate = quickAdd(ParsedQuickAdd(title = "A"), inbox, fallbackDate = tomorrow)
+        val noDate = quickAdd(ParsedQuickAdd(title = "A"), fallbackDate = tomorrow)
         assertEquals(tomorrow, tasks.getTask(noDate.id)!!.dueDate)
 
         val written = LocalDate.of(2026, 11, 2)
-        val withDate = quickAdd(ParsedQuickAdd(title = "B", dueDate = written), inbox, fallbackDate = tomorrow)
+        val withDate = quickAdd(ParsedQuickAdd(title = "B", dueDate = written), fallbackDate = tomorrow)
         assertEquals(written, tasks.getTask(withDate.id)!!.dueDate)
     }
 
@@ -87,7 +84,7 @@ class QuickAddTaskTest {
             priority = Priority.LOW,
         )
 
-        val stored = tasks.getTask(quickAdd(parsed, inbox).id)!!
+        val stored = tasks.getTask(quickAdd(parsed).id)!!
 
         assertNull(stored.dueTime)
         assertNull(stored.recurrence)
@@ -98,7 +95,7 @@ class QuickAddTaskTest {
     fun extraTagsAreAddedAndNotDuplicated() = runTest {
         val viewed = tags.createTag("work")
 
-        val task = quickAdd(ParsedQuickAdd(title = "Report", tags = listOf("Work", "urgent")), inbox, extraTags = listOf(viewed))
+        val task = quickAdd(ParsedQuickAdd(title = "Report", tags = listOf("Work", "urgent")), extraTags = listOf(viewed))
 
         assertEquals(setOf("work", "urgent"), tasks.getTask(task.id)!!.tags.map { it.name }.toSet())
         assertEquals(2, tasks.getTask(task.id)!!.tags.size)

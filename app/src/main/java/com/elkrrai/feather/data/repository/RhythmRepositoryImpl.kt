@@ -13,6 +13,6 @@ class RhythmRepositoryImpl @Inject constructor(
 ) : RhythmRepository {
     override fun observeCompletions(): Flow<List<CompletionRecord>> =
         completionDao.observeRows().map { rows ->
-            rows.map { CompletionRecord(it.taskId, it.title, it.listId, Instant.ofEpochMilli(it.completedAt)) }
+            rows.map { CompletionRecord(it.taskId, it.title, Instant.ofEpochMilli(it.completedAt)) }
         }
 }

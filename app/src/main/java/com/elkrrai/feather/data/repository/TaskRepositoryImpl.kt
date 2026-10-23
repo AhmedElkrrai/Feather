@@ -2,6 +2,7 @@ package com.elkrrai.feather.data.repository
 
 import com.elkrrai.feather.data.db.CompletionDao
 import com.elkrrai.feather.data.db.CompletionEntity
+import com.elkrrai.feather.data.db.INBOX_LIST_ID
 import com.elkrrai.feather.data.db.ReminderDao
 import com.elkrrai.feather.data.db.TaskDao
 import com.elkrrai.feather.data.db.TaskEntity
@@ -63,12 +64,11 @@ class TaskRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun addTask(listId: String, title: String, dueDate: LocalDate?): Task {
+    override suspend fun addTask(title: String, dueDate: LocalDate?): Task {
         require(title.isNotBlank()) { "Task title must not be blank" }
         val now = Instant.now(clock)
         val task = Task(
             id = UUID.randomUUID().toString(),
-            listId = listId,
             title = title.trim(),
             dueDate = dueDate,
             sortOrder = now.toEpochMilli(),
@@ -114,7 +114,7 @@ class TaskRepositoryImpl @Inject constructor(
             val old = existing[subtask.id]
             TaskEntity(
                 id = subtask.id,
-                listId = task.listId,
+                listId = INBOX_LIST_ID,
                 title = subtask.title.trim(),
                 notes = "",
                 dueDate = null,
@@ -259,7 +259,7 @@ class TaskRepositoryImpl @Inject constructor(
     override suspend fun duplicateTask(id: String, title: String): Task? {
         val source = getTask(id) ?: return null
         val copyId = tx.run {
-            val created = addTask(source.listId, title, source.dueDate)
+            val created = addTask(title, source.dueDate)
             saveTaskDetails(
                 created.copy(
                     notes = source.notes,

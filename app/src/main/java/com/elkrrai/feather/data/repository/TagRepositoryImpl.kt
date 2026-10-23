@@ -4,6 +4,7 @@ import com.elkrrai.feather.data.db.TagDao
 import com.elkrrai.feather.data.db.TagEntity
 import com.elkrrai.feather.data.db.toDomain
 import com.elkrrai.feather.domain.model.Tag
+import com.elkrrai.feather.domain.model.wouldLoop
 import com.elkrrai.feather.domain.repository.TagRepository
 import java.time.Clock
 import java.util.UUID
@@ -46,9 +47,25 @@ class TagRepositoryImpl @Inject constructor(
         return true
     }
 
+    override suspend fun setParent(id: String, parentId: String?): Boolean {
+        val active = tagDao.getActive()
+        val tag = active.firstOrNull { it.id == id } ?: return false
+        if (parentId != null && active.none { it.id == parentId }) return false
+        if (active.map { it.toDomain() }.wouldLoop(id, parentId)) return false
+        if (tag.parentId == parentId) return true
+        tagDao.upsert(tag.copy(parentId = parentId, updatedAt = clock.millis()))
+        return true
+    }
+
     override suspend fun deleteTag(id: String) {
+        val now = clock.millis()
+        val existing = tagDao.getById(id)
+        // The tags under this one move up to where it was.
+        tagDao.activeChildren(id).forEach { child ->
+            tagDao.upsert(child.copy(parentId = existing?.parentId, updatedAt = now))
+        }
         // Links to tasks stay in the table but readers ignore deleted tags.
-        tagDao.softDelete(id, deletedAt = clock.millis())
+        tagDao.softDelete(id, deletedAt = now)
     }
 
     private fun normalize(name: String): String = name.trim().removePrefix("#").trim()

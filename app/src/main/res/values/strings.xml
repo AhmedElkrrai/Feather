@@ -15,7 +15,6 @@
     <!-- Task list -->
     <string name="action_add_task">Add task</string>
     <string name="task_deleted">Task deleted</string>
-    <string name="task_list_empty_title">No tasks yet</string>
     <string name="task_list_empty_body">Tap + to add your first task.</string>
     <string name="quick_add_hint">What needs doing?</string>
 
@@ -44,7 +43,6 @@
     <string name="set_time">Set time</string>
 
     <!-- Language setting -->
-    <string name="menu_language">Language</string>
     <string name="language_dialog_title">Choose language</string>
     <string name="language_system">System default</string>
     <!-- Language names are always shown in their own language. -->
@@ -52,16 +50,16 @@
     <string name="language_arabic" translatable="false">العربية</string>
 
     <!-- Views and drawer -->
-    <string name="inbox">Inbox</string>
     <string name="scope_today">Today</string>
     <string name="scope_upcoming">Upcoming</string>
     <string name="scope_overdue">Overdue</string>
     <string name="scope_completed">Completed</string>
+    <string name="done_yesterday">Yesterday</string>
+    <string name="reopen_title">Mark as not done?</string>
+    <string name="reopen_message">“%1$s” will go back to your task list.</string>
+    <string name="reopen_confirm">Mark not done</string>
     <string name="action_clear_completed">Clear all completed</string>
     <string name="scope_no_date">Goals</string>
-    <string name="drawer_section_views">Views</string>
-    <string name="drawer_section_lists">Lists</string>
-    <string name="drawer_section_tags">Tags</string>
     <string name="action_open_menu">Open menu</string>
     <string name="action_close_menu">Close menu</string>
     <string name="trash">Trash</string>
@@ -74,27 +72,30 @@
     <string name="sort_priority">Sort by priority</string>
 
     <!-- Lists, folders and tags -->
-    <string name="action_edit">Edit</string>
     <string name="action_rename">Rename</string>
     <string name="action_create">Create</string>
-    <string name="new_list">New list</string>
-    <string name="edit_list">Edit list</string>
-    <string name="list_name">List name</string>
-    <string name="list_color">Color</string>
-    <string name="color_none">No color</string>
-    <string name="list_folder">Folder</string>
-    <string name="no_folder">No folder</string>
-    <string name="new_folder">New folder</string>
-    <string name="rename_folder">Rename folder</string>
-    <string name="folder_name">Folder name</string>
     <string name="rename_tag">Rename tag</string>
     <string name="tag_name">Tag name</string>
-    <string name="delete_list_title">Delete list?</string>
-    <string name="delete_list_message">Tasks in “%1$s” will move to the Inbox.</string>
-    <string name="delete_folder_title">Delete folder?</string>
-    <string name="delete_folder_message">Lists in “%1$s” are kept and moved out of the folder.</string>
     <string name="delete_tag_title">Delete tag?</string>
     <string name="delete_tag_message">“%1$s” will be removed from all tasks.</string>
+    <string name="tags_title">Tags</string>
+    <string name="tab_all">All</string>
+    <string name="tab_all_in">All #%1$s</string>
+    <string name="tab_no_tag">No tag</string>
+    <string name="tags_row_summary">Rename, delete and arrange your tags. A tag can sit under another.</string>
+    <string name="tags_empty_title">No tags yet</string>
+    <string name="tags_empty_body">Add a tag to a task with #, for example #work. Or make one here.</string>
+    <string name="tag_move_under">Put under another tag</string>
+    <string name="tag_parent_title">Put “%1$s” under…</string>
+    <string name="tag_parent_none">No tag (top level)</string>
+    <string name="tag_parent_note">Tags that sit under this one are not listed, so tags can never loop.</string>
+    <string name="tag_extends">Under #%1$s</string>
+    <string name="tag_rename_failed">That name is already used by another tag.</string>
+    <string name="delete_tag_children_note">The tags under it move up one level.</string>
+    <plurals name="tag_task_count">
+        <item quantity="one">%d task</item>
+        <item quantity="other">%d tasks</item>
+    </plurals>
 
     <!-- Notifications -->
     <string name="channel_reminders_name">Reminders</string>
@@ -203,7 +204,6 @@
     <string name="unit_days">Days</string>
 
     <!-- Trash -->
-    <string name="trash_empty_title">Trash is empty</string>
     <string name="trash_empty_body">Deleted tasks stay here for %1$d days.</string>
     <string name="trash_deleted_ago">Deleted %1$s</string>
     <string name="action_restore">Restore</string>
@@ -218,13 +218,10 @@
     <string name="action_search">Search</string>
     <string name="search_hint">Search tasks</string>
     <string name="search_prompt_title">Search your tasks</string>
-    <string name="search_prompt_body">Look through titles, notes, tags and subtasks.</string>
-    <string name="search_no_results">No tasks found</string>
+    <string name="search_prompt_body">Look through titles, notes, tags and subtasks. Type # and a tag name, or pick a tag below, to find its tasks and the tasks of the tags under it.</string>
     <string name="search_no_results_body">Try a different word.</string>
 
     <!-- Task details: list, tags, subtasks, pin -->
-    <string name="field_list">List</string>
-    <string name="choose_list">Choose list</string>
     <string name="field_tags">Tags</string>
     <string name="new_tag">New tag</string>
     <string name="field_subtasks">Subtasks</string>
@@ -239,7 +236,6 @@
     <!-- Repeating tasks -->
     <string name="field_repeat">Repeat</string>
     <string name="repeat_none">Does not repeat</string>
-    <string name="repeat_has">Repeats</string>
     <string name="repeat_dialog_title">Repeat</string>
     <string name="repeat_freq_daily">Daily</string>
     <string name="repeat_freq_weekly">Weekly</string>
@@ -397,7 +393,6 @@
     </plurals>
     <string name="selection_clear">Clear selection</string>
     <string name="selection_select_all">Select all</string>
-    <string name="selection_move">Move to list…</string>
     <string name="selection_tag">Add tag…</string>
     <plurals name="tasks_deleted">
         <item quantity="one">%d task deleted</item>
@@ -416,22 +411,6 @@
     <string name="open_link">Open link %1$s</string>
 
     <!-- Saved filters -->
-    <string name="drawer_section_filters">Filters</string>
-    <string name="new_filter">New filter</string>
-    <string name="edit_filter">Edit filter</string>
-    <string name="filter_name">Filter name</string>
-    <string name="filter_list_any">Any list</string>
-    <string name="filter_tag_any">Any tag</string>
-    <string name="filter_priority_any">Any priority</string>
-    <string name="filter_priority_at_least">%1$s or higher</string>
-    <string name="due_window_any">Any date</string>
-    <string name="due_window_overdue">Overdue</string>
-    <string name="due_window_today">Today</string>
-    <string name="due_window_week">Next 7 days</string>
-    <string name="due_window_none">No date</string>
-    <string name="filter_hide_completed">Hide finished tasks</string>
-    <string name="delete_filter_title">Delete filter?</string>
-    <string name="delete_filter_message">“%1$s” will be deleted. Your tasks are not affected.</string>
 
     <string name="widget_next_label">Feather: Next task</string>
     <string name="widget_next_description">The most urgent open task, with a checkbox.</string>
@@ -439,8 +418,15 @@
     <string name="widget_next_empty">Nothing left to do</string>
 
     <!-- About and support -->
-    <string name="settings_support">Support Feather</string>
-    <string name="settings_support_summary">Feather is free and always will be. Donations are welcome and never unlock anything.</string>
+    <string name="settings_support">Leave a tip</string>
+    <string name="tip_sheet_title">Say thanks to the bird</string>
+    <string name="tip_sheet_body">Feather has no ads, no accounts and no tracking. Tips keep it that way. Nothing is unlocked.</string>
+    <string name="tip_small">A seed</string>
+    <string name="tip_medium">A feather</string>
+    <string name="tip_large">A whole nest</string>
+    <string name="tip_thanks">Thank you. The bird is delighted.</string>
+    <string name="tip_pending">Your tip is waiting for approval. Thank you.</string>
+    <string name="tip_failed">That did not go through. Please try again later.</string>
     <string name="settings_about">About Feather</string>
     <string name="settings_version">Version %1$s</string>
     <string name="settings_about_summary">Free, with no ads, no accounts and no tracking.</string>
@@ -465,11 +451,7 @@
     <string name="today_done_count">%1$d done</string>
     <string name="today_all_done">All done.</string>
     <string name="today_nothing_planned">Nothing planned today</string>
-    <string name="done_today_pill">Done today · %1$d</string>
-    <string name="done_pill">Done · %1$d</string>
     <string name="subtasks_of">%1$d of %2$d</string>
-    <string name="state_expanded">Expanded</string>
-    <string name="state_collapsed">Collapsed</string>
 
     <!-- Illustration kit: the sentence under each scene -->
     <string name="scene_empty_list">Nothing here yet. Add a thought and I’ll keep it warm.</string>
@@ -478,7 +460,6 @@
     <string name="scene_no_results">Looked under every twig. Nothing matches “%1$s”.</string>
     <string name="scene_backup_saved">Tucked away safely. Your tasks, only yours.</string>
     <string name="scene_reminders_blocked">Your phone is keeping my bell quiet. Two taps to let it ring.</string>
-    <string name="scene_first_launch">Hello! I’m Feather. Everything stays on your phone.</string>
     <string name="scene_trash_empty">Tidy as a nest in spring.</string>
 
     <!-- Quick add tools -->
@@ -486,10 +467,6 @@
     <string name="quick_add_tool_priority">Set priority</string>
     <string name="quick_add_tool_tag">Add a tag</string>
     <string name="quick_add_tool_repeat">Repeat</string>
-    <string name="quick_add_insert_every_day">every day</string>
-    <string name="quick_add_insert_every_week">every week</string>
-    <string name="quick_add_insert_every_month">every month</string>
-    <string name="quick_add_insert_every_year">every year</string>
     <!-- M9 step 6: your rhythm -->
 
     <string name="rhythm_title">Your rhythm</string>
@@ -522,7 +499,6 @@
     <string name="rhythm_time_evening">Evening</string>
     <string name="rhythm_time_night">Night</string>
     <string name="rhythm_best_time">Most of it happens in the %1$s.</string>
-    <string name="rhythm_lists_title">Where it happens</string>
     <string name="rhythm_steady_title">Going well</string>
     <string name="rhythm_steady_hint">Repeating tasks you keep coming back to.</string>
     <plurals name="rhythm_finished_on_day">
@@ -531,7 +507,6 @@
     </plurals>
     <!-- M9 step 7: widgets -->
     <string name="widget_mark_done">Mark %1$s as done</string>
-    <string name="widget_more">+%1$d more</string>
     <!-- M9 step 8: day cards -->
     <string name="settings_section_company">Gentle company</string>
     <string name="settings_morning_card">Morning card</string>
@@ -595,6 +570,5 @@
     <string name="settings_weekly_feather">Weekly feather</string>
     <string name="settings_weekly_feather_summary">On the first day of the week, a feather made from last week, on Your rhythm.</string>
     <string name="weekly_feather_title">Last week\'s feather</string>
-    <string name="weekly_feather_body">%1$d finished and %2$d days of rest. It is the color of %3$s, where most of it happened.</string>
     <string name="weekly_feather_body_plain">%1$d finished and %2$d days of rest.</string>
 </resources>

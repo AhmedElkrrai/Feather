@@ -9,6 +9,9 @@ import kotlinx.serialization.Serializable
  *
  * Soft-deleted rows are included (they carry `deletedAt`), so a deletion made on one phone is
  * not undone by importing an older copy of the task.
+ *
+ * Older files also carry lists, folders and saved filters; they are ignored (lists, folders and
+ * filters left the app), and every task from them goes into the Inbox.
  */
 @Serializable
 data class BackupFile(
@@ -16,15 +19,11 @@ data class BackupFile(
     val version: Int = VERSION,
     /** When the backup was made, epoch millis. */
     val exportedAt: Long = 0,
-    val folders: List<FolderRecord> = emptyList(),
-    val lists: List<ListRecord> = emptyList(),
     val tags: List<TagRecord> = emptyList(),
     val tasks: List<TaskRecord> = emptyList(),
     val taskTags: List<TaskTagRecord> = emptyList(),
     val reminders: List<ReminderRecord> = emptyList(),
     val completions: List<CompletionRecord> = emptyList(),
-    /** Added with the saved filters; older files simply have none. */
-    val filters: List<FilterRecord> = emptyList(),
 ) {
     companion object {
         const val FORMAT = "feather-backup"
@@ -35,42 +34,22 @@ data class BackupFile(
 }
 
 @Serializable
-data class FolderRecord(
-    val id: String,
-    val name: String,
-    val sortOrder: Long = 0,
-    val createdAt: Long = 0,
-    val updatedAt: Long = 0,
-    val deletedAt: Long? = null,
-)
-
-@Serializable
-data class ListRecord(
-    val id: String,
-    val name: String,
-    val isInbox: Boolean = false,
-    val sortOrder: Long = 0,
-    val createdAt: Long = 0,
-    val updatedAt: Long = 0,
-    val deletedAt: Long? = null,
-    val folderId: String? = null,
-    val colorArgb: Int? = null,
-)
-
-@Serializable
 data class TagRecord(
     val id: String,
     val name: String,
     val createdAt: Long = 0,
     val updatedAt: Long = 0,
     val deletedAt: Long? = null,
+    /** The tag this one extends; absent in older backup files, which means a top-level tag. */
+    val parentId: String? = null,
 )
 
 /** A task, or (when [parentTaskId] is set) a checklist item of one. Dates are ISO text. */
 @Serializable
 data class TaskRecord(
     val id: String,
-    val listId: String,
+    /** Always the Inbox now; older files name the list the task was in. */
+    val listId: String = "",
     val title: String,
     val notes: String = "",
     val dueDate: String? = null,
@@ -113,19 +92,4 @@ data class CompletionRecord(
     val taskId: String,
     val completedAt: Long,
     val dueDate: String? = null,
-)
-
-@Serializable
-data class FilterRecord(
-    val id: String,
-    val name: String,
-    val listId: String? = null,
-    val tagId: String? = null,
-    val minPriority: Int = 0,
-    val dueWindow: Int = 0,
-    val hideCompleted: Boolean = true,
-    val sortOrder: Long = 0,
-    val createdAt: Long = 0,
-    val updatedAt: Long = 0,
-    val deletedAt: Long? = null,
 )
