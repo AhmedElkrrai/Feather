@@ -97,7 +97,6 @@ import com.elkrrai.feather.ui.DisplayPrefs
 import com.elkrrai.feather.ui.rememberHaptics
 import com.elkrrai.feather.ui.rememberReduceMotion
 import com.elkrrai.feather.ui.theme.Dur
-import kotlin.math.abs
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.animation.animateColorAsState

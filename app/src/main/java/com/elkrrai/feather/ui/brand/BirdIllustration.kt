@@ -79,9 +79,8 @@ internal fun rememberAmbientPhase(periodMillis: Int, enabled: Boolean): Animatab
 }
 
 /**
- * The Feather bird. It moves on its own in a loop while movement is allowed
- * ([rememberBirdMotionAllowed]) and is a still picture otherwise. Pass a [contentDescription]
- * when the picture carries meaning; without one it is hidden from screen readers.
+ * Shared animation switchboard for the character. Screens ask for a [mood]; the matching visual
+ * implementation is selected here so replacing one animation updates every call site at once.
  */
 @Composable
 fun BirdIllustration(
@@ -94,6 +93,21 @@ fun BirdIllustration(
      * movement is not allowed or Little celebrations is off.
      */
     flightTrigger: Int = 0,
+) {
+    if (mood == BirdMood.IDLE && flightTrigger == 0) {
+        RecraftOwlIllustration(modifier = modifier)
+    } else {
+        LegacyBirdIllustration(modifier, mood, contentDescription, flightTrigger)
+    }
+}
+
+/** Existing sleeping and event animations stay behind the shared switchboard until replaced. */
+@Composable
+private fun LegacyBirdIllustration(
+    modifier: Modifier,
+    mood: BirdMood,
+    contentDescription: String?,
+    flightTrigger: Int,
 ) {
     val allowed = rememberBirdMotionAllowed()
     val flight = remember { Animatable(0f) }
@@ -109,11 +123,9 @@ fun BirdIllustration(
             }
         }
     }
-    // The idle loop waits while the bird is in the air and begins again from its calm pose.
     val phase = rememberAmbientPhase(periodMillis(mood), enabled = allowed && !flying)
     BirdCanvas(
         mood = mood,
-        // Read inside the drawing, so each frame redraws the picture and recomposes nothing.
         phase = { phase.value },
         modifier = modifier.describedAs(contentDescription),
         flight = { if (flying) flight.value else NOT_FLYING },
