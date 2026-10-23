@@ -46,7 +46,7 @@ enum class SceneKind {
 
 /** What a scene's drawing needs: the scale, the colors and the two animated values. */
 internal class SceneScope(
-    /** How many dp one unit of the 200 by 200 board is. */
+    /** How many dp one unit of the 200-unit-wide scene board is. */
     val unit: Dp,
     val palette: ScenePalette,
     /** The sway of leaves and feathers, in degrees; 0 when nothing moves. */
@@ -62,15 +62,15 @@ private const val SUN_MILLIS = 600
 private val ENTRANCE_RISE = 12.dp
 
 /**
- * The frame every scene sits in: a square of [size], faded in and lifted 12dp over 320ms (a plain
- * 160ms fade with reduced motion), with the sway and the sunrise running when motion is allowed.
- * Scenes are decoration: they have no description of their own, the sentence under them says
- * what they mean.
+ * The frame every scene sits in: [size] wide and [height] high, faded in and lifted 12dp over
+ * 320ms (a plain 160ms fade with reduced motion), with the sway and sunrise running when motion is
+ * allowed. Scenes are decoration: their sentence underneath says what they mean.
  */
 @Composable
 internal fun SceneFrame(
     size: Dp,
     modifier: Modifier = Modifier,
+    height: Dp = size,
     risingSun: Boolean = false,
     content: @Composable SceneScope.() -> Unit,
 ) {
@@ -108,7 +108,7 @@ internal fun SceneFrame(
 
     Box(
         modifier = modifier
-            .size(size)
+            .size(width = size, height = height)
             .graphicsLayer {
                 alpha = entrance.value
                 translationY = (1f - entrance.value) * ENTRANCE_RISE.toPx()

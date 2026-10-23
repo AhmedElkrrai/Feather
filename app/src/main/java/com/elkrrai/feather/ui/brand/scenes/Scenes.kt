@@ -1,20 +1,28 @@
 package com.elkrrai.feather.ui.brand.scenes
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.ui.brand.BirdMood
+import com.elkrrai.feather.R
 
 // Where the bird stands in each scene: its 96 by 96 box is moved and scaled by one transform. The
 // numbers put its feet on the ground, the branch or the rim of the nest or bin.
-internal val EmptyListBird = BirdPlacement(x = 18f, y = 90f, scale = 0.95f)
+internal val EmptyListBird = BirdPlacement(x = 31f, y = 116f, scale = 0.68f)
 internal val AllDoneBird = BirdPlacement(x = 52f, y = 66f, scale = 0.95f)
 internal val NothingDueBird = BirdPlacement(x = 52f, y = 36f, scale = 1f)
 internal val NoResultsBird = BirdPlacement(x = 14f, y = 94f, scale = 0.9f, tilt = -10f)
@@ -23,8 +31,8 @@ internal val FirstLaunchBird = BirdPlacement(x = 50f, y = 78f, scale = 0.8f)
 internal val TrashEmptyBird = BirdPlacement(x = 80f, y = 43f, scale = 0.8f)
 
 /**
- * One of the eight scenes of the illustration kit, drawn in code on a 200 by 200 board and shown
- * at [size]. The scene says nothing to screen readers; put the sentence under it.
+ * One of the eight scenes of the illustration kit, drawn on a 200-unit-wide board and shown at
+ * [size]. The scene says nothing to screen readers; put the sentence under it.
  */
 @Composable
 fun Illustration(kind: SceneKind, modifier: Modifier = Modifier, size: Dp = 190.dp) {
@@ -40,22 +48,32 @@ fun Illustration(kind: SceneKind, modifier: Modifier = Modifier, size: Dp = 190.
     }
 }
 
-/** The bird beside an empty nest, with a leaf that sways. */
+/** The bird beside an empty nest, with a leafy tree behind it. */
 @Composable
-private fun EmptyListScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifier) {
+private fun EmptyListScene(size: Dp, modifier: Modifier) = SceneFrame(
+    size,
+    modifier,
+    height = size * 2.5f,
+) {
     val p = palette
+    Image(
+        painter = painterResource(R.drawable.goal_tree),
+        contentDescription = null,
+        contentScale = ContentScale.Fit,
+        alignment = Alignment.BottomCenter,
+        modifier = Modifier
+            .offset(x = unit * -37f, y = unit * 40f)
+            .size(width = unit * 274f, height = unit * 480f),
+    )
     Layer {
-        drawGround(p)
-        drawNestBack(p, 146f, 150f, 38f)
-    }
-    SceneBird(BirdMood.IDLE, EmptyListBird)
-    Layer {
-        drawNestFront(p, 146f, 150f, 38f)
-        val stemBase = Offset(176f, 138f)
-        rotate(sway(), pivot = stemBase) {
-            drawLine(p.bowl, stemBase, Offset(176f, 114f), 3f, StrokeCap.Round)
-            drawLeaf(Offset(176f, 118f), 26f, -20f, p.leaf)
+        translate(0f, 270f) {
+            drawGround(p)
+            drawNestBack(p, 146f, 150f, 38f)
         }
+    }
+    SceneBird(BirdMood.IDLE, EmptyListBird.copy(y = EmptyListBird.y + 270f))
+    Layer {
+        translate(0f, 270f) { drawNestFront(p, 146f, 150f, 38f) }
     }
 }
 

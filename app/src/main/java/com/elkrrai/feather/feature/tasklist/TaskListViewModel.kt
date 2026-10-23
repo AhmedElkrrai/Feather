@@ -117,19 +117,27 @@ class TaskListViewModel @Inject constructor(
         val allTasks = d.tasks.filter { it.id !in restingIds }
         val restingDone = resting.map { it.asFinishedToday() }
         val scope = selected
-        // A tag tab whose tag was deleted falls back to All.
-        val tagFilter = when {
-            pickedFilter is TagFilter.OfTag && d.tags.none { it.id == pickedFilter.tagId } -> TagFilter.All
-            else -> pickedFilter
-        }
-        // The tag tab narrows what the list shows; the counts in the menu and the Today header still count everything.
-        val shown = allTasks.withTagFilter(tagFilter, d.tags)
         // What the tag tabs can offer in this view, before any tag tab narrows it.
         val inView = if (scope == TaskScope.Completed) {
             allTasks.inScope(scope, today) + restingDone
         } else {
             allTasks.inScope(scope, today)
         }
+        // A picked tab must always have something to show. Fall back to All as soon as its last
+        // matching task leaves this view, so the tab can disappear instead of remaining selected
+        // over an empty list. This also handles a tag being deleted and an empty No tag tab.
+        val tagFilter = when (pickedFilter) {
+            is TagFilter.OfTag -> {
+                val branch = d.tags.branchIds(pickedFilter.tagId)
+                if (branch.isEmpty() || inView.none { task -> task.tags.any { it.id in branch } }) {
+                    TagFilter.All
+                } else pickedFilter
+            }
+            TagFilter.Untagged -> if (inView.none { it.tags.isEmpty() }) TagFilter.All else pickedFilter
+            TagFilter.All -> TagFilter.All
+        }
+        // The tag tab narrows what the list shows; the counts in the menu and the Today header still count everything.
+        val shown = allTasks.withTagFilter(tagFilter, d.tags)
         val tagTaskCounts = d.tags.associate { tag ->
             val branch = d.tags.branchIds(tag.id)
             tag.id to inView.count { task -> task.tags.any { it.id in branch } }

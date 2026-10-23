@@ -16,6 +16,7 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.feature.tasklist.QuickAddSheet
 import com.elkrrai.feather.ui.theme.FeatherTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.time.LocalDate
 
 /**
  * A see-through screen that shows only the quick-add sheet on top of whatever the user was doing.
@@ -42,7 +43,12 @@ class QuickAddActivity : AppCompatActivity() {
                     onDismiss = { if (!adding) finish() },
                     onAdd = { parsed ->
                         adding = true
-                        viewModel.add(parsed) {
+                        val fallbackDate = if (intent.getBooleanExtra(EXTRA_DEFAULT_DUE_TODAY, false)) {
+                            LocalDate.now()
+                        } else {
+                            null
+                        }
+                        viewModel.add(parsed, fallbackDate) {
                             Toast.makeText(this@QuickAddActivity, R.string.quick_add_done, Toast.LENGTH_SHORT).show()
                             finish()
                         }
@@ -53,6 +59,8 @@ class QuickAddActivity : AppCompatActivity() {
     }
 
     companion object {
+        const val EXTRA_DEFAULT_DUE_TODAY = "com.elkrrai.feather.extra.DEFAULT_DUE_TODAY"
+
         /** An intent that opens quick add on its own (tile and shortcut). */
         fun intent(context: Context): Intent = Intent(context, QuickAddActivity::class.java)
 

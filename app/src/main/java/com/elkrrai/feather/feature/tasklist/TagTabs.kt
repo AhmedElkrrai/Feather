@@ -31,11 +31,10 @@ fun TagTabs(
     modifier: Modifier = Modifier,
 ) {
     val path = remember(tags, filter) { tagPath(filter, tags) }
-    // A tag with no tasks in this view gets no tab, unless it is the one picked (so the tab never vanishes under the finger).
-    val pickedIds = path.mapTo(HashSet()) { it.id }
-    fun hasTasks(tag: Tag) = (taskCounts[tag.id] ?: 0) > 0 || tag.id in pickedIds
+    // Tabs are available only while they contain tasks in the current view.
+    fun hasTasks(tag: Tag) = (taskCounts[tag.id] ?: 0) > 0
     val topLevel = tags.childrenOf(null).filter(::hasTasks)
-    val showNoTag = untaggedCount > 0 || filter == TagFilter.Untagged
+    val showNoTag = untaggedCount > 0
     // Without any tag to pick, "All" alone is not worth a row.
     if (topLevel.isEmpty() && filter == TagFilter.All) return
     Column(modifier) {

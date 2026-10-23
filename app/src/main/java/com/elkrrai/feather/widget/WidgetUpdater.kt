@@ -25,8 +25,13 @@ class WidgetUpdater @Inject constructor(
         scope.launch {
             tasks.observeTasks()
                 .debounce(DEBOUNCE_MILLIS)
-                .collect { updateTaskWidgets(context) }
+                .collect { refreshNow() }
         }
+    }
+
+    /** Requests a redraw immediately after a foreground task action, before its screen closes. */
+    suspend fun refreshNow() {
+        updateTaskWidgets(context)
     }
 
     private companion object {

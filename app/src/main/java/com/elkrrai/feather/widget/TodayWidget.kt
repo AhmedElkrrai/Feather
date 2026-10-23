@@ -2,6 +2,7 @@ package com.elkrrai.feather.widget
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -158,7 +159,12 @@ class TodayWidget : GlanceAppWidget() {
                         .size(44.dp)
                         .background(WidgetColors.primary)
                         .cornerRadius(16.dp)
-                        .clickable(actionStartActivity(Intent(context, QuickAddActivity::class.java))),
+                    .clickable(actionStartActivity(QuickAddActivity.intent(context).apply {
+                        // Extras do not identify PendingIntents. Give this action a unique data URI
+                        // so Android replaces any previously cached quick-add intent without the date.
+                        data = Uri.parse("feather://quick-add/today-widget")
+                        putExtra(QuickAddActivity.EXTRA_DEFAULT_DUE_TODAY, true)
+                    })),
                     contentAlignment = Alignment.Center,
                 ) {
                     Image(
@@ -232,9 +238,10 @@ class CompleteTaskAction : ActionCallback {
         val taskId = parameters[TaskIdKey] ?: return
         val entry = EntryPointAccessors.fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
         entry.taskRepository().setCompleted(taskId, true)
+        // Redraw before reminder rescheduling does additional database work.
+        updateTaskWidgets(context)
         entry.notifier().cancel(taskId)
         entry.scheduler().reschedule()
-        updateTaskWidgets(context)
     }
 
     companion object {

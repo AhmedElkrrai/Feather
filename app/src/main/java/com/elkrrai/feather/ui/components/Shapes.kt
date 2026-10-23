@@ -1,6 +1,18 @@
 package com.elkrrai.feather.ui.components
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+
+/** Draws the shared leaf shape filled or as a light outline. */
+internal fun DrawScope.drawLeaf(leaf: Path, color: Color, filled: Boolean) {
+    if (filled) {
+        drawPath(leaf, color)
+    } else {
+        drawPath(leaf, color, style = Stroke(width = 0.08f))
+    }
+}
 
 /** A leaf pointed at both ends, in a box from 0 to 1. Shared with the subtask leaves. */
 internal fun leafShape(): Path = Path().apply {
