@@ -24,7 +24,6 @@ import com.elkrrai.feather.R
 // Where the bird stands in each scene: its 96 by 96 box is moved and scaled by one transform. The
 // numbers put its feet on the ground, the branch or the rim of the nest or bin.
 internal val EmptyListBird = BirdPlacement(x = 32f, y = 44f, scale = 1.4f)
-internal val AllDoneBird = BirdPlacement(x = 52f, y = 66f, scale = 0.95f)
 internal val NothingDueBird = BirdPlacement(x = 52f, y = 36f, scale = 1f)
 internal val NoResultsBird = BirdPlacement(x = 14f, y = 94f, scale = 0.9f, tilt = -10f)
 internal val RemindersBlockedBird = BirdPlacement(x = 116f, y = 118f, scale = 0.6f)
@@ -39,7 +38,7 @@ internal val TrashEmptyBird = BirdPlacement(x = 80f, y = 43f, scale = 0.8f)
 fun Illustration(kind: SceneKind, modifier: Modifier = Modifier, size: Dp = 190.dp) {
     when (kind) {
         SceneKind.EmptyList -> EmptyListScene(size, modifier)
-        SceneKind.AllDone -> AllDoneScene(size, modifier)
+        SceneKind.ClearSkies -> ClearSkiesScene(size, size, modifier)
         SceneKind.NothingDue -> NothingDueScene(size, modifier)
         SceneKind.NoResults -> NoResultsScene(size, modifier)
         SceneKind.BackupSaved -> BackupSavedScene(size, modifier)
@@ -78,38 +77,18 @@ private fun EmptyListScene(size: Dp, modifier: Modifier) = SceneFrame(
     )
 }
 
-/** A happy bird on a nest with three eggs, under a sun, with two sparkles. */
-@Composable
-private fun AllDoneScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifier) {
-    val p = palette
-    Layer {
-        drawSun(p, Offset(162f, 40f), 14f)
-        drawSparkle(Offset(44f, 66f), 7f, p.amber)
-        drawSparkle(Offset(172f, 92f), 5f, p.cream)
-        drawGround(p, y = 176f, halfWidth = 66f)
-        drawNestBack(p, 100f, 152f, 54f)
-    }
-    SceneBird(BirdMood.IDLE, AllDoneBird)
-    Layer {
-        // The eggs sit in the bowl: their lower halves are hidden by its front.
-        drawEgg(p, Offset(64f, 142f), size = 1.9f)
-        drawEgg(p, Offset(100f, 148f), size = 1.9f)
-        drawEgg(p, Offset(136f, 142f), size = 1.9f)
-        drawNestFront(p, 100f, 152f, 54f)
-    }
-}
-
 /** A sleeping bird on a branch, with a cloud and a small sun. */
 @Composable
 private fun NothingDueScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifier) {
     val p = palette
+    val perch = Perch.under(NothingDueBird)
     Layer {
         drawCloud(p, Offset(46f, 38f))
         drawSun(p, Offset(174f, 34f), 9f)
-        drawBranch(p, Offset(30f, 126f), Offset(170f, 122f))
-        drawLeaf(Offset(150f, 123f), 20f, -30f, p.leaf)
     }
+    PerchBranch(perch)
     SceneBird(BirdMood.SLEEPING, NothingDueBird)
+    Layer { drawLeaf(perch.twigTip, 20f, -15f, p.leaf) }
 }
 
 /** A bird tilting its head at a loupe held over bare twigs. */

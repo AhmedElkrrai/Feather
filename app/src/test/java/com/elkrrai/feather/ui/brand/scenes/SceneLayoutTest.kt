@@ -75,7 +75,6 @@ class SceneLayoutTest {
     fun everySceneKeepsItsBirdOnTheBoard() {
         val placements = mapOf(
             "empty list" to EmptyListBird,
-            "all done" to AllDoneBird,
             "nothing due" to NothingDueBird,
             "no results" to NoResultsBird,
             "reminders blocked" to RemindersBlockedBird,

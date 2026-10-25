@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
@@ -39,6 +40,25 @@ import kotlin.math.sin
 import kotlinx.coroutines.delay
 
 /**
+ * What the owl wears, on its resting pose: the number of each garment (the first is 0), or -1 for
+ * none. Each is a layer drawn on the owl, so it moves with the owl.
+ */
+data class OwlDress(val scarf: Int = -1, val glasses: Int = -1, val hat: Int = -1) {
+    companion object {
+        val None = OwlDress()
+    }
+}
+
+private val Scarves = intArrayOf(
+    R.drawable.owl_dress_scarf_0, R.drawable.owl_dress_scarf_1, R.drawable.owl_dress_scarf_2,
+    R.drawable.owl_dress_scarf_3, R.drawable.owl_dress_scarf_4, R.drawable.owl_dress_scarf_5,
+)
+private val Spectacles = intArrayOf(R.drawable.owl_dress_glasses_0, R.drawable.owl_dress_glasses_1)
+private val Hats = intArrayOf(
+    R.drawable.owl_dress_hat_0, R.drawable.owl_dress_hat_1, R.drawable.owl_dress_hat_2, R.drawable.owl_dress_hat_3,
+)
+
+/**
  * The owl, Feather's one character, in [mood]. The art is layered PNGs rendered from the Recraft
  * SVGs in `art/owl` (see its README): every layer of a pose shares one square artboard, so a pose is
  * its layers stacked, and the movement is code.
@@ -51,7 +71,7 @@ import kotlinx.coroutines.delay
  *
  * [flightTrigger] counts up each time the owl should fly a lap and land again ([birdFlightPose]);
  * nothing happens when movement is not allowed or Little celebrations is off. Without movement the
- * owl keeps its calm pose.
+ * owl keeps its calm pose. What it [dress] is worn only by the resting owl.
  */
 @Composable
 fun OwlIllustration(
@@ -59,6 +79,7 @@ fun OwlIllustration(
     mood: BirdMood = BirdMood.IDLE,
     contentDescription: String? = null,
     flightTrigger: Int = 0,
+    dress: OwlDress = OwlDress.None,
 ) {
     val allowed = rememberBirdMotionAllowed()
     val flight = remember { Animatable(0f) }
@@ -83,7 +104,7 @@ fun OwlIllustration(
                 .graphicsLayer { alpha = if (flying) 1f - flightBlend(flight.value) else 1f },
         ) {
             when (mood) {
-                BirdMood.IDLE -> IdleOwl()
+                BirdMood.IDLE -> IdleOwl(dress)
                 BirdMood.SLEEPING -> SleepingOwl(allowed)
                 BirdMood.HAPPY, BirdMood.FLYING -> {
                     val phase = rememberAmbientPhase(periodMillis(mood), enabled = allowed)
@@ -105,7 +126,7 @@ internal fun Modifier.describedAs(description: String?): Modifier =
 
 /** The upright owl, three quarters on, with separate head, wing and eye layers. */
 @Composable
-private fun IdleOwl() {
+private fun IdleOwl(dress: OwlDress) {
     val motionAllowed = rememberBirdMotionAllowed()
     val breathing = remember { Animatable(0f) }
     val headTilt = remember { Animatable(0f) }
@@ -169,6 +190,7 @@ private fun IdleOwl() {
             OwlLayer(R.drawable.owl_body)
             OwlLayer(R.drawable.owl_wing)
             OwlLayer(R.drawable.owl_chest)
+            Scarves.getOrNull(dress.scarf)?.let { OwlLayer(it) }
             Box(
                 Modifier
                     .fillMaxSize()
@@ -179,6 +201,8 @@ private fun IdleOwl() {
             ) {
                 OwlLayer(R.drawable.owl_head)
                 OwlLayer(if (eyesOpen) R.drawable.owl_eyes_open else R.drawable.owl_eyes_closed)
+                Spectacles.getOrNull(dress.glasses)?.let { OwlLayer(it) }
+                Hats.getOrNull(dress.hat)?.let { OwlLayer(it, Modifier.graphicsLayer { translationY = -size.height * HAT_LIFT }) }
             }
             Canvas(Modifier.fillMaxSize()) {
                 drawEmblem(
@@ -279,11 +303,12 @@ internal fun OwlFlight(pose: () -> BirdPose, modifier: Modifier = Modifier, stil
 }
 
 @Composable
-private fun OwlLayer(drawable: Int, modifier: Modifier = Modifier) {
+internal fun OwlLayer(drawable: Int, modifier: Modifier = Modifier, colorFilter: ColorFilter? = null) {
     Image(
         painter = painterResource(drawable),
         contentDescription = null,
         contentScale = ContentScale.FillBounds,
+        colorFilter = colorFilter,
         modifier = modifier.fillMaxSize(),
     )
 }
@@ -360,7 +385,7 @@ private fun wingPoseAlpha(index: Int, flap: Float): Float {
 private fun flightBlend(progress: Float): Float =
     smoothStep(0f, FLIGHT_BLEND_END, progress) * (1f - smoothStep(1f - FLIGHT_BLEND_END, 1f, progress))
 
-private fun smoothStep(from: Float, to: Float, x: Float): Float {
+internal fun smoothStep(from: Float, to: Float, x: Float): Float {
     val t = ((x - from) / (to - from)).coerceIn(0f, 1f)
     return t * t * (3f - 2f * t)
 }
@@ -381,6 +406,8 @@ private const val CHEST_GLOW_BASE_ALPHA = 0.62f
 private const val CHEST_GLOW_BREATH_ALPHA = 0.38f
 private const val CHEST_EMBLEM_HALF_WIDTH = 0.027f
 private const val CHEST_EMBLEM_HALF_HEIGHT = 0.043f
+/** The hat's picture is the owl's artboard moved down by this share of its height, so the hat has room above the owl. */
+private const val HAT_LIFT = 128f / 512f
 private const val HEAD_PIVOT_X = 0.56f
 private const val HEAD_PIVOT_Y = 0.5f
 private const val CURIOUS_TILT_DEGREES = -8f
@@ -398,8 +425,9 @@ private const val REST_AFTER_PREEN_MILLIS = 850L
 // Sleeping: the owl's feet are at about 95 percent of the artboard's height, a little left of centre.
 private const val SLEEP_PIVOT_X = 0.45f
 private const val SLEEP_PIVOT_Y = 0.95f
-private const val SLEEP_BREATH_X = 0.006f
-private const val SLEEP_BREATH_Y = 0.014f
+// About 3 dp of rise at the 84 dp size of the Today header: enough to see from arm's length.
+private const val SLEEP_BREATH_X = 0.018f
+private const val SLEEP_BREATH_Y = 0.04f
 private const val SLEEP_GLOW_MAX = 0.8f
 private const val SLEEP_Z_X = 0.80f
 private const val SLEEP_Z_DRIFT_X = 0.07f

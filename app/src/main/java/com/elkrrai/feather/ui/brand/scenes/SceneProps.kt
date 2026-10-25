@@ -24,7 +24,6 @@ import com.elkrrai.feather.ui.theme.Nest
 import com.elkrrai.feather.ui.theme.featherColors
 import com.elkrrai.feather.ui.theme.nest
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import com.elkrrai.feather.ui.theme.leafColor
@@ -81,37 +80,6 @@ internal fun DrawScope.drawGround(p: ScenePalette, cx: Float = 100f, y: Float = 
     drawOval(p.ground, topLeft = Offset(cx - halfWidth, y - 8f), size = Size(halfWidth * 2f, 16f))
 }
 
-/** The inside of a nest, seen over the rim: the dark back of the bowl. Draw before the bird. */
-internal fun DrawScope.drawNestBack(p: ScenePalette, cx: Float, cy: Float, halfWidth: Float) {
-    drawOval(p.weave, topLeft = Offset(cx - halfWidth, cy - 7f), size = Size(halfWidth * 2f, 14f))
-}
-
-/** The front of a nest: the woven bowl and its rim. Draw after the bird and the eggs. */
-internal fun DrawScope.drawNestFront(p: ScenePalette, cx: Float, cy: Float, halfWidth: Float) {
-    val depth = halfWidth * 0.6f
-    drawArc(
-        color = p.bowl,
-        startAngle = 0f,
-        sweepAngle = 180f,
-        useCenter = true,
-        topLeft = Offset(cx - halfWidth, cy - depth),
-        size = Size(halfWidth * 2f, depth * 2f),
-    )
-    for (k in -2..2) {
-        val x = cx + k * halfWidth * 0.36f
-        val bottom = cy + depth * (0.86f - abs(k) * 0.16f)
-        drawLine(p.weave, Offset(x - 3f, cy + depth * 0.18f), Offset(x + 3f, bottom), 2.4f, StrokeCap.Round)
-    }
-    drawLine(p.weave, Offset(cx - halfWidth, cy), Offset(cx + halfWidth, cy), 3.2f, StrokeCap.Round)
-}
-
-/** An egg, 12 by 15 on the board's scale of the spec, enlarged by [size], with a speckle or two. */
-internal fun DrawScope.drawEgg(p: ScenePalette, center: Offset, size: Float = 1.5f) {
-    drawOval(p.cream, topLeft = Offset(center.x - 6f * size, center.y - 7.5f * size), size = Size(12f * size, 15f * size))
-    drawCircle(p.amber.copy(alpha = 0.55f), radius = 0.9f * size, center = Offset(center.x - 1.6f * size, center.y - 2f * size))
-    drawCircle(p.coral.copy(alpha = 0.5f), radius = 0.8f * size, center = Offset(center.x + 2f * size, center.y + 2.4f * size))
-}
-
 internal fun DrawScope.drawSun(p: ScenePalette, center: Offset, radius: Float) {
     drawCircle(p.amber, radius = radius, center = center)
     for (ray in 0 until 8) {
@@ -140,23 +108,6 @@ internal fun DrawScope.drawLeaf(base: Offset, length: Float, degrees: Float, col
             }
         }
     }
-}
-
-internal fun DrawScope.drawBranch(p: ScenePalette, from: Offset, to: Offset, width: Float = 8f) {
-    drawLine(p.bowl, from, to, width, StrokeCap.Round)
-}
-
-/** A four-pointed sparkle. */
-internal fun DrawScope.drawSparkle(center: Offset, radius: Float, color: Color) {
-    val path = Path().apply {
-        moveTo(center.x, center.y - radius)
-        quadraticTo(center.x, center.y, center.x + radius, center.y)
-        quadraticTo(center.x, center.y, center.x, center.y + radius)
-        quadraticTo(center.x, center.y, center.x - radius, center.y)
-        quadraticTo(center.x, center.y, center.x, center.y - radius)
-        close()
-    }
-    drawPath(path, color)
 }
 
 internal fun DrawScope.drawCloud(p: ScenePalette, center: Offset) {

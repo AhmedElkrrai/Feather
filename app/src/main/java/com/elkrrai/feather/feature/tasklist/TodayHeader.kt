@@ -2,6 +2,7 @@ package com.elkrrai.feather.feature.tasklist
 
 import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -422,6 +424,15 @@ private fun DecorativeLeaves(filled: Int, color: Color, outline: Color, modifier
 private val SceneWidth = 150.dp
 private val SceneHeight = 110.dp
 
+// The branch picture is 2 to 1; it is as wide as the scene and hangs 56.5 dp down, which puts its
+// top edge under the owl's feet at about 96 dp. Its lower part reaches past the scene's bottom, into
+// the header's lip, which is clear.
+private val BranchHeight = 75.dp
+private val BranchTop = 56.5.dp
+
+/** Where each egg's bottom sits (in the scene's 150 by 110 units): the branch's top edge is not level. */
+private val EggBaseY = floatArrayOf(95.5f, 98.5f, 100f, 100.5f, 100f)
+
 /**
  * The bird on a branch with a sun or a moon, and eggs on the branch when everything is done. The
  * picture is not mirrored in right-to-left languages (only where it sits is). Decoration only.
@@ -429,7 +440,7 @@ private val SceneHeight = 110.dp
 @Composable
 private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int, modifier: Modifier = Modifier) {
     val feather = MaterialTheme.featherColors
-    val mood = todayBirdMood(status, phase)
+    val mood = todayBirdMood(status)
     val moon = showsMoon(phase)
     val moonPath = remember { moonShape() }
     val leaf = remember { leafShape() }
@@ -464,18 +475,29 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
                     translateAndScale(124f, 12f, 26f) { drawPath(moonPath, Nest.Cream.copy(alpha = moonness)) }
                 }
                 if (moonness < 1f) drawSun(Offset(128f, 24f), 12f, alpha = 1f - moonness)
-                // the branch, a twig and a leaf
-                drawLine(feather.twig, Offset(6f, 96f), Offset(142f, 92f), strokeWidth = 7f, cap = StrokeCap.Round)
-                drawLine(feather.twig, Offset(104f, 94f), Offset(128f, 80f), strokeWidth = 4f, cap = StrokeCap.Round)
-                translateAndScale(124f, 66f, 16f) { drawLeaf(leaf, leafColor, filled = true) }
-                // eggs on the branch
+            }
+        }
+        // The branch the owl sits on: its top edge is at about y 96 under the owl's feet.
+        Image(
+            painter = painterResource(R.drawable.perch_branch),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier
+                .size(SceneWidth, BranchHeight)
+                .offset(y = BranchTop),
+        )
+        Canvas(Modifier.size(SceneWidth, SceneHeight)) {
+            scale(size.width / 150f, pivot = Offset.Zero) {
+                // a leaf on the top twig
+                translateAndScale(126f, 63f, 16f) { drawLeaf(leaf, leafColor, filled = true) }
+                // eggs on the branch, each settled onto its top edge
                 val total = settle.value * EGG_SETTLE_MILLIS
                 repeat(EGGS) { index ->
                     val t = if (reduceMotion) settle.value else ((total - index * EGG_STAGGER_MILLIS) / EGG_POP_MILLIS).coerceIn(0f, 1f)
                     if (t > 0f) {
                         val x = 6f + index * 10.5f
                         val pop = if (reduceMotion) 1f else EggPop.transform(t)
-                        translateAndScale(x + 5.5f, 98f, 1f) {
+                        translateAndScale(x + 5.5f, EggBaseY[index], 1f) {
                             scale(pop, pop, pivot = Offset.Zero) {
                                 translate(left = -5.5f, top = -14f) { drawEgg(Offset.Zero, alpha = t) }
                             }
@@ -487,7 +509,9 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
         BirdIllustration(
             modifier = Modifier
                 .size(84.dp)
-                .offset(x = 36.dp, y = 17.dp),
+                // 3 dp lower than the old branch needed: this one rises to the right, and the owl's
+                // far foot would hang in the air.
+                .offset(x = 36.dp, y = 20.dp),
             mood = mood,
             flightTrigger = flightTrigger,
         )

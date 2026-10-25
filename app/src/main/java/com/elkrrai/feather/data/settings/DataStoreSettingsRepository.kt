@@ -7,6 +7,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.elkrrai.feather.domain.nest.NestOutfit
+import com.elkrrai.feather.domain.nest.NestStyle
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.domain.settings.ThemeMode
@@ -45,6 +47,10 @@ class DataStoreSettingsRepository @Inject constructor(
         val weeklyFeather = booleanPreferencesKey("weekly_feather")
         val nestUnlocked = stringSetPreferencesKey("nest_unlocked")
         val nestSeen = stringSetPreferencesKey("nest_seen")
+        val nestStyle = stringPreferencesKey("nest_style")
+        val nestScarf = intPreferencesKey("nest_scarf")
+        val nestGlasses = intPreferencesKey("nest_glasses")
+        val nestHat = intPreferencesKey("nest_hat")
         val voiceUsed = booleanPreferencesKey("voice_used")
         val backedUp = booleanPreferencesKey("backed_up")
         val morningCard = booleanPreferencesKey("morning_card")
@@ -75,6 +81,12 @@ class DataStoreSettingsRepository @Inject constructor(
             weeklyFeather = prefs[Keys.weeklyFeather] ?: defaults.weeklyFeather,
             nestUnlocked = prefs[Keys.nestUnlocked].orEmpty(),
             nestSeen = prefs[Keys.nestSeen].orEmpty(),
+            nestStyle = prefs.enumOf(Keys.nestStyle, defaults.nestStyle),
+            nestOutfit = NestOutfit(
+                scarf = (prefs[Keys.nestScarf] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.SCARVES - 1),
+                glasses = (prefs[Keys.nestGlasses] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.GLASSES - 1),
+                hat = (prefs[Keys.nestHat] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.HATS - 1),
+            ),
             voiceUsed = prefs[Keys.voiceUsed] ?: defaults.voiceUsed,
             backedUp = prefs[Keys.backedUp] ?: defaults.backedUp,
             morningCard = prefs[Keys.morningCard] ?: defaults.morningCard,
@@ -159,6 +171,18 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setNestSeen(ids: Set<String>) {
         dataStore.edit { it[Keys.nestSeen] = ids }
+    }
+
+    override suspend fun setNestStyle(style: NestStyle) {
+        dataStore.edit { it[Keys.nestStyle] = style.name }
+    }
+
+    override suspend fun setNestOutfit(outfit: NestOutfit) {
+        dataStore.edit {
+            it[Keys.nestScarf] = outfit.scarf
+            it[Keys.nestGlasses] = outfit.glasses
+            it[Keys.nestHat] = outfit.hat
+        }
     }
 
     override suspend fun setVoiceUsed(used: Boolean) {

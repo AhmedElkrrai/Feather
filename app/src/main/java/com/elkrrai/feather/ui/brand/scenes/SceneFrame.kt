@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.ui.brand.BirdIllustration
 import com.elkrrai.feather.ui.brand.BirdMood
+import com.elkrrai.feather.ui.brand.OwlDress
 import com.elkrrai.feather.ui.brand.rememberBirdMotionAllowed
 import com.elkrrai.feather.ui.rememberReduceMotion
 import com.elkrrai.feather.ui.theme.Ease
@@ -35,7 +36,7 @@ import com.elkrrai.feather.ui.brand.rememberAmbientPhase
 /** The scenes of the illustration kit (see `Illustration`). */
 enum class SceneKind {
     EmptyList,
-    AllDone,
+    ClearSkies,
     NothingDue,
     NoResults,
     BackupSaved,
@@ -129,12 +130,13 @@ internal fun SceneScope.Layer(draw: DrawScope.() -> Unit) {
 
 /** The live, animated bird, placed on the board by [at]. */
 @Composable
-internal fun SceneScope.SceneBird(mood: BirdMood, at: BirdPlacement) {
+internal fun SceneScope.SceneBird(mood: BirdMood, at: BirdPlacement, dress: OwlDress = OwlDress.None) {
     BirdIllustration(
         modifier = Modifier
             .offset(x = unit * at.x, y = unit * at.y)
             .size(unit * at.side)
             .graphicsLayer { rotationZ = at.tilt },
         mood = mood,
+        dress = dress,
     )
 }

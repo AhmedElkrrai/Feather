@@ -533,7 +533,8 @@ fun TaskListContent(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            if (state.scope != TaskScope.Completed && !selecting) {
+            // Nothing is added to a view of late or finished tasks.
+            if (state.scope != TaskScope.Completed && state.scope != TaskScope.Overdue && !selecting) {
                 FloatingActionButton(onClick = onAddClick) {
                     Icon(
                         painter = painterResource(R.drawable.ic_add),
@@ -729,7 +730,7 @@ private class EmptyCopy(val scene: SceneKind, @StringRes val title: Int, @String
  * says nothing is due; Completed says nothing is finished yet.
  */
 private fun TaskScope.emptyCopy(): EmptyCopy = when (this) {
-    TaskScope.Overdue -> EmptyCopy(SceneKind.AllDone, R.string.scene_all_done, null)
+    TaskScope.Overdue -> EmptyCopy(SceneKind.ClearSkies, R.string.scene_clear_skies, null)
     TaskScope.NoDate -> EmptyCopy(SceneKind.EmptyList, R.string.scene_empty_list, R.string.task_list_empty_body)
     TaskScope.Today, TaskScope.Upcoming -> EmptyCopy(SceneKind.NothingDue, R.string.scene_nothing_due, null)
     TaskScope.Completed -> EmptyCopy(SceneKind.NothingDue, R.string.empty_view_title, R.string.empty_view_body)

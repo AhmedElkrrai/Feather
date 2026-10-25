@@ -77,7 +77,7 @@ class TodayWidget : GlanceAppWidget() {
         val doneToday = all.count { it.completedAt?.atZone(zone)?.toLocalDate() == today }
         val status = TodayStatus(left = open.size, done = doneToday)
         val phase = dayPhaseFor(now)
-        val mood = todayBirdMood(status, phase)
+        val mood = todayBirdMood(status)
 
         val rows = open.take(MAX_ROWS).map { task ->
             TodayRow(task.id, task.title, dueLabel(localized, task, today, locale), task.priority)

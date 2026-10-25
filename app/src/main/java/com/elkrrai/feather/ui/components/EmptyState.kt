@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.ui.brand.BirdIllustration
 import com.elkrrai.feather.ui.brand.BirdMood
+import com.elkrrai.feather.ui.brand.scenes.ClearSkiesScene
 import com.elkrrai.feather.ui.brand.scenes.Illustration
 import com.elkrrai.feather.ui.brand.scenes.SceneKind
 import com.elkrrai.feather.ui.brand.scenes.sceneSizeDp
@@ -36,6 +37,22 @@ fun EmptyState(
     mood: BirdMood = BirdMood.IDLE,
     scene: SceneKind? = null,
 ) {
+    if (scene == SceneKind.ClearSkies) {
+        // The sky fills the screen, with the sentence written on it near the top.
+        BoxWithConstraints(modifier.fillMaxSize().padding(SKY_MARGIN)) {
+            if (maxHeight >= SKY_MIN_HEIGHT) ClearSkiesScene(width = maxWidth, height = maxHeight)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 36.dp, start = 28.dp, end = 28.dp),
+            )
+        }
+        return
+    }
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
@@ -77,3 +94,7 @@ fun EmptyState(
         }
     }
 }
+
+/** The sky of an empty Overdue view leaves this much of the screen's edge, and is left out when shorter than this. */
+private val SKY_MARGIN = 10.dp
+private val SKY_MIN_HEIGHT = 320.dp

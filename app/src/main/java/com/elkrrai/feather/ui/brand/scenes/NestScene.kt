@@ -1,5 +1,9 @@
 package com.elkrrai.feather.ui.brand.scenes
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -11,49 +15,109 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.nest.NestItem
+import com.elkrrai.feather.domain.nest.NestOutfit
+import com.elkrrai.feather.domain.nest.NestStyle
 import com.elkrrai.feather.ui.brand.BirdMood
-
-/** The bird's place in its nest, the same as on the all-done scene. */
-private val NestBird = AllDoneBird
-
-/** A point of the bird's 96 by 96 box on the 200 by 200 board. */
-private fun bird(x: Float, y: Float) = Offset(NestBird.x + x * NestBird.scale, NestBird.y + y * NestBird.scale)
+import com.elkrrai.feather.ui.brand.OwlDress
 
 private val Terracotta = Color(0xFFC77D4F)
 private val TerracottaDark = Color(0xFFA6613B)
 
 /**
  * The bird's nest with everything it has been given: a scarf, fairy lights, bunting, a lantern, moss,
- * glasses, a flower pot and a party hat. Only what has been earned is drawn. It is the same scene
- * kit as the empty states, so the bird is alive and the whole thing stays quiet.
+ * glasses, a flower pot and a party hat (the scarf, the glasses and the hat are worn by the bird itself). Only what has been earned is drawn. It is the same scene
+ * kit as the empty states, so the bird is alive and the whole thing stays quiet. The nest itself is
+ * the person's choice ([style]); the bird sits in it whichever it is.
  */
 @Composable
-fun NestScene(items: Set<NestItem>, modifier: Modifier = Modifier, size: Dp = 280.dp) =
+fun NestScene(
+    items: Set<NestItem>,
+    modifier: Modifier = Modifier,
+    size: Dp = 280.dp,
+    style: NestStyle = NestStyle.BRAIDED,
+    outfit: NestOutfit = NestOutfit(),
+) =
     SceneFrame(size, modifier) {
         val p = palette
+        val art = style.art()
+        val nestHeight = NEST_WIDTH * art.heightPerWidth
+        val nestTop = GROUND_LINE - nestHeight
+        // the bird stands with its feet at the floor of this nest
+        val bird = BirdPlacement(x = BIRD_X, y = nestTop + art.feet * nestHeight - BIRD_FEET * 96f * BIRD_SCALE, scale = BIRD_SCALE)
         Layer {
             if (items.any { it == NestItem.FAIRY_LIGHTS || it == NestItem.BUNTING || it == NestItem.LANTERN }) {
-                drawBranch(p, Offset(14f, 26f), Offset(186f, 22f), width = 7f)
+                // What hangs is hung on two ropes from the top of the board.
+                drawLine(p.weave, Offset(20f, 0f), Offset(20f, 29f), 1.6f, StrokeCap.Round)
+                drawLine(p.weave, Offset(180f, 0f), Offset(180f, 27f), 1.6f, StrokeCap.Round)
             }
             if (NestItem.BUNTING in items) drawBunting(p.coral, p.amber, p.sky, p.weave)
             if (NestItem.FAIRY_LIGHTS in items) drawFairyLights(p.weave, listOf(p.amber, p.coral, p.sky, p.cream))
             if (NestItem.LANTERN in items) drawLantern(p.weave, p.amber, p.bowl)
             drawGround(p, y = 176f, halfWidth = 70f)
             if (NestItem.MOSS in items) drawMoss(p.moss, p.leaf)
-            drawNestBack(p, 100f, 152f, 54f)
         }
-        SceneBird(BirdMood.IDLE, NestBird)
+        NestLayer(art.back, nestTop, nestHeight)
+        // what the bird wears: each garment shows once earned, in the choice made for it
+        val dress = OwlDress(
+            scarf = if (NestItem.SCARF in items) outfit.scarf else NestOutfit.NONE,
+            glasses = if (NestItem.GLASSES in items) outfit.glasses else NestOutfit.NONE,
+            hat = if (NestItem.PARTY_HAT in items) outfit.hat else NestOutfit.NONE,
+        )
+        SceneBird(BirdMood.IDLE, bird, dress)
+        // the front of the nest, over the bird's feet
+        NestLayer(art.front, nestTop, nestHeight)
         Layer {
-            drawNestFront(p, 100f, 152f, 54f)
             if (NestItem.FLOWER_POT in items) drawFlowerPot(p.coral, p.amber, p.moss)
-            if (NestItem.SCARF in items) drawScarf(p.coral)
-            if (NestItem.GLASSES in items) drawGlasses(p.ink, p.sky)
-            if (NestItem.PARTY_HAT in items) drawPartyHat(p.coral, p.amber, p.cream)
         }
     }
+
+/** One picture of the nest: the whole of it for the back layer, only its front for the front layer. */
+@Composable
+private fun SceneScope.NestLayer(@DrawableRes drawable: Int, top: Float, height: Float) {
+    Image(
+        painter = painterResource(drawable),
+        contentDescription = null,
+        contentScale = ContentScale.FillBounds,
+        modifier = Modifier
+            .offset(x = unit * NEST_X, y = unit * top)
+            .size(unit * NEST_WIDTH, unit * height),
+    )
+}
+
+/** The nest's pictures, and where in them the bird's feet land (a share of the picture's height). */
+private class NestArt(
+    @DrawableRes val back: Int,
+    @DrawableRes val front: Int,
+    /** The picture's height for each unit of its width. */
+    val heightPerWidth: Float,
+    val feet: Float,
+)
+
+private fun NestStyle.art() = when (this) {
+    NestStyle.BRAIDED -> NestArt(R.drawable.nest_braided_back, R.drawable.nest_braided_front, 701f / 920f, 0.64f)
+    NestStyle.TWIGS -> NestArt(R.drawable.nest_twigs_back, R.drawable.nest_twigs_front, 577f / 908f, 0.46f)
+    NestStyle.STRAW -> NestArt(R.drawable.nest_straw_back, R.drawable.nest_straw_front, 568f / 864f, 0.60f)
+    NestStyle.ROPE -> NestArt(R.drawable.nest_rope_back, R.drawable.nest_rope_front, 639f / 934f, 0.55f)
+}
+
+/** The whole nest of [this] style, to show it small, for choosing. */
+@DrawableRes
+fun NestStyle.pictureRes(): Int = art().back
+
+private const val NEST_WIDTH = 126f
+private const val NEST_X = 29f
+private const val GROUND_LINE = 172f
+private const val BIRD_X = 46f
+private const val BIRD_SCALE = 0.95f
+
+/** The bird's feet are this far down its box. */
+private const val BIRD_FEET = 0.945f
 
 /** A swag of bulbs on a thin wire between the two ends of the branch. */
 private fun DrawScope.drawFairyLights(wire: Color, colors: List<Color>) {
@@ -105,8 +169,7 @@ private fun DrawScope.drawBunting(a: Color, b: Color, c: Color, string: Color) {
 
 /** A small lantern hanging from the branch, glowing. */
 private fun DrawScope.drawLantern(string: Color, glow: Color, frame: Color) {
-    val top = Offset(170f, 24f)
-    drawLine(string, top, Offset(170f, 46f), 1.4f, StrokeCap.Round)
+    drawLine(string, Offset(170f, 0f), Offset(170f, 46f), 1.4f, StrokeCap.Round)
     drawCircle(
         brush = Brush.radialGradient(listOf(glow.copy(alpha = 0.45f), Color.Transparent), center = Offset(170f, 60f), radius = 26f),
         radius = 26f,
@@ -143,44 +206,4 @@ private fun DrawScope.drawFlowerPot(petal: Color, center: Color, leaf: Color) {
     }
     drawPath(pot, Terracotta)
     drawRoundRect(TerracottaDark, topLeft = Offset(155f, 148f), size = Size(26f, 6f), cornerRadius = CornerRadius(2f))
-}
-
-/** A scarf round the bird's neck with a tail hanging at the front. */
-private fun DrawScope.drawScarf(color: Color) {
-    val path = Path().apply {
-        val start = bird(46f, 52f)
-        val end = bird(73f, 55f)
-        moveTo(start.x, start.y)
-        quadraticTo(bird(60f, 62f).x, bird(60f, 62f).y, end.x, end.y)
-    }
-    drawPath(path, color, style = Stroke(5.2f, cap = StrokeCap.Round))
-    val tailTop = bird(52f, 57f)
-    val tailBottom = bird(49f, 72f)
-    drawLine(color, tailTop, tailBottom, 5f, StrokeCap.Round)
-    drawLine(Color.White.copy(alpha = 0.35f), bird(58f, 57f), bird(60f, 59f), 1.6f, StrokeCap.Round)
-}
-
-/** Tiny round glasses on the bird's eye, with an arm toward its ear. */
-private fun DrawScope.drawGlasses(frame: Color, lens: Color) {
-    val eye = bird(66f, 37f)
-    drawCircle(lens.copy(alpha = 0.28f), radius = 6.4f, center = eye)
-    drawCircle(frame, radius = 6.4f, center = eye, style = Stroke(1.5f))
-    drawLine(frame, Offset(eye.x - 6.4f, eye.y - 0.5f), bird(52f, 35f), 1.4f, StrokeCap.Round)
-}
-
-/** A small party hat tilted on the crest, with a pompom. */
-private fun DrawScope.drawPartyHat(hat: Color, stripe: Color, pompom: Color) {
-    val left = bird(53f, 25f)
-    val right = bird(75f, 21f)
-    val apex = bird(64f, -2f)
-    val path = Path().apply {
-        moveTo(left.x, left.y)
-        lineTo(right.x, right.y)
-        lineTo(apex.x, apex.y)
-        close()
-    }
-    drawPath(path, hat)
-    drawLine(stripe, bird(57.5f, 14f), bird(70f, 12.5f), 2.4f, StrokeCap.Round)
-    drawLine(stripe, bird(61f, 7f), bird(67f, 6.2f), 2.2f, StrokeCap.Round)
-    drawCircle(pompom, radius = 3.2f, center = apex)
 }

@@ -20,8 +20,9 @@ Layers are rendered at 512 x 512 with a transparent background.
 | `idle/` | Upright, three quarters on. Breathes, blinks, tilts its head, preens. | `body_back`, `body`, `wing`, `chest`, `head`, `eyes_open`, `eyes_closed`, `preen` | |
 | `sleep/` | Hunched, eyes shut. Breathes slowly, the glow of its eyes pulses, z letters float up (drawn in code). | `full` (as `owl_sleep_body`), `eyes` (the glow, laid over the body) | `head`, `feet` |
 | `fly/` | Front-facing, wings spread. Beats its wings, loops over its perch and lands. | `body`, `head`, `eyes`, and each wing in four drawings: `wing_*_down`, `wing_*_curl`, `wing_*_mid`, `wing_*_up` | `full_up`, `full_down` (the whole owl, to check a stack against) |
+| `side/` | Flying seen from the side, facing right, on the empty Overdue screen (`ClearSkiesScene`). Beats its wings on a hinge at the shoulder and bobs; clouds drift past. | `owl_side_body`, `owl_side_wing_down`, `owl_side_wing_up` | none |
 
-Code: `app/src/main/java/com/elkrrai/feather/ui/brand/OwlIllustration.kt`. The movement comes from
+Code: `app/src/main/java/com/elkrrai/feather/ui/brand/OwlIllustration.kt` (idle, sleeping and the front-facing flight) and `SideOwl.kt` (the side view). The movement comes from
 `BirdPose.kt` (`birdPose`, `birdFlightPose`), so a new pose only needs its layers.
 
 ## Notes for the artist
@@ -38,3 +39,14 @@ Code: `app/src/main/java/com/elkrrai/feather/ui/brand/OwlIllustration.kt`. The m
 - **Sleep head** and **feet** are separate layers in case the head ever needs to move on its own;
   that would also need a body layer without the head.
 - Send new frames as transparent 1024 x 1024 PNG or SVG on the same artboard, one file per layer.
+
+## The side view
+
+`side/` holds the Recraft originals (`body.png`, `wing_down.webp`, `wing_up.webp`, each 1024 x 1024 with
+the wing drawn on its own). The three layers in `res` were made once from them, not by `render.py`:
+they sit on a shared 1536 x 1536 artboard (the body in the middle, so the raised wing is not cut off),
+with each wing scaled to 0.8 and its round base put on the body's shoulder at (856, 736), then
+reduced to 768 x 768. `SideOwl.kt` turns each wing about that point (`SIDE_SHOULDER`), 70 degrees from
+hanging to raised, which is the angle between the two drawings. The body has a folded wing removed
+by Recraft (no outline left, the back reads as plain feathers); its chest mark is a square, not the
+diamond of the other poses.

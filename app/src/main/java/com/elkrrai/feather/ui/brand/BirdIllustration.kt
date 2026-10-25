@@ -89,7 +89,8 @@ fun BirdIllustration(
     mood: BirdMood = BirdMood.IDLE,
     contentDescription: String? = null,
     flightTrigger: Int = 0,
-) = OwlIllustration(modifier, mood, contentDescription, flightTrigger)
+    dress: OwlDress = OwlDress.None,
+) = OwlIllustration(modifier, mood, contentDescription, flightTrigger, dress)
 
 /** What a [BirdCanvas] is given as its flight progress when the bird is not in the air. */
 private const val NOT_FLYING = -1f

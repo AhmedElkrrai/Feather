@@ -59,25 +59,18 @@ class TodayLogicTest {
 
     @Test
     fun theBirdSleepsOnAnEmptyDay() {
-        assertEquals(BirdMood.SLEEPING, todayBirdMood(TodayStatus(0, 0), DayPhase.Day))
+        assertEquals(BirdMood.SLEEPING, todayBirdMood(TodayStatus(0, 0)))
     }
 
     @Test
-    fun theBirdSitsCalmlyWhenEverythingIsDone() {
-        assertEquals(BirdMood.IDLE, todayBirdMood(TodayStatus(0, 3), DayPhase.Day))
-        assertEquals(BirdMood.IDLE, todayBirdMood(TodayStatus(0, 3), DayPhase.Night))
+    fun theBirdSleepsWhenEverythingIsDone() {
+        assertEquals(BirdMood.SLEEPING, todayBirdMood(TodayStatus(0, 3)))
     }
 
     @Test
-    fun theBirdGetsSleepyLateWithAtMostTwoThingsLeft() {
-        assertEquals(BirdMood.SLEEPING, todayBirdMood(TodayStatus(2, 5), DayPhase.Night))
-        assertEquals(BirdMood.IDLE, todayBirdMood(TodayStatus(3, 5), DayPhase.Night))
-        assertEquals(BirdMood.IDLE, todayBirdMood(TodayStatus(2, 5), DayPhase.Dusk))
-    }
-
-    @Test
-    fun otherwiseTheBirdJustSitsThere() {
-        assertEquals(BirdMood.IDLE, todayBirdMood(TodayStatus(4, 0), DayPhase.Dawn))
+    fun theBirdIsAwakeWhileAnyTaskIsLeft() {
+        assertEquals(BirdMood.IDLE, todayBirdMood(TodayStatus(1, 5)))
+        assertEquals(BirdMood.IDLE, todayBirdMood(TodayStatus(4, 0)))
     }
 
     @Test

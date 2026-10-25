@@ -1,5 +1,7 @@
 package com.elkrrai.feather.domain.settings
 
+import com.elkrrai.feather.domain.nest.NestOutfit
+import com.elkrrai.feather.domain.nest.NestStyle
 import java.time.LocalTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -51,6 +53,10 @@ data class AppSettings(
     /** Ids of the nest items earned so far (permanent), and the ones whose news was looked at. */
     val nestUnlocked: Set<String> = emptySet(),
     val nestSeen: Set<String> = emptySet(),
+    /** The nest the bird sits in. */
+    val nestStyle: NestStyle = NestStyle.BRAIDED,
+    /** What the bird wears, of what has been earned. */
+    val nestOutfit: NestOutfit = NestOutfit(),
     /** A task was added by voice at least once; a backup was made at least once. Both are milestones for the nest. */
     val voiceUsed: Boolean = false,
     val backedUp: Boolean = false,
@@ -105,6 +111,10 @@ interface SettingsRepository {
     suspend fun setNestUnlocked(ids: Set<String>)
 
     suspend fun setNestSeen(ids: Set<String>)
+
+    suspend fun setNestStyle(style: NestStyle)
+
+    suspend fun setNestOutfit(outfit: NestOutfit)
 
     suspend fun setVoiceUsed(used: Boolean)
 

@@ -531,7 +531,7 @@
 
     <!-- Illustration kit: the sentence under each scene -->
     <string name="scene_empty_list">لا شيء هنا بعد. أضف فكرة وسأُبقيها دافئة.</string>
-    <string name="scene_all_done">كل البيض في العش. اذهب وعِش يومك.</string>
+    <string name="scene_clear_skies">لا شيء متأخر. سماء صافية.</string>
     <string name="scene_nothing_due">يوم كامل بلا مواعيد. مريب، لكنه لطيف.</string>
     <string name="scene_no_results">فتّشت تحت كل غصن. لا شيء يطابق «%1$s».</string>
     <string name="scene_backup_saved">حُفظت بأمان. مهامك، لك وحدك.</string>
@@ -646,6 +646,14 @@
     <string name="repeat_back_on">تعود %1$s</string>
     <!-- M9 step 11: weekly feather and your nest -->
     <string name="nest_title">عشّك</string>
+    <string name="nest_choose">اختر عشًّا</string>
+    <string name="nest_dress">ما ترتديه البومة</string>
+    <string name="nest_dress_none">بدون</string>
+    <string name="nest_dress_choice">%1$s %2$d</string>
+    <string name="nest_style_braided">مجدول</string>
+    <string name="nest_style_twigs">أغصان</string>
+    <string name="nest_style_straw">قش</string>
+    <string name="nest_style_rope">حبل</string>
     <string name="nest_intro">أشياء صغيرة للطائر، تأتي من الأيام العادية. تبقى للأبد، ولا تنفد.</string>
     <string name="nest_item_scarf">وشاح</string>
     <string name="nest_item_fairy_lights">أضواء الجنيات</string>

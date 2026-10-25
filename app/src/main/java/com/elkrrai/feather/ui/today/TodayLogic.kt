@@ -34,16 +34,12 @@ data class TodayStatus(val left: Int = 0, val done: Int = 0) {
 }
 
 /**
- * What the bird is doing in the header: asleep when nothing is planned, sleepy late in the evening
- * when only a couple of things remain, and otherwise sitting about, which includes a finished day:
- * the bird flies a lap when the last task is done (once a day) and then settles back to idle.
+ * What the owl is doing in the header: asleep when nothing is left to do (an empty day or a
+ * finished one: it flies a lap when the last task is done, once a day, and then goes to sleep),
+ * and awake and idle for as long as any task is left, at any hour.
  */
-fun todayBirdMood(status: TodayStatus, phase: DayPhase): BirdMood = when {
-    status.planned == 0 -> BirdMood.SLEEPING
-    status.left == 0 -> BirdMood.IDLE
-    phase == DayPhase.Night && status.left <= 2 -> BirdMood.SLEEPING
-    else -> BirdMood.IDLE
-}
+fun todayBirdMood(status: TodayStatus): BirdMood =
+    if (status.left == 0) BirdMood.SLEEPING else BirdMood.IDLE
 
 /** The number of decorative leaves that are filled, out of [total]: the share of planned tasks that are done. */
 fun leavesFilled(status: TodayStatus, total: Int = 5): Int {
