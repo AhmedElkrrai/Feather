@@ -34,7 +34,6 @@ When the last of these is replaced, delete `BirdShapes.kt`, `BirdCanvas`, `BirdA
 
 ### Not made yet
 
-- A mid-flap wing pair for the owl (see `owl/README.md`).
 - An owl with its eyes half open, for falling asleep and waking. Today it cross-fades between the
   sleeping owl and the resting owl.
 - Owl art for the scenes that still hold props drawn for the songbird: check each placement in

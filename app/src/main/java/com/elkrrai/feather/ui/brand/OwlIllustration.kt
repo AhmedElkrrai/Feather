@@ -237,8 +237,8 @@ private fun SleepingOwl(motionAllowed: Boolean) {
 
 /**
  * The front-facing owl with spread wings, posed by [pose] (a [BirdPose] from [birdPose] or
- * [birdFlightPose]): its offsets move it, its wing angle beats the wings between their raised and
- * lowered art, and its body scale squashes it. With [still] the wings hang down, calm.
+ * [birdFlightPose]): its offsets move it, its wing angle beats the wings through their four
+ * drawings (lowered, curled, fanned, raised), and its body scale squashes it. With [still] the wings hang down, calm.
  */
 @Composable
 internal fun OwlFlight(pose: () -> BirdPose, modifier: Modifier = Modifier, still: Boolean = false) {
@@ -257,10 +257,12 @@ internal fun OwlFlight(pose: () -> BirdPose, modifier: Modifier = Modifier, stil
                 transformOrigin = TransformOrigin(0.5f, FLY_PIVOT_Y)
             },
     ) {
-        OwlLayer(R.drawable.owl_fly_wing_left_down, Modifier.graphicsLayer { alpha = loweredWingAlpha(flap()) })
-        OwlLayer(R.drawable.owl_fly_wing_left_up, Modifier.graphicsLayer { alpha = raisedWingAlpha(flap()) })
-        OwlLayer(R.drawable.owl_fly_wing_right_down, Modifier.graphicsLayer { alpha = loweredWingAlpha(flap()) })
-        OwlLayer(R.drawable.owl_fly_wing_right_up, Modifier.graphicsLayer { alpha = raisedWingAlpha(flap()) })
+        for (wing in LeftWings) {
+            OwlLayer(wing.drawable, Modifier.graphicsLayer { alpha = wingPoseAlpha(wing.index, flap()) })
+        }
+        for (wing in RightWings) {
+            OwlLayer(wing.drawable, Modifier.graphicsLayer { alpha = wingPoseAlpha(wing.index, flap()) })
+        }
         OwlLayer(R.drawable.owl_fly_body)
         OwlLayer(R.drawable.owl_fly_head)
         OwlLayer(R.drawable.owl_fly_eyes)
@@ -321,10 +323,38 @@ private fun breath(phase: Float): Float = 0.5f - 0.5f * cos(2f * PI.toFloat() * 
 /** How far up the wings are, 0 (hanging) to 1 (raised), for a pose's wing angle (negative lifts the wing). */
 private fun flapOf(wingAngle: Float): Float = (0.5f - wingAngle / (2f * FLAP_RANGE_DEGREES)).coerceIn(0f, 1f)
 
-// The raised wing fades in over the lowered one, which stays under it until the raised one is solid.
-private fun raisedWingAlpha(flap: Float): Float = smoothStep(0.3f, 0.7f, flap)
+/** One drawing of a wing: the [index]th of [WING_POSES], from lowered (0) to raised. */
+private class WingPose(val index: Int, val drawable: Int)
 
-private fun loweredWingAlpha(flap: Float): Float = 1f - smoothStep(0.7f, 1f, flap)
+// A wing beat is four drawings, lowered, curled, fanned and raised, drawn in that order.
+private const val WING_POSES = 4
+
+private val LeftWings = listOf(
+    WingPose(0, R.drawable.owl_fly_wing_left_down),
+    WingPose(1, R.drawable.owl_fly_wing_left_curl),
+    WingPose(2, R.drawable.owl_fly_wing_left_mid),
+    WingPose(3, R.drawable.owl_fly_wing_left_up),
+)
+
+private val RightWings = listOf(
+    WingPose(0, R.drawable.owl_fly_wing_right_down),
+    WingPose(1, R.drawable.owl_fly_wing_right_curl),
+    WingPose(2, R.drawable.owl_fly_wing_right_mid),
+    WingPose(3, R.drawable.owl_fly_wing_right_up),
+)
+
+/**
+ * How opaque the [index]th wing drawing is at [flap] (0 lowered to 1 raised). Each drawing fades in
+ * over the one before it, and that one stays underneath until the new one is nearly solid, so the
+ * wing never thins out half way between two drawings.
+ */
+private fun wingPoseAlpha(index: Int, flap: Float): Float {
+    val step = 1f / (WING_POSES - 1)
+    val at = index * step
+    val rise = if (index == 0) 1f else smoothStep(at - step, at, flap)
+    val fall = if (index == WING_POSES - 1) 1f else 1f - smoothStep(at + step - WING_HANDOVER, at + step, flap)
+    return rise * fall
+}
 
 /** How much of a flight, 0 to 1, is shown as the flying owl: it takes over at take-off and hands back when landed. */
 private fun flightBlend(progress: Float): Float =
@@ -387,6 +417,7 @@ private const val FLY_SCALE = 1.3f
 private const val FLY_PIVOT_Y = 0.86f
 private const val FLY_SETTLE_Y = 0.085f
 private const val FLAP_RANGE_DEGREES = 30f
+private const val WING_HANDOVER = 0.1f
 private const val FLIGHT_BLEND_END = 0.06f
 private const val FLY_EMBLEM_X = 0.4995f
 private const val FLY_EMBLEM_Y = 0.6245f
