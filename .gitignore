@@ -18,3 +18,9 @@ local.properties
 keystore.properties
 *.jks
 *.keystore
+
+# Screenshots and scratch images dropped in the repo root (committed art lives in art/ and res/)
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp

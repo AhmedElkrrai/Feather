@@ -5,8 +5,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The bird exists in several files (the Compose drawing, vector drawables, SVGs). BirdShapes is
- * the source; these tests fail if a copy was edited and the others were not.
+ * The old blue bird exists in several files (the Compose drawing, vector drawables, SVGs). BirdShapes
+ * is the source; these tests fail if a copy was edited and the others were not. The owl replaced it
+ * on screens and as the launcher icon; these are the places still waiting for owl art (see
+ * `art/README.md`), and the test goes when the last of them does.
  */
 class BirdArtworkTest {
 
@@ -39,13 +41,11 @@ class BirdArtworkTest {
     @Test
     fun theFullColorDrawablesHaveEveryShape() {
         assertContainsPaths("src/main/res/drawable/ic_bird_mark.xml", all)
-        assertContainsPaths("src/main/res/drawable/ic_launcher_foreground.xml", all)
         assertContainsPaths("src/main/res/drawable/ic_splash_bird.xml", all)
     }
 
     @Test
     fun theSingleColorDrawablesHaveTheSilhouette() {
-        assertContainsPaths("src/main/res/drawable/ic_launcher_monochrome.xml", silhouette)
         assertContainsPaths("src/main/res/drawable/ic_stat_feather.xml", silhouette)
     }
 

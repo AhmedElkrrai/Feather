@@ -42,7 +42,7 @@ See `FeatherTheme.kt` (LightScheme, DarkScheme, BlackScheme, FeatherColors). Key
 - Time-of-day sky wash on the Today header (flat two-stop gradient): dawn 05:00, day 10:00, dusk 17:00, night 20:00 (device local time). Cross-fade 600ms when the phase changes while opening the screen.
 
 ## 4. Illustration kit (all vector drawables, 200x200 box, <=4 flat fills, no gradients)
-Bird stays your existing 96x96 art; scenes place it with one transform. Ground shadow #F1E2C2 (light) / #0B1114 (dark). Props: nest bowl = twig brown (#B08A5A light/dark) with weave strokes #8A6A43; eggs = cream ellipse 12x15 with 1-2 speckles; branch = stroke 8 round; leaf = pointed oval; sun = circle r14 + 8 rays; moon = crescent.
+The mascot is now the owl (layered art, see `art/README.md`); the 96x96 songbird below is retired from the screens. Scenes place the live character with one transform. Ground shadow #F1E2C2 (light) / #0B1114 (dark). Props: nest bowl = twig brown (#B08A5A light/dark) with weave strokes #8A6A43; eggs = cream ellipse 12x15 with 1-2 speckles; branch = stroke 8 round; leaf = pointed oval; sun = circle r14 + 8 rays; moon = crescent.
 | Scene | Composition | Copy EN / AR |
 |---|---|---|
 | Empty list | bird left, empty nest right, one leaf sways +/-3deg (5s) | "Nothing here yet. Add a thought and I'll keep it warm." / "لا شيء هنا بعد. أضف فكرة وسأُبقيها دافئة." |

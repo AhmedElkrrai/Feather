@@ -26,8 +26,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.ui.DisplayPrefs
 import com.elkrrai.feather.ui.rememberReduceMotion
@@ -79,63 +77,24 @@ internal fun rememberAmbientPhase(periodMillis: Int, enabled: Boolean): Animatab
 }
 
 /**
- * Shared animation switchboard for the character. Screens ask for a [mood]; the matching visual
- * implementation is selected here so replacing one animation updates every call site at once.
+ * The character every screen asks for, in a [mood]. It is the owl ([OwlIllustration]); this is the
+ * one door to it, so replacing the art or the animation updates every call site at once.
+ *
+ * [flightTrigger] counts up each time the owl should fly a lap over its perch and land again (see
+ * [birdFlightPose]). Nothing happens when movement is not allowed or Little celebrations is off.
  */
 @Composable
 fun BirdIllustration(
     modifier: Modifier = Modifier.size(120.dp),
     mood: BirdMood = BirdMood.IDLE,
     contentDescription: String? = null,
-    /**
-     * Counts up each time the bird should fly a lap over its perch and land again (see
-     * [birdFlightPose]); the idle movement starts afresh when it has landed. Nothing happens when
-     * movement is not allowed or Little celebrations is off.
-     */
     flightTrigger: Int = 0,
-) {
-    if (mood == BirdMood.IDLE && flightTrigger == 0) {
-        RecraftOwlIllustration(modifier = modifier)
-    } else {
-        LegacyBirdIllustration(modifier, mood, contentDescription, flightTrigger)
-    }
-}
-
-/** Existing sleeping and event animations stay behind the shared switchboard until replaced. */
-@Composable
-private fun LegacyBirdIllustration(
-    modifier: Modifier,
-    mood: BirdMood,
-    contentDescription: String?,
-    flightTrigger: Int,
-) {
-    val allowed = rememberBirdMotionAllowed()
-    val flight = remember { Animatable(0f) }
-    var flying by remember { mutableStateOf(false) }
-    LaunchedEffect(flightTrigger) {
-        if (flightTrigger > 0 && allowed && DisplayPrefs.celebrations) {
-            flying = true
-            try {
-                flight.snapTo(0f)
-                flight.animateTo(1f, tween(durationMillis = FLIGHT_MILLIS, easing = LinearEasing))
-            } finally {
-                flying = false
-            }
-        }
-    }
-    val phase = rememberAmbientPhase(periodMillis(mood), enabled = allowed && !flying)
-    BirdCanvas(
-        mood = mood,
-        phase = { phase.value },
-        modifier = modifier.describedAs(contentDescription),
-        flight = { if (flying) flight.value else NOT_FLYING },
-    )
-}
+) = OwlIllustration(modifier, mood, contentDescription, flightTrigger)
 
 /** What a [BirdCanvas] is given as its flight progress when the bird is not in the air. */
 private const val NOT_FLYING = -1f
 
-/** A short hop of the bird over the screen each time [trigger] changes (a task was finished). */
+/** A short hop of the owl over the screen each time [trigger] changes (a task was finished). */
 @Composable
 fun CompletionBird(trigger: Int, modifier: Modifier = Modifier) {
     if (trigger == 0 || !DisplayPrefs.celebrations || !rememberBirdMotionAllowed()) return
@@ -149,9 +108,8 @@ fun CompletionBird(trigger: Int, modifier: Modifier = Modifier) {
         visible = false
     }
     if (visible) {
-        BirdCanvas(
-            mood = BirdMood.HAPPY,
-            phase = { progress.value },
+        OwlFlight(
+            pose = { birdPose(BirdMood.HAPPY, progress.value) },
             modifier = modifier
                 .size(72.dp)
                 .alpha(fade(progress.value))
@@ -265,9 +223,6 @@ private fun DrawScope.drawSleepingZs(phase: Float) {
         drawLine(color, Offset(x, y + size), Offset(x + size, y + size), strokeWidth = 1.4f, cap = StrokeCap.Round)
     }
 }
-
-private fun Modifier.describedAs(description: String?): Modifier =
-    if (description == null) clearAndSetSemantics { } else semantics { contentDescription = description }
 
 internal fun periodMillis(mood: BirdMood): Int = when (mood) {
     BirdMood.IDLE -> 8000

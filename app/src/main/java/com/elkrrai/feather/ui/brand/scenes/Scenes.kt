@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.ui.brand.BirdMood
-import com.elkrrai.feather.ui.brand.RecraftOwlIllustration
+import com.elkrrai.feather.ui.brand.OwlIllustration
 import com.elkrrai.feather.R
 
 // Where the bird stands in each scene: its 96 by 96 box is moved and scaled by one transform. The
@@ -71,7 +71,7 @@ private fun EmptyListScene(size: Dp, modifier: Modifier) = SceneFrame(
             },
     )
     val owl = EmptyListBird.copy(y = EmptyListBird.y + 270f)
-    RecraftOwlIllustration(
+    OwlIllustration(
         modifier = Modifier
             .offset(x = unit * owl.x, y = unit * owl.y)
             .size(unit * owl.side),

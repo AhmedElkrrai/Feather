@@ -38,3 +38,8 @@ A task can count toward a target, for example "do 100 pushups" done in sets of 2
 - **Mistakes:** long-press the button (or edit the task) to subtract or set an exact number.
 - **Data:** new nullable columns on tasks (target, done count, step), a database migration, the same fields in backup files, a counter tool in the quick-add sheet, strings in English and Arabic, tests.
 - **Left out for now:** quick-add syntax (such as "pushups x100 by 25"), a log of sets, feeding the counts into Your rhythm.
+
+## The owl (branch codex/cartoon-bird-redesign)
+- Owl art for the surfaces still on the old blue bird (widgets, About, launch screen, notification icon, store graphics): list and brief in `art/README.md`.
+- Check the owl on the phone: Today (resting, sleeping at night when nothing is left, the lap when the last task is done), the empty-state scenes (the owl fills more of its box than the songbird did, so placements in `Scenes.kt` may need nudging), the completion hop, the tip sheet thank-you.
+- Mid-flap wing frames and a half-open-eye frame would smooth the wing beat and the falling asleep.
