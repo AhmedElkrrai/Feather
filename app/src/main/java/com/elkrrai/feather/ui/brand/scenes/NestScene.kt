@@ -26,8 +26,6 @@ import com.elkrrai.feather.domain.nest.NestStyle
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.brand.OwlDress
 
-private val Terracotta = Color(0xFFC77D4F)
-private val TerracottaDark = Color(0xFFA6613B)
 
 /**
  * The bird's nest with everything it has been given: a scarf, fairy lights, bunting, a lantern, moss,
@@ -72,26 +70,52 @@ fun NestScene(
         SceneBird(BirdMood.IDLE, bird, dress)
         // the front of the nest, over the bird's feet
         NestLayer(art.front, nestTop, nestHeight)
-        Layer {
-            if (NestItem.FLOWER_POT in items) drawFlowerPot(p.coral, p.amber, p.moss)
-        }
+        if (NestItem.FLOWER_POT in items) PotPicture(outfit.pot)
     }
 
 /** One picture of the nest: the whole of it for the back layer, only its front for the front layer. */
 @Composable
-private fun SceneScope.NestLayer(@DrawableRes drawable: Int, top: Float, height: Float) {
+internal fun SceneScope.NestLayer(
+    @DrawableRes drawable: Int,
+    top: Float,
+    height: Float,
+    left: Float = NEST_X,
+    width: Float = NEST_WIDTH,
+) {
     Image(
         painter = painterResource(drawable),
         contentDescription = null,
         contentScale = ContentScale.FillBounds,
         modifier = Modifier
-            .offset(x = unit * NEST_X, y = unit * top)
-            .size(unit * NEST_WIDTH, unit * height),
+            .offset(x = unit * left, y = unit * top)
+            .size(unit * width, unit * height),
     )
 }
 
+/** The flower pot beside the nest: the choice made for it, standing on the ground. */
+@Composable
+private fun SceneScope.PotPicture(choice: Int) {
+    val picture = Pots.getOrNull(choice) ?: return
+    Image(
+        painter = painterResource(picture),
+        contentDescription = null,
+        contentScale = ContentScale.FillBounds,
+        modifier = Modifier
+            .offset(x = unit * POT_X, y = unit * (POT_BOTTOM - POT_HEIGHT))
+            .size(unit * POT_HEIGHT * POT_ASPECT, unit * POT_HEIGHT),
+    )
+}
+
+private val Pots = intArrayOf(R.drawable.nest_pot_0, R.drawable.nest_pot_1, R.drawable.nest_pot_2, R.drawable.nest_pot_3)
+
+// Each pot picture is 320 by 500, the pot standing on its bottom edge.
+private const val POT_ASPECT = 320f / 500f
+private const val POT_HEIGHT = 46f
+private const val POT_X = 156f
+private const val POT_BOTTOM = 174f
+
 /** The nest's pictures, and where in them the bird's feet land (a share of the picture's height). */
-private class NestArt(
+internal class NestArt(
     @DrawableRes val back: Int,
     @DrawableRes val front: Int,
     /** The picture's height for each unit of its width. */
@@ -99,7 +123,7 @@ private class NestArt(
     val feet: Float,
 )
 
-private fun NestStyle.art() = when (this) {
+internal fun NestStyle.art() = when (this) {
     NestStyle.BRAIDED -> NestArt(R.drawable.nest_braided_back, R.drawable.nest_braided_front, 701f / 920f, 0.64f)
     NestStyle.TWIGS -> NestArt(R.drawable.nest_twigs_back, R.drawable.nest_twigs_front, 577f / 908f, 0.46f)
     NestStyle.STRAW -> NestArt(R.drawable.nest_straw_back, R.drawable.nest_straw_front, 568f / 864f, 0.60f)
@@ -110,9 +134,9 @@ private fun NestStyle.art() = when (this) {
 @DrawableRes
 fun NestStyle.pictureRes(): Int = art().back
 
-private const val NEST_WIDTH = 126f
-private const val NEST_X = 29f
-private const val GROUND_LINE = 172f
+internal const val NEST_WIDTH = 126f
+internal const val NEST_X = 29f
+internal const val GROUND_LINE = 172f
 private const val BIRD_X = 46f
 private const val BIRD_SCALE = 0.95f
 
@@ -188,22 +212,3 @@ private fun DrawScope.drawMoss(moss: Color, light: Color) {
     drawOval(light, topLeft = Offset(158f, 167f), size = Size(18f, 9f))
 }
 
-/** A terracotta pot with a flower, beside the nest. */
-private fun DrawScope.drawFlowerPot(petal: Color, center: Color, leaf: Color) {
-    drawLine(leaf, Offset(168f, 152f), Offset(168f, 130f), 2.4f, StrokeCap.Round)
-    drawOval(leaf, topLeft = Offset(168f, 138f), size = Size(12f, 6f))
-    for (k in 0 until 5) {
-        val angle = k * 2.0 * Math.PI / 5
-        drawCircle(petal, radius = 4.2f, center = Offset(168f + (Math.cos(angle) * 5.5).toFloat(), 126f + (Math.sin(angle) * 5.5).toFloat()))
-    }
-    drawCircle(center, radius = 3.4f, center = Offset(168f, 126f))
-    val pot = Path().apply {
-        moveTo(157f, 150f)
-        lineTo(179f, 150f)
-        lineTo(176f, 174f)
-        lineTo(160f, 174f)
-        close()
-    }
-    drawPath(pot, Terracotta)
-    drawRoundRect(TerracottaDark, topLeft = Offset(155f, 148f), size = Size(26f, 6f), cornerRadius = CornerRadius(2f))
-}

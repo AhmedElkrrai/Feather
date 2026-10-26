@@ -87,7 +87,7 @@ class SceneLayoutTest {
     }
 
     @Test
-    fun thereAreEightScenes() {
-        assertEquals(8, SceneKind.entries.size)
+    fun thereAreNineScenes() {
+        assertEquals(9, SceneKind.entries.size)
     }
 }

@@ -14,26 +14,22 @@ Store graphics (icon, feature graphic) are in `store/graphics`.
 
 ## Who is the mascot
 
-The owl. The old blue songbird (`ui/brand/BirdShapes.kt`) is retired from every screen: Today,
-the empty states, Your rhythm, the tip sheet and the completion hop all show the owl through
-`BirdIllustration` / `OwlIllustration`. The launcher icon is the owl too.
+The owl, everywhere: Today, the empty states, Your rhythm, the tip sheet, the completion hop, the
+nest, the home-screen widgets, the launch screen, the launcher icon, the notification icon and the
+store graphics. The one place the old blue songbird is kept, on purpose, is the **Settings** screen
+(`ic_bird_mark` in `SettingsScreen.kt`), as a tribute. Its drawing code is gone; only that vector
+drawable remains.
 
-### Still the old blue bird
+| Where | Made from |
+|---|---|
+| Widgets (`widget_owl_idle`, `_sleeping`, `_happy`) | The owl's layers stacked and cropped to 256 px |
+| Launch screen (`splash_owl`) | The launcher owl (`ic_launcher_bird`) at 768 px, inside the middle circle of the 288 dp icon |
+| Launcher icon (`ic_launcher_bird`) and themed icon (`ic_launcher_bird_mono`) | The young owl from `art/owl/launcher.png`, 62 percent of the height of the 1024 artboard so it stays inside the safe zone of any icon shape; the themed one is its outline in white, alpha only |
+| Notification icon (`ic_stat_feather`, in each density) | The resting owl's outline in white |
+| Store icon and feature graphic (`store/graphics`) | The resting owl on the launch screen's sky; the title in Young Serif |
 
-These have no owl art yet. Until they do, the app shows two different characters:
-
-| Where | Files | What the owl version needs |
-|---|---|---|
-| Widgets | `drawable/ic_bird_mark.xml`, `ic_bird_sleeping.xml`, `ic_bird_happy.xml` (`widget/WidgetStyle.kt`, `QuickAddWidget.kt`) | Small owl head or body in three moods, as PNG. Glance cannot draw the layered owl. |
-| Settings, About | `ic_bird_mark` in `SettingsScreen.kt` | The owl mark. |
-| Launch screen | `ic_splash_bird.xml`, `avd_splash_bird.xml`, `themes.xml` | A 288 dp owl (centered in a 192 dp circle) and, if it moves, an animated version. |
-| Notification icon | `ic_stat_feather.xml` | A white silhouette, 24 dp, transparent background. Android recolours it. |
-| Store graphics | `store/graphics/icon.svg`, `feature-graphic.svg` | The owl instead of the songbird. |
-| Themed (monochrome) launcher icon | `mipmap-anydpi/ic_launcher*.xml` use `ic_launcher_bird_mono.png` | Already the owl; check it on a themed-icon phone. |
-| Animation lab, bird lab (debug only) | `BirdCanvas` in `app/src/debug` | Show the old bird on purpose, for comparison; remove when the widgets are done. |
-
-When the last of these is replaced, delete `BirdShapes.kt`, `BirdCanvas`, `BirdArtworkTest` and the
-`ic_bird_*` drawables.
+These were made once from the layers in `drawable-nodpi`, not by a script. A re-drawn owl for any of
+them (a flat mark for the widgets, say) would replace the stacked one.
 
 ### Not made yet
 

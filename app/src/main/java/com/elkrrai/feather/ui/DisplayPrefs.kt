@@ -5,6 +5,7 @@ import android.text.format.DateFormat
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.elkrrai.feather.domain.nest.NestStyle
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.TimeFormat
 import com.elkrrai.feather.domain.settings.WeekStart
@@ -36,6 +37,9 @@ object DisplayPrefs {
         private set
     var celebrations by mutableStateOf(true)
         private set
+    /** The nest the person chose, for the scenes that show it. */
+    var nestStyle by mutableStateOf(NestStyle.BRAIDED)
+        private set
 
     fun update(settings: AppSettings) {
         timeFormat = settings.timeFormat
@@ -45,6 +49,7 @@ object DisplayPrefs {
         haptics = settings.haptics
         birdAnimations = settings.birdAnimations
         reduceMotion = settings.reduceMotion
+        nestStyle = settings.nestStyle
         celebrations = settings.celebrations
     }
 }

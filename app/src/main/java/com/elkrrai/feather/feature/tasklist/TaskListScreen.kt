@@ -412,6 +412,8 @@ fun TaskListContent(
 
     // The Today view has its own header (with the buttons), so it has no top bar.
     val todayView = state.scope == TaskScope.Today && !selecting && !state.isLoading
+    // There is nothing to search for on a screen with no tasks.
+    val canSearch = !state.isLoading && !state.isEmpty
     val collapse = rememberHeaderCollapse()
     // Each time the Today view is shown, its header starts open.
     LaunchedEffect(state.scope) { collapse.state.offset = 0f }
@@ -513,11 +515,13 @@ fun TaskListContent(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onSearchClick) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_search),
-                            contentDescription = stringResource(R.string.action_search),
-                        )
+                    if (canSearch) {
+                        IconButton(onClick = onSearchClick) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_search),
+                                contentDescription = stringResource(R.string.action_search),
+                            )
+                        }
                     }
                     val clearAction = if (state.scope == TaskScope.Completed && !state.isEmpty) {
                         listOf(MenuAction(stringResource(R.string.action_clear_completed), onClick = onClearCompleted))
@@ -707,6 +711,7 @@ fun TaskListContent(
                     title = state.scope.title(),
                     onMenuClick = onMenuClick,
                     onSearchClick = onSearchClick,
+                    showSearch = canSearch,
                     sortActions = sortActions,
                     celebration = allDoneCelebration,
                     onWarmFeathers = onWarmFeathers,
@@ -732,7 +737,8 @@ private class EmptyCopy(val scene: SceneKind, @StringRes val title: Int, @String
 private fun TaskScope.emptyCopy(): EmptyCopy = when (this) {
     TaskScope.Overdue -> EmptyCopy(SceneKind.ClearSkies, R.string.scene_clear_skies, null)
     TaskScope.NoDate -> EmptyCopy(SceneKind.EmptyList, R.string.scene_empty_list, R.string.task_list_empty_body)
-    TaskScope.Today, TaskScope.Upcoming -> EmptyCopy(SceneKind.NothingDue, R.string.scene_nothing_due, null)
+    TaskScope.Upcoming -> EmptyCopy(SceneKind.HungryChick, R.string.scene_hungry_chick, null)
+    TaskScope.Today -> EmptyCopy(SceneKind.NothingDue, R.string.scene_nothing_due, null)
     TaskScope.Completed -> EmptyCopy(SceneKind.NothingDue, R.string.empty_view_title, R.string.empty_view_body)
 }
 

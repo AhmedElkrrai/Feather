@@ -42,11 +42,12 @@ Code: `app/src/main/java/com/elkrrai/feather/ui/brand/OwlIllustration.kt` (idle,
 
 ## The side view
 
-`side/` holds the Recraft originals (`body.png`, `wing_down.webp`, `wing_up.webp`, each 1024 x 1024 with
-the wing drawn on its own). The three layers in `res` were made once from them, not by `render.py`:
-they sit on a shared 1536 x 1536 artboard (the body in the middle, so the raised wing is not cut off),
-with each wing scaled to 0.8 and its round base put on the body's shoulder at (856, 736), then
-reduced to 768 x 768. `SideOwl.kt` turns each wing about that point (`SIDE_SHOULDER`), 70 degrees from
-hanging to raised, which is the angle between the two drawings. The body has a folded wing removed
-by Recraft (no outline left, the back reads as plain feathers); its chest mark is a square, not the
-diamond of the other poses.
+`side/` holds the Recraft originals: `body.png` and the two wings, `wing_down.png` (curved, hanging)
+and `wing_up.png` (swept up), each 1024 x 1024 with the wing drawn on its own. The three layers in
+`res` were made once from them, not by `render.py`: they sit on a shared 1536 x 1536 artboard (the
+body in the middle, so the raised wing is not cut off), each wing enlarged to 1.35 with its base put
+on the body's shoulder at (856, 736) (the base is at about (530, 530) in `wing_down.png` and
+(440, 600) in `wing_up.png`), then reduced to 768 x 768. `SideOwl.kt` turns each wing about that
+point (`SIDE_SHOULDER`), 35 degrees from hanging to raised: more than that swings the curved down
+wing over the body in an arch. The body had a folded wing removed by Recraft (no outline left, the
+back reads as plain feathers); its chest mark is a square, not the diamond of the other poses.

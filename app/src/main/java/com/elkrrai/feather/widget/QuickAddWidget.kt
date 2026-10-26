@@ -50,7 +50,7 @@ class QuickAddWidget : GlanceAppWidget() {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Image(
-                    provider = ImageProvider(R.drawable.ic_bird_mark),
+                    provider = ImageProvider(R.drawable.widget_owl_idle),
                     contentDescription = null,
                     modifier = GlanceModifier.size(40.dp),
                 )

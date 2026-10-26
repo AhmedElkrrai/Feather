@@ -15,25 +15,18 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * The owl in flight seen from the side, facing right, beating its wings for as long as movement is
- * allowed. Its three layers (`owl_side_body`, `owl_side_wing_down`, `owl_side_wing_up`) share one
- * artboard with the wings already set on the owl's shoulder, so the movement is only a hinge there:
- * each wing turns about the shoulder while the raised drawing fades in over the lowered one.
+ * The owl in flight seen from the side, facing right. Its three layers (`owl_side_body`,
+ * `owl_side_wing_down`, `owl_side_wing_up`) share one artboard with the wings already set on the
+ * owl's shoulder, so the movement is only a hinge there: each wing turns about the shoulder while
+ * the raised drawing fades in over the lowered one.
  *
- * A beat is a slow raise (the wings fold in a little as they go) and a quick downstroke. On the
- * downstroke the owl lifts and tips its nose up; on the raise it sinks and levels. A second wing,
- * darker and a little more raised, shows behind the body. Without movement the wings hang down.
+ * The caller says how the wings are: [flap] is 0 with the wings hanging and 1 with them raised, and
+ * [fold] how far they are folded in (see [flapAt] and [foldAt] for one wing beat). The owl lifts
+ * and tips its nose up as the wings come down, and sinks and levels as they rise. A second wing,
+ * darker and a little more raised, shows behind the body.
  */
 @Composable
-internal fun SideOwlFlight(
-    modifier: Modifier = Modifier,
-    moving: Boolean = rememberBirdMotionAllowed(),
-    beatMillis: Int = SIDE_BEAT_MILLIS,
-) {
-    val beat = rememberAmbientPhase(beatMillis, enabled = moving)
-    // 0 is wings down, 1 is wings up
-    fun flap(): Float = if (moving) flapAt(beat.value) else 0f
-    fun fold(): Float = if (moving) foldAt(beat.value) else 0f
+internal fun SideOwlFlight(flap: () -> Float, fold: () -> Float, modifier: Modifier = Modifier) {
     val farWing = remember { ColorFilter.tint(Color.Black.copy(alpha = FAR_WING_SHADE), BlendMode.SrcAtop) }
 
     Box(
@@ -47,9 +40,9 @@ internal fun SideOwlFlight(
             },
     ) {
         // the far wing, behind the body
-        SideWings(::flap, ::fold, extraDegrees = FAR_WING_LIFT, colorFilter = farWing)
+        SideWings(flap, fold, extraDegrees = FAR_WING_LIFT, colorFilter = farWing)
         OwlLayer(R.drawable.owl_side_body)
-        SideWings(::flap, ::fold, extraDegrees = 0f, colorFilter = null)
+        SideWings(flap, fold, extraDegrees = 0f, colorFilter = null)
     }
 }
 
@@ -93,14 +86,11 @@ internal fun flapAt(phase: Float): Float =
 internal fun foldAt(phase: Float): Float =
     if (phase < RAISE_SHARE) sin(PI.toFloat() * phase / RAISE_SHARE) else 0f
 
-/** One wing beat, in milliseconds. */
-private const val SIDE_BEAT_MILLIS = 800
-
 /** The raise takes this share of a beat; the downstroke takes the rest. */
 private const val RAISE_SHARE = 0.58f
 
-/** How far a wing turns between hanging and fully raised: the two drawings are 70 degrees apart. */
-private const val SIDE_SWEEP_DEGREES = 70f
+/** How far a wing turns between hanging and fully raised. The two drawings differ a lot, so it is not far. */
+private const val SIDE_SWEEP_DEGREES = 35f
 
 /** How much a wing shrinks about the shoulder at the middle of the raise. */
 private const val WING_FOLD = 0.14f

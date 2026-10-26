@@ -235,6 +235,14 @@ private val Wardrobe = listOf(
         { outfit, choice -> outfit.copy(glasses = choice) },
     ),
     Slot(
+        NestItem.FLOWER_POT,
+        intArrayOf(
+            R.drawable.dress_thumb_pot_0, R.drawable.dress_thumb_pot_1, R.drawable.dress_thumb_pot_2, R.drawable.dress_thumb_pot_3,
+        ),
+        { it.pot },
+        { outfit, choice -> outfit.copy(pot = choice) },
+    ),
+    Slot(
         NestItem.PARTY_HAT,
         intArrayOf(
             R.drawable.dress_thumb_hat_0, R.drawable.dress_thumb_hat_1, R.drawable.dress_thumb_hat_2, R.drawable.dress_thumb_hat_3,
@@ -244,7 +252,7 @@ private val Wardrobe = listOf(
     ),
 )
 
-/** What the owl wears: for each garment that has been earned, a row of its choices, and "None". */
+/** What the owl wears and what stands by the nest: for each item that has been earned, a row of its choices, and "None". */
 @Composable
 private fun WardrobePicker(earned: Set<NestItem>, outfit: NestOutfit, onWear: (NestOutfit) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.x2)) {

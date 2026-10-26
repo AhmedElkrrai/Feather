@@ -176,6 +176,8 @@ fun TodayHeader(
     title: String,
     onMenuClick: () -> Unit,
     onSearchClick: () -> Unit,
+    /** False when there is nothing to search: the button is left out. */
+    showSearch: Boolean = true,
     sortActions: List<MenuAction>,
     modifier: Modifier = Modifier,
     /** Counts up each time the last open task of the day is finished (once a day); it starts the celebration. */
@@ -361,11 +363,13 @@ fun TodayHeader(
                         .weight(1f)
                         .graphicsLayer { alpha = ((collapse.fraction - 0.5f) * 2f).coerceIn(0f, 1f) },
                 )
-                IconButton(onClick = onSearchClick) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_search),
-                        contentDescription = stringResource(R.string.action_search),
-                    )
+                if (showSearch) {
+                    IconButton(onClick = onSearchClick) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_search),
+                            contentDescription = stringResource(R.string.action_search),
+                        )
+                    }
                 }
                 OverflowButton(actions = sortActions)
             }

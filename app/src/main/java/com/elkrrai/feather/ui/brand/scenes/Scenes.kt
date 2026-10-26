@@ -40,6 +40,7 @@ fun Illustration(kind: SceneKind, modifier: Modifier = Modifier, size: Dp = 190.
         SceneKind.EmptyList -> EmptyListScene(size, modifier)
         SceneKind.ClearSkies -> ClearSkiesScene(size, size, modifier)
         SceneKind.NothingDue -> NothingDueScene(size, modifier)
+        SceneKind.HungryChick -> HungryChickScene(size, modifier)
         SceneKind.NoResults -> NoResultsScene(size, modifier)
         SceneKind.BackupSaved -> BackupSavedScene(size, modifier)
         SceneKind.RemindersBlocked -> RemindersBlockedScene(size, modifier)

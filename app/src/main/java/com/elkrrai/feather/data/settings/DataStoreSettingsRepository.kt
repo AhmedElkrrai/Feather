@@ -51,6 +51,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val nestScarf = intPreferencesKey("nest_scarf")
         val nestGlasses = intPreferencesKey("nest_glasses")
         val nestHat = intPreferencesKey("nest_hat")
+        val nestPot = intPreferencesKey("nest_pot")
         val voiceUsed = booleanPreferencesKey("voice_used")
         val backedUp = booleanPreferencesKey("backed_up")
         val morningCard = booleanPreferencesKey("morning_card")
@@ -86,6 +87,7 @@ class DataStoreSettingsRepository @Inject constructor(
                 scarf = (prefs[Keys.nestScarf] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.SCARVES - 1),
                 glasses = (prefs[Keys.nestGlasses] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.GLASSES - 1),
                 hat = (prefs[Keys.nestHat] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.HATS - 1),
+                pot = (prefs[Keys.nestPot] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.POTS - 1),
             ),
             voiceUsed = prefs[Keys.voiceUsed] ?: defaults.voiceUsed,
             backedUp = prefs[Keys.backedUp] ?: defaults.backedUp,
@@ -182,6 +184,7 @@ class DataStoreSettingsRepository @Inject constructor(
             it[Keys.nestScarf] = outfit.scarf
             it[Keys.nestGlasses] = outfit.glasses
             it[Keys.nestHat] = outfit.hat
+            it[Keys.nestPot] = outfit.pot
         }
     }
 

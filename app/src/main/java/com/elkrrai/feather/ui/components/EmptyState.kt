@@ -56,11 +56,17 @@ fun EmptyState(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(if (scene == SceneKind.HungryChick) WIDE_SCENE_MARGIN else 32.dp),
         contentAlignment = Alignment.Center,
     ) {
         val fontScale = LocalDensity.current.fontScale
-        val sceneSize = scene?.let { sceneSizeDp(maxHeight.value, fontScale) }
+        val fits = scene?.let { sceneSizeDp(maxHeight.value, fontScale) }
+        // The nest of hungry chicks uses the whole width, as far as the height allows room for its words.
+        val sceneSize = if (scene == SceneKind.HungryChick && fits != null) {
+            minOf(maxWidth.value, maxHeight.value - WIDE_SCENE_WORDS_ROOM.value)
+        } else {
+            fits
+        }
         Column(
             modifier = if (scene == SceneKind.EmptyList) Modifier.offset(y = (-50).dp) else Modifier,
             verticalArrangement = Arrangement.Center,
@@ -98,3 +104,7 @@ fun EmptyState(
 /** The sky of an empty Overdue view leaves this much of the screen's edge, and is left out when shorter than this. */
 private val SKY_MARGIN = 10.dp
 private val SKY_MIN_HEIGHT = 320.dp
+
+/** The nest of hungry chicks leaves this much at the sides, and keeps this much height for its words. */
+private val WIDE_SCENE_MARGIN = 8.dp
+private val WIDE_SCENE_WORDS_ROOM = 120.dp

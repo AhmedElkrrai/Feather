@@ -38,6 +38,7 @@ enum class SceneKind {
     EmptyList,
     ClearSkies,
     NothingDue,
+    HungryChick,
     NoResults,
     BackupSaved,
     RemindersBlocked,

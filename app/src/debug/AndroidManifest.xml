@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
-        <!-- Debug builds only: a screen to look at and tune the bird. Not in release builds. -->
-        <activity
-            android:name=".debug.BirdLabActivity"
-            android:exported="true"
-            android:label="Bird lab"
-            android:theme="@style/Theme.Feather" />
-
         <!-- Debug builds only: pick any animation from a bottom sheet and replay it. It has its own launcher icon. -->
         <activity
             android:name=".debug.AnimationLabActivity"

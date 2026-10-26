@@ -52,12 +52,9 @@ import com.elkrrai.feather.feature.rhythm.WeekBars
 import com.elkrrai.feather.feature.rhythm.rememberEntry
 import com.elkrrai.feather.feature.tasklist.TodayHeader
 import com.elkrrai.feather.feature.tasklist.rememberHeaderCollapse
-import com.elkrrai.feather.ui.brand.BirdCanvas
 import com.elkrrai.feather.ui.brand.BirdIllustration
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.brand.CompletionBird
-import com.elkrrai.feather.ui.brand.periodMillis
-import com.elkrrai.feather.ui.brand.rememberAmbientPhase
 import com.elkrrai.feather.ui.brand.scenes.Illustration
 import com.elkrrai.feather.ui.brand.scenes.NestScene
 import com.elkrrai.feather.ui.brand.scenes.SceneKind
@@ -100,7 +97,6 @@ class AnimationLabActivity : ComponentActivity() {
 /** What an animation's preview is given: how many times Replay was pressed, and the shared helpers. */
 private class LabScope(
     val replay: Int,
-    val slow: Boolean,
     val confetti: ConfettiController,
     /** The middle of the preview area in window pixels, where confetti starts. */
     val center: () -> Offset,
@@ -117,12 +113,12 @@ private val Items: List<LabItem> = buildList {
     // --- the bird ---
     for (mood in BirdMood.entries) {
         val note = when (mood) {
-            BirdMood.IDLE -> "Bobs, blinks twice, tilts its head and flicks its tail once every 8 seconds."
-            BirdMood.SLEEPING -> "Eyes closed, breathing slowly, floating z letters."
-            BirdMood.HAPPY -> "One hop with flapping wings. Only the completion hop uses it now; it is not a resting state."
-            BirdMood.FLYING -> "Flapping on the spot."
+            BirdMood.IDLE -> "Breathes, blinks, tilts its head and preens now and then."
+            BirdMood.SLEEPING -> "Eyes closed, breathing slowly, the glow pulsing, floating z letters."
+            BirdMood.HAPPY -> "Wings spread, one hop with flapping. Only the completion hop uses it."
+            BirdMood.FLYING -> "Wings spread, flapping on the spot."
         }
-        add(LabItem("Bird", "Bird: ${mood.name.lowercase()}", note) { BirdLoop(mood, slow) })
+        add(LabItem("Bird", "Bird: ${mood.name.lowercase()}", note) { BirdLoop(mood) })
     }
     add(LabItem("Bird", "Bird: flight and land", "Crouches, flies one lap in the air, lands with a squint and starts the idle loop again. 2.2 s.") {
         Box(Modifier.fillMaxSize().padding(bottom = 24.dp), contentAlignment = Alignment.BottomCenter) {
@@ -221,11 +217,10 @@ private fun Hint(text: String) {
     Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-/** The bird in [mood] on a loop of its own clock, at the size of the Today header's bird and bigger. */
+/** The owl in [mood], bigger than the Today header's. */
 @Composable
-private fun BirdLoop(mood: BirdMood, slow: Boolean) {
-    val phase = rememberAmbientPhase(periodMillis(mood) * if (slow) 4 else 1, enabled = true)
-    BirdCanvas(mood = mood, phase = { phase.value }, modifier = Modifier.size(240.dp))
+private fun BirdLoop(mood: BirdMood) {
+    BirdIllustration(Modifier.size(240.dp), mood = mood)
 }
 
 @Composable
@@ -290,7 +285,6 @@ private fun HeaderDemo(scope: LabScope, status: TodayStatus, hours: List<Int>, c
 private fun AnimationLab(dark: Boolean, onDarkChange: (Boolean) -> Unit) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
     var replay by rememberSaveable { mutableIntStateOf(1) }
-    var slow by rememberSaveable { mutableStateOf(false) }
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
     var previewCenter by remember { mutableStateOf(Offset.Zero) }
     val confetti = rememberConfettiController()
@@ -337,15 +331,11 @@ private fun AnimationLab(dark: Boolean, onDarkChange: (Boolean) -> Unit) {
             ) {
                 // A new item starts from scratch (replay is reset to 1 when one is chosen).
                 key(selected) {
-                    val scope = LabScope(replay, slow, confetti) { previewCenter }
+                    val scope = LabScope(replay, confetti) { previewCenter }
                     current.content(scope)
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Switch(checked = slow, onCheckedChange = { slow = it })
-                Text("Bird 4x slower", style = MaterialTheme.typography.labelLarge)
-            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

@@ -69,11 +69,11 @@ internal fun skyTopDrawable(phase: DayPhase): Int = when (phase) {
     DayPhase.Night -> R.drawable.widget_sky_top_night
 }
 
-/** The bird for a mood, chosen when the widget is drawn. */
+/** The owl for a mood, chosen when the widget is drawn: asleep, flying with wings up, or resting. */
 internal fun birdDrawable(mood: BirdMood): Int = when (mood) {
-    BirdMood.SLEEPING -> R.drawable.ic_bird_sleeping
-    BirdMood.HAPPY -> R.drawable.ic_bird_happy
-    BirdMood.IDLE, BirdMood.FLYING -> R.drawable.ic_bird_mark
+    BirdMood.SLEEPING -> R.drawable.widget_owl_sleeping
+    BirdMood.HAPPY -> R.drawable.widget_owl_happy
+    BirdMood.IDLE, BirdMood.FLYING -> R.drawable.widget_owl_idle
 }
 
 /**

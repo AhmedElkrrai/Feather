@@ -273,7 +273,7 @@ internal fun OwlFlight(pose: () -> BirdPose, modifier: Modifier = Modifier, stil
             .graphicsLayer {
                 val current = pose()
                 // The pose's offsets are in the 96 units of the old bird's box.
-                val unit = size.minDimension / BirdShapes.SIZE
+                val unit = size.minDimension / POSE_BOX_UNITS
                 translationX = current.bodyOffsetX * unit
                 translationY = current.bodyOffsetY * unit + size.height * FLY_SETTLE_Y
                 scaleX = FLY_SCALE * current.bodyScale

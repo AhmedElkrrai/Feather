@@ -456,6 +456,7 @@
     <!-- Illustration kit: the sentence under each scene -->
     <string name="scene_empty_list">Nothing here yet. Add a thought and I’ll keep it warm.</string>
     <string name="scene_clear_skies">Nothing is late. Clear skies.</string>
+    <string name="scene_hungry_chick">Nothing coming up. Feed me!</string>
     <string name="scene_nothing_due">A whole day with nothing due. Suspicious, but nice.</string>
     <string name="scene_no_results">Looked under every twig. Nothing matches “%1$s”.</string>
     <string name="scene_backup_saved">Tucked away safely. Your tasks, only yours.</string>
@@ -547,7 +548,7 @@
     <!-- M9 step 11: weekly feather and your nest -->
     <string name="nest_title">Your nest</string>
     <string name="nest_choose">Choose a nest</string>
-    <string name="nest_dress">What the owl wears</string>
+    <string name="nest_dress">Dress your nest</string>
     <string name="nest_dress_none">None</string>
     <string name="nest_dress_choice">%1$s %2$d</string>
     <string name="nest_style_braided">Braided</string>

@@ -5,6 +5,9 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
 
+/** The side of the box, in units, that the poses of [birdPose] and [birdFlightPose] are measured in. */
+internal const val POSE_BOX_UNITS = 96f
+
 /** What the bird is doing. */
 enum class BirdMood {
     /** Sitting, bobbing a little, blinking now and then. */
@@ -22,7 +25,7 @@ enum class BirdMood {
 
 /**
  * How the bird looks at one moment. Angles are in degrees and offsets in the 96 by 96 units of
- * [BirdShapes]; a negative wing angle lifts the wing and a negative offset moves the bird up.
+ * the pose box ([POSE_BOX_UNITS] on a side); a negative wing angle lifts the wing and a negative offset moves the bird up.
  */
 data class BirdPose(
     val wingAngle: Float,
@@ -35,7 +38,7 @@ data class BirdPose(
     val headTilt: Float = 0f,
     /** The tail turning at its root; a positive angle lifts the tip. */
     val tailFlick: Float = 0f,
-    /** How far the bird has moved to the right of where it sits, in the units of [BirdShapes]. */
+    /** How far the bird has moved to the right of where it sits, in the units of the pose box. */
     val bodyOffsetX: Float = 0f,
     /** 1 faces right, -1 faces left; the values between are the bird turning round. */
     val facing: Float = 1f,
