@@ -288,6 +288,7 @@ fun TaskListScreen(
             onToggleSubtask = viewModel::toggleSubtask,
             onCounterAdd = viewModel::addToCounter,
             onCounterSet = viewModel::setCounter,
+            onFinishedByCount = { celebration++ },
             onTagFilterChange = viewModel::selectTagFilter,
         )
         FeatherConfettiOverlay(confetti)
@@ -364,6 +365,8 @@ fun TaskListContent(
     onToggleSubtask: (taskId: String, subtaskId: String) -> Unit = { _, _ -> },
     onCounterAdd: (taskId: String, amount: Int) -> Unit = { _, _ -> },
     onCounterSet: (taskId: String, done: Int) -> Unit = { _, _ -> },
+    /** A counter task reached its target by steps: the bird hops, as for a ring tick. */
+    onFinishedByCount: () -> Unit = {},
     onClearCompleted: () -> Unit = {},
     onFly: (from: Offset, to: Offset?) -> Unit = { _, _ -> },
     onWarmFeathers: (Offset) -> Unit = {},
@@ -632,6 +635,8 @@ fun TaskListContent(
                                     task = task.copy(
                                         completedAt = Instant.now(),
                                         subtasks = task.subtasks.map { it.copy(isCompleted = true) },
+                                        // a finished counter shows a full count, not the one before the last step
+                                        counter = task.counter?.let { it.copy(done = it.target) },
                                     ),
                                     index = rows.indexOfFirst { it.id == task.id }.coerceAtLeast(0),
                                     sectionKey = section.date,
@@ -687,21 +692,20 @@ fun TaskListContent(
                                     onToggleSubtask(task.id, subtaskId)
                                 },
                                 onCounterAdd = { amount ->
-                                    // The step that reaches the target finishes the task: let the row linger like a ring tick.
+                                    // The step that reaches the target finishes the task like a ring tick: the bird hops
+                                    // and the row lingers.
                                     val counter = task.counter
-                                    if (counter != null && !task.isCompleted && counter.done + amount >= counter.target &&
-                                        !reduceMotion && !usesOrderCopy
-                                    ) {
-                                        lingerFinished()
+                                    if (counter != null && !task.isCompleted && counter.done + amount >= counter.target) {
+                                        onFinishedByCount()
+                                        if (!reduceMotion && !usesOrderCopy) lingerFinished()
                                     }
                                     onCounterAdd(task.id, amount)
                                 },
                                 onCounterSet = { done ->
                                     val counter = task.counter
-                                    if (counter != null && !task.isCompleted && done >= counter.target &&
-                                        !reduceMotion && !usesOrderCopy
-                                    ) {
-                                        lingerFinished()
+                                    if (counter != null && !task.isCompleted && done >= counter.target) {
+                                        onFinishedByCount()
+                                        if (!reduceMotion && !usesOrderCopy) lingerFinished()
                                     }
                                     onCounterSet(task.id, done)
                                 },
