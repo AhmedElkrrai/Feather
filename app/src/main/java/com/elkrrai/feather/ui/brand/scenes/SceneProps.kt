@@ -80,20 +80,6 @@ internal fun DrawScope.drawGround(p: ScenePalette, cx: Float = 100f, y: Float = 
     drawOval(p.ground, topLeft = Offset(cx - halfWidth, y - 8f), size = Size(halfWidth * 2f, 16f))
 }
 
-internal fun DrawScope.drawSun(p: ScenePalette, center: Offset, radius: Float) {
-    drawCircle(p.amber, radius = radius, center = center)
-    for (ray in 0 until 8) {
-        val angle = ray * PI / 4
-        drawLine(
-            color = p.amber,
-            start = Offset(center.x + (cos(angle) * (radius + 4f)).toFloat(), center.y + (sin(angle) * (radius + 4f)).toFloat()),
-            end = Offset(center.x + (cos(angle) * (radius + 9f)).toFloat(), center.y + (sin(angle) * (radius + 9f)).toFloat()),
-            strokeWidth = 2.6f,
-            cap = StrokeCap.Round,
-        )
-    }
-}
-
 /** A crescent moon whose box is [size] wide, with its top-left corner at [topLeft]. */
 internal fun DrawScope.drawMoon(p: ScenePalette, topLeft: Offset, size: Float) {
     translate(topLeft.x, topLeft.y) { scale(size, pivot = Offset.Zero) { drawPath(MoonPath, p.cream) } }

@@ -58,7 +58,7 @@ internal fun TagPickerDialog(
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 tags.forEach { tag ->
                     Text(
-                        text = "#${tag.name}",
+                        text = tag.name,
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier
                             .fillMaxWidth()

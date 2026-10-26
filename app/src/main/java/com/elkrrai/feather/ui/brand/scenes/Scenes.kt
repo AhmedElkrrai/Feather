@@ -85,8 +85,15 @@ private fun NothingDueScene(size: Dp, modifier: Modifier) = SceneFrame(size, mod
     val perch = Perch.under(NothingDueBird)
     Layer {
         drawCloud(p, Offset(46f, 38f))
-        drawSun(p, Offset(174f, 34f), 9f)
     }
+    Image(
+        painter = painterResource(R.drawable.sun_day),
+        contentDescription = null,
+        contentScale = ContentScale.FillBounds,
+        modifier = Modifier
+            .offset(x = unit * 158f, y = unit * 18f)
+            .size(unit * 32f),
+    )
     PerchBranch(perch)
     SceneBird(BirdMood.SLEEPING, NothingDueBird)
     Layer { drawLeaf(perch.twigTip, 20f, -15f, p.leaf) }

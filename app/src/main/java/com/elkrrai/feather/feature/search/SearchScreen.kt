@@ -139,7 +139,7 @@ fun SearchContent(
                         scene = SceneKind.NoResults,
                         title = stringResource(
                             R.string.scene_no_results,
-                            state.query.trim().ifBlank { "#" + state.selectedTag?.name.orEmpty() },
+                            state.query.trim().ifBlank { state.selectedTag?.name.orEmpty() },
                         ),
                         body = stringResource(R.string.search_no_results_body),
                         modifier = Modifier.imePadding(),

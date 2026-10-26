@@ -88,7 +88,7 @@ object QuickAddParser {
 
     // --- #tags, @list, !priority ---
 
-    private val TAG = Regex("(?<!\\S)#(?=[\\p{L}\\p{N}_-]*\\p{L})([\\p{L}\\p{N}_-]+)")
+    private val TAG = Regex("(?<!\\S)#(?=[\\p{L}\\p{N}_/-]*\\p{L})([\\p{L}\\p{N}_-]+(?:/[\\p{L}\\p{N}_-]+)*)")
     private val LIST = Regex("(?<!\\S)@([\\p{L}\\p{N}_-]+)")
     private val PRIORITY_WORD = Regex(
         "(?<!\\S)!(high|medium|med|low|1|2|3|عاليه|عالي|" +

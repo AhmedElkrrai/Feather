@@ -43,9 +43,18 @@ class TagsViewModel @Inject constructor(
         TagsUiState(isLoading = false, rows = tags.inTreeOrder(), taskCounts = counts)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TagsUiState())
 
-    fun create(name: String) {
+    /** Creates the tag, under [parentId] when it is given (and the name can be a path like "work/bugfix"). */
+    fun create(name: String, parentId: String? = null) {
         if (name.isBlank()) return
-        viewModelScope.launch { tagRepository.createTag(name) }
+        viewModelScope.launch {
+            val tag = try {
+                tagRepository.createTagPath(name)
+            } catch (e: IllegalArgumentException) {
+                return@launch // only slashes
+            }
+            // a parent picked in the dialog wins over a slash in the name only when the tag is at the top
+            if (parentId != null && tag.parentId == null) tagRepository.setParent(tag.id, parentId)
+        }
     }
 
     /** [onResult] gets false when the name is blank or another tag already has it. */

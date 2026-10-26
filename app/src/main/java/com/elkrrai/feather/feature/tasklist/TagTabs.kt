@@ -45,7 +45,7 @@ fun TagTabs(
         }
         TabRow(
             selectedIndex = firstSelected,
-            labels = listOf(stringResource(R.string.tab_all)) + topLevel.map { "#${it.name}" } +
+            labels = listOf(stringResource(R.string.tab_all)) + topLevel.map { it.name } +
                 listOfNotNull(if (showNoTag) stringResource(R.string.tab_no_tag) else null),
             onPick = { index ->
                 when {
@@ -62,7 +62,7 @@ fun TagTabs(
                 val next = path.getOrNull(depth + 1)
                 TabRow(
                     selectedIndex = if (next == null) 0 else children.indexOfFirst { it.id == next.id } + 1,
-                    labels = listOf(stringResource(R.string.tab_all_in, tag.name)) + children.map { "#${it.name}" },
+                    labels = listOf(stringResource(R.string.tab_all_in, tag.name)) + children.map { it.name },
                     onPick = { index ->
                         onPick(TagFilter.OfTag(if (index == 0) tag.id else children[index - 1].id))
                     },

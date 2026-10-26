@@ -478,8 +478,19 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
                 if (moonness > 0f) {
                     translateAndScale(124f, 12f, 26f) { drawPath(moonPath, Nest.Cream.copy(alpha = moonness)) }
                 }
-                if (moonness < 1f) drawSun(Offset(128f, 24f), 12f, alpha = 1f - moonness)
             }
+        }
+        // The sun, in the corner where the moon is: the dark one at dusk. It fades as the moon comes in.
+        if (moonness < 1f) {
+            Image(
+                painter = painterResource(if (phase == DayPhase.Dusk) R.drawable.sun_dusk else R.drawable.sun_day),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                alpha = 1f - moonness,
+                modifier = Modifier
+                    .offset(x = SceneWidth * (SUN_CENTER_X - SUN_UNITS / 2f) / 150f, y = SceneWidth * (SUN_CENTER_Y - SUN_UNITS / 2f) / 150f)
+                    .size(SceneWidth * SUN_UNITS / 150f),
+            )
         }
         // The branch the owl sits on: its top edge is at about y 96 under the owl's feet.
         Image(
@@ -529,20 +540,6 @@ private fun DrawScope.translateAndScale(x: Float, y: Float, size: Float, block: 
     }
 }
 
-private fun DrawScope.drawSun(center: Offset, radius: Float, alpha: Float = 1f) {
-    drawCircle(Nest.Amber.copy(alpha = alpha), radius = radius, center = center)
-    for (ray in 0 until 8) {
-        val angle = ray * PI / 4
-        drawLine(
-            color = Nest.Amber.copy(alpha = alpha),
-            start = Offset(center.x + (cos(angle) * (radius + 4f)).toFloat(), center.y + (sin(angle) * (radius + 4f)).toFloat()),
-            end = Offset(center.x + (cos(angle) * (radius + 9f)).toFloat(), center.y + (sin(angle) * (radius + 9f)).toFloat()),
-            strokeWidth = 2.4f,
-            cap = StrokeCap.Round,
-        )
-    }
-}
-
 private fun DrawScope.drawEgg(topLeft: Offset, alpha: Float = 1f) {
     drawOval(Nest.Cream.copy(alpha = alpha), topLeft = topLeft, size = androidx.compose.ui.geometry.Size(11f, 14f))
     drawCircle(Nest.Amber.copy(alpha = 0.5f * alpha), radius = 0.9f, center = Offset(topLeft.x + 4f, topLeft.y + 5f))
@@ -550,6 +547,11 @@ private fun DrawScope.drawEgg(topLeft: Offset, alpha: Float = 1f) {
 }
 
 private const val EGGS = 5
+
+/** Where the sun picture sits in the scene's 150 by 110 units, and how wide it is (rays included). */
+private const val SUN_CENTER_X = 128f
+private const val SUN_CENTER_Y = 24f
+private const val SUN_UNITS = 40f
 
 /** The sky, the sun and the moon change over this long. */
 private const val SKY_FADE_MILLIS = 600

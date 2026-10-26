@@ -73,7 +73,7 @@ private val DRAW_ORDER = listOf(1, 0, 2)
 
 /** One chick, rocking about its feet. */
 @Composable
-private fun SceneScope.Chick(
+internal fun SceneScope.Chick(
     picture: Int,
     left: Float,
     top: Float,
@@ -81,12 +81,13 @@ private fun SceneScope.Chick(
     degrees: Float,
     startAt: Float,
     moving: Boolean,
+    height: Float = CHICK_HEIGHT,
 ) {
     val clock = rememberAmbientPhase(wobbleMillis, enabled = moving)
     Box(
         Modifier
             .offset(x = unit * left, y = unit * top)
-            .size(unit * CHICK_WIDTH, unit * CHICK_HEIGHT)
+            .size(unit * height * CHICK_ASPECT, unit * height)
             .graphicsLayer {
                 transformOrigin = TransformOrigin(0.5f, 1f)
                 val turn = 2f * PI.toFloat() * (clock.value + startAt)
@@ -103,7 +104,8 @@ private fun SceneScope.Chick(
 
 // Each chick's picture is about 0.8 as wide as it is tall.
 private const val CHICK_HEIGHT = 70f
-private const val CHICK_WIDTH = CHICK_HEIGHT * 0.797f
+private const val CHICK_ASPECT = 0.797f
+private const val CHICK_WIDTH = CHICK_HEIGHT * CHICK_ASPECT
 private const val CHICK_SINK = 3f
 private const val WOBBLE_STRETCH = 0.012f
 

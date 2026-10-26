@@ -79,6 +79,7 @@ import com.elkrrai.feather.domain.recurrence.Frequency
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import androidx.compose.material3.AlertDialog
 import com.elkrrai.feather.domain.model.Tag
+import com.elkrrai.feather.domain.model.asTagPath
 
 /** How many tasks have been added from the sheet, to know when the example hint can go. */
 private class QuickAddHintStore(context: Context) {
@@ -261,7 +262,7 @@ fun QuickAddSheet(
                 parsed.recurrence?.let { add(QuickAddChip(QuickAddField.REPEAT, it.label(parsed.dueDate))) }
                 if (parsed.priority.level > 0) add(QuickAddChip(QuickAddField.PRIORITY, parsed.priority.label()))
                 if (parsed.tags.isNotEmpty()) {
-                    add(QuickAddChip(QuickAddField.TAGS, parsed.tags.joinToString(" ") { "#$it" }))
+                    add(QuickAddChip(QuickAddField.TAGS, parsed.tags.joinToString(", ") { it.asTagPath() }))
                 }
             }
             QuickAddChips(
@@ -355,7 +356,7 @@ private fun QuickAddTools(
                 tags.forEach { tag ->
                     val picked = chosenTags.any { it.equals(tag.name, ignoreCase = true) }
                     DropdownMenuItem(
-                        text = { Text("#${tag.name}") },
+                        text = { Text(tag.name) },
                         trailingIcon = if (picked) {
                             { Icon(painterResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(18.dp)) }
                         } else {

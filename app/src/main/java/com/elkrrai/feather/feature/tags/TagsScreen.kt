@@ -1,6 +1,7 @@
 package com.elkrrai.feather.feature.tags
 
 import android.widget.Toast
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
@@ -22,28 +24,39 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Tag
+import com.elkrrai.feather.domain.model.TagRow
 import com.elkrrai.feather.domain.model.possibleParentsOf
 import com.elkrrai.feather.feature.tasklist.ConfirmDialog
 import com.elkrrai.feather.feature.tasklist.NameDialog
@@ -91,7 +104,7 @@ fun TagsScreen(
 fun TagsContent(
     state: TagsUiState,
     onBack: () -> Unit,
-    onCreate: (name: String) -> Unit,
+    onCreate: (name: String, parentId: String?) -> Unit,
     onRename: (tagId: String, name: String, done: (Boolean) -> Unit) -> Unit,
     onSetParent: (tagId: String, parentId: String?) -> Unit,
     onDelete: (tagId: String) -> Unit,
@@ -144,10 +157,17 @@ fun TagsContent(
                     val tag = row.tag
                     val count = state.taskCounts[tag.id] ?: 0
                     val parentName = state.nameOf(tag.parentId)
+                    val moveLabel = stringResource(R.string.tag_move_under)
                     ListItem(
-                        // Each level sits a little further in, so the tree can be read at a glance.
-                        modifier = Modifier.padding(start = 20.dp * row.depth),
-                        headlineContent = { Text("#${tag.name}") },
+                        // Each level sits a little further in, so the tree can be read at a glance. A long press
+                        // moves the tag, the same as "Put under another tag" in its menu.
+                        modifier = Modifier
+                            .padding(start = 20.dp * row.depth)
+                            .pointerInput(tag.id) {
+                                detectTapGestures(onLongPress = { dialog = TagDialog.MoveUnder(tag) })
+                            }
+                            .semantics { onLongClick(label = moveLabel) { dialog = TagDialog.MoveUnder(tag); true } },
+                        headlineContent = { Text(tag.name) },
                         supportingContent = {
                             Column {
                                 if (parentName != null) {
@@ -180,13 +200,10 @@ fun TagsContent(
     when (val open = dialog) {
         null -> Unit
 
-        TagDialog.New -> NameDialog(
-            title = stringResource(R.string.new_tag),
-            label = stringResource(R.string.tag_name),
-            initial = "",
-            confirmLabel = stringResource(R.string.action_create),
-            onConfirm = {
-                onCreate(it)
+        TagDialog.New -> NewTagDialog(
+            rows = state.rows,
+            onCreate = { name, parentId ->
+                onCreate(name, parentId)
                 dialog = null
             },
             onDismiss = { dialog = null },
@@ -233,7 +250,7 @@ fun TagsContent(
  * be put under "bugfix".
  */
 @Composable
-private fun ParentDialog(
+internal fun ParentDialog(
     tag: Tag,
     options: List<Tag>,
     onPick: (parentId: String?) -> Unit,
@@ -258,7 +275,7 @@ private fun ParentDialog(
                     )
                     options.forEach { option ->
                         ParentChoice(
-                            label = "#${option.name}",
+                            label = option.name,
                             selected = option.id == tag.parentId,
                             onClick = { onPick(option.id) },
                         )
@@ -272,13 +289,81 @@ private fun ParentDialog(
     )
 }
 
+/**
+ * A new tag: its name, and under which tag it goes (nowhere, by default). Writing a path in the name,
+ * like "Work/Bugfix", makes the tags it names, each under the one before.
+ */
 @Composable
-private fun ParentChoice(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun NewTagDialog(
+    rows: List<TagRow>,
+    onCreate: (name: String, parentId: String?) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by rememberSaveable { mutableStateOf("") }
+    var parentId by rememberSaveable { mutableStateOf<String?>(null) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.new_tag)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.tag_name)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus),
+                )
+                Text(
+                    text = stringResource(R.string.tag_new_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                if (rows.isNotEmpty()) {
+                    Text(
+                        text = stringResource(R.string.tag_new_under),
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(top = 16.dp),
+                    )
+                    Column(Modifier.selectableGroup()) {
+                        ParentChoice(
+                            label = stringResource(R.string.tag_parent_none),
+                            selected = parentId == null,
+                            onClick = { parentId = null },
+                        )
+                        rows.forEach { row ->
+                            ParentChoice(
+                                label = row.tag.name,
+                                selected = parentId == row.tag.id,
+                                onClick = { parentId = row.tag.id },
+                                indent = 16.dp * row.depth,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onCreate(name, parentId) }, enabled = name.isNotBlank()) {
+                Text(stringResource(R.string.action_create))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    )
+}
+
+@Composable
+private fun ParentChoice(label: String, selected: Boolean, onClick: () -> Unit, indent: Dp = 0.dp) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
-            .padding(vertical = 12.dp),
+            .padding(start = indent, top = 12.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(selected = selected, onClick = null)

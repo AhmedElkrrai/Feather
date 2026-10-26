@@ -131,7 +131,7 @@ internal fun SceneScope.Layer(draw: DrawScope.() -> Unit) {
 
 /** The live, animated bird, placed on the board by [at]. */
 @Composable
-internal fun SceneScope.SceneBird(mood: BirdMood, at: BirdPlacement, dress: OwlDress = OwlDress.None) {
+internal fun SceneScope.SceneBird(mood: BirdMood, at: BirdPlacement, dress: OwlDress = OwlDress.None, preens: Boolean = true) {
     BirdIllustration(
         modifier = Modifier
             .offset(x = unit * at.x, y = unit * at.y)
@@ -139,5 +139,6 @@ internal fun SceneScope.SceneBird(mood: BirdMood, at: BirdPlacement, dress: OwlD
             .graphicsLayer { rotationZ = at.tilt },
         mood = mood,
         dress = dress,
+        preens = preens,
     )
 }

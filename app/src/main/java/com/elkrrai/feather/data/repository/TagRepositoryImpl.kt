@@ -4,6 +4,7 @@ import com.elkrrai.feather.data.db.TagDao
 import com.elkrrai.feather.data.db.TagEntity
 import com.elkrrai.feather.data.db.toDomain
 import com.elkrrai.feather.domain.model.Tag
+import com.elkrrai.feather.domain.model.asTagName
 import com.elkrrai.feather.domain.model.wouldLoop
 import com.elkrrai.feather.domain.repository.TagRepository
 import java.time.Clock
@@ -68,5 +69,5 @@ class TagRepositoryImpl @Inject constructor(
         tagDao.softDelete(id, deletedAt = now)
     }
 
-    private fun normalize(name: String): String = name.trim().removePrefix("#").trim()
+    private fun normalize(name: String): String = name.trim().removePrefix("#").trim().asTagName()
 }

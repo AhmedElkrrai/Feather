@@ -5,6 +5,7 @@ import com.elkrrai.feather.domain.model.Reminder
 import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
+import com.elkrrai.feather.domain.model.asTagName
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.domain.recurrence.RepeatMode
@@ -62,7 +63,7 @@ fun TaskEntity.toSubtask(): Subtask = Subtask(
     isCompleted = completedAt != null,
 )
 
-fun TagEntity.toDomain(): Tag = Tag(id = id, name = name, parentId = parentId)
+fun TagEntity.toDomain(): Tag = Tag(id = id, name = name.asTagName(), parentId = parentId)
 
 fun ReminderEntity.toDomain(): Reminder = Reminder(
     id = id,

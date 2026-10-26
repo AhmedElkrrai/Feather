@@ -61,7 +61,8 @@ fun BirdIllustration(
     contentDescription: String? = null,
     flightTrigger: Int = 0,
     dress: OwlDress = OwlDress.None,
-) = OwlIllustration(modifier, mood, contentDescription, flightTrigger, dress)
+    preens: Boolean = true,
+) = OwlIllustration(modifier, mood, contentDescription, flightTrigger, dress, preens)
 
 /** A short hop of the owl over the screen each time [trigger] changes (a task was finished). */
 @Composable

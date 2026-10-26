@@ -25,6 +25,7 @@ import com.elkrrai.feather.domain.nest.NestOutfit
 import com.elkrrai.feather.domain.nest.NestStyle
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.brand.OwlDress
+import com.elkrrai.feather.ui.brand.rememberBirdMotionAllowed
 
 
 /**
@@ -67,7 +68,19 @@ fun NestScene(
             glasses = if (NestItem.GLASSES in items) outfit.glasses else NestOutfit.NONE,
             hat = if (NestItem.PARTY_HAT in items) outfit.hat else NestOutfit.NONE,
         )
-        SceneBird(BirdMood.IDLE, bird, dress)
+        SceneBird(BirdMood.IDLE, bird, dress, preens = false)
+        // a little owlet beside it, rocking now and then, its feet down in the nest a little
+        val chickHeight = NESTLING_HEIGHT
+        Chick(
+            picture = R.drawable.chick_3,
+            left = NESTLING_CENTRE - chickHeight * 0.797f / 2f,
+            top = nestTop + art.nestlingFeet * nestHeight - chickHeight,
+            wobbleMillis = 2_100,
+            degrees = 5f,
+            startAt = 0.3f,
+            moving = rememberBirdMotionAllowed(),
+            height = chickHeight,
+        )
         // the front of the nest, over the bird's feet
         NestLayer(art.front, nestTop, nestHeight)
         if (NestItem.FLOWER_POT in items) PotPicture(outfit.pot)
@@ -111,7 +124,7 @@ private val Pots = intArrayOf(R.drawable.nest_pot_0, R.drawable.nest_pot_1, R.dr
 // Each pot picture is 320 by 500, the pot standing on its bottom edge.
 private const val POT_ASPECT = 320f / 500f
 private const val POT_HEIGHT = 46f
-private const val POT_X = 156f
+private const val POT_X = 162f
 private const val POT_BOTTOM = 174f
 
 /** The nest's pictures, and where in them the bird's feet land (a share of the picture's height). */
@@ -121,24 +134,33 @@ internal class NestArt(
     /** The picture's height for each unit of its width. */
     val heightPerWidth: Float,
     val feet: Float,
+    /**
+     * Where the owlet's feet land (a share of the picture's height): a little below the top edge of the
+     * front rim where the owlet sits, so the rim covers its feet and it is down in the nest.
+     */
+    val nestlingFeet: Float,
 )
 
 internal fun NestStyle.art() = when (this) {
-    NestStyle.BRAIDED -> NestArt(R.drawable.nest_braided_back, R.drawable.nest_braided_front, 701f / 920f, 0.64f)
-    NestStyle.TWIGS -> NestArt(R.drawable.nest_twigs_back, R.drawable.nest_twigs_front, 577f / 908f, 0.46f)
-    NestStyle.STRAW -> NestArt(R.drawable.nest_straw_back, R.drawable.nest_straw_front, 568f / 864f, 0.60f)
-    NestStyle.ROPE -> NestArt(R.drawable.nest_rope_back, R.drawable.nest_rope_front, 639f / 934f, 0.55f)
+    NestStyle.BRAIDED -> NestArt(R.drawable.nest_braided_back, R.drawable.nest_braided_front, 701f / 920f, 0.64f, 0.72f)
+    NestStyle.TWIGS -> NestArt(R.drawable.nest_twigs_back, R.drawable.nest_twigs_front, 577f / 908f, 0.46f, 0.55f)
+    NestStyle.STRAW -> NestArt(R.drawable.nest_straw_back, R.drawable.nest_straw_front, 568f / 864f, 0.60f, 0.49f)
+    NestStyle.ROPE -> NestArt(R.drawable.nest_rope_back, R.drawable.nest_rope_front, 639f / 934f, 0.55f, 0.64f)
 }
 
 /** The whole nest of [this] style, to show it small, for choosing. */
 @DrawableRes
 fun NestStyle.pictureRes(): Int = art().back
 
-internal const val NEST_WIDTH = 126f
-internal const val NEST_X = 29f
+internal const val NEST_WIDTH = 152f
+internal const val NEST_X = 24f
 internal const val GROUND_LINE = 172f
-private const val BIRD_X = 46f
+private const val BIRD_X = 40f
 private const val BIRD_SCALE = 0.95f
+
+/** The owlet in the nest: how tall it is and where its middle is on the board. */
+private const val NESTLING_HEIGHT = 42f
+private const val NESTLING_CENTRE = 130f
 
 /** The bird's feet are this far down its box. */
 private const val BIRD_FEET = 0.945f

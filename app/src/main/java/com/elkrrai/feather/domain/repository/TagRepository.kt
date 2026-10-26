@@ -13,6 +13,27 @@ interface TagRepository {
      */
     suspend fun createTag(name: String): Tag
 
+    /**
+     * Creates the tags of a path like "work/bugfix" and returns the last one: "Work" (or the one that
+     * exists), then "Bugfix" under it. A tag that already sits under another tag stays where it is; only
+     * a tag that was at the top level is put under the one before it. Blank parts are ignored; a path
+     * with nothing in it is refused like a blank name.
+     */
+    suspend fun createTagPath(path: String): Tag {
+        val names = path.split('/').map { it.trim().removePrefix("#").trim() }.filter { it.isNotEmpty() }
+        require(names.isNotEmpty()) { "Tag name must not be blank" }
+        var before: Tag? = null
+        for (name in names) {
+            var tag = createTag(name)
+            val parent = before
+            if (parent != null && tag.id != parent.id && tag.parentId == null && setParent(tag.id, parent.id)) {
+                tag = tag.copy(parentId = parent.id)
+            }
+            before = tag
+        }
+        return before!!
+    }
+
     /** Returns false (and changes nothing) if the name is blank or used by another tag. */
     suspend fun renameTag(id: String, name: String): Boolean
 

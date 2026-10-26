@@ -95,7 +95,7 @@ internal fun ClearSkiesScene(width: Dp, height: Dp, modifier: Modifier = Modifie
                 modifier = Modifier
                     .offset(x = unit * (SUN_X - SUN_SIZE / 2f), y = unit * (skyBodyY - SUN_SIZE / 2f))
                     .size(unit * SUN_SIZE)
-                    .graphicsLayer { rotationZ = (flight.distance * SUN_TURN_DEGREES) % 360f },
+                    .graphicsLayer { rotationZ = flight.sunTurn % 360f },
             )
         }
         Layer {
@@ -165,6 +165,9 @@ private class Flight {
     /** How far the clouds' base speed has carried the world past the owl, in board units. */
     var distance by mutableFloatStateOf(0f)
 
+    /** How far the sun has turned, in degrees: at its own steady pace, whether the owl glides or bursts. */
+    var sunTurn by mutableFloatStateOf(0f)
+
     /** The wings hang when still, are held up in the glide and beat in the burst. */
     val flap: Float get() = if (still) 0f else 1f - boost * (1f - flapAt(beat))
     val fold: Float get() = if (still) 0f else boost * foldAt(beat)
@@ -191,6 +194,7 @@ private class Flight {
         beat = 0f
         wave = 0f
         distance = 0f
+        sunTurn = 0f
     }
 }
 
@@ -212,6 +216,7 @@ private fun rememberFlight(moving: Boolean): Flight {
             flight.beat = (flight.beat + dt * BEAT_HZ * boost) % 1f
             flight.wave = (flight.wave + dt * (WAVE_HZ + WAVE_BURST_HZ * boost)) % 1f
             flight.distance += dt * BASE_SPEED * (1f + SPEED_BURST * boost)
+            flight.sunTurn += dt * SUN_TURN_DEGREES_PER_SECOND
         }
     }
     return flight
@@ -277,13 +282,14 @@ private fun SceneScope.HillStrip(boardHeight: Float, drawable: Int, phase: () ->
     }
 }
 
-// A round: a glide of 5.5 seconds, a burst that builds for a second, holds for three, eases for one
-// and a half, and a short glide again.
-private const val ROUND_SECONDS = 12f
-private const val BURST_START = 5.5f
-private const val BURST_FULL = 6.5f
-private const val BURST_HOLD_END = 9.5f
-private const val BURST_END = 11f
+// A round: a glide of 2 seconds, a burst that builds for a second, holds for three, eases for one
+// and a half, and a second of glide again, which joins the next round's: the wings are held up for
+// 3 seconds at a time.
+private const val ROUND_SECONDS = 8.5f
+private const val BURST_START = 2f
+private const val BURST_FULL = 3f
+private const val BURST_HOLD_END = 6f
+private const val BURST_END = 7.5f
 
 /** Wing beats a second at the height of the burst. */
 private const val BEAT_HZ = 2.2f
@@ -321,7 +327,8 @@ private const val OWL_ART_CENTRE_Y = 0.5f
 
 private const val SUN_X = 156f
 private const val SUN_SIZE = 44f
-private const val SUN_TURN_DEGREES = 0.35f
+/** The sun turns this many degrees a second, always: it does not speed up with the owl. */
+private const val SUN_TURN_DEGREES_PER_SECOND = 7.7f
 private const val FAR_HILLS_LIFT = 24f
 private const val HILLS_HEIGHT_PER_WIDTH = 496f / 2000f
 private const val PANEL_RADIUS = 12f

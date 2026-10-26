@@ -289,7 +289,7 @@ class TaskListViewModel @Inject constructor(
         clearSelection()
         viewModelScope.launch {
             val tag = try {
-                tagRepository.createTag(name)
+                tagRepository.createTagPath(name)
             } catch (e: IllegalArgumentException) {
                 return@launch // blank name
             }

@@ -9,6 +9,8 @@ import android.text.format.DateFormat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,16 +57,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,6 +82,8 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.Subtask
 import com.elkrrai.feather.domain.model.Tag
+import com.elkrrai.feather.domain.model.possibleParentsOf
+import com.elkrrai.feather.feature.tags.ParentDialog
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import com.elkrrai.feather.feature.tasklist.NameDialog
 import com.elkrrai.feather.domain.text.findLinks
@@ -92,6 +99,8 @@ import com.elkrrai.feather.ui.format.formatDueTime
 import com.elkrrai.feather.ui.format.label
 import com.elkrrai.feather.ui.format.offsetLabel
 import java.time.Instant
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -113,6 +122,7 @@ class TaskEditActions(
     val onPriorityChange: (Priority) -> Unit,
     val onTagToggle: (Tag) -> Unit,
     val onCreateTag: (String) -> Unit,
+    val onSetTagParent: (tagId: String, parentId: String?) -> Unit = { _, _ -> },
     val onPinnedChange: (Boolean) -> Unit,
     val onAddSubtask: (String) -> Unit,
     val onSubtaskToggle: (String) -> Unit,
@@ -171,6 +181,7 @@ fun TaskEditScreen(
             onPriorityChange = viewModel::onPriorityChange,
             onTagToggle = viewModel::onTagToggle,
             onCreateTag = viewModel::onCreateTag,
+            onSetTagParent = viewModel::onSetTagParent,
             onPinnedChange = viewModel::onPinnedChange,
             onAddSubtask = viewModel::onAddSubtask,
             onSubtaskToggle = viewModel::onSubtaskToggle,
@@ -206,6 +217,7 @@ fun TaskEditContent(
     var showTimePicker by rememberSaveable { mutableStateOf(false) }
     var showRecurrence by rememberSaveable { mutableStateOf(false) }
     var showNewTag by rememberSaveable { mutableStateOf(false) }
+    var movingTagId by rememberSaveable { mutableStateOf<String?>(null) }
     var reminderStep by remember { mutableStateOf<ReminderStep>(ReminderStep.None) }
     val confetti = rememberConfettiController()
 
@@ -413,10 +425,11 @@ fun TaskEditContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     state.availableTags.forEach { tag ->
-                        FilterChip(
+                        TagChip(
+                            tag = tag,
                             selected = state.tags.any { it.id == tag.id },
                             onClick = { actions.onTagToggle(tag) },
-                            label = { Text("#${tag.name}") },
+                            onMove = { movingTagId = tag.id },
                         )
                     }
                     AssistChip(
@@ -486,6 +499,18 @@ fun TaskEditContent(
         onAddAtTime = actions.onAddAtTime,
     )
 
+    state.availableTags.firstOrNull { it.id == movingTagId }?.let { moving ->
+        ParentDialog(
+            tag = moving,
+            options = state.availableTags.possibleParentsOf(moving.id),
+            onPick = { parentId ->
+                actions.onSetTagParent(moving.id, parentId)
+                movingTagId = null
+            },
+            onDismiss = { movingTagId = null },
+        )
+    }
+
     if (showNewTag) {
         NameDialog(
             title = stringResource(R.string.new_tag),
@@ -499,6 +524,36 @@ fun TaskEditContent(
             onDismiss = { showNewTag = false },
         )
     }
+}
+
+/**
+ * A tag to pick for the task. A long press asks which tag it goes under, the same as on the Tags
+ * screen; the tap that ends a long press does not also pick the tag.
+ */
+@Composable
+private fun TagChip(tag: Tag, selected: Boolean, onClick: () -> Unit, onMove: () -> Unit) {
+    val interactions = remember { MutableInteractionSource() }
+    val longPressMillis = LocalViewConfiguration.current.longPressTimeoutMillis
+    val currentMove by rememberUpdatedState(onMove)
+    var longPressed by remember { mutableStateOf(false) }
+    LaunchedEffect(interactions, longPressMillis) {
+        interactions.interactions.collectLatest { interaction ->
+            if (interaction is PressInteraction.Press) {
+                longPressed = false
+                delay(longPressMillis)
+                longPressed = true
+                currentMove()
+            }
+        }
+    }
+    val moveLabel = stringResource(R.string.tag_move_under)
+    FilterChip(
+        selected = selected,
+        onClick = { if (!longPressed) onClick() },
+        label = { Text(tag.name) },
+        interactionSource = interactions,
+        modifier = Modifier.semantics { onLongClick(label = moveLabel) { onMove(); true } },
+    )
 }
 
 @Composable

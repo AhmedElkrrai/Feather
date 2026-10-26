@@ -235,7 +235,7 @@ fun TaskRow(
                         // Every tag shows; the row wraps onto another line when there are many.
                         for (tag in task.tags) {
                             MetaChip(
-                                text = "#${tag.name}",
+                                text = tag.name,
                                 container = scheme.primaryContainer,
                                 content = scheme.onPrimaryContainer,
                             )

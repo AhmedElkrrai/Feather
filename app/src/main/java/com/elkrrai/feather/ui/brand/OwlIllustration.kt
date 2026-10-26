@@ -71,7 +71,8 @@ private val Hats = intArrayOf(
  *
  * [flightTrigger] counts up each time the owl should fly a lap and land again ([birdFlightPose]);
  * nothing happens when movement is not allowed or Little celebrations is off. Without movement the
- * owl keeps its calm pose. What it [dress] is worn only by the resting owl.
+ * owl keeps its calm pose. What it [dress] is worn only by the resting owl, which does not preen
+ * when [preens] is false (the preen pose is drawn without clothes).
  */
 @Composable
 fun OwlIllustration(
@@ -80,6 +81,7 @@ fun OwlIllustration(
     contentDescription: String? = null,
     flightTrigger: Int = 0,
     dress: OwlDress = OwlDress.None,
+    preens: Boolean = true,
 ) {
     val allowed = rememberBirdMotionAllowed()
     val flight = remember { Animatable(0f) }
@@ -104,7 +106,7 @@ fun OwlIllustration(
                 .graphicsLayer { alpha = if (flying) 1f - flightBlend(flight.value) else 1f },
         ) {
             when (mood) {
-                BirdMood.IDLE -> IdleOwl(dress)
+                BirdMood.IDLE -> IdleOwl(dress, preens)
                 BirdMood.SLEEPING -> SleepingOwl(allowed)
                 BirdMood.HAPPY, BirdMood.FLYING -> {
                     val phase = rememberAmbientPhase(periodMillis(mood), enabled = allowed)
@@ -126,7 +128,7 @@ internal fun Modifier.describedAs(description: String?): Modifier =
 
 /** The upright owl, three quarters on, with separate head, wing and eye layers. */
 @Composable
-private fun IdleOwl(dress: OwlDress) {
+private fun IdleOwl(dress: OwlDress, preens: Boolean) {
     val motionAllowed = rememberBirdMotionAllowed()
     val breathing = remember { Animatable(0f) }
     val headTilt = remember { Animatable(0f) }
@@ -142,7 +144,7 @@ private fun IdleOwl(dress: OwlDress) {
         }
     }
 
-    LaunchedEffect(motionAllowed) {
+    LaunchedEffect(motionAllowed, preens) {
         headTilt.snapTo(0f)
         preenPose.snapTo(0f)
         eyesOpen = true
@@ -162,11 +164,13 @@ private fun IdleOwl(dress: OwlDress) {
             headTilt.animateTo(0f, tween(HEAD_RETURN_MILLIS, easing = LinearOutSlowInEasing))
 
             delay(BEFORE_PREEN_MILLIS)
-            eyesOpen = false
-            preenPose.animateTo(1f, tween(PREEN_TRANSITION_MILLIS, easing = FastOutSlowInEasing))
-            delay(PREEN_HOLD_MILLIS)
-            preenPose.animateTo(0f, tween(PREEN_TRANSITION_MILLIS, easing = LinearOutSlowInEasing))
-            eyesOpen = true
+            if (preens) {
+                eyesOpen = false
+                preenPose.animateTo(1f, tween(PREEN_TRANSITION_MILLIS, easing = FastOutSlowInEasing))
+                delay(PREEN_HOLD_MILLIS)
+                preenPose.animateTo(0f, tween(PREEN_TRANSITION_MILLIS, easing = LinearOutSlowInEasing))
+                eyesOpen = true
+            }
             delay(REST_AFTER_PREEN_MILLIS)
         }
     }
@@ -204,14 +208,17 @@ private fun IdleOwl(dress: OwlDress) {
                 Spectacles.getOrNull(dress.glasses)?.let { OwlLayer(it) }
                 Hats.getOrNull(dress.hat)?.let { OwlLayer(it, Modifier.graphicsLayer { translationY = -size.height * HAT_LIFT }) }
             }
-            Canvas(Modifier.fillMaxSize()) {
-                drawEmblem(
-                    center = Offset(size.width * CHEST_GLOW_X, size.height * CHEST_GLOW_Y),
-                    halfWidth = CHEST_EMBLEM_HALF_WIDTH,
-                    halfHeight = CHEST_EMBLEM_HALF_HEIGHT,
-                    glowRadius = CHEST_GLOW_RADIUS + CHEST_GLOW_BREATH_RADIUS * breathing.value,
-                    glowAlpha = CHEST_GLOW_BASE_ALPHA + CHEST_GLOW_BREATH_ALPHA * breathing.value,
-                )
+            // the glowing rune on the chest is covered by a scarf
+            if (Scarves.getOrNull(dress.scarf) == null) {
+                Canvas(Modifier.fillMaxSize()) {
+                    drawEmblem(
+                        center = Offset(size.width * CHEST_GLOW_X, size.height * CHEST_GLOW_Y),
+                        halfWidth = CHEST_EMBLEM_HALF_WIDTH,
+                        halfHeight = CHEST_EMBLEM_HALF_HEIGHT,
+                        glowRadius = CHEST_GLOW_RADIUS + CHEST_GLOW_BREATH_RADIUS * breathing.value,
+                        glowAlpha = CHEST_GLOW_BASE_ALPHA + CHEST_GLOW_BREATH_ALPHA * breathing.value,
+                    )
+                }
             }
         }
         OwlLayer(R.drawable.owl_preen, Modifier.graphicsLayer { alpha = preenPose.value })

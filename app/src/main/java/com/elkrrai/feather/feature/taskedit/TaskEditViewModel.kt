@@ -146,7 +146,7 @@ class TaskEditViewModel @Inject constructor(
     fun onCreateTag(name: String) {
         viewModelScope.launch {
             val tag = try {
-                tagRepository.createTag(name)
+                tagRepository.createTagPath(name)
             } catch (e: IllegalArgumentException) {
                 return@launch // blank name
             }
@@ -154,6 +154,11 @@ class TaskEditViewModel @Inject constructor(
                 if (state.tags.any { it.id == tag.id }) state else state.copy(tags = state.tags + tag)
             }
         }
+    }
+
+    /** Puts [tagId] under [parentId] (the top level when null); moves that would loop are refused. */
+    fun onSetTagParent(tagId: String, parentId: String?) {
+        viewModelScope.launch { tagRepository.setParent(tagId, parentId) }
     }
 
     /** Adds a reminder [minutes] before the due moment (0 = at the due moment), once per schedule. */

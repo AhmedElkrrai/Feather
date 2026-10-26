@@ -31,7 +31,7 @@ class QuickAddTask(
 
         val fromText = parsed.tags.mapNotNull { name ->
             try {
-                tags.createTag(name)
+                tags.createTagPath(name)
             } catch (e: IllegalArgumentException) {
                 null // a blank name
             }
