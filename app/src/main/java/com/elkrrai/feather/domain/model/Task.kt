@@ -34,6 +34,8 @@ data class Task(
     val deletedAt: Instant? = null,
     /** When this task was last finished (a repeating task keeps going, so this is its history); null if never. */
     val lastCompletedAt: Instant? = null,
+    /** A target to count toward in steps, or null. A task has a counter or a checklist, not both. */
+    val counter: Counter? = null,
 ) {
     val isCompleted: Boolean get() = completedAt != null
 
@@ -47,5 +49,9 @@ data class Task(
 
     /** How a resting task is shown in a Done section: finished, with its checklist ticked. */
     fun asFinishedToday(): Task =
-        copy(completedAt = lastCompletedAt, subtasks = subtasks.map { it.copy(isCompleted = true) })
+        copy(
+            completedAt = lastCompletedAt,
+            subtasks = subtasks.map { it.copy(isCompleted = true) },
+            counter = counter?.let { it.copy(done = it.target) },
+        )
 }

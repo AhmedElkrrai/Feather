@@ -454,6 +454,24 @@
     <string name="today_all_done">All done.</string>
     <string name="today_nothing_planned">Nothing planned today</string>
     <string name="subtasks_of">%1$d of %2$d</string>
+    <string name="field_counter">Counter</string>
+    <string name="counter_switch">Count toward a target</string>
+    <string name="counter_target">Target</string>
+    <string name="counter_step">Step</string>
+    <string name="counter_hint">Each tap on the task adds one step; leave the step empty to count one at a time.</string>
+    <string name="counter_needs_empty_checklist">Remove the checklist items first: a task has a counter or a checklist, not both.</string>
+    <string name="counter_setup_title">Count toward a target</string>
+    <string name="counter_remove">Remove the counter</string>
+    <string name="counter_chip">To %1$d by %2$d</string>
+    <string name="quick_add_tool_counter">Count toward a target</string>
+    <string name="counter_of">%1$d / %2$d</string>
+    <string name="counter_step_label">+%1$d</string>
+    <string name="counter_add_description">Add %1$d to %2$s</string>
+    <string name="counter_set_action">Set the count</string>
+    <string name="counter_set_title">Set the count</string>
+    <string name="counter_set_label">Done so far</string>
+    <string name="counter_set_of">Out of %1$d</string>
+    <string name="counter_take_back">Take back %1$d</string>
 
     <!-- Illustration kit: the sentence under each scene -->
     <string name="scene_empty_list">Nothing here yet. Add a thought and I’ll keep it warm.</string>

@@ -67,6 +67,23 @@ class FakeTaskRepository : TaskRepository {
         row.copy(task = row.task.copy(completedAt = if (completed) Instant.ofEpochSecond(1_000) else null))
     }
 
+    override suspend fun addToCounter(id: String, delta: Int) = change(id) { row ->
+        val counter = row.task.counter ?: return@change row
+        setCount(row, counter.plus(delta))
+    }
+
+    override suspend fun setCounterDone(id: String, done: Int) = change(id) { row ->
+        val counter = row.task.counter ?: return@change row
+        setCount(row, counter.copy(done = done.coerceIn(0, counter.target)))
+    }
+
+    private fun setCount(row: Row, counter: com.elkrrai.feather.domain.model.Counter): Row = row.copy(
+        task = row.task.copy(
+            counter = counter,
+            completedAt = if (counter.isFull) row.task.completedAt ?: Instant.ofEpochSecond(1_000) else null,
+        ),
+    )
+
     override suspend fun duplicateTask(id: String, title: String): Task? {
         val source = getTask(id) ?: return null
         val copy = addTask(title, source.dueDate)

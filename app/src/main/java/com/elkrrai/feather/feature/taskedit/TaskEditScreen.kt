@@ -74,6 +74,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -124,6 +125,10 @@ class TaskEditActions(
     val onCreateTag: (String) -> Unit,
     val onSetTagParent: (tagId: String, parentId: String?) -> Unit = { _, _ -> },
     val onPinnedChange: (Boolean) -> Unit,
+    val onCounterToggle: (Boolean) -> Unit = {},
+    val onCounterTargetChange: (String) -> Unit = {},
+    val onCounterStepChange: (String) -> Unit = {},
+    val onCounterDoneChange: (String) -> Unit = {},
     val onAddSubtask: (String) -> Unit,
     val onSubtaskToggle: (String) -> Unit,
     val onSubtaskTitleChange: (id: String, title: String) -> Unit,
@@ -183,6 +188,10 @@ fun TaskEditScreen(
             onCreateTag = viewModel::onCreateTag,
             onSetTagParent = viewModel::onSetTagParent,
             onPinnedChange = viewModel::onPinnedChange,
+            onCounterToggle = viewModel::onCounterToggle,
+            onCounterTargetChange = viewModel::onCounterTargetChange,
+            onCounterStepChange = viewModel::onCounterStepChange,
+            onCounterDoneChange = viewModel::onCounterDoneChange,
             onAddSubtask = viewModel::onAddSubtask,
             onSubtaskToggle = viewModel::onSubtaskToggle,
             onSubtaskTitleChange = viewModel::onSubtaskTitleChange,
@@ -439,8 +448,15 @@ fun TaskEditContent(
                 }
             }
 
-            FieldSection(label = stringResource(R.string.field_subtasks)) {
-                SubtasksEditor(state.subtasks, actions, onCelebrate = confetti::celebrate)
+            FieldSection(label = stringResource(R.string.field_counter)) {
+                CounterEditor(state, actions)
+            }
+
+            // A task has a counter or a checklist, not both.
+            if (!state.counterOn) {
+                FieldSection(label = stringResource(R.string.field_subtasks)) {
+                    SubtasksEditor(state.subtasks, actions, onCelebrate = confetti::celebrate)
+                }
             }
 
             Row(
@@ -554,6 +570,72 @@ private fun TagChip(tag: Tag, selected: Boolean, onClick: () -> Unit, onMove: ()
         interactionSource = interactions,
         modifier = Modifier.semantics { onLongClick(label = moveLabel) { onMove(); true } },
     )
+}
+
+/** The switch that makes the task a counter, and its target, step and (when editing) count so far. */
+@Composable
+private fun CounterEditor(state: TaskEditUiState, actions: TaskEditActions) {
+    val checklistInTheWay = !state.counterOn && state.subtasks.isNotEmpty()
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = stringResource(R.string.counter_switch),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = state.counterOn,
+                onCheckedChange = actions.onCounterToggle,
+                enabled = !checklistInTheWay,
+            )
+        }
+        if (checklistInTheWay) {
+            Text(
+                text = stringResource(R.string.counter_needs_empty_checklist),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (state.counterOn) {
+            val target = state.counterTarget.toIntOrNull()
+            val step = state.counterStep.toIntOrNull()
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = state.counterTarget,
+                    onValueChange = actions.onCounterTargetChange,
+                    label = { Text(stringResource(R.string.counter_target)) },
+                    isError = target == null || target < 1,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = state.counterStep,
+                    onValueChange = actions.onCounterStepChange,
+                    label = { Text(stringResource(R.string.counter_step)) },
+                    isError = step != null && target != null && step > target,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+                if (!state.isNew) {
+                    OutlinedTextField(
+                        value = state.counterDone,
+                        onValueChange = actions.onCounterDoneChange,
+                        label = { Text(stringResource(R.string.counter_set_label)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+            Text(
+                text = stringResource(R.string.counter_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
 }
 
 @Composable

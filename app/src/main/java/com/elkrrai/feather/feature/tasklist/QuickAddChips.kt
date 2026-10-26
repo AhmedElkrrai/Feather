@@ -56,6 +56,7 @@ internal fun fieldTint(field: QuickAddField, scheme: ColorScheme): FieldTint = w
 
     QuickAddField.PRIORITY -> FieldTint(scheme.tertiaryContainer, scheme.onTertiaryContainer)
     QuickAddField.TAGS, QuickAddField.LIST -> FieldTint(scheme.primaryContainer, scheme.onPrimaryContainer)
+    QuickAddField.COUNTER -> FieldTint(scheme.tertiaryContainer, scheme.onTertiaryContainer)
 }
 
 @DrawableRes
@@ -66,6 +67,7 @@ private fun QuickAddField.iconRes(): Int? = when (this) {
     QuickAddField.PRIORITY -> R.drawable.ic_flag
     QuickAddField.TAGS -> R.drawable.ic_tag
     QuickAddField.LIST -> null
+    QuickAddField.COUNTER -> R.drawable.ic_counter
 }
 
 private const val CHIP_STAGGER_MILLIS = 40

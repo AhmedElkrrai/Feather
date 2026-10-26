@@ -8,6 +8,7 @@ import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.Reminder
 import com.elkrrai.feather.domain.model.ReminderKind
 import com.elkrrai.feather.domain.model.Subtask
+import com.elkrrai.feather.domain.model.Counter
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.domain.recurrence.Recurrence
@@ -43,6 +44,11 @@ data class TaskEditUiState(
     val reminders: List<Reminder> = emptyList(),
     /** How the task repeats, or null. A repeating task always has a due date. */
     val recurrence: Recurrence? = null,
+    /** Whether the task counts toward a target, and the three numbers as they are typed. */
+    val counterOn: Boolean = false,
+    val counterTarget: String = "",
+    val counterStep: String = "",
+    val counterDone: String = "",
     val availableTags: List<Tag> = emptyList(),
     val isSaving: Boolean = false,
     /** Set once the task was duplicated; the screen then opens the copy. */
@@ -50,7 +56,11 @@ data class TaskEditUiState(
     /** Set once the task was saved (or turned out not to exist); the screen then navigates back. */
     val finished: Boolean = false,
 ) {
-    val canSave: Boolean get() = title.isNotBlank() && !isSaving
+    /** The counter the numbers make, or null when the task has none or the target is missing. */
+    val counter: Counter?
+        get() = if (counterOn) Counter.of(counterTarget.toIntOrNull(), counterStep.toIntOrNull(), counterDone.toIntOrNull() ?: 0) else null
+
+    val canSave: Boolean get() = title.isNotBlank() && !isSaving && (!counterOn || counter != null)
 }
 
 @HiltViewModel
@@ -99,6 +109,10 @@ class TaskEditViewModel @Inject constructor(
                     subtasks = task.subtasks,
                     reminders = task.reminders.filter { r -> r.kind != ReminderKind.SNOOZE },
                     recurrence = task.recurrence,
+                    counterOn = task.counter != null,
+                    counterTarget = task.counter?.target?.toString().orEmpty(),
+                    counterStep = task.counter?.step?.toString().orEmpty(),
+                    counterDone = task.counter?.done?.toString().orEmpty(),
                 )
             }
         }
@@ -129,6 +143,22 @@ class TaskEditViewModel @Inject constructor(
             dueDate = if (recurrence != null && it.dueDate == null) LocalDate.now() else it.dueDate,
         )
     }
+
+    /** Turning the counter on starts from 10 in steps of 1; the numbers typed before are kept when it is turned off. */
+    fun onCounterToggle(on: Boolean) = _uiState.update {
+        it.copy(
+            counterOn = on,
+            counterTarget = if (on && it.counterTarget.isBlank()) "10" else it.counterTarget,
+            counterStep = if (on && it.counterStep.isBlank()) "1" else it.counterStep,
+            counterDone = if (on && it.counterDone.isBlank()) "0" else it.counterDone,
+        )
+    }
+
+    fun onCounterTargetChange(text: String) = _uiState.update { it.copy(counterTarget = text.filter(Char::isDigit).take(5)) }
+
+    fun onCounterStepChange(text: String) = _uiState.update { it.copy(counterStep = text.filter(Char::isDigit).take(5)) }
+
+    fun onCounterDoneChange(text: String) = _uiState.update { it.copy(counterDone = text.filter(Char::isDigit).take(5)) }
 
     fun onDueTimeChange(time: LocalTime?) = _uiState.update { it.copy(dueTime = time) }
 
@@ -215,6 +245,7 @@ class TaskEditViewModel @Inject constructor(
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             val base = original ?: tasks.addTask(state.title)
+            val counter = state.counter
             tasks.saveTaskDetails(
                 base.copy(
                     title = state.title.trim(),
@@ -224,13 +255,18 @@ class TaskEditViewModel @Inject constructor(
                     priority = state.priority,
                     isPinned = state.isPinned,
                     tags = state.tags,
-                    subtasks = state.subtasks,
+                    // a task has a counter or a checklist, not both
+                    subtasks = if (counter != null) emptyList() else state.subtasks,
                     reminders = state.reminders,
                     recurrence = state.recurrence,
+                    counter = counter,
                 )
             )
-            // A checklist with every item ticked means the task is done.
-            if (!base.isCompleted && state.subtasks.isNotEmpty() && state.subtasks.all { it.isCompleted }) {
+            if (counter != null) {
+                // Reaching the target finishes the task; a count below it reopens a finished one.
+                tasks.setCounterDone(base.id, counter.done)
+            } else if (!base.isCompleted && state.subtasks.isNotEmpty() && state.subtasks.all { it.isCompleted }) {
+                // A checklist with every item ticked means the task is done.
                 tasks.setCompleted(base.id, true)
             }
             _uiState.update { it.copy(isSaving = false, finished = true) }

@@ -1,12 +1,13 @@
 package com.elkrrai.feather.domain.quickadd
 
+import com.elkrrai.feather.domain.model.Counter
 import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import java.time.LocalDate
 import java.time.LocalTime
 
 /** The parts of a quick-add text the parser can recognize; each one can be switched off. */
-enum class QuickAddField { DATE, TIME, PRIORITY, TAGS, LIST, REPEAT }
+enum class QuickAddField { DATE, TIME, PRIORITY, TAGS, LIST, REPEAT, COUNTER }
 
 /**
  * Where a recognized part of the text sits: the [field] it was understood as, and the characters
@@ -32,6 +33,8 @@ data class ParsedQuickAdd(
     val listName: String? = null,
     val recurrence: Recurrence? = null,
     val dateIsImplied: Boolean = false,
+    /** A target to count toward, chosen with the counter tool (it is not read from the text). */
+    val counter: Counter? = null,
 ) {
     /**
      * Where each recognized part sits in the text, so it can be shown in place (tinted). Set by the
@@ -49,5 +52,6 @@ data class ParsedQuickAdd(
             if (tags.isNotEmpty()) add(QuickAddField.TAGS)
             if (listName != null) add(QuickAddField.LIST)
             if (recurrence != null) add(QuickAddField.REPEAT)
+            if (counter != null) add(QuickAddField.COUNTER)
         }
 }

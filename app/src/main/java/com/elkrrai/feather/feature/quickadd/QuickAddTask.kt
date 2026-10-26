@@ -43,7 +43,9 @@ class QuickAddTask(
         val time = parsed.dueTime.takeIf { hasDate }
         val recurrence = parsed.recurrence.takeIf { hasDate }
 
-        if (time == null && recurrence == null && parsed.priority == Priority.NONE && allTags.isEmpty()) {
+        if (time == null && recurrence == null && parsed.priority == Priority.NONE && allTags.isEmpty() &&
+            parsed.counter == null
+        ) {
             return created
         }
         val detailed = created.copy(
@@ -51,6 +53,7 @@ class QuickAddTask(
             priority = parsed.priority,
             tags = allTags,
             recurrence = recurrence,
+            counter = parsed.counter,
         )
         tasks.saveTaskDetails(detailed)
         return detailed

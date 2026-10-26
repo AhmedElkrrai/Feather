@@ -102,6 +102,9 @@ fun TaskRow(
     /** When both are set, the card can open to show its subtasks and take a new one. */
     onAddSubtask: ((title: String) -> Unit)? = null,
     onToggleSubtask: ((subtaskId: String) -> Unit)? = null,
+    /** For a counter task: add to the count (the "+25" button, or a step taken back), and set it exactly. */
+    onCounterAdd: ((amount: Int) -> Unit)? = null,
+    onCounterSet: ((done: Int) -> Unit)? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
     val feather = MaterialTheme.featherColors
@@ -131,7 +134,11 @@ fun TaskRow(
     val subtaskTotal = task.subtasks.size
     val subtasksDone = task.subtasks.count { it.isCompleted }
     val hasChips = due != null || recurrence != null || task.tags.isNotEmpty()
-    val canExpand = onAddSubtask != null && onToggleSubtask != null && !task.isCompleted
+    val counter = task.counter
+    val counterState = counter?.let { stringResource(R.string.subtasks_of, it.done, it.target) }
+    val canExpand = onAddSubtask != null && onToggleSubtask != null && !task.isCompleted && counter == null
+    val showCounterButton = counter != null && !task.isCompleted && onCounterAdd != null
+    var counterDialog by rememberSaveable(task.id) { mutableStateOf(false) }
     var expanded by rememberSaveable(task.id) { mutableStateOf(false) }
 
     val baseColor = if (selected) scheme.secondaryContainer else feather.card
@@ -157,7 +164,7 @@ fun TaskRow(
                 )
                 .semantics {
                     this.selected = selected
-                    if (waiting) stateDescription = waitingLabel
+                    if (waiting) stateDescription = waitingLabel else if (counterState != null) stateDescription = counterState
                     customActions = buildList {
                         add(CustomAccessibilityAction(doneActionLabel) { onToggle(!task.isCompleted); true })
                         if (onDelete != null) add(CustomAccessibilityAction(deleteLabel) { onDelete(); true })
@@ -257,6 +264,21 @@ fun TaskRow(
                         )
                     }
                 }
+                // A counter task shows how far it has got, with the count beside the bar.
+                if (counter != null) {
+                    Spacer(Modifier.height(Space.x2))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+                    ) {
+                        SubtaskProgressBar(done = counter.done, total = counter.target, modifier = Modifier.weight(1f))
+                        Text(
+                            text = stringResource(R.string.counter_of, counter.done, counter.target),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = scheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 if (canExpand) {
                     AnimatedVisibility(
                         visible = expanded,
@@ -277,7 +299,7 @@ fun TaskRow(
                 }
             }
 
-            if (task.isPinned || hasReminder || dragHandle != null || canExpand) {
+            if (task.isPinned || hasReminder || dragHandle != null || canExpand || showCounterButton) {
                 Row(
                     modifier = Modifier.height(48.dp).padding(start = Space.x2),
                     verticalAlignment = Alignment.CenterVertically,
@@ -324,9 +346,33 @@ fun TaskRow(
                             )
                         }
                     }
+                    if (showCounterButton && counter != null && onCounterAdd != null) {
+                        CounterStepButton(
+                            counter = counter,
+                            title = task.title,
+                            onAdd = onCounterAdd,
+                            onLongClick = { counterDialog = true },
+                            onCelebrate = onCelebrate,
+                        )
+                    }
                     dragHandle?.invoke()
                 }
             }
         }
+    }
+
+    if (counterDialog && counter != null && onCounterAdd != null && onCounterSet != null) {
+        CounterDialog(
+            counter = counter,
+            onSet = { done ->
+                onCounterSet(done)
+                counterDialog = false
+            },
+            onTakeBack = {
+                onCounterAdd(-minOf(counter.step, counter.done))
+                counterDialog = false
+            },
+            onDismiss = { counterDialog = false },
+        )
     }
 }

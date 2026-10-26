@@ -66,6 +66,9 @@ interface TaskDao {
     )
     suspend fun completeSubtasks(parentId: String, completedAt: Long)
 
+    @Query("UPDATE tasks SET counterDone = :done, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun setCounterDone(id: String, done: Int, updatedAt: Long)
+
     @Query("UPDATE tasks SET sortOrder = :sortOrder, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setSortOrder(id: String, sortOrder: Long, updatedAt: Long)
 

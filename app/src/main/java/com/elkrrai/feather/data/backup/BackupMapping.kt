@@ -31,6 +31,9 @@ fun TaskEntity.toRecord() = TaskRecord(
     isPinned = isPinned,
     rrule = rrule,
     repeatMode = repeatMode,
+    counterTarget = counterTarget,
+    counterStep = counterStep,
+    counterDone = counterDone,
 )
 
 /** Every task is kept in the Inbox, whatever list an older file says it was in. */
@@ -51,6 +54,9 @@ fun TaskRecord.toEntity() = TaskEntity(
     isPinned = isPinned,
     rrule = rrule,
     repeatMode = repeatMode,
+    counterTarget = counterTarget,
+    counterStep = counterStep,
+    counterDone = counterDone,
 )
 
 fun TaskTagCrossRef.toRecord() = TaskTagRecord(taskId, tagId)

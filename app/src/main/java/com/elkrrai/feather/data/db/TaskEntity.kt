@@ -44,4 +44,8 @@ data class TaskEntity(
     // Added in schema v4. [rrule] is an RFC 5545 style rule; [repeatMode] is a `RepeatMode` code.
     val rrule: String? = null,
     @ColumnInfo(defaultValue = "0") val repeatMode: Int = 0,
+    // Added in schema v8: a counter task counts [counterDone] up to [counterTarget] in steps of [counterStep].
+    val counterTarget: Int? = null,
+    val counterStep: Int? = null,
+    @ColumnInfo(defaultValue = "0") val counterDone: Int = 0,
 )

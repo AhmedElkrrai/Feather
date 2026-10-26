@@ -286,6 +286,8 @@ fun TaskListScreen(
             },
             onAddSubtask = viewModel::addSubtask,
             onToggleSubtask = viewModel::toggleSubtask,
+            onCounterAdd = viewModel::addToCounter,
+            onCounterSet = viewModel::setCounter,
             onTagFilterChange = viewModel::selectTagFilter,
         )
         FeatherConfettiOverlay(confetti)
@@ -360,6 +362,8 @@ fun TaskListContent(
     onCelebrate: (Offset, Float) -> Unit = { _, _ -> },
     onAddSubtask: (taskId: String, title: String) -> Unit = { _, _ -> },
     onToggleSubtask: (taskId: String, subtaskId: String) -> Unit = { _, _ -> },
+    onCounterAdd: (taskId: String, amount: Int) -> Unit = { _, _ -> },
+    onCounterSet: (taskId: String, done: Int) -> Unit = { _, _ -> },
     onClearCompleted: () -> Unit = {},
     onFly: (from: Offset, to: Offset?) -> Unit = { _, _ -> },
     onWarmFeathers: (Offset) -> Unit = {},
@@ -681,6 +685,25 @@ fun TaskListContent(
                                         lingerFinished()
                                     }
                                     onToggleSubtask(task.id, subtaskId)
+                                },
+                                onCounterAdd = { amount ->
+                                    // The step that reaches the target finishes the task: let the row linger like a ring tick.
+                                    val counter = task.counter
+                                    if (counter != null && !task.isCompleted && counter.done + amount >= counter.target &&
+                                        !reduceMotion && !usesOrderCopy
+                                    ) {
+                                        lingerFinished()
+                                    }
+                                    onCounterAdd(task.id, amount)
+                                },
+                                onCounterSet = { done ->
+                                    val counter = task.counter
+                                    if (counter != null && !task.isCompleted && done >= counter.target &&
+                                        !reduceMotion && !usesOrderCopy
+                                    ) {
+                                        lingerFinished()
+                                    }
+                                    onCounterSet(task.id, done)
                                 },
                                 // No drag grip for now: it felt odd (see TODO.md). TalkBack can still move rows up and down.
                                 dragHandle = null,

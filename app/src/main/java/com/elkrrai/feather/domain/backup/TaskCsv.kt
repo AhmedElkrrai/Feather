@@ -16,7 +16,7 @@ object TaskCsv {
 
     val HEADER: List<String> = listOf(
         "Title", "Notes", "Due date", "Due time", "Priority", "Status",
-        "Completed at", "Tags", "Repeat", "Subtasks",
+        "Completed at", "Tags", "Repeat", "Subtasks", "Counter",
     )
 
     fun build(tasks: List<Task>): String {
@@ -32,6 +32,7 @@ object TaskCsv {
                 task.tags.joinToString("; ") { it.name },
                 repeatText(task),
                 task.subtasks.joinToString(" | ") { (if (it.isCompleted) "[x] " else "[ ] ") + it.title },
+                task.counter?.let { "${it.done}/${it.target} by ${it.step}" }.orEmpty(),
             )
         }
         return BYTE_ORDER_MARK + (listOf(HEADER) + rows).joinToString(LINE_BREAK, postfix = LINE_BREAK) { row ->

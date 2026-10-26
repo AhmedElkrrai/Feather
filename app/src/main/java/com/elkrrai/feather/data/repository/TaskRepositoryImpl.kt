@@ -86,6 +86,8 @@ class TaskRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveTaskDetails(task: Task) {
+        // A task has a counter or a checklist, not both: a counter leaves no checklist behind.
+        val task = if (task.counter != null && task.subtasks.isNotEmpty()) task.copy(subtasks = emptyList()) else task
         tx.run {
             val before = taskDao.getById(task.id)
             saveTask(task)
@@ -184,6 +186,12 @@ class TaskRepositoryImpl @Inject constructor(
         }
         completionDao.deleteForTaskAt(task.id, finishedAt)
         taskDao.setCompletedAt(task.id, completedAt = null, updatedAt = clock.millis())
+        // A counter that is open again is one step short, so it is not "full and open".
+        val target = task.counterTarget
+        if (target != null) {
+            val step = (task.counterStep ?: 1).coerceAtLeast(1)
+            taskDao.setCounterDone(task.id, (target - step).coerceAtLeast(0), clock.millis())
+        }
     }
 
     /**
@@ -198,7 +206,14 @@ class TaskRepositoryImpl @Inject constructor(
         val today = LocalDate.now(clock.withZone(ZoneId.systemDefault()))
         if (Instant.ofEpochMilli(last.completedAt).atZone(ZoneId.systemDefault()).toLocalDate() != today) return
         val restored = recurrence.copy(count = recurrence.count?.plus(1))
-        taskDao.upsert(task.copy(dueDate = dueBefore, rrule = restored.toRule(), updatedAt = clock.millis()))
+        taskDao.upsert(
+            task.copy(
+                dueDate = dueBefore,
+                rrule = restored.toRule(),
+                updatedAt = clock.millis(),
+                counterDone = task.counterTarget ?: 0,
+            )
+        )
         completionDao.deleteForTaskAt(task.id, last.completedAt)
     }
 
@@ -222,8 +237,9 @@ class TaskRepositoryImpl @Inject constructor(
 
         if (due == null || recurrence == null || next == null) {
             taskDao.setCompletedAt(task.id, completedAt = now, updatedAt = now)
-            // A finished task has a finished checklist.
+            // A finished task has a finished checklist and a full count.
             taskDao.completeSubtasks(task.id, completedAt = now)
+            task.counterTarget?.let { taskDao.setCounterDone(task.id, it, now) }
         } else {
             advance(task, recurrence, due, next, now)
         }
@@ -235,7 +251,12 @@ class TaskRepositoryImpl @Inject constructor(
      */
     private suspend fun advance(task: TaskEntity, recurrence: Recurrence, due: LocalDate, next: LocalDate, now: Long) {
         taskDao.upsert(
-            task.copy(dueDate = next.toString(), rrule = recurrence.afterAdvance().toRule(), updatedAt = now)
+            task.copy(
+                dueDate = next.toString(),
+                rrule = recurrence.afterAdvance().toRule(),
+                updatedAt = now,
+                counterDone = 0,
+            )
         )
         taskDao.reopenSubtasks(task.id, updatedAt = now)
 
@@ -256,6 +277,33 @@ class TaskRepositoryImpl @Inject constructor(
         if (moved.isNotEmpty()) reminderDao.upsertAll(moved)
     }
 
+    override suspend fun addToCounter(id: String, delta: Int) {
+        tx.run {
+            val task = taskDao.getById(id) ?: return@run
+            if (task.counterTarget == null) return@run
+            applyCounter(task, task.counterDone + delta)
+        }
+    }
+
+    override suspend fun setCounterDone(id: String, done: Int) {
+        tx.run {
+            val task = taskDao.getById(id) ?: return@run
+            if (task.counterTarget == null) return@run
+            applyCounter(task, done)
+        }
+    }
+
+    /** Stores the new count; the target finishes the task, and a count below it reopens a finished one. */
+    private suspend fun applyCounter(task: TaskEntity, wanted: Int) {
+        val target = task.counterTarget ?: return
+        val done = wanted.coerceIn(0, target)
+        if (task.completedAt != null && done < target) reopen(task)
+        taskDao.setCounterDone(task.id, done, clock.millis())
+        if (done >= target && task.completedAt == null) {
+            taskDao.getById(task.id)?.let { complete(it) }
+        }
+    }
+
     override suspend fun duplicateTask(id: String, title: String): Task? {
         val source = getTask(id) ?: return null
         val copyId = tx.run {
@@ -272,6 +320,7 @@ class TaskRepositoryImpl @Inject constructor(
                         .filter { it.kind != ReminderKind.SNOOZE }
                         .map { it.copy(id = UUID.randomUUID().toString(), firedForTrigger = null) },
                     recurrence = source.recurrence,
+                    counter = source.counter?.reset(),
                 )
             )
             created.id

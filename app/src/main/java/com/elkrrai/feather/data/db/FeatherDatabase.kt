@@ -16,6 +16,7 @@ import androidx.room.migration.AutoMigrationSpec
  * - v6: tags.parentId (a tag can sit under another tag)
  * - v7: folders and saved_filters are dropped (lists, folders and filters left the app); task_lists stays,
  *   see [ListEntity]
+ * - v8: tasks.counterTarget, counterStep and counterDone (a task that counts toward a target)
  *
  * Migrations are never destructive for what the person made: users have real data. Exported schemas
  * live in `app/schemas`.
@@ -29,7 +30,7 @@ import androidx.room.migration.AutoMigrationSpec
         ReminderEntity::class,
         CompletionEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -38,6 +39,7 @@ import androidx.room.migration.AutoMigrationSpec
         AutoMigration(from = 4, to = 5),
         AutoMigration(from = 5, to = 6),
         AutoMigration(from = 6, to = 7, spec = FeatherDatabase.DropFoldersAndFilters::class),
+        AutoMigration(from = 7, to = 8),
     ],
 )
 abstract class FeatherDatabase : RoomDatabase() {

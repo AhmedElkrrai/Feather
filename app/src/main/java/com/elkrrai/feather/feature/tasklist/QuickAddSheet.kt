@@ -78,6 +78,7 @@ import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.recurrence.Frequency
 import com.elkrrai.feather.domain.recurrence.Recurrence
 import androidx.compose.material3.AlertDialog
+import com.elkrrai.feather.domain.model.Counter
 import com.elkrrai.feather.domain.model.Tag
 import com.elkrrai.feather.domain.model.asTagPath
 
@@ -124,6 +125,7 @@ fun QuickAddSheet(
     var toolPriority by remember { mutableStateOf<Priority?>(null) }
     var toolRepeat by remember { mutableStateOf<Frequency?>(null) }
     var toolTags by remember { mutableStateOf(emptyList<String>()) }
+    var toolCounter by remember { mutableStateOf<Counter?>(null) }
     val focusRequester = remember { FocusRequester() }
     val hintStore = remember { QuickAddHintStore(context) }
     var addsSoFar by remember { mutableIntStateOf(hintStore.count()) }
@@ -162,8 +164,8 @@ fun QuickAddSheet(
     val fromText = remember(text, ignored) {
         QuickAddParser.parse(text, LocalDateTime.now(), emptyList(), ignored)
     }
-    val parsed = remember(fromText, toolDate, toolPriority, toolRepeat, toolTags) {
-        fromText.withTools(toolDate, toolPriority, toolRepeat, toolTags)
+    val parsed = remember(fromText, toolDate, toolPriority, toolRepeat, toolTags, toolCounter) {
+        fromText.withTools(toolDate, toolPriority, toolRepeat, toolTags, toolCounter)
     }
     val today = LocalDate.now()
 
@@ -188,6 +190,7 @@ fun QuickAddSheet(
             QuickAddField.PRIORITY -> toolPriority = null
             QuickAddField.REPEAT -> toolRepeat = null
             QuickAddField.TAGS -> toolTags = emptyList()
+            QuickAddField.COUNTER -> toolCounter = null
             else -> Unit
         }
         ignored = ignored + field
@@ -264,6 +267,7 @@ fun QuickAddSheet(
                 if (parsed.tags.isNotEmpty()) {
                     add(QuickAddChip(QuickAddField.TAGS, parsed.tags.joinToString(", ") { it.asTagPath() }))
                 }
+                parsed.counter?.let { add(QuickAddChip(QuickAddField.COUNTER, stringResource(R.string.counter_chip, it.target, it.step))) }
             }
             QuickAddChips(
                 chips = chips,
@@ -282,6 +286,11 @@ fun QuickAddSheet(
                 onRepeat = { frequency ->
                     toolRepeat = frequency
                     chosen(QuickAddField.REPEAT)
+                },
+                counter = toolCounter,
+                onCounter = { counter ->
+                    toolCounter = counter
+                    chosen(QuickAddField.COUNTER)
                 },
                 onVoice = ::startVoice,
                 tags = tags,
@@ -309,6 +318,8 @@ private fun QuickAddTools(
     onDate: (LocalDate) -> Unit,
     onPriority: (Priority) -> Unit,
     onRepeat: (Frequency) -> Unit,
+    counter: Counter?,
+    onCounter: (Counter?) -> Unit,
     onVoice: () -> Unit,
     tags: List<Tag>,
     chosenTags: List<String>,
@@ -319,6 +330,7 @@ private fun QuickAddTools(
     var repeatMenu by remember { mutableStateOf(false) }
     var tagMenu by remember { mutableStateOf(false) }
     var newTagDialog by remember { mutableStateOf(false) }
+    var counterDialog by remember { mutableStateOf(false) }
 
     Row(horizontalArrangement = Arrangement.spacedBy(Space.x1), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = { showDatePicker = true }) {
@@ -401,9 +413,28 @@ private fun QuickAddTools(
             }
         }
 
+        IconButton(onClick = { counterDialog = true }) {
+            Icon(painterResource(R.drawable.ic_counter), stringResource(R.string.quick_add_tool_counter))
+        }
+
         IconButton(onClick = onVoice) {
             Icon(painterResource(R.drawable.ic_mic), stringResource(R.string.voice_input))
         }
+    }
+
+    if (counterDialog) {
+        CounterSetupDialog(
+            current = counter,
+            onSet = {
+                onCounter(it)
+                counterDialog = false
+            },
+            onRemove = {
+                onCounter(null)
+                counterDialog = false
+            },
+            onDismiss = { counterDialog = false },
+        )
     }
 
     if (newTagDialog) {
@@ -466,8 +497,10 @@ private fun ParsedQuickAdd.withTools(
     priority: Priority?,
     repeat: Frequency?,
     extraTags: List<String>,
+    counter: Counter?,
 ): ParsedQuickAdd {
     var result = this
+    if (counter != null) result = result.copy(counter = counter)
     if (extraTags.isNotEmpty()) {
         result = result.copy(tags = (result.tags + extraTags).distinctBy { it.lowercase() })
     }

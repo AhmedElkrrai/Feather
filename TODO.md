@@ -27,7 +27,7 @@ What felt odd, and ideas to try:
 - Release keystore, store graphics and screenshots, privacy contact address, Play policy forms.
 - Arabic copy is a draft for a native speaker to read through (everything added since M9).
 
-## Counter tasks (after the open items above are fixed)
+## Counter tasks (written on branch counter-tasks, not yet tried on a phone)
 A task can count toward a target, for example "do 100 pushups" done in sets of 25. Decided:
 - **A fixed step per task.** The card shows a progress bar ("40 / 100") and one "+25" button, one tap per set. No typing a number each time.
 - **Only the number is kept**, not a log of each set with its time (a log can be added later without changing the number).
@@ -37,6 +37,7 @@ A task can count toward a target, for example "do 100 pushups" done in sets of 2
 - **Counter or checklist, not both** on one task.
 - **Mistakes:** long-press the button (or edit the task) to subtract or set an exact number.
 - **Data:** new nullable columns on tasks (target, done count, step), a database migration, the same fields in backup files, a counter tool in the quick-add sheet, strings in English and Arabic, tests.
+- **Built as decided, plus:** the count stops at the target; opening a finished counter again takes its last step back (it is open, one step short), so it is never "full and open"; a copy of a counter task starts at 0; the CSV export has a "Counter" column; the long press on the +step button opens "Set the count" (type a number, or take a step back); the quick-add counter tool sets target and step (no typed syntax).
 - **Left out for now:** quick-add syntax (such as "pushups x100 by 25"), a log of sets, feeding the counts into Your rhythm.
 
 ## The owl (branch codex/cartoon-bird-redesign)

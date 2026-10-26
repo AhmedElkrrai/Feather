@@ -64,6 +64,10 @@ data class TaskRecord(
     val isPinned: Boolean = false,
     val rrule: String? = null,
     val repeatMode: Int = 0,
+    /** A counter task's target, step and count; absent in older backup files. */
+    val counterTarget: Int? = null,
+    val counterStep: Int? = null,
+    val counterDone: Int = 0,
 )
 
 @Serializable

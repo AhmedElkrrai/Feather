@@ -257,6 +257,16 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
+    /** Adds [amount] (it may be negative) to the count of the counter task [taskId]; the target finishes it. */
+    fun addToCounter(taskId: String, amount: Int) {
+        viewModelScope.launch { taskRepository.addToCounter(taskId, amount) }
+    }
+
+    /** Sets the count of the counter task [taskId] to [done]. */
+    fun setCounter(taskId: String, done: Int) {
+        viewModelScope.launch { taskRepository.setCounterDone(taskId, done) }
+    }
+
     // --- Selecting several tasks ---
 
     fun toggleSelected(taskId: String) {

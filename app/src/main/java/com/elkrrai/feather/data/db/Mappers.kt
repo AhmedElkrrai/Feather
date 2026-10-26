@@ -1,5 +1,6 @@
 package com.elkrrai.feather.data.db
 
+import com.elkrrai.feather.domain.model.Counter
 import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.Reminder
 import com.elkrrai.feather.domain.model.ReminderKind
@@ -35,6 +36,7 @@ fun TaskEntity.toDomain(
     reminders = reminders,
     recurrence = Recurrence.parse(rrule, RepeatMode.fromCode(repeatMode)),
     deletedAt = deletedAt?.let(Instant::ofEpochMilli),
+    counter = Counter.of(counterTarget, counterStep, counterDone),
 )
 
 /** Tags and subtasks live in their own rows and are written separately. Every task is kept in the Inbox. */
@@ -55,6 +57,9 @@ fun Task.toEntity(deletedAt: Long? = null): TaskEntity = TaskEntity(
     isPinned = isPinned,
     rrule = recurrence?.toRule(),
     repeatMode = recurrence?.mode?.code ?: RepeatMode.FIXED.code,
+    counterTarget = counter?.target,
+    counterStep = counter?.step,
+    counterDone = counter?.done ?: 0,
 )
 
 fun TaskEntity.toSubtask(): Subtask = Subtask(

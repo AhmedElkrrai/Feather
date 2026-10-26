@@ -45,6 +45,16 @@ interface TaskRepository {
      */
     suspend fun duplicateTask(id: String, title: String): Task?
 
+    /**
+     * Adds [delta] (it may be negative) to a counter task's count, kept between 0 and the target.
+     * Reaching the target finishes the task like ticking its ring; dropping below it reopens a
+     * finished one. Does nothing for a task that has no counter.
+     */
+    suspend fun addToCounter(id: String, delta: Int)
+
+    /** Sets a counter task's count to [done], with the same rules as [addToCounter]. */
+    suspend fun setCounterDone(id: String, done: Int)
+
     suspend fun setPinned(id: String, pinned: Boolean)
 
     /**
