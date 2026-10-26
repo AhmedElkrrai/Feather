@@ -142,10 +142,10 @@ internal class NestArt(
 )
 
 internal fun NestStyle.art() = when (this) {
-    NestStyle.BRAIDED -> NestArt(R.drawable.nest_braided_back, R.drawable.nest_braided_front, 701f / 920f, 0.64f, 0.72f)
-    NestStyle.TWIGS -> NestArt(R.drawable.nest_twigs_back, R.drawable.nest_twigs_front, 577f / 908f, 0.46f, 0.55f)
+    NestStyle.BRAIDED -> NestArt(R.drawable.nest_braided_back, R.drawable.nest_braided_front, 701f / 920f, 0.64f, 0.5f)
+    NestStyle.TWIGS -> NestArt(R.drawable.nest_twigs_back, R.drawable.nest_twigs_front, 577f / 908f, 0.46f, 0.45f)
     NestStyle.STRAW -> NestArt(R.drawable.nest_straw_back, R.drawable.nest_straw_front, 568f / 864f, 0.60f, 0.49f)
-    NestStyle.ROPE -> NestArt(R.drawable.nest_rope_back, R.drawable.nest_rope_front, 639f / 934f, 0.55f, 0.64f)
+    NestStyle.ROPE -> NestArt(R.drawable.nest_rope_back, R.drawable.nest_rope_front, 639f / 934f, 0.55f, 0.6f)
 }
 
 /** The whole nest of [this] style, to show it small, for choosing. */
