@@ -302,7 +302,7 @@ fun SettingsContent(
             ListItem(
                 leadingContent = {
                     Image(
-                        painter = painterResource(R.drawable.ic_bird_mark),
+                        painter = painterResource(R.drawable.settings_chick),
                         contentDescription = null,
                         modifier = Modifier.size(40.dp),
                     )

@@ -17,24 +17,25 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * Four hungry owlets in the nest the person chose, side by side, each rocking a little on its own
- * beat so they are never in step: one with its beak shut, one with it open, one wailing, one just
- * staring up with big eyes. With movement off they sit still.
+ * Three hungry owlets in the nest the person chose, side by side, each rocking a little on its own
+ * beat so they are never in step: one with its beak open, one wailing, one just staring up with
+ * big eyes. The nest is as wide as the picture and a little flattened. With movement off they sit
+ * still.
  */
 @Composable
 internal fun HungryChickScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifier) {
     val p = palette
     val moving = rememberBirdMotionAllowed()
     val art = DisplayPrefs.nestStyle.art()
-    // a big nest, nearly the width of the picture
-    val nestHeight = BIG_NEST_WIDTH * art.heightPerWidth
+    // a nest as wide as the picture, squashed down a little so it is wider than it is tall
+    val nestHeight = BIG_NEST_WIDTH * art.heightPerWidth * NEST_FLATTEN
     val nestTop = GROUND_LINE - nestHeight
     val nestLeft = (SCENE_BOARD - BIG_NEST_WIDTH) / 2f
     // the chicks sit with their feet at the floor of the nest, a little down into it
     val feet = nestTop + art.feet * nestHeight + CHICK_SINK
-    Layer { drawGround(p, y = 178f, halfWidth = 90f) }
+    Layer { drawGround(p, y = 178f, halfWidth = 96f) }
     NestLayer(art.back, nestTop, nestHeight, left = nestLeft, width = BIG_NEST_WIDTH)
-    // the two in the middle are a little further back, so they sit higher and are drawn first
+    // the one in the middle is a little further back, so it sits higher and is drawn first
     for (index in DRAW_ORDER) {
         val chick = Chicks[index]
         Chick(
@@ -63,13 +64,12 @@ private class ChickSpot(
 )
 
 private val Chicks = listOf(
-    ChickSpot(R.drawable.chick_0, centre = -68f, lift = 3f, wobbleMillis = 2_300, degrees = 5f, startAt = 0.00f),
-    ChickSpot(R.drawable.chick_1, centre = -23f, lift = -3f, wobbleMillis = 1_900, degrees = 4.5f, startAt = 0.35f),
-    ChickSpot(R.drawable.chick_2, centre = 23f, lift = -3f, wobbleMillis = 2_600, degrees = 5.5f, startAt = 0.70f),
-    ChickSpot(R.drawable.chick_3, centre = 68f, lift = 3f, wobbleMillis = 2_100, degrees = 4f, startAt = 0.15f),
+    ChickSpot(R.drawable.chick_0, centre = -50f, lift = 3f, wobbleMillis = 2_300, degrees = 5f, startAt = 0.00f),
+    ChickSpot(R.drawable.chick_1, centre = 0f, lift = -3f, wobbleMillis = 1_900, degrees = 4.5f, startAt = 0.40f),
+    ChickSpot(R.drawable.chick_2, centre = 50f, lift = 3f, wobbleMillis = 2_600, degrees = 5.5f, startAt = 0.75f),
 )
 
-private val DRAW_ORDER = listOf(1, 2, 0, 3)
+private val DRAW_ORDER = listOf(1, 0, 2)
 
 /** One chick, rocking about its feet. */
 @Composable
@@ -102,10 +102,11 @@ private fun SceneScope.Chick(
 }
 
 // Each chick's picture is about 0.8 as wide as it is tall.
-private const val CHICK_HEIGHT = 60f
+private const val CHICK_HEIGHT = 70f
 private const val CHICK_WIDTH = CHICK_HEIGHT * 0.797f
 private const val CHICK_SINK = 3f
 private const val WOBBLE_STRETCH = 0.012f
 
-/** The nest here is nearly as wide as the picture. */
-private const val BIG_NEST_WIDTH = 190f
+/** The nest here is as wide as the picture, and this much as tall as its drawing would be. */
+private const val BIG_NEST_WIDTH = SCENE_BOARD
+private const val NEST_FLATTEN = 0.8f

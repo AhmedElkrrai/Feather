@@ -30,8 +30,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
@@ -41,7 +39,10 @@ import com.elkrrai.feather.ui.brand.flapAt
 import com.elkrrai.feather.ui.brand.foldAt
 import com.elkrrai.feather.ui.brand.smoothStep
 import com.elkrrai.feather.ui.brand.rememberBirdMotionAllowed
-import com.elkrrai.feather.ui.theme.Nest
+import com.elkrrai.feather.ui.theme.DayPhase
+import com.elkrrai.feather.ui.today.dayPhaseFor
+import com.elkrrai.feather.ui.today.showsMoon
+import java.time.LocalTime
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -53,7 +54,7 @@ import kotlin.math.sin
  * wings fast, surges forward and nose up, rides a bigger wave, and the clouds and the hills rush
  * past; then it settles back into the glide. The scene is one rounded picture of sky, [width] by
  * [height] (it can fill a screen: the board is 200 units wide and as tall as the shape needs), so
- * it reads in the light and in the dark. With movement off, everything holds still with the owl in
+ * it follows the time of day: a blue sky and the sun by day, a dark one and the moon at night. With movement off, everything holds still with the owl in
  * the middle, wings down.
  */
 @Composable
@@ -63,9 +64,15 @@ internal fun ClearSkiesScene(width: Dp, height: Dp, modifier: Modifier = Modifie
         val moving = rememberBirdMotionAllowed()
         // the board is 200 units wide and this many tall
         val boardHeight = height / unit
-        val dark = p.ground.luminance() < 0.5f
-        val skyTop = if (dark) Color(0xFF0E1F2A) else lerp(Nest.SkyWing, Color.White, 0.3f)
-        val skyBottom = if (dark) Color(0xFF1D3B4A) else lerp(Nest.SkyWing, Nest.Cream, 0.8f)
+        // the sky is the one of the time of day, as on Today: dawn, day, dusk or night, with the moon at night
+        val phase = remember { dayPhaseFor(LocalTime.now()) }
+        val (skyTop, skyBottom) = skyOf(phase)
+        val night = showsMoon(phase)
+        val hazy = phase == DayPhase.Dawn || phase == DayPhase.Dusk
+        // the sun or the moon sits up in the corner, and lower at the edges of the day
+        val skyBodyY = (if (hazy) 0.34f else 0.26f) * boardHeight
+        // clouds are white against a sunlit sky and a dim blue-grey against the night one
+        val cloudColor = if (night) Color(0xFF3B5668) else Color.White.copy(alpha = 0.96f)
         val flight = rememberFlight(moving)
         val restY = REST_HEIGHT * boardHeight
         val cloudSpan = SCENE_BOARD + 2f * CLOUD_MARGIN
@@ -76,17 +83,32 @@ internal fun ClearSkiesScene(width: Dp, height: Dp, modifier: Modifier = Modifie
         Layer {
             clipPath(panel) {
                 drawRect(Brush.verticalGradient(listOf(skyTop, skyBottom), startY = 0f, endY = boardHeight))
-                val skyBodyY = 0.26f * boardHeight
-                if (dark) drawMoon(p, Offset(146f, skyBodyY - 14f), 28f) else drawSun(p, Offset(160f, skyBodyY), 14f)
+                if (night) drawMoon(p, Offset(146f, skyBodyY - 14f), 28f)
+            }
+        }
+        // the sun turns slowly behind the clouds: the bright one by day and dawn, the dark one at dusk
+        if (!night) {
+            Image(
+                painter = painterResource(if (phase == DayPhase.Dusk) R.drawable.sun_dusk else R.drawable.sun_day),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .offset(x = unit * (SUN_X - SUN_SIZE / 2f), y = unit * (skyBodyY - SUN_SIZE / 2f))
+                    .size(unit * SUN_SIZE)
+                    .graphicsLayer { rotationZ = (flight.distance * SUN_TURN_DEGREES) % 360f },
+            )
+        }
+        Layer {
+            clipPath(panel) {
                 // the far clouds, small and slow
                 val farPhase = flight.distance * FAR_CLOUD_SPEED / cloudSpan
-                drawDriftingCloud(p, Offset(150f, 0.38f * boardHeight), 0.7f, farPhase)
-                drawDriftingCloud(p, Offset(36f, 0.56f * boardHeight), 0.7f, farPhase)
+                drawDriftingCloud(p, cloudColor, Offset(150f, 0.38f * boardHeight), 0.7f, farPhase)
+                drawDriftingCloud(p, cloudColor, Offset(36f, 0.56f * boardHeight), 0.7f, farPhase)
             }
         }
         // two rows of hills, the far one higher up and slower; on the light sky they are paler
-        HillStrip(boardHeight, R.drawable.hills_far, { flight.distance * FAR_HILLS_SPEED / (2f * SCENE_BOARD) }, FAR_HILLS_LIFT, if (dark) 0.8f else 0.4f)
-        HillStrip(boardHeight, R.drawable.hills_near, { flight.distance * NEAR_HILLS_SPEED / (2f * SCENE_BOARD) }, 0f, if (dark) 1f else 0.55f)
+        HillStrip(boardHeight, R.drawable.hills_far, { flight.distance * FAR_HILLS_SPEED / (2f * SCENE_BOARD) }, FAR_HILLS_LIFT, if (night) 0.8f else if (hazy) 0.6f else 0.4f)
+        HillStrip(boardHeight, R.drawable.hills_near, { flight.distance * NEAR_HILLS_SPEED / (2f * SCENE_BOARD) }, 0f, if (night) 1f else if (hazy) 0.8f else 0.55f)
         // The owl is boxed where it rests in the middle of the sky and moved from there by the
         // flight: forward in a burst, up and down on its wave, tipped with it.
         Box(Modifier.size(unit * SCENE_BOARD, unit * boardHeight).clip(RoundedCornerShape(unit * PANEL_RADIUS))) {
@@ -111,8 +133,8 @@ internal fun ClearSkiesScene(width: Dp, height: Dp, modifier: Modifier = Modifie
             clipPath(panel) {
                 // the near clouds, larger and quicker, pass in front of the sky and the hills
                 val nearPhase = flight.distance * NEAR_CLOUD_SPEED / cloudSpan
-                drawDriftingCloud(p, Offset(70f, 0.74f * boardHeight), 1.1f, nearPhase)
-                drawDriftingCloud(p, Offset(170f, 0.14f * boardHeight), 1f, nearPhase)
+                drawDriftingCloud(p, cloudColor, Offset(70f, 0.74f * boardHeight), 1.1f, nearPhase)
+                drawDriftingCloud(p, cloudColor, Offset(170f, 0.14f * boardHeight), 1f, nearPhase)
             }
             drawRoundRect(
                 p.ink.copy(alpha = 0.12f),
@@ -205,15 +227,26 @@ private fun boostAt(t: Float): Float = when {
 }
 
 /**
+ * The sky's top and bottom colours at each time of day. They are the sky's own, whatever the app's
+ * theme is: the dark theme does not make the day dark.
+ */
+private fun skyOf(phase: DayPhase): Pair<Color, Color> = when (phase) {
+    DayPhase.Dawn -> Color(0xFFF3B79E) to Color(0xFFFBE4C4)
+    DayPhase.Day -> Color(0xFF86CBE8) to Color(0xFFDDF2F9)
+    DayPhase.Dusk -> Color(0xFF6C6CA6) to Color(0xFFF2AC7C)
+    DayPhase.Night -> Color(0xFF0E1F2A) to Color(0xFF1D3B4A)
+}
+
+/**
  * A cloud drifting left once across the picture for each [phase] of 0 to 1, coming back in from the
  * right: [start] is where it is at a phase of 0.
  */
-private fun DrawScope.drawDriftingCloud(p: ScenePalette, start: Offset, size: Float, phase: Float) {
+private fun DrawScope.drawDriftingCloud(p: ScenePalette, color: Color, start: Offset, size: Float, phase: Float) {
     val span = SCENE_BOARD + 2f * CLOUD_MARGIN
     val travelled = (start.x + CLOUD_MARGIN - phase * span) % span
     val x = (if (travelled < 0f) travelled + span else travelled) - CLOUD_MARGIN
     val center = Offset(x, start.y)
-    scale(size, pivot = center) { drawCloud(p, center) }
+    scale(size, pivot = center) { drawCloud(p, center, color) }
 }
 
 /**
@@ -286,6 +319,9 @@ private const val OWL_SIDE = 170f
 private const val OWL_ART_CENTRE_X = 0.44f
 private const val OWL_ART_CENTRE_Y = 0.5f
 
+private const val SUN_X = 156f
+private const val SUN_SIZE = 44f
+private const val SUN_TURN_DEGREES = 0.35f
 private const val FAR_HILLS_LIFT = 24f
 private const val HILLS_HEIGHT_PER_WIDTH = 496f / 2000f
 private const val PANEL_RADIUS = 12f

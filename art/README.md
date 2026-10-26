@@ -16,9 +16,8 @@ Store graphics (icon, feature graphic) are in `store/graphics`.
 
 The owl, everywhere: Today, the empty states, Your rhythm, the tip sheet, the completion hop, the
 nest, the home-screen widgets, the launch screen, the launcher icon, the notification icon and the
-store graphics. The one place the old blue songbird is kept, on purpose, is the **Settings** screen
-(`ic_bird_mark` in `SettingsScreen.kt`), as a tribute. Its drawing code is gone; only that vector
-drawable remains.
+store graphics. The old blue songbird is gone from the app; the Settings screen, which kept it for a
+while as a tribute, now shows the owlet (`settings_chick`, from `art/scenes/chick/settings.png`).
 
 | Where | Made from |
 |---|---|

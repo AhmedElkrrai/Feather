@@ -110,11 +110,11 @@ internal fun DrawScope.drawLeaf(base: Offset, length: Float, degrees: Float, col
     }
 }
 
-internal fun DrawScope.drawCloud(p: ScenePalette, center: Offset) {
-    drawCircle(p.cloud, radius = 11f, center = Offset(center.x - 12f, center.y))
-    drawCircle(p.cloud, radius = 14f, center = Offset(center.x + 2f, center.y - 6f))
-    drawCircle(p.cloud, radius = 10f, center = Offset(center.x + 16f, center.y))
-    drawRoundRect(p.cloud, topLeft = Offset(center.x - 24f, center.y - 2f), size = Size(52f, 12f), cornerRadius = CornerRadius(6f, 6f))
+internal fun DrawScope.drawCloud(p: ScenePalette, center: Offset, color: Color = p.cloud) {
+    drawCircle(color, radius = 11f, center = Offset(center.x - 12f, center.y))
+    drawCircle(color, radius = 14f, center = Offset(center.x + 2f, center.y - 6f))
+    drawCircle(color, radius = 10f, center = Offset(center.x + 16f, center.y))
+    drawRoundRect(color, topLeft = Offset(center.x - 24f, center.y - 2f), size = Size(52f, 12f), cornerRadius = CornerRadius(6f, 6f))
 }
 
 /** A woven basket or bin: a trapezoid with rows of weave. */

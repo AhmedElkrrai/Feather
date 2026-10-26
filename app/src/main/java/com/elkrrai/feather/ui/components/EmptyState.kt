@@ -106,5 +106,5 @@ private val SKY_MARGIN = 10.dp
 private val SKY_MIN_HEIGHT = 320.dp
 
 /** The nest of hungry chicks leaves this much at the sides, and keeps this much height for its words. */
-private val WIDE_SCENE_MARGIN = 8.dp
+private val WIDE_SCENE_MARGIN = 2.dp
 private val WIDE_SCENE_WORDS_ROOM = 120.dp
