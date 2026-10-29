@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
@@ -20,6 +21,10 @@ import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.brand.OwlIllustration
 import com.elkrrai.feather.R
+import com.elkrrai.feather.ui.theme.DayPhase
+import com.elkrrai.feather.ui.today.dayPhaseFor
+import com.elkrrai.feather.ui.today.showsMoon
+import java.time.LocalTime
 
 // Where the bird stands in each scene: its 96 by 96 box is moved and scaled by one transform. The
 // numbers put its feet on the ground, the branch or the rim of the nest or bin.
@@ -78,22 +83,30 @@ private fun EmptyListScene(size: Dp, modifier: Modifier) = SceneFrame(
     )
 }
 
-/** A sleeping bird on a branch, with a cloud and a small sun. */
+/**
+ * A sleeping bird on a branch, with a cloud and, by day, a small sun (the dark one at dusk) or, at
+ * night, a moon: the same as the Today header.
+ */
 @Composable
 private fun NothingDueScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifier) {
     val p = palette
     val perch = Perch.under(NothingDueBird)
+    val phase = remember { dayPhaseFor(LocalTime.now()) }
+    val night = showsMoon(phase)
     Layer {
         drawCloud(p, Offset(46f, 38f))
+        if (night) drawMoon(p, Offset(158f, 16f), 30f)
     }
-    Image(
-        painter = painterResource(R.drawable.sun_day),
-        contentDescription = null,
-        contentScale = ContentScale.FillBounds,
-        modifier = Modifier
-            .offset(x = unit * 158f, y = unit * 18f)
-            .size(unit * 32f),
-    )
+    if (!night) {
+        Image(
+            painter = painterResource(if (phase == DayPhase.Dusk) R.drawable.sun_dusk else R.drawable.sun_day),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier
+                .offset(x = unit * 158f, y = unit * 18f)
+                .size(unit * 32f),
+        )
+    }
     PerchBranch(perch)
     SceneBird(BirdMood.SLEEPING, NothingDueBird)
     Layer { drawLeaf(perch.twigTip, 20f, -15f, p.leaf) }

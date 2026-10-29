@@ -338,6 +338,8 @@ fun TaskListScreen(
             onDismiss = { showQuickAdd = false },
             onAdd = viewModel::addParsed,
             onVoiceUsed = dayCards::voiceUsed,
+            // Goals have no date, so there is no date to pick there.
+            showDateTool = state.scope != TaskScope.NoDate,
         )
     }
 }

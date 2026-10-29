@@ -112,6 +112,8 @@ fun QuickAddSheet(
     initialText: String = "",
     /** Called when something was dictated into the sheet. */
     onVoiceUsed: () -> Unit = {},
+    /** False where tasks have no date (the Goals view): the date tool is left out. */
+    showDateTool: Boolean = true,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -275,6 +277,7 @@ fun QuickAddSheet(
             )
 
             QuickAddTools(
+                showDateTool = showDateTool,
                 onDate = { date ->
                     toolDate = date
                     chosen(QuickAddField.DATE)
@@ -315,6 +318,7 @@ fun QuickAddSheet(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun QuickAddTools(
+    showDateTool: Boolean,
     onDate: (LocalDate) -> Unit,
     onPriority: (Priority) -> Unit,
     onRepeat: (Frequency) -> Unit,
@@ -333,8 +337,10 @@ private fun QuickAddTools(
     var counterDialog by remember { mutableStateOf(false) }
 
     Row(horizontalArrangement = Arrangement.spacedBy(Space.x1), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { showDatePicker = true }) {
-            Icon(painterResource(R.drawable.ic_calendar), stringResource(R.string.quick_add_tool_date))
+        if (showDateTool) {
+            IconButton(onClick = { showDatePicker = true }) {
+                Icon(painterResource(R.drawable.ic_calendar), stringResource(R.string.quick_add_tool_date))
+            }
         }
 
         Box {
