@@ -104,6 +104,8 @@ fun RhythmScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RhythmViewModel = hiltViewModel(),
+    onOpenHabit: (habitId: String) -> Unit = {},
+    onOpenHabitOverview: (habitId: String) -> Unit = {},
     habitsViewModel: HabitsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -111,6 +113,8 @@ fun RhythmScreen(
     RhythmContent(
         state = state,
         habits = habits,
+        onOpenHabit = onOpenHabit,
+        onOpenHabitOverview = onOpenHabitOverview,
         onBack = onBack,
         onPause = viewModel::pause,
         onResume = viewModel::resume,
@@ -134,6 +138,8 @@ fun RhythmContent(
     today: LocalDate = LocalDate.now(),
     /** The habits for the second tab; null while they load. */
     habits: List<HabitState>? = emptyList(),
+    onOpenHabit: (habitId: String) -> Unit = {},
+    onOpenHabitOverview: (habitId: String) -> Unit = {},
 ) {
     // 0 is the tasks (everything this screen was), 1 the habits.
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -157,7 +163,7 @@ fun RhythmContent(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text(stringResource(R.string.rhythm_title), style = MaterialTheme.typography.headlineSmall) },
+                    title = { Text(stringResource(R.string.rhythm_screen_title), style = MaterialTheme.typography.headlineSmall) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.action_back))
@@ -172,7 +178,13 @@ fun RhythmContent(
         },
     ) { padding ->
         if (tab == 1) {
-            HabitsRhythmTab(habits = habits, weekStart = weekStartOf(today, firstDay), contentPadding = padding)
+            HabitsRhythmTab(
+                habits = habits,
+                weekStart = weekStartOf(today, firstDay),
+                contentPadding = padding,
+                onOpenHabit = onOpenHabit,
+                onOpenOverview = onOpenHabitOverview,
+            )
             return@Scaffold
         }
         if (state.isLoading) {

@@ -12,8 +12,6 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 enum class TimeFormat { SYSTEM, H12, H24 }
 
-enum class WeekStart { SYSTEM, MONDAY, SATURDAY, SUNDAY }
-
 /** User preferences. The language is handled separately, by AppCompat's per-app locales. */
 data class AppSettings(
     /** The due moment of a task that has a date but no time, for "before due" reminders. */
@@ -30,14 +28,17 @@ data class AppSettings(
     val lastBackupAt: Long? = null,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     /** True black backgrounds in dark mode, for OLED screens. */
-    val pureBlack: Boolean = false,
+    val pureBlack: Boolean = true,
     /** Material You colors from the wallpaper (Android 12 and up); off by default, the app has its own colors. */
     val dynamicColor: Boolean = false,
     val timeFormat: TimeFormat = TimeFormat.SYSTEM,
-    val weekStart: WeekStart = WeekStart.SYSTEM,
     val haptics: Boolean = true,
-    /** Asks for a fingerprint, a face or the screen lock when the app is opened. Only takes effect on a phone that has one. */
-    val appLock: Boolean = true,
+    /** The grey line under each item of the menu that says what is in it. */
+    val menuHints: Boolean = true,
+    /** The first-run welcome card was shown (and closed), so it does not come again. */
+    val welcomeSeen: Boolean = false,
+    /** Asks for a fingerprint, a face or the screen lock when the app is opened. Off until the person turns it on, and only takes effect on a phone that has one. */
+    val appLock: Boolean = false,
     /** Lets the bird move; off keeps it still. */
     val birdAnimations: Boolean = true,
     /** Fewer animations: things appear and leave without moving. The phone's own setting counts too. */
@@ -96,9 +97,11 @@ interface SettingsRepository {
 
     suspend fun setTimeFormat(format: TimeFormat)
 
-    suspend fun setWeekStart(start: WeekStart)
-
     suspend fun setHaptics(enabled: Boolean)
+
+    suspend fun setMenuHints(enabled: Boolean)
+
+    suspend fun setWelcomeSeen(seen: Boolean)
 
     suspend fun setAppLock(enabled: Boolean)
 

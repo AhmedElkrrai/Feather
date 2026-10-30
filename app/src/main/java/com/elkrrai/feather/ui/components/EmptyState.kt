@@ -50,6 +50,17 @@ fun EmptyState(
                     .align(Alignment.TopCenter)
                     .padding(top = 36.dp, start = 28.dp, end = 28.dp),
             )
+            if (body != null) {
+                Text(
+                    text = body,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 80.dp, start = 28.dp, end = 28.dp),
+                )
+            }
         }
         return
     }

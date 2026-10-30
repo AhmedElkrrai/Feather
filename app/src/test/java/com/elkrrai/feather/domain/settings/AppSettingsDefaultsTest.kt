@@ -15,7 +15,9 @@ class AppSettingsDefaultsTest {
         assertFalse(defaults.dynamicColor)
         assertTrue(defaults.birdAnimations)
         assertEquals(ThemeMode.SYSTEM, defaults.themeMode)
-        assertFalse(defaults.pureBlack)
+        // dark mode is true black from the start, and the app lock is off until it is turned on
+        assertTrue(defaults.pureBlack)
+        assertFalse(defaults.appLock)
         assertTrue(defaults.haptics)
     }
 

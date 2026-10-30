@@ -4,6 +4,9 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
+import com.elkrrai.feather.domain.time.FIRST_DAY_OF_WEEK
+import com.elkrrai.feather.domain.time.indexInWeek
+import com.elkrrai.feather.domain.time.startOfWeek
 import java.time.temporal.TemporalAdjusters
 
 /**
@@ -47,16 +50,16 @@ private fun Recurrence.nextDaily(due: LocalDate, after: LocalDate): LocalDate {
     return due.plusDays(steps * interval)
 }
 
-/** Weeks start on Monday; with an interval above 1 they are counted from the week of [due]. */
+/** Weeks start on Saturday (see [FIRST_DAY_OF_WEEK]); with an interval above 1 they are counted from the week of [due]. */
 private fun Recurrence.nextWeekly(due: LocalDate, after: LocalDate): LocalDate {
-    val days = weekdays.ifEmpty { setOf(due.dayOfWeek) }.sortedBy { it.value }
-    val firstWeek = due.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-    val afterWeek = after.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val days = weekdays.ifEmpty { setOf(due.dayOfWeek) }.sortedBy { it.indexInWeek() }
+    val firstWeek = due.startOfWeek()
+    val afterWeek = after.startOfWeek()
     var step = Math.floorDiv(ChronoUnit.WEEKS.between(firstWeek, afterWeek), interval.toLong())
     while (true) {
         val week = firstWeek.plusWeeks(step * interval)
         for (day in days) {
-            val candidate = week.plusDays((day.value - 1).toLong())
+            val candidate = week.plusDays(day.indexInWeek().toLong())
             if (candidate.isAfter(after)) return candidate
         }
         step++

@@ -1,26 +1,16 @@
 package com.elkrrai.feather.data.db
 
-import androidx.room.AutoMigration
 import androidx.room.Database
-import androidx.room.DeleteTable
 import androidx.room.RoomDatabase
-import androidx.room.migration.AutoMigrationSpec
 
 /**
- * Schema history:
- * - v1: tasks, task_lists
- * - v2: folders, tags, task_tags; tasks.parentTaskId and isPinned; task_lists.folderId and colorArgb
- * - v3: reminders
- * - v4: tasks.rrule and repeatMode; completion_history
- * - v5: saved_filters
- * - v6: tags.parentId (a tag can sit under another tag)
- * - v7: folders and saved_filters are dropped (lists, folders and filters left the app); task_lists stays,
- *   see [ListEntity]
- * - v8: tasks.counterTarget, counterStep and counterDone (a task that counts toward a target)
- * - v9: habits, habit_goals and habit_entries (habits are not tasks)
+ * Schema history: the app's database was started again at version 1 before the first release, with
+ * everything the earlier versions had (tasks, tags and their links, reminders, completion history,
+ * the counter columns, habits). The old migrations were dropped with them: there is no data from before
+ * to carry over. From the first release on, every change is a new version with a migration, and
+ * migrations never destroy what the person made. Exported schemas live in `app/schemas`.
  *
- * Migrations are never destructive for what the person made: users have real data. Exported schemas
- * live in `app/schemas`.
+ * [ListEntity] stays: every task is kept in the Inbox list, see [INBOX_LIST_ID].
  */
 @Database(
     entities = [
@@ -34,18 +24,8 @@ import androidx.room.migration.AutoMigrationSpec
         HabitGoalEntity::class,
         HabitEntryEntity::class,
     ],
-    version = 9,
+    version = 1,
     exportSchema = true,
-    autoMigrations = [
-        AutoMigration(from = 1, to = 2),
-        AutoMigration(from = 2, to = 3),
-        AutoMigration(from = 3, to = 4),
-        AutoMigration(from = 4, to = 5),
-        AutoMigration(from = 5, to = 6),
-        AutoMigration(from = 6, to = 7, spec = FeatherDatabase.DropFoldersAndFilters::class),
-        AutoMigration(from = 7, to = 8),
-        AutoMigration(from = 8, to = 9),
-    ],
 )
 abstract class FeatherDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
@@ -55,13 +35,6 @@ abstract class FeatherDatabase : RoomDatabase() {
     abstract fun completionDao(): CompletionDao
     abstract fun backupDao(): BackupDao
     abstract fun habitDao(): HabitDao
-
-    /** Nothing refers to these two tables, so dropping them cannot touch any task. */
-    @DeleteTable.Entries(
-        DeleteTable(tableName = "folders"),
-        DeleteTable(tableName = "saved_filters"),
-    )
-    class DropFoldersAndFilters : AutoMigrationSpec
 
     companion object {
         const val NAME = "feather.db"

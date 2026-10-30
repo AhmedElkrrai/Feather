@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
     private var locked by mutableStateOf(false)
 
     /** The "Lock the app" setting; kept up to date while the activity lives. */
-    private var lockSetting = true
+    private var lockSetting = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Must come first: it swaps the launch theme for the normal one once the first frame is ready.

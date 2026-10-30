@@ -6,7 +6,6 @@ import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
-import com.elkrrai.feather.domain.settings.WeekStart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalTime
 import javax.inject.Inject
@@ -56,10 +55,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repository.setTimeFormat(format) }
     }
 
-    fun setWeekStart(start: WeekStart) {
-        viewModelScope.launch { repository.setWeekStart(start) }
-    }
-
     fun setBirdAnimations(enabled: Boolean) {
         viewModelScope.launch { repository.setBirdAnimations(enabled) }
     }
@@ -70,6 +65,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setAppLock(enabled: Boolean) {
         viewModelScope.launch { repository.setAppLock(enabled) }
+    }
+
+    fun setMenuHints(enabled: Boolean) {
+        viewModelScope.launch { repository.setMenuHints(enabled) }
     }
 
     fun setCelebrations(enabled: Boolean) {

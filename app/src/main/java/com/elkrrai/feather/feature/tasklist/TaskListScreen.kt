@@ -143,6 +143,7 @@ fun TaskListScreen(
     }
     val dayCard by dayCards.card.collectAsStateWithLifecycle()
     val focusSession by focusBadge.session.collectAsStateWithLifecycle()
+    val showWelcome by dayCards.showWelcome.collectAsStateWithLifecycle()
     val nestNews by dayCards.nestNews.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -356,6 +357,8 @@ fun TaskListScreen(
         )
     }
 
+    if (showWelcome) WelcomeDialog(onDone = dayCards::welcomeDone)
+
     if (showQuickAdd) {
         QuickAddSheet(
             tags = state.tags,
@@ -364,6 +367,8 @@ fun TaskListScreen(
             onVoiceUsed = dayCards::voiceUsed,
             // Goals have no date, so there is no date to pick there.
             showDateTool = state.scope != TaskScope.NoDate,
+            // Upcoming starts tomorrow: today is not offered there.
+            firstDate = if (state.scope == TaskScope.Upcoming) LocalDate.now().plusDays(1) else LocalDate.now(),
         )
     }
 }
@@ -794,9 +799,9 @@ private class EmptyCopy(val scene: SceneKind, @StringRes val title: Int, @String
  * says nothing is due; Completed says nothing is finished yet.
  */
 private fun TaskScope.emptyCopy(): EmptyCopy = when (this) {
-    TaskScope.Overdue -> EmptyCopy(SceneKind.ClearSkies, R.string.scene_clear_skies, null)
-    TaskScope.NoDate -> EmptyCopy(SceneKind.EmptyList, R.string.scene_empty_list, R.string.task_list_empty_body)
-    TaskScope.Upcoming -> EmptyCopy(SceneKind.HungryChick, R.string.scene_hungry_chick, null)
+    TaskScope.Overdue -> EmptyCopy(SceneKind.ClearSkies, R.string.scene_clear_skies, R.string.empty_overdue_body)
+    TaskScope.NoDate -> EmptyCopy(SceneKind.EmptyList, R.string.scene_empty_list, R.string.empty_goals_body)
+    TaskScope.Upcoming -> EmptyCopy(SceneKind.HungryChick, R.string.scene_hungry_chick, R.string.empty_upcoming_body)
     TaskScope.Today -> EmptyCopy(SceneKind.NothingDue, R.string.scene_nothing_due, null)
     TaskScope.Completed -> EmptyCopy(SceneKind.NothingDue, R.string.empty_view_title, R.string.empty_view_body)
 }

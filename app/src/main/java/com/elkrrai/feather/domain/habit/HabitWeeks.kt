@@ -2,18 +2,23 @@ package com.elkrrai.feather.domain.habit
 
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 
 /** The first day of the week that [date] is in. */
 fun weekStartOf(date: LocalDate, firstDay: DayOfWeek): LocalDate = date.with(TemporalAdjusters.previousOrSame(firstDay))
 
-/** The goal in force for the week that starts on [weekStart], or null before the habit's first goal. */
+/**
+ * The goal in force for the week that starts on [weekStart], or null before the habit's first goal. A goal
+ * counts for the week that its first day falls in, so a goal made when weeks began on another day still covers
+ * the week it was made in.
+ */
 fun List<HabitGoal>.forWeek(weekStart: LocalDate): HabitGoal? =
-    filter { !it.effectiveFrom.isAfter(weekStart) }.maxByOrNull { it.effectiveFrom }
+    filter { !it.effectiveFrom.isAfter(weekStart.plusDays(6)) }.maxByOrNull { it.effectiveFrom }
 
-/** The goal that takes effect after [weekStart] (an edit made during the week), or null. */
+/** The goal that takes effect after the week of [weekStart] (an edit made during the week), or null. */
 fun List<HabitGoal>.queuedAfter(weekStart: LocalDate): HabitGoal? =
-    filter { it.effectiveFrom.isAfter(weekStart) }.minByOrNull { it.effectiveFrom }
+    filter { it.effectiveFrom.isAfter(weekStart.plusDays(6)) }.minByOrNull { it.effectiveFrom }
 
 /** One day of a week: how much was logged and whether it counts as done. */
 data class DayProgress(val date: LocalDate, val amount: Int, val done: Boolean)
@@ -77,3 +82,53 @@ fun HabitState.weeksMetInARow(currentWeekStart: LocalDate): Int {
 /** True when [date] is a day that can be logged: in the week that starts on [weekStart], and not after [today]. */
 fun canLog(date: LocalDate, weekStart: LocalDate, today: LocalDate): Boolean =
     !date.isBefore(weekStart) && date.isBefore(weekStart.plusDays(DAYS_IN_WEEK.toLong())) && !date.isAfter(today)
+
+/** The first week the habit has anything in: its first goal or its first logged day, never after the current week. */
+fun HabitState.firstWeekStart(currentWeekStart: LocalDate, firstDay: DayOfWeek): LocalDate {
+    val earliest = (goals.map { it.effectiveFrom } + entries.keys).minOrNull() ?: currentWeekStart
+    return minOf(weekStartOf(earliest, firstDay), currentWeekStart)
+}
+
+/**
+ * The habit with its first goal moved back to cover [firstStart]. A first week that starts a little before
+ * the first goal (the week start changed since it was made) is then still judged by that goal.
+ */
+fun HabitState.coveringFrom(firstStart: LocalDate): HabitState = copy(
+    goals = goals.mapIndexed { index, goal ->
+        if (index == 0) goal.copy(effectiveFrom = minOf(goal.effectiveFrom, firstStart)) else goal
+    },
+)
+
+/** The whole of a habit in one place: each week from the first to this one, and a few quiet numbers. */
+data class HabitOverview(
+    /** Every week, oldest first, the last being this week. */
+    val weeks: List<WeekProgress>,
+    /** The weeks that reached the goal, and the weeks so far: this week counts only once it is met. */
+    val weeksMet: Int,
+    val weeksSoFar: Int,
+    /** Days done ([HabitKind.DAYS]) or the amount logged ([HabitKind.AMOUNT]) over all the weeks. */
+    val total: Int,
+    /** The week with the most, or null when nothing was ever logged. */
+    val best: WeekProgress?,
+    val inARow: Int,
+)
+
+fun HabitState.overview(currentWeekStart: LocalDate, firstDay: DayOfWeek): HabitOverview {
+    val first = firstWeekStart(currentWeekStart, firstDay)
+    val covered = coveringFrom(first)
+    val count = (ChronoUnit.WEEKS.between(first, currentWeekStart) + 1).toInt().coerceAtLeast(1)
+    val weeks = (0 until count).map { covered.week(first.plusWeeks(it.toLong())) }
+    val finished = weeks.dropLast(1)
+    val current = weeks.last()
+    val met = finished.count { it.met } + if (current.met) 1 else 0
+    val sofar = finished.size + if (current.met) 1 else 0
+    val total = weeks.sumOf { it.total }
+    return HabitOverview(
+        weeks = weeks,
+        weeksMet = met,
+        weeksSoFar = sofar,
+        total = total,
+        best = weeks.filter { it.total > 0 }.maxByOrNull { it.total },
+        inARow = covered.weeksMetInARow(currentWeekStart),
+    )
+}

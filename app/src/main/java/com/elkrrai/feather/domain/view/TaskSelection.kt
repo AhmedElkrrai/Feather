@@ -6,14 +6,10 @@ import com.elkrrai.feather.domain.model.branchIds
 import java.time.LocalDate
 import java.time.ZoneId
 
-/** How many days ahead the Upcoming view reaches. */
-const val UPCOMING_DAYS = 7L
-
 /** True if this task belongs in [scope] as of [today]. Pure, so it is cheap to unit test. */
 fun Task.matches(scope: TaskScope, today: LocalDate): Boolean = when (scope) {
     TaskScope.Today -> !isCompleted && dueDate == today
-    TaskScope.Upcoming -> !isCompleted && dueDate != null &&
-        dueDate.isAfter(today) && !dueDate.isAfter(today.plusDays(UPCOMING_DAYS))
+    TaskScope.Upcoming -> !isCompleted && dueDate != null && dueDate.isAfter(today)
     TaskScope.Overdue -> !isCompleted && dueDate != null && dueDate.isBefore(today)
     TaskScope.Completed -> isCompleted
     TaskScope.NoDate -> !isCompleted && dueDate == null

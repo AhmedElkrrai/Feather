@@ -119,4 +119,30 @@ class HabitWeeksTest {
         assertFalse(canLog(today.plusDays(1), week1, today))
         assertFalse(canLog(week1.minusDays(1), week1, today))
     }
+
+    @Test
+    fun theOverviewCountsThisWeekOnlyOnceItIsMet() {
+        val goals = listOf(HabitGoal(week1, 20))
+        val partial = state(HabitKind.AMOUNT, goals, mapOf(week1 to 20, week2 to 25, week3 to 5))
+        val during = partial.overview(week3, DayOfWeek.MONDAY)
+        // the two finished weeks were met; the third is still going and not yet met, so it is not counted
+        assertEquals(3, during.weeks.size)
+        assertEquals(2, during.weeksMet)
+        assertEquals(2, during.weeksSoFar)
+        assertEquals(50, during.total)
+        assertEquals(week2, during.best?.weekStart)
+
+        val met = state(HabitKind.AMOUNT, goals, mapOf(week1 to 20, week2 to 25, week3 to 20)).overview(week3, DayOfWeek.MONDAY)
+        assertEquals(3, met.weeksMet)
+        assertEquals(3, met.weeksSoFar)
+        assertEquals(3, met.inARow)
+    }
+
+    @Test
+    fun theOverviewStartsAtTheFirstWeekWithAnythingInIt() {
+        val s = state(HabitKind.DAYS, listOf(HabitGoal(week2, 3)), mapOf(week2.plusDays(1) to 1))
+        val all = s.overview(week3, DayOfWeek.MONDAY)
+        assertEquals(listOf(week2, week3), all.weeks.map { it.weekStart })
+        assertNull(state(HabitKind.AMOUNT, listOf(HabitGoal(week1, 20))).overview(week1, DayOfWeek.MONDAY).best)
+    }
 }

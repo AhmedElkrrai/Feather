@@ -64,8 +64,8 @@ class TaskSelectionTest {
     }
 
     @Test
-    fun upcomingStartsTomorrowAndEndsAWeekOut() {
-        assertEquals(listOf("tomorrow", "week"), all.titles(TaskScope.Upcoming))
+    fun upcomingHoldsEveryTaskFromTomorrowOn() {
+        assertEquals(listOf("tomorrow", "week", "later"), all.titles(TaskScope.Upcoming))
     }
 
     @Test

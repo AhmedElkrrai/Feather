@@ -211,7 +211,7 @@ internal object ArabicRules : LanguageRules {
             ?: text.takeFirst(TOMORROW) { today.plusDays(1) }
             ?: text.takeFirst(TODAY) { today }
             ?: text.takeFirst(NEXT_UNIT) { m ->
-                if (m.groupValues[1] == "اسبوع") nextMonday(today) else firstOfNextMonth(today)
+                if (m.groupValues[1] == "اسبوع") startOfNextWeek(today) else firstOfNextMonth(today)
             }
             ?: text.takeFirst(IN_UNITS) { m ->
                 val amount = amountOf(m.groupValues[1], m.groupValues[2])

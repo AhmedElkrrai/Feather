@@ -1,5 +1,6 @@
 package com.elkrrai.feather.feature.habits
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -26,6 +27,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -41,6 +46,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -72,7 +78,11 @@ import com.elkrrai.feather.domain.habit.queuedAfter
 import com.elkrrai.feather.domain.habit.week
 import com.elkrrai.feather.domain.habit.weekStartOf
 import com.elkrrai.feather.domain.habit.weeksMetInARow
+import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.feature.tasklist.ConfirmDialog
+import com.elkrrai.feather.feature.tasklist.DrawerActions
+import com.elkrrai.feather.feature.tasklist.TaskDrawerContent
+import com.elkrrai.feather.feature.tasklist.TaskListUiState
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.components.MenuAction
@@ -84,24 +94,68 @@ import com.elkrrai.feather.ui.theme.Space
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlinx.coroutines.launch
 
-/** The Habits screen: a card for each habit with its week, where days are logged. */
+/**
+ * The Habits screen: a card for each habit with its week, where days are logged. It is one of the
+ * places the menu leads to, like Today and Goals, so it has the same menu (the burger) and not a back
+ * arrow. [listState] is the task list's state, for the counts in the menu.
+ */
 @Composable
 fun HabitsScreen(
-    onBack: () -> Unit,
+    listState: TaskListUiState,
+    onSelectScope: (TaskScope) -> Unit,
+    onOpenTrash: () -> Unit,
+    onOpenRhythm: () -> Unit,
+    onOpenNest: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HabitsViewModel = hiltViewModel(),
 ) {
     val habits by viewModel.habits.collectAsStateWithLifecycle()
-    HabitsContent(
-        habits = habits,
-        onBack = onBack,
-        onAdd = viewModel::add,
-        onEdit = viewModel::edit,
-        onSetAmount = viewModel::setAmount,
-        onDelete = viewModel::delete,
-        modifier = modifier,
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
+
+    fun closeDrawer() {
+        coroutineScope.launch { drawerState.close() }
+    }
+
+    // Back closes the menu first, before it leaves the screen.
+    BackHandler(enabled = drawerState.currentValue == DrawerValue.Open) { closeDrawer() }
+
+    val drawerActions = DrawerActions(
+        onSelect = onSelectScope,
+        onOpenTrash = onOpenTrash,
+        onOpenHabits = ::closeDrawer,
+        onOpenSettings = onOpenSettings,
+        onOpenRhythm = onOpenRhythm,
+        onOpenNest = onOpenNest,
+        onClose = ::closeDrawer,
     )
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                TaskDrawerContent(
+                    state = listState,
+                    actions = drawerActions,
+                    highlightScope = false,
+                    habitsSelected = true,
+                )
+            }
+        },
+        modifier = modifier,
+    ) {
+        HabitsContent(
+            habits = habits,
+            onMenuClick = { coroutineScope.launch { drawerState.open() } },
+            onAdd = viewModel::add,
+            onEdit = viewModel::edit,
+            onSetAmount = viewModel::setAmount,
+            onDelete = viewModel::delete,
+        )
+    }
 }
 
 private sealed interface HabitDialog {
@@ -115,7 +169,7 @@ private sealed interface HabitDialog {
 @Composable
 internal fun HabitsContent(
     habits: List<HabitState>?,
-    onBack: () -> Unit,
+    onMenuClick: () -> Unit,
     onAdd: (String, HabitKind, String, Int, Int, LocalDate) -> Unit,
     onEdit: (String, String, String, Int, Int, Boolean, LocalDate) -> Unit,
     onSetAmount: (String, LocalDate, Int) -> Unit,
@@ -135,8 +189,8 @@ internal fun HabitsContent(
             TopAppBar(
                 title = { Text(stringResource(R.string.habits_title), style = MaterialTheme.typography.headlineSmall) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.action_back))
+                    IconButton(onClick = onMenuClick) {
+                        Icon(painterResource(R.drawable.ic_menu), stringResource(R.string.action_open_menu))
                     }
                 },
             )
@@ -492,6 +546,12 @@ private fun HabitEditDialog(
                         }
                         KindChoice(R.string.habit_kind_amount, kind == HabitKind.AMOUNT) { kind = HabitKind.AMOUNT }
                     }
+                    // an example of what the chosen kind looks like
+                    Text(
+                        text = stringResource(if (kind == HabitKind.DAYS) R.string.habit_example_days else R.string.habit_example_amount),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
                 OutlinedTextField(
                     value = target,

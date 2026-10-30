@@ -114,6 +114,8 @@ fun QuickAddSheet(
     onVoiceUsed: () -> Unit = {},
     /** False where tasks have no date (the Goals view): the date tool is left out. */
     showDateTool: Boolean = true,
+    /** The first day the date tool lets you pick: today, or tomorrow in the Upcoming view. */
+    firstDate: LocalDate = LocalDate.now(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -278,6 +280,7 @@ fun QuickAddSheet(
 
             QuickAddTools(
                 showDateTool = showDateTool,
+                firstDate = firstDate,
                 onDate = { date ->
                     toolDate = date
                     chosen(QuickAddField.DATE)
@@ -319,6 +322,7 @@ fun QuickAddSheet(
 @Composable
 private fun QuickAddTools(
     showDateTool: Boolean,
+    firstDate: LocalDate,
     onDate: (LocalDate) -> Unit,
     onPriority: (Priority) -> Unit,
     onRepeat: (Frequency) -> Unit,
@@ -473,7 +477,7 @@ private fun QuickAddTools(
     }
 
     if (showDatePicker) {
-        val pickerState = rememberDatePickerState(selectableDates = com.elkrrai.feather.feature.taskedit.TodayOrLater)
+        val pickerState = rememberDatePickerState(selectableDates = remember(firstDate) { com.elkrrai.feather.feature.taskedit.FromDate(firstDate) })
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {

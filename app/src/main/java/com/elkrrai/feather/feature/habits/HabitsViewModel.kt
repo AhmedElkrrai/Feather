@@ -6,6 +6,7 @@ import com.elkrrai.feather.domain.habit.HabitKind
 import com.elkrrai.feather.domain.habit.HabitState
 import com.elkrrai.feather.domain.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.DayOfWeek
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -52,6 +53,11 @@ class HabitsViewModel @Inject constructor(
 
     fun setAmount(id: String, date: LocalDate, amount: Int) {
         viewModelScope.launch { repository.setAmount(id, date, amount) }
+    }
+
+    /** Debug builds only: sample habits with months of history (see [addSampleHabits]). */
+    fun addSamples(today: LocalDate, firstDay: DayOfWeek) {
+        viewModelScope.launch { repository.addSampleHabits(today, firstDay) }
     }
 
     fun delete(id: String) {

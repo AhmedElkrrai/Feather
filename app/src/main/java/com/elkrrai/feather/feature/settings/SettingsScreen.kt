@@ -57,13 +57,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
+import com.elkrrai.feather.feature.habits.HabitsViewModel
 import com.elkrrai.feather.security.BiometricGate
+import com.elkrrai.feather.ui.firstDayOfWeek
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.reminders.startActivitySafely
 import com.elkrrai.feather.domain.settings.SNOOZE_MINUTE_OPTIONS
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
-import com.elkrrai.feather.domain.settings.WeekStart
 import com.elkrrai.feather.ui.components.TimeOfDayDialog
 import com.elkrrai.feather.ui.components.rememberReminderHealth
 import com.elkrrai.feather.ui.format.formatDueTime
@@ -128,6 +129,10 @@ fun SettingsScreen(
     }
     savedMessage?.let { message -> BackupSavedDialog(detail = message, onDismiss = { savedMessage = null }) }
     val activity = LocalActivity.current as? FragmentActivity
+    // Only a debug build offers the sample data.
+    val debuggable = remember { context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0 }
+    val habitsViewModel: HabitsViewModel = hiltViewModel()
+    val sampleLocale = LocalConfiguration.current.locales[0]
 
     SettingsContent(
         settings = settings,
@@ -155,6 +160,11 @@ fun SettingsScreen(
             onBackupNow = backupViewModel::backupNow,
         ),
         backupBusy = backupState.busy,
+        onAddSampleHabits = if (debuggable) {
+            { habitsViewModel.addSamples(LocalDate.now(), firstDayOfWeek(sampleLocale)) }
+        } else {
+            null
+        },
         appLockAvailable = remember { BiometricGate.canAuthenticate(context) },
         onAppLockChange = { enable ->
             // Switching the lock on or off asks first: it proves the person holding the phone is the owner.
@@ -175,8 +185,8 @@ fun SettingsScreen(
             onPureBlackChange = viewModel::setPureBlack,
             onDynamicColorChange = viewModel::setDynamicColor,
             onTimeFormatChange = viewModel::setTimeFormat,
-            onWeekStartChange = viewModel::setWeekStart,
             onHapticsChange = viewModel::setHaptics,
+            onMenuHintsChange = viewModel::setMenuHints,
             onBirdAnimationsChange = viewModel::setBirdAnimations,
             onReduceMotionChange = viewModel::setReduceMotion,
             onCelebrationsChange = viewModel::setCelebrations,
@@ -218,6 +228,8 @@ fun SettingsContent(
     /** Whether the phone has a fingerprint, a face or a screen lock the app lock could use. */
     appLockAvailable: Boolean = true,
     onAppLockChange: (Boolean) -> Unit = {},
+    /** Debug builds: makes sample habits with months of history. Null in a release build. */
+    onAddSampleHabits: (() -> Unit)? = null,
     versionName: String = "",
     onOpenTags: () -> Unit = {},
 ) {
@@ -300,7 +312,6 @@ fun SettingsContent(
                 actions = appearance,
                 onPickTheme = { dialog = SettingsDialog.Theme },
                 onPickTimeFormat = { dialog = SettingsDialog.TimeFormat },
-                onPickWeekStart = { dialog = SettingsDialog.WeekStart },
             )
 
             SectionTitle(stringResource(R.string.settings_section_privacy))
@@ -338,6 +349,15 @@ fun SettingsContent(
                 supporting = null,
                 onClick = { dialog = SettingsDialog.Language },
             )
+
+            if (onAddSampleHabits != null) {
+                SettingsRow(
+                    title = stringResource(R.string.debug_add_sample_habits),
+                    summary = null,
+                    supporting = stringResource(R.string.debug_add_sample_habits_summary),
+                    onClick = onAddSampleHabits,
+                )
+            }
 
             ListItem(
                 leadingContent = {
@@ -416,17 +436,6 @@ fun SettingsContent(
             },
             onDismiss = { dialog = null },
         )
-
-        SettingsDialog.WeekStart -> ChoiceDialog(
-            title = stringResource(R.string.settings_week_start),
-            options = WeekStart.entries.map { it to it.label() },
-            selected = settings.weekStart,
-            onSelect = {
-                appearance.onWeekStartChange(it)
-                dialog = null
-            },
-            onDismiss = { dialog = null },
-        )
     }
 }
 
@@ -438,7 +447,7 @@ private fun versionNameOf(context: Context): String = try {
 }
 
 /** Which settings dialog is open. An enum so it survives rotation with `rememberSaveable`. */
-private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Language, Theme, TimeFormat, WeekStart }
+private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Language, Theme, TimeFormat }
 
 @Composable
 internal fun SectionTitle(text: String) {

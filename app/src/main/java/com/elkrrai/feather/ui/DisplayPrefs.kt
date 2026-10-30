@@ -8,10 +8,9 @@ import androidx.compose.runtime.setValue
 import com.elkrrai.feather.domain.nest.NestStyle
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.TimeFormat
-import com.elkrrai.feather.domain.settings.WeekStart
+import com.elkrrai.feather.domain.time.FIRST_DAY_OF_WEEK
 import java.time.DayOfWeek
 import java.util.Locale
-import java.time.temporal.WeekFields
 
 /**
  * The display choices from Settings that formatting code needs everywhere: theme colors, the
@@ -23,13 +22,13 @@ import java.time.temporal.WeekFields
 object DisplayPrefs {
     var timeFormat by mutableStateOf(TimeFormat.SYSTEM)
         private set
-    var weekStart by mutableStateOf(WeekStart.SYSTEM)
-        private set
     var dynamicColor by mutableStateOf(false)
         private set
-    var pureBlack by mutableStateOf(false)
+    var pureBlack by mutableStateOf(true)
         private set
     var haptics by mutableStateOf(true)
+        private set
+    var menuHints by mutableStateOf(true)
         private set
     var birdAnimations by mutableStateOf(true)
         private set
@@ -43,10 +42,10 @@ object DisplayPrefs {
 
     fun update(settings: AppSettings) {
         timeFormat = settings.timeFormat
-        weekStart = settings.weekStart
         dynamicColor = settings.dynamicColor
         pureBlack = settings.pureBlack
         haptics = settings.haptics
+        menuHints = settings.menuHints
         birdAnimations = settings.birdAnimations
         reduceMotion = settings.reduceMotion
         nestStyle = settings.nestStyle
@@ -61,10 +60,6 @@ fun use24HourClock(context: Context): Boolean = when (DisplayPrefs.timeFormat) {
     TimeFormat.H24 -> true
 }
 
-/** The first day of the week: the user's choice, or the locale's. */
-fun firstDayOfWeek(locale: Locale): DayOfWeek = when (DisplayPrefs.weekStart) {
-    WeekStart.SYSTEM -> WeekFields.of(locale).firstDayOfWeek
-    WeekStart.MONDAY -> DayOfWeek.MONDAY
-    WeekStart.SATURDAY -> DayOfWeek.SATURDAY
-    WeekStart.SUNDAY -> DayOfWeek.SUNDAY
-}
+/** The first day of the week: Saturday, in every language (see [FIRST_DAY_OF_WEEK]). */
+@Suppress("UNUSED_PARAMETER")
+fun firstDayOfWeek(locale: Locale): DayOfWeek = FIRST_DAY_OF_WEEK

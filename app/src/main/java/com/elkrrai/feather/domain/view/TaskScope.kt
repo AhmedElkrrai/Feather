@@ -5,7 +5,7 @@ sealed interface TaskScope {
     /** Open tasks due today. What is late is in [Overdue]. */
     data object Today : TaskScope
 
-    /** Open tasks due from tomorrow up to a week ahead. */
+    /** Open tasks due from tomorrow on, however far ahead. */
     data object Upcoming : TaskScope
 
     /** Open tasks due before today. */

@@ -72,6 +72,15 @@ class DayCardsViewModel @Inject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    /** True until the welcome card has been seen; false while the settings load, so it never flashes. */
+    val showWelcome: StateFlow<Boolean> = settingsRepository.settings
+        .map { !it.welcomeSeen }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    fun welcomeDone() {
+        viewModelScope.launch { settingsRepository.setWelcomeSeen(true) }
+    }
+
     /** Whether the nest has something new, for the quiet dot on Settings. */
     val nestNews: StateFlow<Boolean> = settingsRepository.settings
         .map { (it.nestUnlocked - it.nestSeen).isNotEmpty() }

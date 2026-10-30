@@ -6,6 +6,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.YearMonth
+import com.elkrrai.feather.domain.time.startOfNextWeek
 import java.time.temporal.TemporalAdjusters
 
 /** "every 2 weeks on monday and friday": the pieces of a repeat phrase. */
@@ -66,16 +67,17 @@ internal fun LocalDateTime.plusUnit(amount: Long, unit: DateUnit): LocalDateTime
 
 /**
  * The next [day] after [today] (never today itself). With [following], "next friday": if that
- * day is still in the current week (weeks start on Monday), the one a week later.
+ * day is still in the current week (weeks start on Saturday), the one a week later.
  */
 internal fun nextWeekday(today: LocalDate, day: DayOfWeek, following: Boolean): LocalDate {
     var date = today.plusDays(1)
     while (date.dayOfWeek != day) date = date.plusDays(1)
-    val nextWeekStart = today.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+    val nextWeekStart = today.startOfNextWeek()
     return if (following && date.isBefore(nextWeekStart)) date.plusDays(DAYS_PER_WEEK) else date
 }
 
-internal fun nextMonday(today: LocalDate): LocalDate = today.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+/** "Next week": the first day of the week that comes after this one. */
+internal fun startOfNextWeek(today: LocalDate): LocalDate = today.startOfNextWeek()
 
 internal fun firstOfNextMonth(today: LocalDate): LocalDate = today.with(TemporalAdjusters.firstDayOfNextMonth())
 

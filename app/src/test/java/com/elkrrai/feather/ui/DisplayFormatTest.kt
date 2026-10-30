@@ -2,7 +2,6 @@ package com.elkrrai.feather.ui
 
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.TimeFormat
-import com.elkrrai.feather.domain.settings.WeekStart
 import com.elkrrai.feather.ui.format.formatDueTime
 import java.time.DayOfWeek
 import java.time.LocalTime
@@ -30,16 +29,8 @@ class DisplayFormatTest {
     }
 
     @Test
-    fun theFirstWeekdayFollowsTheChoice() {
-        DisplayPrefs.update(AppSettings(weekStart = WeekStart.SATURDAY))
+    fun theWeekAlwaysStartsOnSaturday() {
         assertEquals(DayOfWeek.SATURDAY, firstDayOfWeek(Locale.US))
-
-        DisplayPrefs.update(AppSettings(weekStart = WeekStart.MONDAY))
-        assertEquals(DayOfWeek.MONDAY, firstDayOfWeek(Locale.US))
-
-        // Follow system: the locale decides.
-        DisplayPrefs.update(AppSettings(weekStart = WeekStart.SYSTEM))
-        assertEquals(DayOfWeek.SUNDAY, firstDayOfWeek(Locale.US))
-        assertEquals(DayOfWeek.MONDAY, firstDayOfWeek(Locale.FRANCE))
+        assertEquals(DayOfWeek.SATURDAY, firstDayOfWeek(Locale.FRANCE))
     }
 }

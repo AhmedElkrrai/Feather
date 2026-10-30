@@ -729,6 +729,14 @@ private fun SubtasksEditor(
 
 /** Only today and later can be picked as a due date; the picker hands out UTC midnights. */
 @OptIn(ExperimentalMaterial3Api::class)
+/** Dates from [first] on can be picked; the days before it are greyed out. */
+internal class FromDate(private val first: LocalDate) : SelectableDates {
+    override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+        utcTimeMillis >= first.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+    override fun isSelectableYear(year: Int): Boolean = year >= first.year
+}
+
 internal object TodayOrLater : SelectableDates {
     override fun isSelectableDate(utcTimeMillis: Long): Boolean =
         utcTimeMillis >= LocalDate.now().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()

@@ -13,7 +13,6 @@ import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
-import com.elkrrai.feather.domain.settings.WeekStart
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -38,8 +37,9 @@ class DataStoreSettingsRepository @Inject constructor(
         val pureBlack = booleanPreferencesKey("pure_black")
         val dynamicColor = booleanPreferencesKey("dynamic_color")
         val timeFormat = stringPreferencesKey("time_format")
-        val weekStart = stringPreferencesKey("week_start")
         val haptics = booleanPreferencesKey("haptics")
+        val menuHints = booleanPreferencesKey("menu_hints")
+        val welcomeSeen = booleanPreferencesKey("welcome_seen")
         val appLock = booleanPreferencesKey("app_lock")
         val birdAnimations = booleanPreferencesKey("bird_animations")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
@@ -75,8 +75,9 @@ class DataStoreSettingsRepository @Inject constructor(
             pureBlack = prefs[Keys.pureBlack] ?: defaults.pureBlack,
             dynamicColor = prefs[Keys.dynamicColor] ?: defaults.dynamicColor,
             timeFormat = prefs.enumOf(Keys.timeFormat, defaults.timeFormat),
-            weekStart = prefs.enumOf(Keys.weekStart, defaults.weekStart),
             haptics = prefs[Keys.haptics] ?: defaults.haptics,
+            menuHints = prefs[Keys.menuHints] ?: defaults.menuHints,
+            welcomeSeen = prefs[Keys.welcomeSeen] ?: defaults.welcomeSeen,
             appLock = prefs[Keys.appLock] ?: defaults.appLock,
             birdAnimations = prefs[Keys.birdAnimations] ?: defaults.birdAnimations,
             reduceMotion = prefs[Keys.reduceMotion] ?: defaults.reduceMotion,
@@ -145,10 +146,6 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit { it[Keys.timeFormat] = format.name }
     }
 
-    override suspend fun setWeekStart(start: WeekStart) {
-        dataStore.edit { it[Keys.weekStart] = start.name }
-    }
-
     override suspend fun setHaptics(enabled: Boolean) {
         dataStore.edit { it[Keys.haptics] = enabled }
     }
@@ -163,6 +160,14 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setAppLock(enabled: Boolean) {
         dataStore.edit { it[Keys.appLock] = enabled }
+    }
+
+    override suspend fun setMenuHints(enabled: Boolean) {
+        dataStore.edit { it[Keys.menuHints] = enabled }
+    }
+
+    override suspend fun setWelcomeSeen(seen: Boolean) {
+        dataStore.edit { it[Keys.welcomeSeen] = seen }
     }
 
     override suspend fun setCelebrations(enabled: Boolean) {

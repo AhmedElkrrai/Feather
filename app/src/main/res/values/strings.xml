@@ -511,12 +511,14 @@
     <string name="lock_prompt_turn_off">Confirm to turn the lock off</string>
     <string name="habits_title">Habits</string>
     <string name="habits_empty_title">No habits yet</string>
-    <string name="habits_empty_body">A habit has a goal for each week, like workout 3 days or read 20 pages. Tap + to make one.</string>
+    <string name="habits_empty_body">A habit is something you repeat, with a goal for each week, like workout 3 days or read 20 pages. Tap + to make a habit.</string>
     <string name="habit_new">New habit</string>
     <string name="habit_edit">Edit habit</string>
     <string name="habit_name">Habit</string>
     <string name="habit_kind_days">Days in a week</string>
     <string name="habit_kind_amount">A total for the week</string>
+    <string name="habit_example_days">Example: Pray 7 Days a week 5 Times a day</string>
+    <string name="habit_example_amount">Example: Read 20 pages a week</string>
     <string name="habit_target_days">Days a week</string>
     <string name="habit_target_amount">Goal for the week</string>
     <string name="habit_daily_target">Times a day</string>
@@ -541,6 +543,48 @@
     <string name="habits_rhythm_empty_title">No habits to look back on</string>
     <string name="habits_rhythm_empty_body">Make a habit in the Habits screen and its weeks will show here.</string>
     <string name="habit_history_summary">Met %1$d of the last %2$d weeks</string>
+    <string name="habit_this_week">This week</string>
+    <string name="habit_goal_days">Goal: %1$d days</string>
+    <string name="habit_goal_days_times">Goal: %1$d days, %2$d times a day</string>
+    <string name="habit_goal_amount">Goal: %1$d %2$s</string>
+    <string name="habit_week_met">Goal met</string>
+    <string name="drawer_hint_today">Due today</string>
+    <string name="drawer_hint_upcoming">From tomorrow on</string>
+    <string name="drawer_hint_overdue">Past their date</string>
+    <string name="drawer_hint_goals">No date, for whenever</string>
+    <string name="drawer_hint_completed">Finished tasks</string>
+    <string name="drawer_hint_habits">Weekly goals</string>
+    <string name="drawer_hint_progress">Finished tasks and habits</string>
+    <string name="empty_upcoming_body">Tasks with a date after today wait here.</string>
+    <string name="empty_overdue_body">Tasks past their date wait here, each with a button to move it to today.</string>
+    <string name="empty_goals_body">Tasks without a date live here, for whenever. Tap + to add one.</string>
+    <string name="welcome_title">Hi, I\u2019m Feather</string>
+    <string name="welcome_task_lead">A task</string>
+    <string name="welcome_task_body">is something to finish. Tap + to add one.</string>
+    <string name="welcome_upcoming_lead">Upcoming</string>
+    <string name="welcome_upcoming_body">shows the tasks due tomorrow or later.</string>
+    <string name="welcome_goals_lead">Goals</string>
+    <string name="welcome_goals_body">are tasks with no date, for whenever.</string>
+    <string name="welcome_today_lead">Today</string>
+    <string name="welcome_today_body">shows the tasks due today.</string>
+    <string name="welcome_habits_lead">Habits</string>
+    <string name="welcome_habits_body">are things you repeat, with a goal for each week.</string>
+    <string name="welcome_go">Let\u2019s go</string>
+    <string name="settings_menu_hints">Hints in the menu</string>
+    <string name="settings_menu_hints_summary">A dim line under each view saying what is in it.</string>
+    <string name="habit_open_history">See %1$s week by week</string>
+    <string name="habit_btn_this_week">This week</string>
+    <string name="habit_btn_all_time">All time</string>
+    <string name="habit_overview_met">Met %1$d of %2$d weeks</string>
+    <string name="habit_overview_total_days">%1$d days in all</string>
+    <string name="habit_overview_total_amount">%1$d %2$s in all, about %3$d a week</string>
+    <string name="habit_overview_best_days">Best week: %1$d days, %2$s</string>
+    <string name="habit_overview_best_amount">Best week: %1$d %2$s, %3$s</string>
+    <string name="habit_garden_legend">One leaf for each week. A glowing leaf met its goal. A dot is a week the goal changed. Tap a leaf to open that week.</string>
+    <string name="habit_garden_week_days">%1$s: %2$d of %3$d days</string>
+    <string name="habit_garden_week_amount">%1$s: %2$d of %3$d %4$s</string>
+    <string name="debug_add_sample_habits" translatable="false">Add sample habits (debug build)</string>
+    <string name="debug_add_sample_habits_summary" translatable="false">Read, Workout and Pray with months of history, to see the all-time view. Delete them from the Habits screen.</string>
     <string name="counter_of">%1$d / %2$d</string>
     <string name="counter_step_label">+%1$d</string>
     <string name="counter_add_description">Add %1$d to %2$s</string>
@@ -567,13 +611,14 @@
     <string name="quick_add_tool_repeat">Repeat</string>
     <!-- M9 step 6: your rhythm -->
 
-    <string name="rhythm_title">Your rhythm</string>
+    <string name="rhythm_title">Progress</string>
+    <string name="rhythm_screen_title">Your progress</string>
     <string name="rhythm_hero_label">finished in the last 7 days</string>
-    <string name="rhythm_hero_none">A quiet week. Rest is part of the rhythm.</string>
+    <string name="rhythm_hero_none">A quiet week. Resting is fine too.</string>
     <string name="rhythm_hero_few">A few small steps. They add up.</string>
     <string name="rhythm_hero_steady">A steady week. Nicely done.</string>
     <string name="rhythm_hero_busy">A busy, bright week.</string>
-    <string name="rhythm_new_title">Your rhythm starts here</string>
+    <string name="rhythm_new_title">Your progress starts here</string>
     <string name="rhythm_new_body">Finish a task and the first egg will appear.</string>
     <string name="rhythm_last_seven">Last 7 days</string>
     <string name="rhythm_last_seven_summary">Last 7 days: %1$s</string>
@@ -581,8 +626,8 @@
     <string name="rhythm_dots_title">Showing up</string>
     <string name="rhythm_dots_headline">%1$d of the last %2$d days</string>
     <string name="rhythm_dots_hint">A filled dot is a day you finished something. A ring is a day of rest.</string>
-    <string name="rhythm_pause">Pause my rhythm</string>
-    <string name="rhythm_resume">Resume my rhythm</string>
+    <string name="rhythm_pause">Pause counting</string>
+    <string name="rhythm_resume">Resume counting</string>
     <string name="rhythm_pause_note">Paused days are left out. They never count as gaps.</string>
     <string name="rhythm_pause_title">Pause for how long?</string>
     <string name="rhythm_pause_today">Today only</string>
@@ -674,7 +719,7 @@
     <string name="nest_not_yet">Not yet</string>
     <string name="nest_new_dot">New in your nest</string>
     <string name="settings_weekly_feather">Weekly feather</string>
-    <string name="settings_weekly_feather_summary">On the first day of the week, a feather made from last week, on Your rhythm.</string>
+    <string name="settings_weekly_feather_summary">On the first day of the week, a feather made from last week, in Progress.</string>
     <string name="weekly_feather_title">Last week\'s feather</string>
     <string name="weekly_feather_body_plain">%1$d finished and %2$d days of rest.</string>
 </resources>

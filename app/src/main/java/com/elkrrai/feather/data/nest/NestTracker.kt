@@ -10,6 +10,7 @@ import com.elkrrai.feather.domain.rhythm.keptRepeaterFourWeeks
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import java.time.Clock
+import com.elkrrai.feather.domain.time.FIRST_DAY_OF_WEEK
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
@@ -36,7 +37,7 @@ class NestTracker @Inject constructor(
     private val clock: Clock,
 ) {
     /** What has been done so far, updated as the data changes. */
-    fun facts(firstDay: DayOfWeek = DayOfWeek.MONDAY): Flow<NestFacts> = combine(
+    fun facts(firstDay: DayOfWeek = FIRST_DAY_OF_WEEK): Flow<NestFacts> = combine(
         rhythm.observeCompletions(),
         tasks.observeTasks(),
         tagRepository.observeTags(),

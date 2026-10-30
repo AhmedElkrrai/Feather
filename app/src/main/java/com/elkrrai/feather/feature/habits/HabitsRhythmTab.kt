@@ -2,10 +2,13 @@ package com.elkrrai.feather.feature.habits
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,14 +18,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -33,6 +40,9 @@ import com.elkrrai.feather.domain.habit.weeksMetInARow
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.theme.Space
+import com.elkrrai.feather.ui.theme.featherColors
+import com.elkrrai.feather.ui.theme.leafColor
+import com.elkrrai.feather.ui.theme.rememberSeason
 import java.time.LocalDate
 
 /** How many weeks the Habits tab of Your rhythm looks back. */
@@ -49,6 +59,8 @@ fun HabitsRhythmTab(
     weekStart: LocalDate,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    onOpenHabit: (habitId: String) -> Unit = {},
+    onOpenOverview: (habitId: String) -> Unit = {},
 ) {
     when {
         habits == null -> Box(modifier.fillMaxSize().padding(contentPadding))
@@ -71,13 +83,25 @@ fun HabitsRhythmTab(
             ),
             verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
-            items(habits, key = { it.habit.id }) { state -> HabitHistoryCard(state, weekStart) }
+            items(habits, key = { it.habit.id }) { state ->
+                HabitHistoryCard(
+                    state = state,
+                    weekStart = weekStart,
+                    onOpenWeek = { onOpenHabit(state.habit.id) },
+                    onOpenOverview = { onOpenOverview(state.habit.id) },
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun HabitHistoryCard(state: HabitState, weekStart: LocalDate) {
+private fun HabitHistoryCard(
+    state: HabitState,
+    weekStart: LocalDate,
+    onOpenWeek: () -> Unit,
+    onOpenOverview: () -> Unit,
+) {
     val scheme = MaterialTheme.colorScheme
     val weeks = state.history(weekStart, WEEKS_SHOWN)
     val existed = weeks.filter { it.goal != null }
@@ -132,6 +156,15 @@ private fun HabitHistoryCard(state: HabitState, weekStart: LocalDate) {
                     style = MaterialTheme.typography.bodySmall,
                     color = scheme.onSurfaceVariant,
                 )
+            }
+            Spacer(Modifier.height(Space.x3))
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
+                OutlinedButton(onClick = onOpenWeek, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.habit_btn_this_week))
+                }
+                OutlinedButton(onClick = onOpenOverview, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.habit_btn_all_time))
+                }
             }
         }
     }

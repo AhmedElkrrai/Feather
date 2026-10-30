@@ -29,6 +29,14 @@ data object ReliabilityRoute
 @Serializable
 data object HabitsRoute
 
+/** One habit looked back on, week by week. */
+@Serializable
+data class HabitDetailRoute(val habitId: String, val weekStart: String? = null)
+
+/** One habit, every week of it at once. */
+@Serializable
+data class HabitOverviewRoute(val habitId: String)
+
 @Serializable
 data object RhythmRoute
 

@@ -190,7 +190,7 @@ internal object EnglishRules : LanguageRules {
                 if (amount == null || unit == null) null else today.plusUnit(amount.toLong(), unit)
             }
             ?: text.takeFirst(NEXT_UNIT) { m ->
-                if (m.groupValues[1] == "week") nextMonday(today) else firstOfNextMonth(today)
+                if (m.groupValues[1] == "week") startOfNextWeek(today) else firstOfNextMonth(today)
             }
             ?: text.takeFirst(WEEKEND) { upcomingWeekend(today) }
             ?: text.takeFirst(WEEKDAY_FULL) { m ->

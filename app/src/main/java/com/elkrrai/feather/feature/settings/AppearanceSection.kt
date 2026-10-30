@@ -26,7 +26,6 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
-import com.elkrrai.feather.domain.settings.WeekStart
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import androidx.compose.foundation.background
@@ -44,8 +43,8 @@ class AppearanceActions(
     val onPureBlackChange: (Boolean) -> Unit = {},
     val onDynamicColorChange: (Boolean) -> Unit = {},
     val onTimeFormatChange: (TimeFormat) -> Unit = {},
-    val onWeekStartChange: (WeekStart) -> Unit = {},
     val onHapticsChange: (Boolean) -> Unit = {},
+    val onMenuHintsChange: (Boolean) -> Unit = {},
     val onBirdAnimationsChange: (Boolean) -> Unit = {},
     val onReduceMotionChange: (Boolean) -> Unit = {},
     val onCelebrationsChange: (Boolean) -> Unit = {},
@@ -68,20 +67,6 @@ internal fun TimeFormat.labelRes(): Int = when (this) {
     TimeFormat.H24 -> R.string.time_format_24
 }
 
-private fun WeekStart.day(): DayOfWeek? = when (this) {
-    WeekStart.SYSTEM -> null
-    WeekStart.MONDAY -> DayOfWeek.MONDAY
-    WeekStart.SATURDAY -> DayOfWeek.SATURDAY
-    WeekStart.SUNDAY -> DayOfWeek.SUNDAY
-}
-
-/** The name of a first-weekday choice: the weekday in the app language, or "Follow system". */
-@Composable
-internal fun WeekStart.label(): String {
-    val locale = LocalConfiguration.current.locales[0]
-    return day()?.getDisplayName(TextStyle.FULL, locale) ?: stringResource(R.string.format_system)
-}
-
 /** The rows of the "Appearance and formats" section. */
 @Composable
 internal fun AppearanceRows(
@@ -89,7 +74,6 @@ internal fun AppearanceRows(
     actions: AppearanceActions,
     onPickTheme: () -> Unit,
     onPickTimeFormat: () -> Unit,
-    onPickWeekStart: () -> Unit,
 ) {
     SectionTitle(stringResource(R.string.settings_section_appearance))
     SettingsRow(
@@ -127,10 +111,11 @@ internal fun AppearanceRows(
         onClick = onPickTimeFormat,
     )
     SettingsRow(
-        title = stringResource(R.string.settings_week_start),
-        summary = settings.weekStart.label(),
-        supporting = null,
-        onClick = onPickWeekStart,
+        title = stringResource(R.string.settings_menu_hints),
+        summary = null,
+        supporting = stringResource(R.string.settings_menu_hints_summary),
+        onClick = { actions.onMenuHintsChange(!settings.menuHints) },
+        trailing = { Switch(checked = settings.menuHints, onCheckedChange = actions.onMenuHintsChange) },
     )
     SettingsRow(
         title = stringResource(R.string.settings_haptics),

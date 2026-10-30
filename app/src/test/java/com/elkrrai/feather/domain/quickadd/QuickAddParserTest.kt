@@ -89,7 +89,7 @@ class QuickAddParserTest {
                 Case("Pay rent in 3 days", "Pay rent", "2026-10-17"),
                 Case("Pay rent in two weeks", "Pay rent", "2026-10-28"),
                 Case("Pay rent in a month", "Pay rent", "2026-11-14"),
-                Case("Plan next week", "Plan", "2026-10-19"),
+                Case("Plan next week", "Plan", "2026-10-17"), // the week starts on Saturday
                 Case("Plan next month", "Plan", "2026-11-01"),
                 Case("Hike this weekend", "Hike", "2026-10-17"),
             )
@@ -108,7 +108,7 @@ class QuickAddParserTest {
                 Case("Submit by friday", "Submit", "2026-10-16"),
                 Case("Class on tue", "Class", "2026-10-20"),
                 Case("Class next mon", "Class", "2026-10-19"),
-                Case("Class next sun", "Class", "2026-10-25"), // the Sunday of next week
+                Case("Class next sun", "Class", "2026-10-18"), // the Sunday of next week (it starts on Saturday the 17th)
                 Case("Class sat", "Class sat"), // an abbreviation alone is just a word
             )
         )
