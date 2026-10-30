@@ -43,7 +43,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.activity.compose.LocalActivity
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.fragment.app.FragmentActivity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -55,6 +57,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
+import com.elkrrai.feather.security.BiometricGate
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.reminders.startActivitySafely
 import com.elkrrai.feather.domain.settings.SNOOZE_MINUTE_OPTIONS
@@ -124,6 +127,7 @@ fun SettingsScreen(
         }
     }
     savedMessage?.let { message -> BackupSavedDialog(detail = message, onDismiss = { savedMessage = null }) }
+    val activity = LocalActivity.current as? FragmentActivity
 
     SettingsContent(
         settings = settings,
@@ -151,6 +155,21 @@ fun SettingsScreen(
             onBackupNow = backupViewModel::backupNow,
         ),
         backupBusy = backupState.busy,
+        appLockAvailable = remember { BiometricGate.canAuthenticate(context) },
+        onAppLockChange = { enable ->
+            // Switching the lock on or off asks first: it proves the person holding the phone is the owner.
+            val host = activity
+            if (host == null) {
+                viewModel.setAppLock(enable)
+            } else {
+                BiometricGate.authenticate(
+                    activity = host,
+                    title = context.getString(R.string.lock_prompt_title),
+                    subtitle = context.getString(if (enable) R.string.lock_prompt_turn_on else R.string.lock_prompt_turn_off),
+                    onSuccess = { viewModel.setAppLock(enable) },
+                )
+            }
+        },
         appearance = AppearanceActions(
             onThemeChange = viewModel::setThemeMode,
             onPureBlackChange = viewModel::setPureBlack,
@@ -196,6 +215,9 @@ fun SettingsContent(
     backup: BackupActions = BackupActions(),
     backupBusy: Boolean = false,
     appearance: AppearanceActions = AppearanceActions(),
+    /** Whether the phone has a fingerprint, a face or a screen lock the app lock could use. */
+    appLockAvailable: Boolean = true,
+    onAppLockChange: (Boolean) -> Unit = {},
     versionName: String = "",
     onOpenTags: () -> Unit = {},
 ) {
@@ -279,6 +301,24 @@ fun SettingsContent(
                 onPickTheme = { dialog = SettingsDialog.Theme },
                 onPickTimeFormat = { dialog = SettingsDialog.TimeFormat },
                 onPickWeekStart = { dialog = SettingsDialog.WeekStart },
+            )
+
+            SectionTitle(stringResource(R.string.settings_section_privacy))
+            SettingsRow(
+                title = stringResource(R.string.settings_app_lock),
+                summary = null,
+                supporting = stringResource(
+                    if (appLockAvailable) R.string.settings_app_lock_summary else R.string.settings_app_lock_unavailable,
+                ),
+                enabled = appLockAvailable,
+                onClick = { onAppLockChange(!settings.appLock) },
+                trailing = {
+                    Switch(
+                        checked = settings.appLock && appLockAvailable,
+                        onCheckedChange = onAppLockChange,
+                        enabled = appLockAvailable,
+                    )
+                },
             )
 
             BackupRows(backup, settings)

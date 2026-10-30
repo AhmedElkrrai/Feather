@@ -574,6 +574,17 @@
     <string name="move_to_today_short">إلى اليوم</string>
     <string name="action_move_to_today">انقل %1$s إلى اليوم</string>
     <string name="moved_to_today">نُقلت إلى اليوم</string>
+    <string name="settings_section_privacy">الخصوصية</string>
+    <string name="settings_app_lock">قفل التطبيق</string>
+    <string name="settings_app_lock_summary">اطلب بصمتك أو وجهك أو قفل الشاشة عند فتح ريشة، ومرة أخرى بعد غياب قصير.</string>
+    <string name="settings_app_lock_unavailable">فعّل بصمة أو وجهًا أو قفل شاشة من إعدادات هاتفك أولًا، ثم يمكنك قفل ريشة.</string>
+    <string name="lock_title">ريشة تستريح</string>
+    <string name="lock_body">افتح القفل لترى مهامك.</string>
+    <string name="lock_unlock">فتح القفل</string>
+    <string name="lock_prompt_title">فتح ريشة</string>
+    <string name="lock_prompt_subtitle">أكّد أنك أنت</string>
+    <string name="lock_prompt_turn_on">أكّد لتشغيل القفل</string>
+    <string name="lock_prompt_turn_off">أكّد لإيقاف القفل</string>
     <string name="counter_of">%1$d / %2$d</string>
     <string name="counter_step_label">+%1$d</string>
     <string name="counter_add_description">أضف %1$d إلى %2$s</string>

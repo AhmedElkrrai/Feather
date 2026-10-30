@@ -498,6 +498,17 @@
     <string name="move_to_today_short">To today</string>
     <string name="action_move_to_today">Move %1$s to today</string>
     <string name="moved_to_today">Moved to today</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_app_lock">Lock the app</string>
+    <string name="settings_app_lock_summary">Ask for your fingerprint, face or screen lock when Feather is opened, and again after you have been away for a little while.</string>
+    <string name="settings_app_lock_unavailable">Set up a fingerprint, a face or a screen lock in your phone\u2019s settings first, then you can lock Feather.</string>
+    <string name="lock_title">Feather is resting</string>
+    <string name="lock_body">Unlock to see your tasks.</string>
+    <string name="lock_unlock">Unlock</string>
+    <string name="lock_prompt_title">Unlock Feather</string>
+    <string name="lock_prompt_subtitle">Confirm that it is you</string>
+    <string name="lock_prompt_turn_on">Confirm to turn the lock on</string>
+    <string name="lock_prompt_turn_off">Confirm to turn the lock off</string>
     <string name="counter_of">%1$d / %2$d</string>
     <string name="counter_step_label">+%1$d</string>
     <string name="counter_add_description">Add %1$d to %2$s</string>

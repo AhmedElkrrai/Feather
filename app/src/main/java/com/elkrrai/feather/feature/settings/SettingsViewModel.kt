@@ -68,6 +68,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repository.setReduceMotion(enabled) }
     }
 
+    fun setAppLock(enabled: Boolean) {
+        viewModelScope.launch { repository.setAppLock(enabled) }
+    }
+
     fun setCelebrations(enabled: Boolean) {
         viewModelScope.launch { repository.setCelebrations(enabled) }
     }

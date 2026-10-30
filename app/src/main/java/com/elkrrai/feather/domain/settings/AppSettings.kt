@@ -36,6 +36,8 @@ data class AppSettings(
     val timeFormat: TimeFormat = TimeFormat.SYSTEM,
     val weekStart: WeekStart = WeekStart.SYSTEM,
     val haptics: Boolean = true,
+    /** Asks for a fingerprint, a face or the screen lock when the app is opened. Only takes effect on a phone that has one. */
+    val appLock: Boolean = true,
     /** Lets the bird move; off keeps it still. */
     val birdAnimations: Boolean = true,
     /** Fewer animations: things appear and leave without moving. The phone's own setting counts too. */
@@ -97,6 +99,8 @@ interface SettingsRepository {
     suspend fun setWeekStart(start: WeekStart)
 
     suspend fun setHaptics(enabled: Boolean)
+
+    suspend fun setAppLock(enabled: Boolean)
 
     suspend fun setBirdAnimations(enabled: Boolean)
 

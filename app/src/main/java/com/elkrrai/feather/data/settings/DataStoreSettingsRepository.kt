@@ -40,6 +40,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val timeFormat = stringPreferencesKey("time_format")
         val weekStart = stringPreferencesKey("week_start")
         val haptics = booleanPreferencesKey("haptics")
+        val appLock = booleanPreferencesKey("app_lock")
         val birdAnimations = booleanPreferencesKey("bird_animations")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val celebrations = booleanPreferencesKey("celebrations")
@@ -76,6 +77,7 @@ class DataStoreSettingsRepository @Inject constructor(
             timeFormat = prefs.enumOf(Keys.timeFormat, defaults.timeFormat),
             weekStart = prefs.enumOf(Keys.weekStart, defaults.weekStart),
             haptics = prefs[Keys.haptics] ?: defaults.haptics,
+            appLock = prefs[Keys.appLock] ?: defaults.appLock,
             birdAnimations = prefs[Keys.birdAnimations] ?: defaults.birdAnimations,
             reduceMotion = prefs[Keys.reduceMotion] ?: defaults.reduceMotion,
             celebrations = prefs[Keys.celebrations] ?: defaults.celebrations,
@@ -157,6 +159,10 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setReduceMotion(enabled: Boolean) {
         dataStore.edit { it[Keys.reduceMotion] = enabled }
+    }
+
+    override suspend fun setAppLock(enabled: Boolean) {
+        dataStore.edit { it[Keys.appLock] = enabled }
     }
 
     override suspend fun setCelebrations(enabled: Boolean) {
