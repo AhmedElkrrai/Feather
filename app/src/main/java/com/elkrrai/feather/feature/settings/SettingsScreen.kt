@@ -234,7 +234,8 @@ fun SettingsContent(
     onOpenTags: () -> Unit = {},
 ) {
     val locale = LocalConfiguration.current.locales[0]
-    val resources = LocalContext.current.resources
+    val context = LocalContext.current
+    val resources = context.resources
     var dialog by rememberSaveable { mutableStateOf<SettingsDialog?>(null) }
 
     Scaffold(
@@ -376,6 +377,13 @@ fun SettingsContent(
                         Text(
                             text = stringResource(R.string.settings_about_summary),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_open_source, SOURCE_CODE_LINK),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable {
+                                context.startActivitySafely(Intent(Intent.ACTION_VIEW, Uri.parse("https://$SOURCE_CODE_LINK")))
+                            },
                         )
                     }
                 },
@@ -530,3 +538,6 @@ private fun SnoozeLengthDialog(
         },
     )
 }
+
+/** Where the code of the app is, shown in About without the scheme. */
+private const val SOURCE_CODE_LINK = "github.com/AhmedElkrrai/Feather"

@@ -503,6 +503,7 @@
     <string name="tip_failed">لم تتم العملية. حاول لاحقًا.</string>
     <string name="settings_about">عن Feather</string>
     <string name="settings_version">الإصدار %1$s</string>
+    <string name="settings_open_source">مفتوح المصدر: %1$s</string>
     <string name="settings_about_summary">مجاني، بلا إعلانات ولا حسابات ولا تتبع.</string>
 
     <!-- Bird animations -->
@@ -624,6 +625,7 @@
     <string name="habit_goal_days_times">الهدف: %1$d أيام، %2$d مرات في اليوم</string>
     <string name="habit_goal_amount">الهدف: %1$d %2$s</string>
     <string name="habit_week_met">تحقق الهدف</string>
+    <string name="habit_swipe_hint">اسحب لرؤية الأسابيع السابقة</string>
     <string name="drawer_hint_today">المستحقة اليوم</string>
     <string name="drawer_hint_upcoming">من الغد فصاعدًا</string>
     <string name="drawer_hint_overdue">تجاوزت موعدها</string>
@@ -633,7 +635,6 @@
     <string name="drawer_hint_progress">المهام المنجزة والعادات</string>
     <string name="empty_upcoming_body">المهام ذات التاريخ بعد اليوم تنتظر هنا.</string>
     <string name="empty_overdue_body">المهام التي تجاوزت موعدها تنتظر هنا، ولكل منها زر لنقلها إلى اليوم.</string>
-    <string name="empty_goals_body">المهام بلا تاريخ تعيش هنا، لأي وقت. اضغط + لإضافة واحدة.</string>
     <string name="welcome_title">مرحبًا، أنا ريشة</string>
     <string name="welcome_task_lead">المهمة</string>
     <string name="welcome_task_body">شيء تُنجزه. اضغط + لإضافة واحدة.</string>

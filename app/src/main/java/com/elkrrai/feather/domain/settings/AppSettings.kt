@@ -37,6 +37,9 @@ data class AppSettings(
     val menuHints: Boolean = true,
     /** The first-run welcome card was shown (and closed), so it does not come again. */
     val welcomeSeen: Boolean = false,
+    /** How many times the "swipe to see earlier weeks" hint on a habit's weekly page was shown, and the week of the last time. */
+    val habitSwipeHintsShown: Int = 0,
+    val habitSwipeHintWeek: LocalDate? = null,
     /** Asks for a fingerprint, a face or the screen lock when the app is opened. Off until the person turns it on, and only takes effect on a phone that has one. */
     val appLock: Boolean = false,
     /** Lets the bird move; off keeps it still. */
@@ -102,6 +105,8 @@ interface SettingsRepository {
     suspend fun setMenuHints(enabled: Boolean)
 
     suspend fun setWelcomeSeen(seen: Boolean)
+
+    suspend fun setHabitSwipeHint(shown: Int, week: LocalDate)
 
     suspend fun setAppLock(enabled: Boolean)
 

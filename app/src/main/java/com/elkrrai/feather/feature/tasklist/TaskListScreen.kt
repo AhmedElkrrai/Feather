@@ -99,7 +99,15 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import java.time.LocalTime
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToDown
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.annotation.StringRes
 import com.elkrrai.feather.ui.brand.scenes.SceneKind
 import androidx.compose.ui.geometry.Offset
@@ -193,6 +201,24 @@ fun TaskListScreen(
     // Back closes the menu first, before it leaves the screen.
     BackHandler(enabled = drawerState.currentValue == DrawerValue.Open) { closeDrawer() }
 
+    // Zen mode: an empty Overdue view is a calm sky. After a few quiet seconds the owl's sky takes the
+    // whole screen; a touch brings the screen back, and a few quiet seconds later the sky comes again.
+    var zen by remember { mutableStateOf(false) }
+    var touches by remember { mutableIntStateOf(0) }
+    val zenPossible = state.scope == TaskScope.Overdue && state.isEmpty && !state.isLoading &&
+        drawerState.targetValue == DrawerValue.Closed && !showTips && !showWelcome && !showQuickAdd &&
+        selectionDialog == null
+    LaunchedEffect(zenPossible, zen, touches) {
+        if (!zenPossible) {
+            zen = false
+        } else if (!zen) {
+            delay(ZEN_DELAY_MILLIS)
+            zen = true
+        }
+    }
+    BackHandler(enabled = zen) { zen = false }
+    HideSystemBars(hide = zen)
+
     val drawerActions = DrawerActions(
         onSelect = { scope ->
             viewModel.selectScope(scope)
@@ -232,7 +258,19 @@ fun TaskListScreen(
                 TaskDrawerContent(state = state, actions = drawerActions, nestDot = nestNews, tipsVisible = tipOffers.isNotEmpty())
             }
         },
-        modifier = modifier,
+        gesturesEnabled = !zen,
+        modifier = modifier.pointerInput(Unit) {
+            // Any touch is activity: it ends Zen mode and starts the wait again. The touch still goes on to what is under it.
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    if (event.changes.any { it.changedToDown() }) {
+                        touches++
+                        zen = false
+                    }
+                }
+            }
+        },
     ) {
         Box {
         TaskListContent(
@@ -301,6 +339,7 @@ fun TaskListScreen(
             onCounterSet = viewModel::setCounter,
             onFinishedByCount = { celebration++ },
             focusSession = focusSession,
+            zen = zen,
             onMoveToToday = { task ->
                 viewModel.moveToToday(task.id) { before ->
                     coroutineScope.launch {
@@ -402,6 +441,8 @@ fun TaskListContent(
     focusSession: FocusSession? = null,
     /** In the Overdue view: moves the task to today. */
     onMoveToToday: (Task) -> Unit = {},
+    /** Zen mode: the header and the words are gone and the sky of an empty Overdue view fills the screen. */
+    zen: Boolean = false,
     onClearCompleted: () -> Unit = {},
     onFly: (from: Offset, to: Offset?) -> Unit = { _, _ -> },
     onWarmFeathers: (Offset) -> Unit = {},
@@ -532,9 +573,15 @@ fun TaskListContent(
 
     Scaffold(
         modifier = modifier,
-        contentWindowInsets = if (todayView) WindowInsets.navigationBars else ScaffoldDefaults.contentWindowInsets,
+        contentWindowInsets = when {
+            zen -> WindowInsets(0, 0, 0, 0)
+            todayView -> WindowInsets.navigationBars
+            else -> ScaffoldDefaults.contentWindowInsets
+        },
         topBar = {
-            if (todayView) {
+            if (zen) {
+                // nothing: the sky has the whole screen
+            } else if (todayView) {
                 // nothing: see TodayHeader
             } else if (selecting) {
                 SelectionTopBar(count = state.selection.size, actions = selectionActions)
@@ -602,6 +649,7 @@ fun TaskListContent(
                     title = stringResource(copy.title),
                     body = copy.body?.let { stringResource(it) },
                     modifier = Modifier.padding(padding),
+                    calm = zen,
                 )
             }
 
@@ -794,13 +842,31 @@ fun TaskListContent(
 /** The picture and words for an empty view. */
 private class EmptyCopy(val scene: SceneKind, @StringRes val title: Int, @StringRes val body: Int?)
 
+/** How long Overdue sits empty and untouched before the sky fills the screen. */
+private const val ZEN_DELAY_MILLIS = 5_000L
+
+/** Hides the status and navigation bars while [hide]; a swipe from the edge shows them for a moment. */
+@Composable
+private fun HideSystemBars(hide: Boolean) {
+    val view = LocalView.current
+    DisposableEffect(hide) {
+        val window = view.context.findActivity()?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        if (hide && controller != null) {
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+        }
+        onDispose { if (hide) controller?.show(WindowInsetsCompat.Type.systemBars()) }
+    }
+}
+
 /**
  * What an empty view says. Overdue is a happy place to be; Goals invite a first one; Upcoming
  * says nothing is due; Completed says nothing is finished yet.
  */
 private fun TaskScope.emptyCopy(): EmptyCopy = when (this) {
     TaskScope.Overdue -> EmptyCopy(SceneKind.ClearSkies, R.string.scene_clear_skies, R.string.empty_overdue_body)
-    TaskScope.NoDate -> EmptyCopy(SceneKind.EmptyList, R.string.scene_empty_list, R.string.empty_goals_body)
+    TaskScope.NoDate -> EmptyCopy(SceneKind.EmptyList, R.string.scene_empty_list, null)
     TaskScope.Upcoming -> EmptyCopy(SceneKind.HungryChick, R.string.scene_hungry_chick, R.string.empty_upcoming_body)
     TaskScope.Today -> EmptyCopy(SceneKind.NothingDue, R.string.scene_nothing_due, null)
     TaskScope.Completed -> EmptyCopy(SceneKind.NothingDue, R.string.empty_view_title, R.string.empty_view_body)

@@ -27,7 +27,8 @@ import com.elkrrai.feather.ui.brand.scenes.sceneSizeDp
  * Centered empty-state layout: one picture, one sentence ([title]) and, if it helps, a line of
  * detail ([body]). The picture is a [scene] from the illustration kit, shown at a size that
  * follows the font size and left out when the screen is too short for it; without a scene it is
- * the bird in [mood].
+ * the bird in [mood]. With [calm] the sky of the Overdue view fills the whole screen with nothing
+ * written on it.
  */
 @Composable
 fun EmptyState(
@@ -36,11 +37,13 @@ fun EmptyState(
     body: String? = null,
     mood: BirdMood = BirdMood.IDLE,
     scene: SceneKind? = null,
+    calm: Boolean = false,
 ) {
     if (scene == SceneKind.ClearSkies) {
         // The sky fills the screen, with the sentence written on it near the top.
-        BoxWithConstraints(modifier.fillMaxSize().padding(SKY_MARGIN)) {
-            if (maxHeight >= SKY_MIN_HEIGHT) ClearSkiesScene(width = maxWidth, height = maxHeight)
+        BoxWithConstraints(modifier.fillMaxSize().padding(if (calm) 0.dp else SKY_MARGIN)) {
+            if (maxHeight >= SKY_MIN_HEIGHT) ClearSkiesScene(width = maxWidth, height = maxHeight, fullBleed = calm)
+            if (calm) return@BoxWithConstraints
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,

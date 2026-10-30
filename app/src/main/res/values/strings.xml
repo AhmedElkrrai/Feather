@@ -431,6 +431,7 @@
     <string name="tip_failed">That did not go through. Please try again later.</string>
     <string name="settings_about">About Feather</string>
     <string name="settings_version">Version %1$s</string>
+    <string name="settings_open_source">Open source: %1$s</string>
     <string name="settings_about_summary">Free, with no ads, no accounts and no tracking.</string>
 
     <!-- Bird animations -->
@@ -548,6 +549,7 @@
     <string name="habit_goal_days_times">Goal: %1$d days, %2$d times a day</string>
     <string name="habit_goal_amount">Goal: %1$d %2$s</string>
     <string name="habit_week_met">Goal met</string>
+    <string name="habit_swipe_hint">Swipe to see earlier weeks</string>
     <string name="drawer_hint_today">Due today</string>
     <string name="drawer_hint_upcoming">From tomorrow on</string>
     <string name="drawer_hint_overdue">Past their date</string>
@@ -557,7 +559,6 @@
     <string name="drawer_hint_progress">Finished tasks and habits</string>
     <string name="empty_upcoming_body">Tasks with a date after today wait here.</string>
     <string name="empty_overdue_body">Tasks past their date wait here, each with a button to move it to today.</string>
-    <string name="empty_goals_body">Tasks without a date live here, for whenever. Tap + to add one.</string>
     <string name="welcome_title">Hi, I\u2019m Feather</string>
     <string name="welcome_task_lead">A task</string>
     <string name="welcome_task_body">is something to finish. Tap + to add one.</string>

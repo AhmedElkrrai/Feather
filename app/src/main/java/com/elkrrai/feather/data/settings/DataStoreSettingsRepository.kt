@@ -40,6 +40,8 @@ class DataStoreSettingsRepository @Inject constructor(
         val haptics = booleanPreferencesKey("haptics")
         val menuHints = booleanPreferencesKey("menu_hints")
         val welcomeSeen = booleanPreferencesKey("welcome_seen")
+        val habitSwipeHintsShown = intPreferencesKey("habit_swipe_hints_shown")
+        val habitSwipeHintWeek = stringPreferencesKey("habit_swipe_hint_week")
         val appLock = booleanPreferencesKey("app_lock")
         val birdAnimations = booleanPreferencesKey("bird_animations")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
@@ -78,6 +80,8 @@ class DataStoreSettingsRepository @Inject constructor(
             haptics = prefs[Keys.haptics] ?: defaults.haptics,
             menuHints = prefs[Keys.menuHints] ?: defaults.menuHints,
             welcomeSeen = prefs[Keys.welcomeSeen] ?: defaults.welcomeSeen,
+            habitSwipeHintsShown = prefs[Keys.habitSwipeHintsShown] ?: defaults.habitSwipeHintsShown,
+            habitSwipeHintWeek = prefs[Keys.habitSwipeHintWeek]?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
             appLock = prefs[Keys.appLock] ?: defaults.appLock,
             birdAnimations = prefs[Keys.birdAnimations] ?: defaults.birdAnimations,
             reduceMotion = prefs[Keys.reduceMotion] ?: defaults.reduceMotion,
@@ -168,6 +172,13 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setWelcomeSeen(seen: Boolean) {
         dataStore.edit { it[Keys.welcomeSeen] = seen }
+    }
+
+    override suspend fun setHabitSwipeHint(shown: Int, week: LocalDate) {
+        dataStore.edit {
+            it[Keys.habitSwipeHintsShown] = shown
+            it[Keys.habitSwipeHintWeek] = week.toString()
+        }
     }
 
     override suspend fun setCelebrations(enabled: Boolean) {

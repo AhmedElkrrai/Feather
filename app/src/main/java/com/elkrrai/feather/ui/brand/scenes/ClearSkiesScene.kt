@@ -58,10 +58,12 @@ import kotlin.math.sin
  * the middle, wings down.
  */
 @Composable
-internal fun ClearSkiesScene(width: Dp, height: Dp, modifier: Modifier = Modifier) =
+internal fun ClearSkiesScene(width: Dp, height: Dp, modifier: Modifier = Modifier, fullBleed: Boolean = false) =
     SceneFrame(width, modifier, height = height) {
         val p = palette
         val moving = rememberBirdMotionAllowed()
+        // filling a whole screen, the picture has square corners
+        val radius = if (fullBleed) 0f else PANEL_RADIUS
         // the board is 200 units wide and this many tall
         val boardHeight = height / unit
         // the sky is the one of the time of day, as on Today: dawn, day, dusk or night, with the moon at night
@@ -78,7 +80,7 @@ internal fun ClearSkiesScene(width: Dp, height: Dp, modifier: Modifier = Modifie
         val cloudSpan = SCENE_BOARD + 2f * CLOUD_MARGIN
 
         val panel = Path().apply {
-            addRoundRect(RoundRect(0f, 0f, SCENE_BOARD, boardHeight, CornerRadius(PANEL_RADIUS)))
+            addRoundRect(RoundRect(0f, 0f, SCENE_BOARD, boardHeight, CornerRadius(radius)))
         }
         Layer {
             clipPath(panel) {
@@ -107,11 +109,11 @@ internal fun ClearSkiesScene(width: Dp, height: Dp, modifier: Modifier = Modifie
             }
         }
         // two rows of hills, the far one higher up and slower; on the light sky they are paler
-        HillStrip(boardHeight, R.drawable.hills_far, { flight.distance * FAR_HILLS_SPEED / (2f * SCENE_BOARD) }, FAR_HILLS_LIFT, if (night) 0.8f else if (hazy) 0.6f else 0.4f)
-        HillStrip(boardHeight, R.drawable.hills_near, { flight.distance * NEAR_HILLS_SPEED / (2f * SCENE_BOARD) }, 0f, if (night) 1f else if (hazy) 0.8f else 0.55f)
+        HillStrip(boardHeight, radius, R.drawable.hills_far, { flight.distance * FAR_HILLS_SPEED / (2f * SCENE_BOARD) }, FAR_HILLS_LIFT, if (night) 0.8f else if (hazy) 0.6f else 0.4f)
+        HillStrip(boardHeight, radius, R.drawable.hills_near, { flight.distance * NEAR_HILLS_SPEED / (2f * SCENE_BOARD) }, 0f, if (night) 1f else if (hazy) 0.8f else 0.55f)
         // The owl is boxed where it rests in the middle of the sky and moved from there by the
         // flight: forward in a burst, up and down on its wave, tipped with it.
-        Box(Modifier.size(unit * SCENE_BOARD, unit * boardHeight).clip(RoundedCornerShape(unit * PANEL_RADIUS))) {
+        Box(Modifier.size(unit * SCENE_BOARD, unit * boardHeight).clip(RoundedCornerShape(unit * radius))) {
             SideOwlFlight(
                 flap = { flight.flap },
                 fold = { flight.fold },
@@ -139,7 +141,7 @@ internal fun ClearSkiesScene(width: Dp, height: Dp, modifier: Modifier = Modifie
             drawRoundRect(
                 p.ink.copy(alpha = 0.12f),
                 size = Size(SCENE_BOARD, boardHeight),
-                cornerRadius = CornerRadius(PANEL_RADIUS),
+                cornerRadius = CornerRadius(radius),
                 style = Stroke(1.2f),
             )
         }
@@ -258,11 +260,12 @@ private fun DrawScope.drawDriftingCloud(p: ScenePalette, color: Color, start: Of
  * A row of hills (a 2000 by 496 picture) as wide as the sky picture, scrolling left for ever: each
  * [phase] of 0 to 1 moves it two picture widths. It is tiled one way up, then flipped, then the
  * first way again, so the joins always match even where the picture's own edges do not. [lift]
- * raises it by that many board units from the bottom of the sky, which is [boardHeight] tall.
+ * raises it by that many board units from the bottom of the sky, which is [boardHeight] tall; the
+ * sky has corners of [radius] units.
  */
 @Composable
-private fun SceneScope.HillStrip(boardHeight: Float, drawable: Int, phase: () -> Float, lift: Float, alpha: Float) {
-    Box(Modifier.size(unit * SCENE_BOARD, unit * boardHeight).clip(RoundedCornerShape(unit * PANEL_RADIUS))) {
+private fun SceneScope.HillStrip(boardHeight: Float, radius: Float, drawable: Int, phase: () -> Float, lift: Float, alpha: Float) {
+    Box(Modifier.size(unit * SCENE_BOARD, unit * boardHeight).clip(RoundedCornerShape(unit * radius))) {
         for (tile in 0..2) {
             Image(
                 painter = painterResource(drawable),

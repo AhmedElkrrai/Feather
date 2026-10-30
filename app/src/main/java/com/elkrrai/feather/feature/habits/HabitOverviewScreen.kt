@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
+import com.elkrrai.feather.domain.habit.DAYS_IN_WEEK
 import com.elkrrai.feather.domain.habit.HabitKind
 import com.elkrrai.feather.domain.habit.HabitOverview
 import com.elkrrai.feather.domain.habit.HabitState
@@ -210,7 +211,8 @@ private fun weekRange(context: android.content.Context, start: LocalDate, zone: 
     DateUtils.formatDateRange(
         context,
         start.atStartOfDay(zone).toInstant().toEpochMilli(),
-        start.plusDays(6).atStartOfDay(zone).toInstant().toEpochMilli(),
+        // the last moment of the last day: a range that ends at midnight is shown without that day
+        start.plusDays(DAYS_IN_WEEK.toLong()).atStartOfDay(zone).toInstant().toEpochMilli() - 1,
         DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH,
     )
 
