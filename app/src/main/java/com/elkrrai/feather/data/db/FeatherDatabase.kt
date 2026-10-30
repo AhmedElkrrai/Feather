@@ -17,6 +17,7 @@ import androidx.room.migration.AutoMigrationSpec
  * - v7: folders and saved_filters are dropped (lists, folders and filters left the app); task_lists stays,
  *   see [ListEntity]
  * - v8: tasks.counterTarget, counterStep and counterDone (a task that counts toward a target)
+ * - v9: habits, habit_goals and habit_entries (habits are not tasks)
  *
  * Migrations are never destructive for what the person made: users have real data. Exported schemas
  * live in `app/schemas`.
@@ -29,8 +30,11 @@ import androidx.room.migration.AutoMigrationSpec
         TaskTagCrossRef::class,
         ReminderEntity::class,
         CompletionEntity::class,
+        HabitEntity::class,
+        HabitGoalEntity::class,
+        HabitEntryEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -40,6 +44,7 @@ import androidx.room.migration.AutoMigrationSpec
         AutoMigration(from = 5, to = 6),
         AutoMigration(from = 6, to = 7, spec = FeatherDatabase.DropFoldersAndFilters::class),
         AutoMigration(from = 7, to = 8),
+        AutoMigration(from = 8, to = 9),
     ],
 )
 abstract class FeatherDatabase : RoomDatabase() {
@@ -49,6 +54,7 @@ abstract class FeatherDatabase : RoomDatabase() {
     abstract fun reminderDao(): ReminderDao
     abstract fun completionDao(): CompletionDao
     abstract fun backupDao(): BackupDao
+    abstract fun habitDao(): HabitDao
 
     /** Nothing refers to these two tables, so dropping them cannot touch any task. */
     @DeleteTable.Entries(

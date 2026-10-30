@@ -24,6 +24,10 @@ data class BackupFile(
     val taskTags: List<TaskTagRecord> = emptyList(),
     val reminders: List<ReminderRecord> = emptyList(),
     val completions: List<CompletionRecord> = emptyList(),
+    /** Habits with their weekly goals and logged days; absent in older backup files. */
+    val habits: List<HabitRecord> = emptyList(),
+    val habitGoals: List<HabitGoalRecord> = emptyList(),
+    val habitEntries: List<HabitEntryRecord> = emptyList(),
 ) {
     companion object {
         const val FORMAT = "feather-backup"
@@ -96,4 +100,33 @@ data class CompletionRecord(
     val taskId: String,
     val completedAt: Long,
     val dueDate: String? = null,
+)
+
+@Serializable
+data class HabitRecord(
+    val id: String,
+    val name: String,
+    val kind: Int = 0,
+    val unit: String = "",
+    val sortOrder: Long = 0,
+    val createdAt: Long = 0,
+    val updatedAt: Long = 0,
+    val deletedAt: Long? = null,
+)
+
+@Serializable
+data class HabitGoalRecord(
+    val habitId: String,
+    val effectiveFrom: String,
+    val target: Int,
+    val dailyTarget: Int = 1,
+    val updatedAt: Long = 0,
+)
+
+@Serializable
+data class HabitEntryRecord(
+    val habitId: String,
+    val date: String,
+    val amount: Int,
+    val updatedAt: Long = 0,
 )

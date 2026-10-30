@@ -35,6 +35,7 @@ class DrawerActions(
     val onSelect: (TaskScope) -> Unit,
     val onOpenTrash: () -> Unit,
     val onOpenRhythm: () -> Unit = {},
+    val onOpenHabits: () -> Unit = {},
     val onOpenNest: () -> Unit = {},
     val onOpenSettings: () -> Unit,
     val onOpenTips: () -> Unit = {},
@@ -102,6 +103,14 @@ fun TaskDrawerContent(
                 modifier = Modifier.padding(itemPadding),
             )
         }
+
+        // Habits are a screen of their own, not a view of the tasks.
+        NavigationDrawerItem(
+            label = { Text(stringResource(R.string.habits_title)) },
+            selected = false,
+            onClick = actions.onOpenHabits,
+            modifier = Modifier.padding(itemPadding),
+        )
 
         HorizontalDivider(Modifier.padding(horizontal = 28.dp, vertical = 8.dp))
         NavigationDrawerItem(

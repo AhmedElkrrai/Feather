@@ -14,6 +14,9 @@ data class MergePlan(
     val reminders: List<ReminderRecord>,
     val completions: List<CompletionRecord>,
     val rewrittenTaskIds: Set<String>,
+    val habits: List<HabitRecord> = emptyList(),
+    val habitGoals: List<HabitGoalRecord> = emptyList(),
+    val habitEntries: List<HabitEntryRecord> = emptyList(),
 )
 
 /**
@@ -27,6 +30,8 @@ data class MergePlan(
  *   joined to the phone's tag instead of being added a second time.
  * - Tag links and reminders come from the file only for tasks that were taken from it.
  *   Completion history is a union.
+ * - Habits are taken like tasks (the later `updatedAt` wins). Their goals and logged days are taken one by
+ *   one, each when the phone does not have it or the file's copy is later, for habits the phone ends up with.
  */
 object BackupMerger {
 
@@ -60,6 +65,21 @@ object BackupMerger {
             .filter { it.taskId in knownTasks && it.id !in knownCompletions }
             .distinctBy { it.id }
 
+        val habits = newer(local.habits, incoming.habits, { it.id }, { it.updatedAt })
+        val knownHabits = local.habits.map { it.id }.toSet() + habits.map { it.id }
+        val habitGoals = newer(
+            local.habitGoals,
+            incoming.habitGoals.filter { it.habitId in knownHabits },
+            { "${it.habitId}|${it.effectiveFrom}" },
+            { it.updatedAt },
+        )
+        val habitEntries = newer(
+            local.habitEntries,
+            incoming.habitEntries.filter { it.habitId in knownHabits },
+            { "${it.habitId}|${it.date}" },
+            { it.updatedAt },
+        )
+
         return MergePlan(
             tags = tags,
             tasks = tasks,
@@ -67,6 +87,9 @@ object BackupMerger {
             reminders = reminders,
             completions = completions,
             rewrittenTaskIds = rewritten,
+            habits = habits,
+            habitGoals = habitGoals,
+            habitEntries = habitEntries,
         )
     }
 

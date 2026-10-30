@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.elkrrai.feather.data.db.BackupDao
 import com.elkrrai.feather.data.db.CompletionDao
 import com.elkrrai.feather.data.db.FeatherDatabase
+import com.elkrrai.feather.data.db.HabitDao
 import com.elkrrai.feather.data.db.ListDao
 import com.elkrrai.feather.data.db.ReminderDao
 import com.elkrrai.feather.data.db.TagDao
@@ -43,6 +44,9 @@ object DatabaseModule {
 
     @Provides
     fun provideBackupDao(db: FeatherDatabase): BackupDao = db.backupDao()
+
+    @Provides
+    fun provideHabitDao(db: FeatherDatabase): HabitDao = db.habitDao()
 
     @Provides
     fun provideClock(): Clock = Clock.systemUTC()

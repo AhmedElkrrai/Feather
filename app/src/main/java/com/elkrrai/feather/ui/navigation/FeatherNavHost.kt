@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.elkrrai.feather.feature.focus.FocusScreen
+import com.elkrrai.feather.feature.habits.HabitsScreen
 import com.elkrrai.feather.feature.search.SearchScreen
 import com.elkrrai.feather.feature.settings.ReliabilityScreen
 import com.elkrrai.feather.feature.settings.SettingsScreen
@@ -58,6 +59,7 @@ fun FeatherNavHost(
                 onOpenTrash = { navController.navigate(TrashRoute) },
                 onOpenSettings = { navController.navigate(SettingsRoute) },
                 onOpenRhythm = { navController.navigate(RhythmRoute) },
+                onOpenHabits = { navController.navigate(HabitsRoute) },
                 onOpenNest = { navController.navigate(NestRoute) },
             )
         }
@@ -99,6 +101,9 @@ fun FeatherNavHost(
         }
         composable<NestRoute> {
             NestScreen(onBack = { navController.popBackStack() })
+        }
+        composable<HabitsRoute> {
+            HabitsScreen(onBack = { navController.popBackStack() })
         }
         composable<RhythmRoute> {
             RhythmScreen(onBack = { navController.popBackStack() })

@@ -29,12 +29,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -87,6 +91,10 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.roundToInt
+import com.elkrrai.feather.domain.habit.HabitState
+import com.elkrrai.feather.domain.habit.weekStartOf
+import com.elkrrai.feather.feature.habits.HabitsRhythmTab
+import com.elkrrai.feather.feature.habits.HabitsViewModel
 import com.elkrrai.feather.domain.rhythm.WeeklyFeather
 import com.elkrrai.feather.domain.rhythm.isFeatherDay
 import com.elkrrai.feather.domain.rhythm.weeklyFeather
@@ -96,10 +104,13 @@ fun RhythmScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RhythmViewModel = hiltViewModel(),
+    habitsViewModel: HabitsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val habits by habitsViewModel.habits.collectAsStateWithLifecycle()
     RhythmContent(
         state = state,
+        habits = habits,
         onBack = onBack,
         onPause = viewModel::pause,
         onResume = viewModel::resume,
@@ -121,7 +132,11 @@ fun RhythmContent(
     onResume: () -> Unit,
     modifier: Modifier = Modifier,
     today: LocalDate = LocalDate.now(),
+    /** The habits for the second tab; null while they load. */
+    habits: List<HabitState>? = emptyList(),
 ) {
+    // 0 is the tasks (everything this screen was), 1 the habits.
+    var tab by rememberSaveable { mutableIntStateOf(0) }
     val locale = LocalConfiguration.current.locales[0]
     val zone = remember { ZoneId.systemDefault() }
     val firstDay = firstDayOfWeek(locale)
@@ -140,16 +155,26 @@ fun RhythmContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.rhythm_title), style = MaterialTheme.typography.headlineSmall) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.action_back))
-                    }
-                },
-            )
+            Column {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.rhythm_title), style = MaterialTheme.typography.headlineSmall) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.action_back))
+                        }
+                    },
+                )
+                PrimaryTabRow(selectedTabIndex = tab) {
+                    Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.rhythm_tab_tasks)) })
+                    Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.rhythm_tab_habits)) })
+                }
+            }
         },
     ) { padding ->
+        if (tab == 1) {
+            HabitsRhythmTab(habits = habits, weekStart = weekStartOf(today, firstDay), contentPadding = padding)
+            return@Scaffold
+        }
         if (state.isLoading) {
             Box(Modifier.fillMaxSize().padding(padding))
             return@Scaffold

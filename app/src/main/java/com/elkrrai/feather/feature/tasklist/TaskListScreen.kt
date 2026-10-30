@@ -123,6 +123,7 @@ fun TaskListScreen(
     modifier: Modifier = Modifier,
     onOpenRhythm: () -> Unit = {},
     onOpenNest: () -> Unit = {},
+    onOpenHabits: () -> Unit = {},
     viewModel: TaskListViewModel = hiltViewModel(),
     dayCards: DayCardsViewModel = hiltViewModel(),
     tips: TipViewModel = hiltViewModel(),
@@ -199,6 +200,10 @@ fun TaskListScreen(
         onOpenTrash = {
             closeDrawer()
             onOpenTrash()
+        },
+        onOpenHabits = {
+            closeDrawer()
+            onOpenHabits()
         },
         onOpenSettings = {
             closeDrawer()

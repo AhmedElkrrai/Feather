@@ -1,6 +1,9 @@
 package com.elkrrai.feather.data.backup
 
 import com.elkrrai.feather.data.db.CompletionEntity
+import com.elkrrai.feather.data.db.HabitEntity
+import com.elkrrai.feather.data.db.HabitEntryEntity
+import com.elkrrai.feather.data.db.HabitGoalEntity
 import com.elkrrai.feather.data.db.INBOX_LIST_ID
 import com.elkrrai.feather.data.db.ReminderEntity
 import com.elkrrai.feather.data.db.TagEntity
@@ -92,3 +95,15 @@ fun ReminderRecord.toEntity() = ReminderEntity(
 fun CompletionEntity.toRecord() = CompletionRecord(id, taskId, completedAt, dueDate)
 
 fun CompletionRecord.toEntity() = CompletionEntity(id, taskId, completedAt, dueDate)
+
+fun HabitEntity.toRecord() = HabitRecord(id, name, kind, unit, sortOrder, createdAt, updatedAt, deletedAt)
+
+fun HabitRecord.toEntity() = HabitEntity(id, name, kind, unit, sortOrder, createdAt, updatedAt, deletedAt)
+
+fun HabitGoalEntity.toRecord() = HabitGoalRecord(habitId, effectiveFrom, target, dailyTarget, updatedAt)
+
+fun HabitGoalRecord.toEntity() = HabitGoalEntity(habitId, effectiveFrom, target, dailyTarget, updatedAt)
+
+fun HabitEntryEntity.toRecord() = HabitEntryRecord(habitId, date, amount, updatedAt)
+
+fun HabitEntryRecord.toEntity() = HabitEntryEntity(habitId, date, amount, updatedAt)

@@ -56,11 +56,15 @@ class BackupRepositoryImpl @Inject constructor(
         taskTags = dao.tagLinks().map { it.toRecord() },
         reminders = dao.reminders().map { it.toRecord() },
         completions = dao.completions().map { it.toRecord() },
+        habits = dao.habits().map { it.toRecord() },
+        habitGoals = dao.habitGoals().map { it.toRecord() },
+        habitEntries = dao.habitEntries().map { it.toRecord() },
     )
 
     private suspend fun wipe() {
         dao.deleteAllTasks() // tag links, reminders and history go with them
         dao.deleteAllTags()
+        dao.deleteAllHabits() // goals and logged days go with them
     }
 
     /** Parents before children, so every foreign key points at a row that already exists. */
@@ -72,6 +76,9 @@ class BackupRepositoryImpl @Inject constructor(
         dao.insertTagLinks(plan.tagLinks.map { it.toEntity() })
         dao.upsertReminders(plan.reminders.map { it.toEntity() })
         dao.insertCompletions(plan.completions.map { it.toEntity() })
+        dao.upsertHabits(plan.habits.map { it.toEntity() })
+        dao.upsertHabitGoals(plan.habitGoals.map { it.toEntity() })
+        dao.upsertHabitEntries(plan.habitEntries.map { it.toEntity() })
     }
 
     private companion object {

@@ -28,6 +28,28 @@ interface BackupDao {
     @Query("SELECT * FROM completion_history")
     suspend fun completions(): List<CompletionEntity>
 
+    @Query("SELECT * FROM habits")
+    suspend fun habits(): List<HabitEntity>
+
+    @Query("SELECT * FROM habit_goals")
+    suspend fun habitGoals(): List<HabitGoalEntity>
+
+    @Query("SELECT * FROM habit_entries")
+    suspend fun habitEntries(): List<HabitEntryEntity>
+
+    @Upsert
+    suspend fun upsertHabits(rows: List<HabitEntity>)
+
+    @Upsert
+    suspend fun upsertHabitGoals(rows: List<HabitGoalEntity>)
+
+    @Upsert
+    suspend fun upsertHabitEntries(rows: List<HabitEntryEntity>)
+
+    /** Removes every habit with its goals and logged days (they cascade). */
+    @Query("DELETE FROM habits")
+    suspend fun deleteAllHabits()
+
     @Upsert
     suspend fun upsertTags(rows: List<TagEntity>)
 
