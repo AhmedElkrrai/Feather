@@ -40,6 +40,10 @@ A task can count toward a target, for example "do 100 pushups" done in sets of 2
 - **Built as decided, plus:** the count stops at the target; opening a finished counter again takes its last step back (it is open, one step short), so it is never "full and open"; a copy of a counter task starts at 0; the CSV export has a "Counter" column; the long press on the +step button opens "Set the count" (type a number, or take a step back); the quick-add counter tool sets target and step (no typed syntax).
 - **Left out for now:** quick-add syntax (such as "pushups x100 by 25"), a log of sets, feeding the counts into Your rhythm.
 
+## Focus timer (size 1, written, not yet tried on a phone)
+A "Focus on this task" action in the editor menu opens a full-screen timer for the task: 25 minutes by default (5 to 120 in steps of 5), pause, stop, a notification with a live countdown while it runs, a sound and vibration when time is up, then a 5 minute break or another round. The owl lies still while you focus and takes a lap at the end. One session at a time; it survives the app being closed (an alarm and a small preferences file).
+- **Not done (sizes 2 and 3):** minutes spent per task, cycles of four rounds with a long break, a settings screen for the lengths, a chip on the card while a session runs, asking for the notification permission when starting.
+
 ## The owl (branch codex/cartoon-bird-redesign)
 - Owl art for the surfaces still on the old blue bird (widgets, About, launch screen, notification icon, store graphics): list and brief in `art/README.md`.
 - Check the owl on the phone: Today (resting, sleeping at night when nothing is left, the lap when the last task is done), the empty-state scenes (the owl fills more of its box than the songbird did, so placements in `Scenes.kt` may need nudging), the completion hop, the tip sheet thank-you.

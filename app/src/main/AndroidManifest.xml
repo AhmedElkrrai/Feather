@@ -140,6 +140,16 @@
             </intent-filter>
         </receiver>
 
+        <!-- The focus timer's alarm and its notification's Stop button, and re-arming it after a reboot. -->
+        <receiver
+            android:name=".focus.FocusReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <!-- Persists the per-app language choice on API < 33. -->
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

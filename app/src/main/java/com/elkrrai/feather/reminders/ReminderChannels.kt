@@ -9,6 +9,8 @@ import com.elkrrai.feather.R
 object ReminderChannels {
     const val REMINDERS = "reminders"
     const val SUMMARY = "daily_summary"
+    const val FOCUS_RUNNING = "focus_running"
+    const val FOCUS_DONE = "focus_done"
 
     fun ensure(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
@@ -30,6 +32,25 @@ object ReminderChannels {
                 NotificationManager.IMPORTANCE_DEFAULT,
             ).apply {
                 description = context.getString(R.string.channel_summary_description)
+            }
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(
+                FOCUS_RUNNING,
+                context.getString(R.string.channel_focus_running_name),
+                NotificationManager.IMPORTANCE_LOW,
+            ).apply {
+                description = context.getString(R.string.channel_focus_running_description)
+            }
+        )
+        manager.createNotificationChannel(
+            NotificationChannel(
+                FOCUS_DONE,
+                context.getString(R.string.channel_focus_done_name),
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = context.getString(R.string.channel_focus_done_description)
+                enableVibration(true)
             }
         )
     }

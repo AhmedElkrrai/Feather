@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.elkrrai.feather.feature.focus.FocusScreen
 import com.elkrrai.feather.feature.search.SearchScreen
 import com.elkrrai.feather.feature.settings.ReliabilityScreen
 import com.elkrrai.feather.feature.settings.SettingsScreen
@@ -25,6 +26,9 @@ fun FeatherNavHost(
     modifier: Modifier = Modifier,
     openTaskId: String? = null,
     onOpenTaskHandled: () -> Unit = {},
+    /** A task whose focus timer to open (from a focus notification), or null. */
+    openFocusTaskId: String? = null,
+    onOpenFocusHandled: () -> Unit = {},
 ) {
     val navController = rememberNavController()
 
@@ -32,6 +36,13 @@ fun FeatherNavHost(
         if (openTaskId != null) {
             navController.navigate(TaskEditRoute(openTaskId))
             onOpenTaskHandled()
+        }
+    }
+
+    LaunchedEffect(openFocusTaskId) {
+        if (openFocusTaskId != null) {
+            navController.navigate(FocusRoute(openFocusTaskId))
+            onOpenFocusHandled()
         }
     }
 
@@ -55,6 +66,7 @@ fun FeatherNavHost(
             TaskEditScreen(
                 onBack = { navController.popBackStack() },
                 onOpenReliability = { navController.navigate(ReliabilityRoute) },
+                onOpenFocus = { taskId -> navController.navigate(FocusRoute(taskId)) },
                 // Replace the editor with the copy so Back returns to the list, not to the original.
                 onOpenTask = { taskId ->
                     navController.navigate(TaskEditRoute(taskId)) {
@@ -62,6 +74,9 @@ fun FeatherNavHost(
                     }
                 },
             )
+        }
+        composable<FocusRoute> {
+            FocusScreen(onBack = { navController.popBackStack() })
         }
         composable<SearchRoute> {
             SearchScreen(

@@ -68,7 +68,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
+import com.elkrrai.feather.domain.focus.FocusSession
 import com.elkrrai.feather.domain.model.Task
+import com.elkrrai.feather.feature.focus.FocusBadgeViewModel
 import com.elkrrai.feather.domain.support.TipResult
 import com.elkrrai.feather.domain.view.TagFilter
 import com.elkrrai.feather.domain.view.TaskScope
@@ -124,6 +126,7 @@ fun TaskListScreen(
     viewModel: TaskListViewModel = hiltViewModel(),
     dayCards: DayCardsViewModel = hiltViewModel(),
     tips: TipViewModel = hiltViewModel(),
+    focusBadge: FocusBadgeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val tipOffers by tips.offers.collectAsStateWithLifecycle()
@@ -138,6 +141,7 @@ fun TaskListScreen(
         }
     }
     val dayCard by dayCards.card.collectAsStateWithLifecycle()
+    val focusSession by focusBadge.session.collectAsStateWithLifecycle()
     val nestNews by dayCards.nestNews.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -145,6 +149,7 @@ fun TaskListScreen(
     var showQuickAdd by rememberSaveable { mutableStateOf(false) }
     val deletedMessage = stringResource(R.string.task_deleted)
     val undoLabel = stringResource(R.string.action_undo)
+    val movedToTodayMessage = stringResource(R.string.moved_to_today)
     val context = LocalContext.current
     val resources = context.resources
     var selectionDialog by remember { mutableStateOf<SelectionDialog?>(null) }
@@ -289,6 +294,20 @@ fun TaskListScreen(
             onCounterAdd = viewModel::addToCounter,
             onCounterSet = viewModel::setCounter,
             onFinishedByCount = { celebration++ },
+            focusSession = focusSession,
+            onMoveToToday = { task ->
+                viewModel.moveToToday(task.id) { before ->
+                    coroutineScope.launch {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                        val result = snackbarHostState.showSnackbar(
+                            message = movedToTodayMessage,
+                            actionLabel = undoLabel,
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) viewModel.putBack(before)
+                    }
+                }
+            },
             onTagFilterChange = viewModel::selectTagFilter,
         )
         FeatherConfettiOverlay(confetti)
@@ -369,6 +388,10 @@ fun TaskListContent(
     onCounterSet: (taskId: String, done: Int) -> Unit = { _, _ -> },
     /** A counter task reached its target by steps: the bird hops, as for a ring tick. */
     onFinishedByCount: () -> Unit = {},
+    /** The running focus session, if any: its task shows the time left. */
+    focusSession: FocusSession? = null,
+    /** In the Overdue view: moves the task to today. */
+    onMoveToToday: (Task) -> Unit = {},
     onClearCompleted: () -> Unit = {},
     onFly: (from: Offset, to: Offset?) -> Unit = { _, _ -> },
     onWarmFeathers: (Offset) -> Unit = {},
@@ -703,6 +726,8 @@ fun TaskListContent(
                                     }
                                     onCounterAdd(task.id, amount)
                                 },
+                                focus = focusSession?.takeIf { it.taskId == task.id && !task.isCompleted },
+                                onMoveToToday = if (state.scope == TaskScope.Overdue) ({ onMoveToToday(task) }) else null,
                                 onCounterSet = { done ->
                                     val counter = task.counter
                                     if (counter != null && !task.isCompleted && done >= counter.target) {

@@ -257,6 +257,20 @@ class TaskListViewModel @Inject constructor(
         }
     }
 
+    /** Moves an overdue task to today; [onMoved] gets the task as it was, so the move can be undone. */
+    fun moveToToday(taskId: String, onMoved: (Task) -> Unit) {
+        viewModelScope.launch {
+            val task = taskRepository.getTask(taskId) ?: return@launch
+            taskRepository.saveTaskDetails(task.copy(dueDate = today()))
+            onMoved(task)
+        }
+    }
+
+    /** Puts a task back as it was (undo of [moveToToday]). */
+    fun putBack(task: Task) {
+        viewModelScope.launch { taskRepository.saveTaskDetails(task) }
+    }
+
     /** Adds [amount] (it may be negative) to the count of the counter task [taskId]; the target finishes it. */
     fun addToCounter(taskId: String, amount: Int) {
         viewModelScope.launch { taskRepository.addToCounter(taskId, amount) }

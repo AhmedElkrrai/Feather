@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import com.elkrrai.feather.data.nest.NestTracker
+import com.elkrrai.feather.focus.FocusController
 
 @HiltAndroidApp
 class FeatherApp : Application() {
@@ -35,6 +36,7 @@ class FeatherApp : Application() {
     @Inject lateinit var settingsRepository: SettingsRepository
     @Inject lateinit var widgetUpdater: WidgetUpdater
     @Inject lateinit var nestTracker: NestTracker
+    @Inject lateinit var focusController: FocusController
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -62,6 +64,8 @@ class FeatherApp : Application() {
         widgetUpdater.start(appScope)
         // Keeps score for the bird's nest: what is earned stays earned.
         nestTracker.start(appScope)
+        // A focus session ends with its task: finished, deleted or moved to another day.
+        focusController.watch(taskRepository, appScope)
         // The daily backup job runs only while automatic backup is on and a folder is chosen.
         appScope.launch {
             settingsRepository.settings

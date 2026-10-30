@@ -84,8 +84,7 @@ class AlarmReminderScheduler @Inject constructor(
         val today = LocalDate.now(clock.withZone(ZoneId.systemDefault()))
         val active = tasks.getActiveTasks()
         val overdue = active.openCountIn(TaskScope.Overdue, today)
-        // "Today" includes overdue tasks; the summary reports the two separately.
-        val dueToday = active.openCountIn(TaskScope.Today, today) - overdue
+        val dueToday = active.openCountIn(TaskScope.Today, today)
         notifier.showSummary(dueToday = dueToday, overdue = overdue)
     }
 

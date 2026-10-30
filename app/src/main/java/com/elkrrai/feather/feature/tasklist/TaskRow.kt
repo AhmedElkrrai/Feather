@@ -4,7 +4,10 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +26,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.platform.LocalConfiguration
+import kotlinx.coroutines.delay
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +42,8 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
+import com.elkrrai.feather.domain.focus.FocusSession
+import com.elkrrai.feather.domain.focus.focusClock
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.ui.components.CompletionRing
 import com.elkrrai.feather.ui.components.MetaChip
@@ -67,6 +75,58 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.graphicsLayer
 import com.elkrrai.feather.ui.components.SubtaskProgressBar
 import com.elkrrai.feather.ui.theme.Dur
+
+/** "To today": the one-tap way out of the Overdue view. */
+@Composable
+private fun MoveToTodayButton(title: String, onClick: () -> Unit) {
+    val haptics = rememberHaptics()
+    val label = stringResource(R.string.action_move_to_today, title)
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = Modifier.heightIn(min = 40.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .clickable(onClickLabel = label, role = Role.Button) {
+                    haptics.tick()
+                    onClick()
+                }
+                .heightIn(min = 40.dp)
+                .padding(horizontal = 14.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(text = stringResource(R.string.move_to_today_short), style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+/** The time left of a focus session, counting down by the second (a paused one stands still). */
+@Composable
+private fun FocusChip(session: FocusSession) {
+    val scheme = MaterialTheme.colorScheme
+    val locale = LocalConfiguration.current.locales[0]
+    val now by produceState(System.currentTimeMillis(), session) {
+        while (!session.isPaused) {
+            value = System.currentTimeMillis()
+            delay(1_000)
+        }
+    }
+    MetaChip(
+        text = focusClock(session.remaining(now), locale),
+        container = scheme.tertiaryContainer,
+        content = scheme.onTertiaryContainer,
+        leading = {
+            Icon(
+                painter = painterResource(R.drawable.ic_timer),
+                contentDescription = stringResource(R.string.focus_title),
+                modifier = Modifier.size(12.dp),
+                tint = scheme.onTertiaryContainer,
+            )
+        },
+    )
+}
 
 /**
  * One task, as a card: the completion ring, the title, and a row of small chips (date, repeat,
@@ -105,6 +165,10 @@ fun TaskRow(
     /** For a counter task: add to the count (the "+25" button, or a step taken back), and set it exactly. */
     onCounterAdd: ((amount: Int) -> Unit)? = null,
     onCounterSet: ((done: Int) -> Unit)? = null,
+    /** The focus session on this task, when there is one: its time left shows as a chip. */
+    focus: FocusSession? = null,
+    /** In the Overdue view: puts the task on today with one tap. */
+    onMoveToToday: (() -> Unit)? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
     val feather = MaterialTheme.featherColors
@@ -133,7 +197,7 @@ fun TaskRow(
 
     val subtaskTotal = task.subtasks.size
     val subtasksDone = task.subtasks.count { it.isCompleted }
-    val hasChips = due != null || recurrence != null || task.tags.isNotEmpty()
+    val hasChips = due != null || recurrence != null || task.tags.isNotEmpty() || focus != null
     val counter = task.counter
     val counterState = counter?.let { stringResource(R.string.subtasks_of, it.done, it.target) }
     val canExpand = onAddSubtask != null && onToggleSubtask != null && !task.isCompleted && counter == null
@@ -212,6 +276,7 @@ fun TaskRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
+                        if (focus != null) FocusChip(focus)
                         if (due != null) {
                             val container = when {
                                 due.isWaiting -> scheme.surfaceVariant
@@ -299,7 +364,7 @@ fun TaskRow(
                 }
             }
 
-            if (task.isPinned || hasReminder || dragHandle != null || canExpand || showCounterButton) {
+            if (task.isPinned || hasReminder || dragHandle != null || canExpand || showCounterButton || onMoveToToday != null) {
                 Row(
                     modifier = Modifier.height(48.dp).padding(start = Space.x2),
                     verticalAlignment = Alignment.CenterVertically,
@@ -346,6 +411,7 @@ fun TaskRow(
                             )
                         }
                     }
+                    if (onMoveToToday != null) MoveToTodayButton(title = task.title, onClick = onMoveToToday)
                     if (showCounterButton && counter != null && onCounterAdd != null) {
                         CounterStepButton(
                             counter = counter,

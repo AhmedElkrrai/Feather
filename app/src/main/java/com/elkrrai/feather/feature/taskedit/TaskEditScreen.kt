@@ -139,6 +139,7 @@ class TaskEditActions(
     val onOpenReliability: () -> Unit,
     val onRecurrenceChange: (Recurrence?) -> Unit = {},
     val onDuplicate: () -> Unit = {},
+    val onFocus: () -> Unit = {},
 )
 
 @Composable
@@ -147,6 +148,7 @@ fun TaskEditScreen(
     onOpenReliability: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenTask: (taskId: String) -> Unit = {},
+    onOpenFocus: (taskId: String) -> Unit = {},
     viewModel: TaskEditViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -202,6 +204,7 @@ fun TaskEditScreen(
             onOpenReliability = onOpenReliability,
             onRecurrenceChange = viewModel::onRecurrenceChange,
             onDuplicate = { viewModel.duplicate(copyTitle) },
+            onFocus = { viewModel.currentTaskId?.let(onOpenFocus) },
         ),
         health = health,
         onRequestNotificationPermission = requestNotificationPermission,
@@ -252,6 +255,15 @@ fun TaskEditContent(
                     }
                 },
                 actions = {
+                    // Focus is for the open tasks of today only.
+                    if (!state.isNew && !state.isCompleted && state.dueDate == today) {
+                        IconButton(onClick = actions.onFocus) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_timer),
+                                contentDescription = stringResource(R.string.focus_action),
+                            )
+                        }
+                    }
                     if (!state.isNew) {
                         OverflowButton(
                             actions = listOf(

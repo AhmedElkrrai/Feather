@@ -250,7 +250,7 @@ class TaskListViewModelTest {
         val viewModel = newViewModel()
 
         val counts = viewModel.uiState.value.counts
-        assertEquals(2, counts[TaskScope.Today])
+        assertEquals(1, counts[TaskScope.Today])
         assertEquals(1, counts[TaskScope.Overdue])
         assertEquals(1, counts[TaskScope.Upcoming])
         assertEquals(1, counts[TaskScope.NoDate])

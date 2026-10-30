@@ -11,7 +11,7 @@ const val UPCOMING_DAYS = 7L
 
 /** True if this task belongs in [scope] as of [today]. Pure, so it is cheap to unit test. */
 fun Task.matches(scope: TaskScope, today: LocalDate): Boolean = when (scope) {
-    TaskScope.Today -> !isCompleted && dueDate != null && !dueDate.isAfter(today)
+    TaskScope.Today -> !isCompleted && dueDate == today
     TaskScope.Upcoming -> !isCompleted && dueDate != null &&
         dueDate.isAfter(today) && !dueDate.isAfter(today.plusDays(UPCOMING_DAYS))
     TaskScope.Overdue -> !isCompleted && dueDate != null && dueDate.isBefore(today)

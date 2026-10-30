@@ -36,6 +36,8 @@ data class TaskEditUiState(
     val dueTime: LocalTime? = null,
     val priority: Priority = Priority.NONE,
     val isPinned: Boolean = false,
+    /** The task is finished (a finished task has no focus timer). */
+    val isCompleted: Boolean = false,
     /** The tags currently attached to the task. */
     val tags: List<Tag> = emptyList(),
     /** The checklist, in order. Blank items are dropped when saving. */
@@ -72,6 +74,9 @@ class TaskEditViewModel @Inject constructor(
 
     private val taskId: String? = savedStateHandle.toRoute<TaskEditRoute>().taskId
 
+    /** The id of the task being edited, or null for a new one that has not been saved. */
+    val currentTaskId: String? get() = taskId
+
     private val _uiState = MutableStateFlow(
         TaskEditUiState(isLoading = taskId != null, isNew = taskId == null)
     )
@@ -105,6 +110,7 @@ class TaskEditViewModel @Inject constructor(
                     dueTime = task.dueTime,
                     priority = task.priority,
                     isPinned = task.isPinned,
+                    isCompleted = task.isCompleted,
                     tags = task.tags,
                     subtasks = task.subtasks,
                     reminders = task.reminders.filter { r -> r.kind != ReminderKind.SNOOZE },

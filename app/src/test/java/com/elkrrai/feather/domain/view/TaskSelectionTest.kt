@@ -59,8 +59,8 @@ class TaskSelectionTest {
     private val all = listOf(overdue, dueToday, tomorrow, inAWeek, later, undated, done)
 
     @Test
-    fun todayHoldsOpenTasksDueTodayOrEarlier() {
-        assertEquals(listOf("overdue", "today"), all.titles(TaskScope.Today))
+    fun todayHoldsOpenTasksDueToday() {
+        assertEquals(listOf("today"), all.titles(TaskScope.Today))
     }
 
     @Test
@@ -85,7 +85,7 @@ class TaskSelectionTest {
 
     @Test
     fun openCountIgnoresCompletedTasks() {
-        assertEquals(2, all.openCountIn(TaskScope.Today, today))
+        assertEquals(1, all.openCountIn(TaskScope.Today, today))
         assertEquals(1, all.openCountIn(TaskScope.NoDate, today))
     }
 

@@ -9,6 +9,7 @@ import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.TaskSort
 import com.elkrrai.feather.domain.view.comparator
 import com.elkrrai.feather.domain.view.inScope
+import com.elkrrai.feather.domain.view.openCountIn
 import com.elkrrai.feather.ui.today.DayCard
 import com.elkrrai.feather.ui.today.DayCardKind
 import com.elkrrai.feather.ui.today.DayCardSwitches
@@ -60,7 +61,7 @@ class DayCardsViewModel @Inject constructor(
         dayCardFor(
             time = time,
             status = TodayStatus(left = open.size, done = done),
-            waiting = open.count { it.dueDate?.isBefore(today) == true },
+            waiting = tasks.openCountIn(TaskScope.Overdue, today),
             firstTitle = open.firstOrNull()?.title,
             switches = DayCardSwitches(
                 morning = settings.morningCard,
@@ -92,7 +93,7 @@ class DayCardsViewModel @Inject constructor(
         }
     }
 
-    /** Moves everything still open for today (and the days before) to tomorrow, then calls [onMoved] with what moved. */
+    /** Moves everything still open for today to tomorrow, then calls [onMoved] with what moved. */
     fun moveToTomorrow(onMoved: (List<Task>) -> Unit) {
         val today = today()
         viewModelScope.launch {

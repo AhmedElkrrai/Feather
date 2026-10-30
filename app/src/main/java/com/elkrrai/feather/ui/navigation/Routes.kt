@@ -10,6 +10,10 @@ data object TaskListRoute
 @Serializable
 data class TaskEditRoute(val taskId: String? = null)
 
+/** The focus timer of one task. */
+@Serializable
+data class FocusRoute(val taskId: String)
+
 @Serializable
 data object SearchRoute
 

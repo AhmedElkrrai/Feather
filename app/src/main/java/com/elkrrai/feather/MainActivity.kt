@@ -23,13 +23,19 @@ class MainActivity : AppCompatActivity() {
     /** A task a reminder notification asked us to open; cleared once the editor is shown. */
     private var openTaskId by mutableStateOf<String?>(null)
 
+    /** A task whose focus timer a focus notification asked us to open. */
+    private var openFocusTaskId by mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Must come first: it swaps the launch theme for the normal one once the first frame is ready.
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // Only on a fresh launch: after a rotation the same intent must not reopen the task.
-        if (savedInstanceState == null) openTaskId = intent.getStringExtra(EXTRA_OPEN_TASK_ID)
+        if (savedInstanceState == null) {
+            openTaskId = intent.getStringExtra(EXTRA_OPEN_TASK_ID)
+            openFocusTaskId = intent.getStringExtra(EXTRA_OPEN_FOCUS_TASK_ID)
+        }
         setContent {
             FeatherTheme {
                 // Each screen owns its Scaffold (top bar, FAB, insets); this only paints the background.
@@ -43,6 +49,11 @@ class MainActivity : AppCompatActivity() {
                             openTaskId = null
                             intent.removeExtra(EXTRA_OPEN_TASK_ID)
                         },
+                        openFocusTaskId = openFocusTaskId,
+                        onOpenFocusHandled = {
+                            openFocusTaskId = null
+                            intent.removeExtra(EXTRA_OPEN_FOCUS_TASK_ID)
+                        },
                     )
                 }
             }
@@ -54,10 +65,14 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         openTaskId = intent.getStringExtra(EXTRA_OPEN_TASK_ID)
+        openFocusTaskId = intent.getStringExtra(EXTRA_OPEN_FOCUS_TASK_ID)
     }
 
     companion object {
         /** Set by a reminder notification: the id of the task to open in the editor. */
         const val EXTRA_OPEN_TASK_ID = "com.elkrrai.feather.extra.OPEN_TASK_ID"
+
+        /** Set by a focus notification: the id of the task whose focus timer to open. */
+        const val EXTRA_OPEN_FOCUS_TASK_ID = "com.elkrrai.feather.extra.OPEN_FOCUS_TASK_ID"
     }
 }

@@ -2,7 +2,7 @@ package com.elkrrai.feather.domain.view
 
 /** What the task screen is showing: one of the five views. */
 sealed interface TaskScope {
-    /** Open tasks due today or earlier. */
+    /** Open tasks due today. What is late is in [Overdue]. */
     data object Today : TaskScope
 
     /** Open tasks due from tomorrow up to a week ahead. */
