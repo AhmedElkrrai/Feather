@@ -51,7 +51,7 @@ class TaskCsvTest {
         val row = lines(TaskCsv.build(listOf(full)))[1]
 
         assertEquals(
-            "Call mom,Ask about the trip,2026-10-15,17:00,high,open,,family; calls,FREQ=WEEKLY,[x] Dial | [ ] Talk",
+            "Call mom,Ask about the trip,2026-10-15,17:00,high,open,,family; calls,FREQ=WEEKLY,[x] Dial | [ ] Talk,",
             row,
         )
     }

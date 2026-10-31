@@ -126,20 +126,20 @@ class BackupMergerTest {
     }
 
     @Test
-    fun filtersFollowTheSameNewestWinsRule() {
+    fun habitsFollowTheSameNewestWinsRule() {
         val local = BackupFile(
-            filters = listOf(FilterRecord("kept", "Local", updatedAt = 10), FilterRecord("old", "Local", updatedAt = 1)),
+            habits = listOf(HabitRecord("kept", "Local", updatedAt = 10), HabitRecord("old", "Local", updatedAt = 1)),
         )
         val incoming = BackupFile(
-            filters = listOf(
-                FilterRecord("kept", "File", updatedAt = 5),
-                FilterRecord("old", "File", updatedAt = 2),
-                FilterRecord("new", "File", updatedAt = 1),
+            habits = listOf(
+                HabitRecord("kept", "File", updatedAt = 5),
+                HabitRecord("old", "File", updatedAt = 2),
+                HabitRecord("new", "File", updatedAt = 1),
             ),
         )
 
         val plan = plan(local, incoming)
 
-        assertEquals(setOf("old", "new"), plan.filters.map { it.id }.toSet())
+        assertEquals(setOf("old", "new"), plan.habits.map { it.id }.toSet())
     }
 }

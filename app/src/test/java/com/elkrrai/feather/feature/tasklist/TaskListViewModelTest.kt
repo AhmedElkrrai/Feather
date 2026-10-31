@@ -86,7 +86,7 @@ class TaskListViewModelTest {
     }
 
     @Test
-    fun todayViewHoldsDueAndOverdueTasksAndQuickAddDatesTheNewTaskToday() = runTest {
+    fun todayViewHoldsOnlyTasksDueTodayAndQuickAddDatesTheNewTaskToday() = runTest {
         tasks.addTask("Overdue", today.minusDays(2))
         tasks.addTask("Due today", today)
         tasks.addTask("Later", today.plusDays(3))
@@ -94,7 +94,7 @@ class TaskListViewModelTest {
         val viewModel = newViewModel()
 
         viewModel.selectScope(TaskScope.Today)
-        assertEquals(setOf("Overdue", "Due today"), viewModel.titles().toSet())
+        assertEquals(setOf("Due today"), viewModel.titles().toSet())
 
         viewModel.addTask("New for today")
         assertTrue("New for today" in viewModel.titles())
@@ -130,17 +130,17 @@ class TaskListViewModelTest {
     }
 
     @Test
-    fun upcomingViewGroupsTasksByDay() = runTest {
+    fun upcomingViewGroupsEveryFutureTaskByDay() = runTest {
         tasks.addTask("Tomorrow A", today.plusDays(1))
         tasks.addTask("Tomorrow B", today.plusDays(1))
         tasks.addTask("In three days", today.plusDays(3))
-        tasks.addTask("Too far", today.plusDays(30))
+        tasks.addTask("A month away", today.plusDays(30))
         val viewModel = newViewModel()
 
         viewModel.selectScope(TaskScope.Upcoming)
 
         val sections = viewModel.uiState.value.sections
-        assertEquals(listOf(today.plusDays(1), today.plusDays(3)), sections.map { it.date })
+        assertEquals(listOf(today.plusDays(1), today.plusDays(3), today.plusDays(30)), sections.map { it.date })
         assertEquals(listOf("Tomorrow A", "Tomorrow B"), sections.first().tasks.map { it.title })
     }
 
@@ -258,15 +258,15 @@ class TaskListViewModelTest {
 
     @Test
     fun sortByDueDateOrdersTasksEarliestFirst() = runTest {
-        tasks.addTask("Today", today)
-        tasks.addTask("Long ago", today.minusDays(5))
-        tasks.addTask("Yesterday", today.minusDays(1))
+        tasks.addTask("Next month", today.plusDays(30))
+        tasks.addTask("Tomorrow", today.plusDays(1))
+        tasks.addTask("In three days", today.plusDays(3))
         val viewModel = newViewModel()
-        viewModel.selectScope(TaskScope.Today)
+        viewModel.selectScope(TaskScope.Upcoming)
 
         viewModel.setSort(TaskSort.DUE_DATE)
 
-        assertEquals(listOf("Long ago", "Yesterday", "Today"), viewModel.titles())
+        assertEquals(listOf("Tomorrow", "In three days", "Next month"), viewModel.titles())
     }
 
     @Test
@@ -551,13 +551,18 @@ class TaskListViewModelTest {
     @Test
     fun aTaskAddedInsideATagTabGetsThatTag() = runTest {
         val work = tags.createTag("work")
+        val first = tasks.addTask("Write the brief")
+        tasks.saveTaskDetails(first.copy(tags = listOf(work)))
         val viewModel = newViewModel()
         viewModel.selectTagFilter(TagFilter.OfTag(work.id))
 
         viewModel.addTask("Draft the plan")
 
-        assertEquals(listOf("work"), tasks.getActiveTasks().single().tags.map { it.name })
-        assertEquals(listOf("Draft the plan"), viewModel.titles())
+        assertEquals(
+            listOf("work"),
+            tasks.getActiveTasks().first { it.title == "Draft the plan" }.tags.map { it.name },
+        )
+        assertEquals(setOf("Write the brief", "Draft the plan"), viewModel.titles().toSet())
     }
 
     @Test

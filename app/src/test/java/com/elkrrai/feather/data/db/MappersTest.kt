@@ -128,6 +128,6 @@ class MappersTest {
 
         val tags = rows.toDomainTasks().single().tags
 
-        assertEquals(listOf("apple", "Zebra"), tags.map { it.name })
+        assertEquals(listOf("Apple", "Zebra"), tags.map { it.name })
     }
 }
