@@ -1,0 +1,143 @@
+name: Build APKs
+
+# A debug APK and a release APK on every push to master, on pull requests, on tags that start with v,
+# and by hand from the Actions tab. Each APK is uploaded as a plain .apk, not a zip. A tag (v1.0, ...) also
+# puts the release APK on that tag's release page.
+#
+# The release APK is signed when these repository secrets are set (Settings, Secrets and variables, Actions):
+#   KEYSTORE_BASE64    the keystore file, as base64
+#   KEYSTORE_PASSWORD  the keystore's password
+#   KEY_ALIAS          the key's alias
+#   KEY_PASSWORD       the key's password
+# Without them the release APK is built unsigned (it cannot be installed). Pull requests from forks never get
+# the secrets.
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  debug:
+    name: Debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # accepts the SDK licences, so Gradle can fetch the platform it needs
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+
+      - name: Name the APK
+        id: apk
+        run: |
+          version=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          name="feather-${version}-debug-${GITHUB_SHA::7}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "$name"
+          echo "path=$name" >> "$GITHUB_OUTPUT"
+
+      # one file, not zipped: it downloads as the .apk itself
+      - uses: actions/upload-artifact@v7
+        with:
+          path: ${{ steps.apk.outputs.path }}
+          archive: false
+          if-no-files-found: error
+
+  release:
+    name: Release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write # only used to attach the APK to the release of a tag
+    env:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up signing
+        id: signing
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/feather-release.jks"
+            {
+              echo "storeFile=$RUNNER_TEMP/feather-release.jks"
+              echo "storePassword=$KEYSTORE_PASSWORD"
+              echo "keyAlias=$KEY_ALIAS"
+              echo "keyPassword=$KEY_PASSWORD"
+            } > keystore.properties
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No signing secrets are set, so the release APK is unsigned and cannot be installed."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
+
+      - name: Name the APK
+        id: apk
+        run: |
+          version=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          built=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
+          if [ "${{ steps.signing.outputs.signed }}" = "true" ]; then
+            name="feather-${version}-release.apk"
+          else
+            name="feather-${version}-release-unsigned.apk"
+          fi
+          cp "$built" "$name"
+          echo "path=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Remove the keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/feather-release.jks" keystore.properties
+
+      - uses: actions/upload-artifact@v7
+        with:
+          path: ${{ steps.apk.outputs.path }}
+          archive: false
+          if-no-files-found: error
+
+      # a tag such as v1.0 gets a release page with the APK on it
+      - name: Attach the APK to the release
+        if: startsWith(github.ref, 'refs/tags/v') && steps.signing.outputs.signed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APK: ${{ steps.apk.outputs.path }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$APK" --generate-notes \
+            || gh release upload "$GITHUB_REF_NAME" "$APK" --clobber
