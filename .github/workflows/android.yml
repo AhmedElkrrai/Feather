@@ -39,8 +39,11 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      # accepts the SDK licences, so Gradle can fetch the platform it needs
-      - uses: android-actions/setup-android@v3
+      # the runner already has the Android SDK; accept its licences so Gradle can fetch the platform it needs
+      - name: Accept Android SDK licences
+        run: |
+          sdkmanager=$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | tail -n 1)
+          yes | "$sdkmanager" --licenses > /dev/null || true
 
       - uses: gradle/actions/setup-gradle@v4
 
@@ -83,7 +86,11 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
+      # the runner already has the Android SDK; accept its licences so Gradle can fetch the platform it needs
+      - name: Accept Android SDK licences
+        run: |
+          sdkmanager=$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | tail -n 1)
+          yes | "$sdkmanager" --licenses > /dev/null || true
 
       - uses: gradle/actions/setup-gradle@v4
 
