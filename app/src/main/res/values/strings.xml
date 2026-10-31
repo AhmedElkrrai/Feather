@@ -576,6 +576,12 @@
     <string name="habit_open_history">See %1$s week by week</string>
     <string name="habit_btn_this_week">This week</string>
     <string name="habit_btn_all_time">All time</string>
+    <plurals name="habit_tree_met">
+        <item quantity="one">%d week met</item>
+        <item quantity="other">%d weeks met</item>
+    </plurals>
+    <string name="habit_tree_hint">Each leaf is a week you met your goal. Tap one to open that week.</string>
+    <string name="habit_tree_empty">Meet a week\'s goal and the first leaf will grow.</string>
     <string name="habit_overview_met">Met %1$d of %2$d weeks</string>
     <string name="habit_overview_total_days">%1$d days in all</string>
     <string name="habit_overview_total_amount">%1$d %2$s in all, about %3$d a week</string>

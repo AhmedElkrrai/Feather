@@ -51,7 +51,8 @@ private const val WEEKS_SHOWN = 8
 /**
  * The Habits tab of Your rhythm: for each habit the last eight weeks, one bar a week that rises with
  * how much of that week's goal was reached (a week that met it is the full colour), and a quiet line
- * about weeks in a row. A week that was not met is only a shorter bar: no red, no "you missed".
+ * about weeks in a row. A week that was not met is only a shorter bar: no red, no "you missed". Tapping
+ * a card opens the tree of that habit.
  */
 @Composable
 fun HabitsRhythmTab(
@@ -61,6 +62,7 @@ fun HabitsRhythmTab(
     modifier: Modifier = Modifier,
     onOpenHabit: (habitId: String) -> Unit = {},
     onOpenOverview: (habitId: String) -> Unit = {},
+    onOpenTree: (habitId: String) -> Unit = {},
 ) {
     when {
         habits == null -> Box(modifier.fillMaxSize().padding(contentPadding))
@@ -89,6 +91,7 @@ fun HabitsRhythmTab(
                     weekStart = weekStart,
                     onOpenWeek = { onOpenHabit(state.habit.id) },
                     onOpenOverview = { onOpenOverview(state.habit.id) },
+                    onOpenTree = { onOpenTree(state.habit.id) },
                 )
             }
         }
@@ -101,6 +104,7 @@ private fun HabitHistoryCard(
     weekStart: LocalDate,
     onOpenWeek: () -> Unit,
     onOpenOverview: () -> Unit,
+    onOpenTree: () -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
     val weeks = state.history(weekStart, WEEKS_SHOWN)
@@ -109,7 +113,9 @@ private fun HabitHistoryCard(
     val inARow = state.weeksMetInARow(weekStart)
     val summary = stringResource(R.string.habit_history_summary, met, existed.size)
 
+    // the card opens the habit's tree; the two buttons in it open the weeks
     Surface(
+        onClick = onOpenTree,
         shape = RoundedCornerShape(20.dp),
         color = scheme.surfaceContainer,
         modifier = Modifier.border(androidx.compose.foundation.BorderStroke(1.dp, scheme.outlineVariant), RoundedCornerShape(20.dp)),

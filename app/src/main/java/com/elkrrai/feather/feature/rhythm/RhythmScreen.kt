@@ -106,6 +106,7 @@ fun RhythmScreen(
     viewModel: RhythmViewModel = hiltViewModel(),
     onOpenHabit: (habitId: String) -> Unit = {},
     onOpenHabitOverview: (habitId: String) -> Unit = {},
+    onOpenHabitTree: (habitId: String) -> Unit = {},
     habitsViewModel: HabitsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -115,6 +116,7 @@ fun RhythmScreen(
         habits = habits,
         onOpenHabit = onOpenHabit,
         onOpenHabitOverview = onOpenHabitOverview,
+        onOpenHabitTree = onOpenHabitTree,
         onBack = onBack,
         onPause = viewModel::pause,
         onResume = viewModel::resume,
@@ -140,6 +142,7 @@ fun RhythmContent(
     habits: List<HabitState>? = emptyList(),
     onOpenHabit: (habitId: String) -> Unit = {},
     onOpenHabitOverview: (habitId: String) -> Unit = {},
+    onOpenHabitTree: (habitId: String) -> Unit = {},
 ) {
     // 0 is the tasks (everything this screen was), 1 the habits.
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -184,6 +187,7 @@ fun RhythmContent(
                 contentPadding = padding,
                 onOpenHabit = onOpenHabit,
                 onOpenOverview = onOpenHabitOverview,
+                onOpenTree = onOpenHabitTree,
             )
             return@Scaffold
         }

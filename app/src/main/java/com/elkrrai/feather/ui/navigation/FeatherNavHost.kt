@@ -8,12 +8,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.feature.tasklist.TaskListViewModel
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.elkrrai.feather.feature.focus.FocusScreen
 import com.elkrrai.feather.feature.habits.HabitDetailScreen
 import com.elkrrai.feather.feature.habits.HabitOverviewScreen
+import com.elkrrai.feather.feature.habits.HabitTreeScreen
 import com.elkrrai.feather.feature.habits.HabitsScreen
 import com.elkrrai.feather.feature.search.SearchScreen
 import com.elkrrai.feather.feature.settings.ReliabilityScreen
@@ -24,6 +26,7 @@ import com.elkrrai.feather.feature.trash.TrashScreen
 import com.elkrrai.feather.feature.rhythm.RhythmScreen
 import com.elkrrai.feather.feature.nest.NestScreen
 import com.elkrrai.feather.feature.tags.TagsScreen
+import com.elkrrai.feather.ui.rememberReduceMotion
 
 /**
  * @param openTaskId a task to open straight in the editor (from a reminder notification), or null
@@ -54,10 +57,15 @@ fun FeatherNavHost(
         }
     }
 
+    val reduceMotion = rememberReduceMotion()
     NavHost(
         navController = navController,
         startDestination = TaskListRoute,
         modifier = modifier,
+        enterTransition = featherEnter(reduceMotion),
+        exitTransition = featherExit(reduceMotion),
+        popEnterTransition = featherPopEnter(reduceMotion),
+        popExitTransition = featherPopExit(reduceMotion),
     ) {
         composable<TaskListRoute> {
             TaskListScreen(
@@ -73,7 +81,7 @@ fun FeatherNavHost(
         // The editor's ViewModel reads the task id from the route itself.
         composable<TaskEditRoute> {
             TaskEditScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { navController.goBack() },
                 onOpenReliability = { navController.navigate(ReliabilityRoute) },
                 onOpenFocus = { taskId -> navController.navigate(FocusRoute(taskId)) },
                 // Replace the editor with the copy so Back returns to the list, not to the original.
@@ -85,39 +93,46 @@ fun FeatherNavHost(
             )
         }
         composable<FocusRoute> {
-            FocusScreen(onBack = { navController.popBackStack() })
+            FocusScreen(onBack = { navController.goBack() })
         }
         composable<SearchRoute> {
             SearchScreen(
                 onOpenTask = { taskId -> navController.navigate(TaskEditRoute(taskId)) },
-                onBack = { navController.popBackStack() },
+                onBack = { navController.goBack() },
             )
         }
         composable<TrashRoute> {
-            TrashScreen(onBack = { navController.popBackStack() })
+            TrashScreen(onBack = { navController.goBack() })
         }
         composable<SettingsRoute> {
             SettingsScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { navController.goBack() },
                 onOpenReliability = { navController.navigate(ReliabilityRoute) },
                 onOpenTags = { navController.navigate(TagsRoute) },
             )
         }
         composable<TagsRoute> {
-            TagsScreen(onBack = { navController.popBackStack() })
+            TagsScreen(onBack = { navController.goBack() })
         }
         composable<NestRoute> {
-            NestScreen(onBack = { navController.popBackStack() })
+            NestScreen(onBack = { navController.goBack() })
         }
         composable<HabitOverviewRoute> {
             HabitOverviewScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { navController.goBack() },
                 // a leaf in the garden opens that week on the weekly page
                 onOpenWeek = { habitId, week -> navController.navigate(HabitDetailRoute(habitId, week.toString())) },
             )
         }
+        composable<HabitTreeRoute> {
+            HabitTreeScreen(
+                onBack = { navController.goBack() },
+                // a leaf opens that week on the weekly page
+                onOpenWeek = { habitId, week -> navController.navigate(HabitDetailRoute(habitId, week.toString())) },
+            )
+        }
         composable<HabitDetailRoute> {
-            HabitDetailScreen(onBack = { navController.popBackStack() })
+            HabitDetailScreen(onBack = { navController.goBack() })
         }
         composable<HabitsRoute> { entry ->
             // The menu on this screen is the task list's: its counts, and its choice of view.
@@ -128,7 +143,7 @@ fun FeatherNavHost(
                 listState = listState,
                 onSelectScope = { scope ->
                     listViewModel.selectScope(scope)
-                    navController.popBackStack()
+                    navController.goBack()
                 },
                 onOpenTrash = { navController.navigate(TrashRoute) { popUpTo<TaskListRoute>() } },
                 onOpenRhythm = { navController.navigate(RhythmRoute) { popUpTo<TaskListRoute>() } },
@@ -138,13 +153,23 @@ fun FeatherNavHost(
         }
         composable<RhythmRoute> {
             RhythmScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { navController.goBack() },
                 onOpenHabit = { habitId -> navController.navigate(HabitDetailRoute(habitId)) },
                 onOpenHabitOverview = { habitId -> navController.navigate(HabitOverviewRoute(habitId)) },
+                onOpenHabitTree = { habitId -> navController.navigate(HabitTreeRoute(habitId)) },
             )
         }
         composable<ReliabilityRoute> {
-            ReliabilityScreen(onBack = { navController.popBackStack() })
+            ReliabilityScreen(onBack = { navController.goBack() })
         }
     }
+}
+
+/**
+ * Goes back one screen, unless there is none to go back to. A second tap on a back arrow during the
+ * fade of the first would otherwise pop the task list itself (the arrow sits where the menu button
+ * is) and leave nothing on screen.
+ */
+private fun NavController.goBack() {
+    if (previousBackStackEntry != null) popBackStack()
 }

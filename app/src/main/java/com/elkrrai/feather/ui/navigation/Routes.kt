@@ -37,6 +37,10 @@ data class HabitDetailRoute(val habitId: String, val weekStart: String? = null)
 @Serializable
 data class HabitOverviewRoute(val habitId: String)
 
+/** One habit as a tree, a leaf for each week that met the goal. */
+@Serializable
+data class HabitTreeRoute(val habitId: String)
+
 @Serializable
 data object RhythmRoute
 
