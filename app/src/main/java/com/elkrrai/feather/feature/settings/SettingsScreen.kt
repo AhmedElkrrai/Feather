@@ -165,6 +165,11 @@ fun SettingsScreen(
         } else {
             null
         },
+        onAddTreeStages = if (debuggable) {
+            { habitsViewModel.addTreeStages(LocalDate.now(), firstDayOfWeek(sampleLocale)) }
+        } else {
+            null
+        },
         appLockAvailable = remember { BiometricGate.canAuthenticate(context) },
         onAppLockChange = { enable ->
             // Switching the lock on or off asks first: it proves the person holding the phone is the owner.
@@ -230,6 +235,8 @@ fun SettingsContent(
     onAppLockChange: (Boolean) -> Unit = {},
     /** Debug builds: makes sample habits with months of history. Null in a release build. */
     onAddSampleHabits: (() -> Unit)? = null,
+    /** Debug builds: makes a habit for every picture of the tree. Null in a release build. */
+    onAddTreeStages: (() -> Unit)? = null,
     versionName: String = "",
     onOpenTags: () -> Unit = {},
 ) {
@@ -357,6 +364,14 @@ fun SettingsContent(
                     summary = null,
                     supporting = stringResource(R.string.debug_add_sample_habits_summary),
                     onClick = onAddSampleHabits,
+                )
+            }
+            if (onAddTreeStages != null) {
+                SettingsRow(
+                    title = stringResource(R.string.debug_add_tree_stages),
+                    summary = null,
+                    supporting = stringResource(R.string.debug_add_tree_stages_summary),
+                    onClick = onAddTreeStages,
                 )
             }
 

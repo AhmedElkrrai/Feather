@@ -660,8 +660,17 @@
         <item quantity="many">تحقق الهدف في %d أسبوعًا</item>
         <item quantity="other">تحقق الهدف في %d أسبوع</item>
     </plurals>
-    <string name="habit_tree_hint">كل ورقة أسبوع حققتَ فيه هدفك. اضغط على ورقة لفتح ذلك الأسبوع.</string>
-    <string name="habit_tree_empty">حقّق هدف أسبوع وستنمو أول ورقة.</string>
+    <string name="habit_tree_stage">المرحلة %1$d من %2$d</string>
+    <plurals name="habit_tree_next">
+        <item quantity="zero">%d أسبوع إضافي للمرحلة التالية</item>
+        <item quantity="one">أسبوع إضافي واحد للمرحلة التالية</item>
+        <item quantity="two">أسبوعان إضافيان للمرحلة التالية</item>
+        <item quantity="few">%d أسابيع إضافية للمرحلة التالية</item>
+        <item quantity="many">%d أسبوعًا إضافيًا للمرحلة التالية</item>
+        <item quantity="other">%d أسبوع إضافي للمرحلة التالية</item>
+    </plurals>
+    <string name="habit_tree_full">اكتمل نمو الشجرة</string>
+    <string name="habit_tree_empty">حقّق هدف أسبوع وستنبت الشجرة.</string>
     <string name="habit_overview_met">تحقق الهدف في %1$d من %2$d أسابيع</string>
     <string name="habit_overview_total_days">%1$d أيام في المجموع</string>
     <string name="habit_overview_total_amount">%1$d %2$s في المجموع، بمعدل %3$d في الأسبوع</string>

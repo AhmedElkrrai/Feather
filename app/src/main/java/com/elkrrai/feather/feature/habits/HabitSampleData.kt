@@ -1,6 +1,8 @@
 package com.elkrrai.feather.feature.habits
 
 import com.elkrrai.feather.domain.habit.HabitKind
+import com.elkrrai.feather.domain.habit.TREE_STAGES
+import com.elkrrai.feather.domain.habit.TREE_WEEKS_PER_STAGE
 import com.elkrrai.feather.domain.habit.weekStartOf
 import com.elkrrai.feather.domain.repository.HabitRepository
 import java.time.DayOfWeek
@@ -61,5 +63,19 @@ suspend fun HabitRepository.addSampleHabits(today: LocalDate, firstDay: DayOfWee
     for (week in 0..11) {
         val days = (0..6).map { day -> day to if (random.nextInt(10) < 8) 5 else 3 + random.nextInt(2) }
         log(pray.id, prayFirst.plusWeeks(week.toLong()), days)
+    }
+}
+
+/**
+ * Fourteen habits, one for every picture of the tree: "Tree 0" has no met week (the seed), "Tree 1" has
+ * the first week of stage 1, "Tree 2" the first of stage 2, up to "Tree 13" with the first week of stage
+ * 13. Each is a habit of one day a week with that many past weeks logged.
+ */
+suspend fun HabitRepository.addTreeStageHabits(today: LocalDate, firstDay: DayOfWeek) {
+    val thisWeek = weekStartOf(today, firstDay)
+    for (stage in 0..TREE_STAGES) {
+        val metWeeks = if (stage == 0) 0 else (stage - 1) * TREE_WEEKS_PER_STAGE + 1
+        val habit = addHabit("Tree $stage", HabitKind.DAYS, "", 1, 1, thisWeek.minusWeeks(maxOf(metWeeks, 1).toLong()))
+        for (week in 1..metWeeks) setAmount(habit.id, thisWeek.minusWeeks(week.toLong()), 1)
     }
 }

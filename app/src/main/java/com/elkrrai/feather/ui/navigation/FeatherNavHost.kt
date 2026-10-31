@@ -125,11 +125,7 @@ fun FeatherNavHost(
             )
         }
         composable<HabitTreeRoute> {
-            HabitTreeScreen(
-                onBack = { navController.goBack() },
-                // a leaf opens that week on the weekly page
-                onOpenWeek = { habitId, week -> navController.navigate(HabitDetailRoute(habitId, week.toString())) },
-            )
+            HabitTreeScreen(onBack = { navController.goBack() })
         }
         composable<HabitDetailRoute> {
             HabitDetailScreen(onBack = { navController.goBack() })
