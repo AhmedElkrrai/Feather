@@ -1,22 +1,17 @@
 name: Build APKs
 
-# A debug APK and a release APK on every push to master, on pull requests, on tags that start with v,
-# and by hand from the Actions tab. Each APK is uploaded as a plain .apk, not a zip. A tag (v1.0, ...) also
-# puts the release APK on that tag's release page.
+# A debug APK and a release APK, built only when you run it by hand: Actions tab, Build APKs, Run workflow,
+# and pick the branch (or a tag) to build. Each APK is uploaded as a plain .apk, not a zip. Run it on a tag
+# such as v1.0 and the signed release APK is also put on that tag's release page.
 #
 # The release APK is signed when these repository secrets are set (Settings, Secrets and variables, Actions):
 #   KEYSTORE_BASE64    the keystore file, as base64
 #   KEYSTORE_PASSWORD  the keystore's password
 #   KEY_ALIAS          the key's alias
 #   KEY_PASSWORD       the key's password
-# Without them the release APK is built unsigned (it cannot be installed). Pull requests from forks never get
-# the secrets.
+# Without them the release APK is built unsigned (it cannot be installed).
 
 on:
-  push:
-    branches: [master]
-    tags: ['v*']
-  pull_request:
   workflow_dispatch:
 
 concurrency:
