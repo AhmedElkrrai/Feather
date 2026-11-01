@@ -45,7 +45,7 @@ fun WelcomeDialog(onDone: () -> Unit) {
                     .padding(Space.x6),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // the egg cracking, the owl peeking out, the sun coming up
+                // the egg cracking, a small chick peeking out, the sun coming up
                 Illustration(SceneKind.FirstLaunch, size = 200.dp)
                 Spacer(Modifier.height(Space.x3))
                 Text(

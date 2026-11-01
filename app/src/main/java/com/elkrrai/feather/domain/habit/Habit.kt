@@ -50,5 +50,5 @@ data class HabitState(
 )
 
 const val MAX_HABIT_TARGET = 9_999
-const val MAX_DAILY_TARGET = 99
+const val MAX_DAILY_TARGET = 1_000
 const val DAYS_IN_WEEK = 7

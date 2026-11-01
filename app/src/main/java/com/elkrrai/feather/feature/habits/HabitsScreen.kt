@@ -567,7 +567,7 @@ private fun HabitEditDialog(
                 if (kind == HabitKind.DAYS) {
                     OutlinedTextField(
                         value = daily,
-                        onValueChange = { daily = it.filter(Char::isDigit).trimStart('0').take(2) },
+                        onValueChange = { daily = it.filter(Char::isDigit).trimStart('0').take(4) },
                         label = { Text(stringResource(R.string.habit_daily_target)) },
                         supportingText = { Text(stringResource(R.string.habit_daily_target_hint)) },
                         singleLine = true,

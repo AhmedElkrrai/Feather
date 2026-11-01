@@ -78,7 +78,6 @@ class SceneLayoutTest {
             "nothing due" to NothingDueBird,
             "no results" to NoResultsBird,
             "reminders blocked" to RemindersBlockedBird,
-            "first launch" to FirstLaunchBird,
             "trash empty" to TrashEmptyBird,
         )
         for ((scene, placement) in placements) {

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.brand.OwlIllustration
+import com.elkrrai.feather.ui.brand.rememberBirdMotionAllowed
 import com.elkrrai.feather.R
 import com.elkrrai.feather.ui.theme.DayPhase
 import com.elkrrai.feather.ui.today.dayPhaseFor
@@ -32,8 +33,9 @@ internal val EmptyListBird = BirdPlacement(x = 32f, y = 44f, scale = 1.4f)
 internal val NothingDueBird = BirdPlacement(x = 52f, y = 36f, scale = 1f)
 internal val NoResultsBird = BirdPlacement(x = 14f, y = 94f, scale = 0.9f, tilt = -10f)
 internal val RemindersBlockedBird = BirdPlacement(x = 116f, y = 118f, scale = 0.6f)
-internal val FirstLaunchBird = BirdPlacement(x = 50f, y = 78f, scale = 0.8f)
 internal val TrashEmptyBird = BirdPlacement(x = 80f, y = 43f, scale = 0.8f)
+
+private const val FIRST_LAUNCH_CHICK_HEIGHT = 64f
 
 /**
  * One of the eight scenes of the illustration kit, drawn on a 200-unit-wide board and shown at
@@ -166,7 +168,7 @@ private fun RemindersBlockedScene(size: Dp, modifier: Modifier) = SceneFrame(siz
     }
 }
 
-/** A cracked egg with the bird's head peeking out, and the sun climbing over a dawn horizon. */
+/** A cracked egg with a small chick peeking out, and the sun climbing over a dawn horizon. */
 @Composable
 private fun FirstLaunchScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifier, risingSun = true) {
     val p = palette
@@ -175,7 +177,17 @@ private fun FirstLaunchScene(size: Dp, modifier: Modifier) = SceneFrame(size, mo
         drawCircle(p.amber, radius = 30f, center = Offset(100f, 168f - sunRise()))
         drawOval(p.dawnGround, topLeft = Offset(6f, 146f), size = Size(188f, 52f))
     }
-    SceneBird(BirdMood.IDLE, FirstLaunchBird)
+    // a small chick peeking out of the shell, rocking now and then
+    Chick(
+        picture = R.drawable.chick_3,
+        left = 100f - FIRST_LAUNCH_CHICK_HEIGHT * 0.797f / 2f,
+        top = 134f - FIRST_LAUNCH_CHICK_HEIGHT,
+        wobbleMillis = 2_100,
+        degrees = 4f,
+        startAt = 0.3f,
+        moving = rememberBirdMotionAllowed(),
+        height = FIRST_LAUNCH_CHICK_HEIGHT,
+    )
     Layer {
         // The lower half of the shell, with a zigzag crack along its top.
         val shell = Path().apply {
