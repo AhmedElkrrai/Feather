@@ -64,13 +64,16 @@ LEAF_CURVE = 0.7             # below 1 = leaves come early and slow down; above 
 
 # --- how the tree grows over the stages -----------------------------------------------------
 # When each level of branches grows (share of the way to the tree with its full trunk: 0 to 1).
-# Level 0 is the trunk, 1 the limbs, 2 and up the branches and twigs.
-GROWTH_WINDOWS = [(0.0, 0.04), (0.02, 0.11), (0.06, 0.19), (0.12, 0.27), (0.19, 0.34), (0.26, 0.41)]
-# Stage -> the look it has. Stages 8, 9, 10 look like 9, 11, 13 of an even run, then the trunk stays as it is.
-STAGE_LOOK = [(0, 0), (7, 7), (8, 9), (9, 11), (10, 13), (13, 13)]
+# Level 0 is the trunk, 1 the limbs, 2 and up the branches and twigs. Each level starts when the one under it has
+# finished, so a side branch never starts growing in mid-air.
+GROWTH_WINDOWS = [(0.0, 0.04), (0.04, 0.11), (0.11, 0.19), (0.19, 0.27), (0.27, 0.34), (0.34, 0.41)]
+# Stage -> the look it has. Stage 1 already looks like 3 of an even run (a young tree, not a stub), stages 2 to 7
+# fill it out, 8, 9, 10 look like 9, 11, 13, then the trunk stays as it is.
+STAGE_LOOK = [(0, 0), (1, 3), (7, 7), (8, 9), (9, 11), (10, 13), (13, 13)]
 TRUNK_THICKER_FROM_STAGE = 5   # the trunk starts getting thicker at this stage
 TRUNK_THICKER_BY = 2.0         # and ends up this much thicker (2.0 = three times as thick at the foot)
 TRUNK_TALLER_FROM_STAGE = 10   # the trunk starts growing taller at this stage
+TRUNK_LATE_BY = 0.50           # the trunk keeps growing at stages 11 and 12: this much more of its first height
 TRUNK_TALLER_BY = 0.70         # and ends this much taller than at first (0.70 = 70% longer)
 CROWN_STRETCH = 0.42           # after stage 10 the crown grows this much taller by stage 13 (0.42 = 42%)
 
@@ -272,6 +275,7 @@ def render(seed, stage, W=250, H=400):
     # from the "taller" stage the trunk grows, and lifts the crown with it (a limb rides up with the part of the
     # trunk it leaves); then each limb grows taller from where it leaves the trunk
     lift = lift_max * max(0.0, min(1.0, (f - taller_from) / (1 - taller_from)))
+    lift += TRUNK_LATE_BY * TRUNK_HEIGHT * max(0.0, min(1.0, (stage - 10) / 2))
     branches = []
     owner = {}       # the limb each branch belongs to
     limb_base = {}   # where each limb leaves the trunk, lifted
@@ -314,7 +318,7 @@ def render(seed, stage, W=250, H=400):
     ground = H * 0.97 * SS
     centre = W / 2 * SS
     half = max(max(abs(b['x0']), abs(b['x1'])) for b in branches) + 0.07
-    room = 1 + lift_max + CROWN_STRETCH * 0.62
+    room = 1 + lift_max + TRUNK_LATE_BY * TRUNK_HEIGHT + CROWN_STRETCH * 0.62
     sc = min(H * 0.90 / room, W * 0.47 / half) * SS * (0.70 + 0.30 * smooth(min(1.0, f / 0.9)))
 
     def P(x, y):

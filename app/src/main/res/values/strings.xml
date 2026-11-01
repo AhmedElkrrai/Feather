@@ -581,11 +581,10 @@
         <item quantity="other">%d weeks met</item>
     </plurals>
     <string name="habit_tree_stage">Stage %1$d of %2$d</string>
-    <plurals name="habit_tree_next">
-        <item quantity="one">%d more week to the next stage</item>
-        <item quantity="other">%d more weeks to the next stage</item>
-    </plurals>
-    <string name="habit_tree_full">Fully grown</string>
+    <string name="habit_tree_stage_of_tree">Tree %1$d, stage %2$d of %3$d</string>
+    <string name="habit_tree_next">Meet another week\'s goal to grow the next stage.</string>
+    <string name="habit_tree_full">Fully grown. Meet another week\'s goal and a new tree will sprout beside it.</string>
+    <string name="habit_tree_new_growth">Your tree grew</string>
     <string name="habit_tree_empty">Meet a week\'s goal and the tree will sprout.</string>
     <string name="habit_overview_met">Met %1$d of %2$d weeks</string>
     <string name="habit_overview_total_days">%1$d days in all</string>
@@ -596,7 +595,7 @@
     <string name="habit_garden_week_days">%1$s: %2$d of %3$d days</string>
     <string name="habit_garden_week_amount">%1$s: %2$d of %3$d %4$s</string>
     <string name="debug_add_tree_stages" translatable="false">Add tree stage habits (debug build)</string>
-    <string name="debug_add_tree_stages_summary" translatable="false">Fourteen habits, Tree 0 to Tree 13, one for every picture of the tree. Open them in Progress, Habits. Delete them from the Habits screen.</string>
+    <string name="debug_add_tree_stages_summary" translatable="false">Habits Tree 0 to Tree 13 (a stage each), and Forest 14, 27, 40, 66 and 80 (finished trees behind a new one). Open them in Progress, Habits. Delete them from the Habits screen.</string>
     <string name="counter_of">%1$d / %2$d</string>
     <string name="counter_step_label">+%1$d</string>
     <string name="counter_add_description">Add %1$d to %2$s</string>

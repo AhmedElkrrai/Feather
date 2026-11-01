@@ -661,15 +661,10 @@
         <item quantity="other">تحقق الهدف في %d أسبوع</item>
     </plurals>
     <string name="habit_tree_stage">المرحلة %1$d من %2$d</string>
-    <plurals name="habit_tree_next">
-        <item quantity="zero">%d أسبوع إضافي للمرحلة التالية</item>
-        <item quantity="one">أسبوع إضافي واحد للمرحلة التالية</item>
-        <item quantity="two">أسبوعان إضافيان للمرحلة التالية</item>
-        <item quantity="few">%d أسابيع إضافية للمرحلة التالية</item>
-        <item quantity="many">%d أسبوعًا إضافيًا للمرحلة التالية</item>
-        <item quantity="other">%d أسبوع إضافي للمرحلة التالية</item>
-    </plurals>
-    <string name="habit_tree_full">اكتمل نمو الشجرة</string>
+    <string name="habit_tree_stage_of_tree">الشجرة %1$d، المرحلة %2$d من %3$d</string>
+    <string name="habit_tree_next">حقّق هدف أسبوع آخر لتنمو المرحلة التالية.</string>
+    <string name="habit_tree_full">اكتمل نمو الشجرة. حقّق هدف أسبوع آخر وستنبت شجرة جديدة بجانبها.</string>
+    <string name="habit_tree_new_growth">نمت شجرتك</string>
     <string name="habit_tree_empty">حقّق هدف أسبوع وستنبت الشجرة.</string>
     <string name="habit_overview_met">تحقق الهدف في %1$d من %2$d أسابيع</string>
     <string name="habit_overview_total_days">%1$d أيام في المجموع</string>

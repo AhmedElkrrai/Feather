@@ -3,7 +3,6 @@ package com.elkrrai.feather.feature.habits
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,10 +23,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas as GraphicsCanvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.platform.LocalConfiguration
@@ -37,10 +41,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
+import com.elkrrai.feather.domain.habit.FOREST_MAX_BEHIND
 import com.elkrrai.feather.domain.habit.HabitState
 import com.elkrrai.feather.domain.habit.TREE_HEIGHT_ROOM
 import com.elkrrai.feather.domain.habit.TREE_ROOTS
@@ -48,13 +54,14 @@ import com.elkrrai.feather.domain.habit.TREE_ROOT_WIDTH
 import com.elkrrai.feather.domain.habit.TREE_STAGES
 import com.elkrrai.feather.domain.habit.TreeBranch
 import com.elkrrai.feather.domain.habit.TreeLook
+import com.elkrrai.feather.domain.habit.TreeProgress
 import com.elkrrai.feather.domain.habit.TreeRandom
 import com.elkrrai.feather.domain.habit.TreeShape
 import com.elkrrai.feather.domain.habit.overview
+import com.elkrrai.feather.domain.habit.treeProgress
+import com.elkrrai.feather.domain.habit.treeSeed
 import com.elkrrai.feather.domain.habit.treeShape
-import com.elkrrai.feather.domain.habit.treeStage
 import com.elkrrai.feather.domain.habit.weekStartOf
-import com.elkrrai.feather.domain.habit.weeksToNextTreeStage
 import com.elkrrai.feather.ui.firstDayOfWeek
 import com.elkrrai.feather.ui.rememberLowEndMode
 import com.elkrrai.feather.ui.rememberReduceMotion
@@ -70,8 +77,9 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 /**
- * The tree of one habit. It grows in stages, one for every four weeks that met the goal, and grows from
- * a seed up to its stage each time the page opens.
+ * The tree of one habit. It grows a stage for every week that met the goal, and grows from a seed up to its
+ * stage each time the page opens. When it is full the next met week starts a new tree, and the finished ones
+ * stand behind it, a forest.
  */
 @Composable
 fun HabitTreeScreen(
@@ -80,7 +88,7 @@ fun HabitTreeScreen(
     viewModel: HabitTreeViewModel = hiltViewModel(),
 ) {
     val habit by viewModel.habit.collectAsStateWithLifecycle()
-    HabitTreeContent(habit = habit, onBack = onBack, modifier = modifier)
+    HabitTreeContent(habit = habit, onBack = onBack, onSeen = viewModel::markSeen, modifier = modifier)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,6 +97,7 @@ internal fun HabitTreeContent(
     habit: HabitState?,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onSeen: (metWeeks: Int) -> Unit = {},
     today: LocalDate = LocalDate.now(),
 ) {
     val locale = LocalConfiguration.current.locales[0]
@@ -111,25 +120,29 @@ internal fun HabitTreeContent(
             return@Scaffold
         }
         val all = remember(habit, today, firstDay) { habit.overview(weekStartOf(today, firstDay), firstDay) }
-        val stage = treeStage(all.weeksMet)
-        val shape = remember(habit.habit.id) { treeShape(habit.habit.id.hashCode()) }
+        val progress = treeProgress(all.weeksMet)
         val met = pluralStringResource(R.plurals.habit_tree_met, all.weeksMet, all.weeksMet)
+        // looking at the tree is seeing its growth: the card on Your rhythm stops saying it grew
+        LaunchedEffect(all.weeksMet) { onSeen(all.weeksMet) }
 
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Tree(
-                shape = shape,
-                stage = stage,
-                seed = habit.habit.id.hashCode(),
+                habitSeed = habit.habit.id.hashCode(),
+                progress = progress,
                 description = met,
                 modifier = Modifier.fillMaxWidth().weight(1f),
             )
             Text(text = met, style = MaterialTheme.typography.titleMedium)
-            if (stage > 0) {
+            if (progress.stage > 0) {
                 Text(
-                    text = stringResource(R.string.habit_tree_stage, stage, TREE_STAGES),
+                    text = if (progress.tree == 0) {
+                        stringResource(R.string.habit_tree_stage, progress.stage, TREE_STAGES)
+                    } else {
+                        stringResource(R.string.habit_tree_stage_of_tree, progress.tree + 1, progress.stage, TREE_STAGES)
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -141,12 +154,11 @@ internal fun HabitTreeContent(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            val next = weeksToNextTreeStage(all.weeksMet)
             Text(
                 text = when {
                     all.weeksMet == 0 -> stringResource(R.string.habit_tree_empty)
-                    next == null -> stringResource(R.string.habit_tree_full)
-                    else -> pluralStringResource(R.plurals.habit_tree_next, next, next)
+                    progress.stage == TREE_STAGES -> stringResource(R.string.habit_tree_full)
+                    else -> stringResource(R.string.habit_tree_next)
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -164,11 +176,25 @@ private val Trunk = Color(0xFF8A6A4A)
 private val TrunkShade = Color(40, 28, 18, 70)
 private val Midrib = Color(0x781E461E)
 
+/**
+ * Where a finished tree stands in the forest, the latest finished one first: how far across the picture (0 to 1), where
+ * its ground line is (0 to 1 down), how big it is next to the growing tree, and how pale the air makes it.
+ */
+private class ForestSpot(val across: Float, val ground: Float, val size: Float, val haze: Float)
+
+/** One for each of [FOREST_MAX_BEHIND]. The farther ones are higher up, smaller and paler. */
+private val ForestSpots = listOf(
+    ForestSpot(0.25f, 0.80f, 0.50f, 0.50f),
+    ForestSpot(0.80f, 0.78f, 0.44f, 0.58f),
+    ForestSpot(0.50f, 0.74f, 0.34f, 0.68f),
+    ForestSpot(0.12f, 0.73f, 0.28f, 0.74f),
+    ForestSpot(0.88f, 0.72f, 0.26f, 0.78f),
+)
+
 @Composable
 private fun Tree(
-    shape: TreeShape,
-    stage: Int,
-    seed: Int,
+    habitSeed: Int,
+    progress: TreeProgress,
     description: String,
     modifier: Modifier = Modifier,
 ) {
@@ -176,15 +202,65 @@ private fun Tree(
     val still = rememberReduceMotion()
     // a phone that is struggling shows half of the leaves, a little larger
     val thin = rememberLowEndMode()
+    // far trees fade toward this, the colour of the air
+    val scheme = MaterialTheme.colorScheme
+    val air = lerp(scheme.background, scheme.onSurfaceVariant, 0.2f)
+
+    // the tree that is growing, and the finished ones behind it, the latest nearest
+    val shape = remember(habitSeed, progress.tree) { treeShape(treeSeed(habitSeed, progress.tree)) }
+    val behind = remember(habitSeed, progress.tree) {
+        (0 until min(progress.tree, FOREST_MAX_BEHIND)).map { k -> treeShape(treeSeed(habitSeed, progress.tree - 1 - k)) }
+    }
 
     // 0 to 1: how far the tree has grown toward its stage
     val grown = remember { Animatable(if (still) 1f else 0f) }
-    LaunchedEffect(stage, still) {
+    LaunchedEffect(progress.stage, still) {
         if (still) grown.snapTo(1f) else grown.animateTo(1f, tween(GROW_MILLIS, easing = FastOutSlowInEasing))
     }
 
-    Canvas(modifier.semantics { contentDescription = description }) {
-        drawTree(shape, TreeLook(stage * grown.value), seed, leaf, thin)
+    Box(
+        modifier
+            .semantics { contentDescription = description }
+            .drawWithCache {
+                // the forest does not move: it is drawn once into a picture, which is shown again and again
+                val forest = if (behind.isEmpty() || size.minDimension < 1f) {
+                    null
+                } else {
+                    val picture = ImageBitmap(size.width.toInt(), size.height.toInt())
+                    CanvasDrawScope().draw(this, LayoutDirection.Ltr, GraphicsCanvas(picture), size) {
+                        drawForest(behind, leaf, air, thin)
+                    }
+                    picture
+                }
+                onDrawBehind {
+                    forest?.let { drawImage(it) }
+                    drawTree(shape, TreeLook(progress.stage * grown.value), habitSeed, leaf, thin)
+                }
+            },
+    )
+}
+
+/** The finished trees: two bands of ground, then each tree full grown, the farthest first, smaller and paler. */
+private fun DrawScope.drawForest(trees: List<TreeShape>, leaf: Color, air: Color, thin: Boolean) {
+    drawOval(
+        air.copy(alpha = 0.27f),
+        topLeft = Offset(-size.width * 0.2f, size.height * 0.76f),
+        size = Size(size.width * 1.4f, size.height * 0.14f),
+    )
+    drawOval(
+        Trunk.copy(alpha = 0.235f),
+        topLeft = Offset(-size.width * 0.1f, size.height * 0.90f),
+        size = Size(size.width * 1.2f, size.height * 0.16f),
+    )
+    for (k in trees.indices.reversed()) {
+        val spot = ForestSpots[k]
+        withTransform({
+            // the tree is drawn on the whole picture and then shrunk and moved so its ground line lands where it should
+            translate(spot.across * size.width - spot.size * size.width / 2f, spot.ground * size.height - 0.97f * size.height * spot.size)
+            scale(spot.size, spot.size, Offset.Zero)
+        }) {
+            drawTree(trees[k], TreeLook(TREE_STAGES.toFloat()), 0, leaf, thin, ground = false, haze = spot.haze, hazeTo = air)
+        }
     }
 }
 
@@ -203,7 +279,22 @@ private val LeafPath: Path = Path().apply {
     close()
 }
 
-private fun DrawScope.drawTree(shape: TreeShape, look: TreeLook, seed: Int, leaf: Color, thin: Boolean) {
+private fun DrawScope.drawTree(
+    shape: TreeShape,
+    look: TreeLook,
+    seed: Int,
+    leaf: Color,
+    thin: Boolean,
+    ground: Boolean = true,
+    haze: Float = 0f,
+    hazeTo: Color = Color.Unspecified,
+) {
+    // a far tree fades toward the colour of the air
+    fun tint(color: Color) = if (haze > 0f) lerp(color, hazeTo.copy(alpha = color.alpha), haze) else color
+    val trunk = tint(Trunk)
+    val shadeColor = tint(TrunkShade)
+    val midrib = tint(Midrib)
+    val leafTint = tint(leaf)
     // sizes below are in the units of a 250 wide drawing; this is one of them
     val u = size.width / 250f
     val centreX = size.width / 2f
@@ -214,19 +305,21 @@ private fun DrawScope.drawTree(shape: TreeShape, look: TreeLook, seed: Int, leaf
 
     val branches = look.place(shape)
 
-    // the ground, and tufts of grass
-    drawOval(
-        Trunk.copy(alpha = 0.2f),
-        topLeft = Offset(centreX - scale * 0.45f, groundY - 9 * u),
-        size = Size(scale * 0.9f, 20 * u),
-    )
-    val grass = Color(leaf.red * 0.7f, leaf.green * 0.85f, leaf.blue * 0.7f, 0.8f)
-    val random = TreeRandom(seed + 1)
-    repeat(32) {
-        val x = centreX + (random.nextFloat() - 0.5f) * scale * 0.85f
-        val height = (8 + random.nextFloat() * 14) * u
-        val bend = (random.nextFloat() - 0.5f) * 8 * u
-        drawLine(grass, Offset(x, groundY + 3 * u), Offset(x + bend, groundY + 3 * u - height), strokeWidth = 2 * u, cap = StrokeCap.Round)
+    // the ground, and tufts of grass (the forest has its own ground)
+    if (ground) {
+        drawOval(
+            Trunk.copy(alpha = 0.2f),
+            topLeft = Offset(centreX - scale * 0.45f, groundY - 9 * u),
+            size = Size(scale * 0.9f, 20 * u),
+        )
+        val grass = Color(leaf.red * 0.7f, leaf.green * 0.85f, leaf.blue * 0.7f, 0.8f)
+        val random = TreeRandom(seed + 1)
+        repeat(32) {
+            val x = centreX + (random.nextFloat() - 0.5f) * scale * 0.85f
+            val height = (8 + random.nextFloat() * 14) * u
+            val bend = (random.nextFloat() - 0.5f) * 8 * u
+            drawLine(grass, Offset(x, groundY + 3 * u), Offset(x + bend, groundY + 3 * u - height), strokeWidth = 2 * u, cap = StrokeCap.Round)
+        }
     }
 
     // the roots: a few thick arms that thin to a point, flowing out of the foot of the trunk
@@ -249,7 +342,7 @@ private fun DrawScope.drawTree(shape: TreeShape, look: TreeLook, seed: Int, leaf
             outline.lineTo(px(x), py(y - w / 2))
         }
         outline.close()
-        drawPath(outline, Trunk)
+        drawPath(outline, trunk)
     }
 
     // the trunk and the branches, each a curved strip that thins toward its tip. First every body, so they join
@@ -288,10 +381,10 @@ private fun DrawScope.drawTree(shape: TreeShape, look: TreeLook, seed: Int, leaf
         }
         for (k in steps downTo 0) body.lineTo(right[k * 2], right[k * 2 + 1])
         body.close()
-        drawPath(body, Trunk)
+        drawPath(body, trunk)
         if (b.depth >= 2) {
             val footWidth = b.widthAt(0f) * look.girth(b.depth) * (0.5f + 0.5f * g)
-            drawCircle(Trunk, radius = footWidth * scale / 2, center = Offset(px(b.x(0f)), py(b.y(0f))))
+            drawCircle(trunk, radius = footWidth * scale / 2, center = Offset(px(b.x(0f)), py(b.y(0f))))
         }
     }
     branches.forEachIndexed { index, b ->
@@ -309,7 +402,7 @@ private fun DrawScope.drawTree(shape: TreeShape, look: TreeLook, seed: Int, leaf
         }
         for (k in steps downTo 0) shade.lineTo(right[k * 2], right[k * 2 + 1])
         shade.close()
-        drawPath(shade, TrunkShade)
+        drawPath(shade, shadeColor)
     }
 
     // the leaves
@@ -326,7 +419,8 @@ private fun DrawScope.drawTree(shape: TreeShape, look: TreeLook, seed: Int, leaf
             Offset(px(b.x(spot.along * g)), py(b.y(spot.along * g))),
             length,
             spot.angle,
-            Color(min(1f, leaf.red * k), min(1f, leaf.green * k), min(1f, leaf.blue * k)),
+            Color(min(1f, leafTint.red * k), min(1f, leafTint.green * k), min(1f, leafTint.blue * k)),
+            midrib,
         )
     }
 
@@ -335,18 +429,18 @@ private fun DrawScope.drawTree(shape: TreeShape, look: TreeLook, seed: Int, leaf
         val trunk = branches[0]
         val g = look.branchGrowth(0)
         val tip = Offset(px(trunk.x(g)), py(trunk.y(g)))
-        for (turn in floatArrayOf(-0.7f, 0.7f)) drawLeaf(tip, leafLength * 0.9f, turn, leaf)
+        for (turn in floatArrayOf(-0.7f, 0.7f)) drawLeaf(tip, leafLength * 0.9f, turn, leafTint, midrib)
     }
 }
 
 /** A leaf [length] long with its foot at [at], turned [angle] radians clockwise from straight up. */
-private fun DrawScope.drawLeaf(at: Offset, length: Float, angle: Float, color: Color) {
+private fun DrawScope.drawLeaf(at: Offset, length: Float, angle: Float, color: Color, midrib: Color) {
     withTransform({
         translate(at.x, at.y)
         rotate(angle * 180f / PI.toFloat(), Offset.Zero)
         scale(length, length, Offset.Zero)
     }) {
         drawPath(LeafPath, color)
-        drawLine(Midrib, Offset.Zero, Offset(0f, -0.92f), strokeWidth = 0.05f)
+        drawLine(midrib, Offset.Zero, Offset(0f, -0.92f), strokeWidth = 0.05f)
     }
 }

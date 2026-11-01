@@ -2,7 +2,6 @@ package com.elkrrai.feather.feature.habits
 
 import com.elkrrai.feather.domain.habit.HabitKind
 import com.elkrrai.feather.domain.habit.TREE_STAGES
-import com.elkrrai.feather.domain.habit.TREE_WEEKS_PER_STAGE
 import com.elkrrai.feather.domain.habit.weekStartOf
 import com.elkrrai.feather.domain.repository.HabitRepository
 import java.time.DayOfWeek
@@ -11,12 +10,12 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
-private val TreeHabitName = Regex("Tree \\d+")
+private val TreeHabitName = Regex("(Tree|Forest) \\d+")
 
 /**
- * Fourteen habits, one for every picture of the tree: "Tree 0" has no met week (the seed), "Tree 1" has
- * the first week of stage 1, "Tree 2" the first of stage 2, up to "Tree 13" with the first week of stage
- * 13. Each is a habit of one day a week with that many past weeks logged.
+ * Habits to see every picture of the tree, each of one day a week with that many past weeks logged: "Tree 0"
+ * has no met week (the seed), "Tree 1" one (stage 1), up to "Tree 13" with 13 (a full tree). "Forest 14", "27",
+ * "40", "66" and "80" have a tree or more finished behind the one that is growing (80 has more than fit).
  *
  * Only a debug build offers it (a button at the end of Settings). It uses the repository like the screens
  * do, so what it makes is ordinary data: delete the habits from their menu to remove it. It runs to the end
@@ -26,9 +25,10 @@ private val TreeHabitName = Regex("Tree \\d+")
 suspend fun HabitRepository.addTreeStageHabits(today: LocalDate, firstDay: DayOfWeek) = withContext(NonCancellable) {
     observeHabits().first().filter { TreeHabitName.matches(it.habit.name) }.forEach { delete(it.habit.id) }
     val thisWeek = weekStartOf(today, firstDay)
-    for (stage in 0..TREE_STAGES) {
-        val metWeeks = if (stage == 0) 0 else (stage - 1) * TREE_WEEKS_PER_STAGE + 1
-        val habit = addHabit("Tree $stage", HabitKind.DAYS, "", 1, 1, thisWeek.minusWeeks(maxOf(metWeeks, 1).toLong()))
+    suspend fun make(name: String, metWeeks: Int) {
+        val habit = addHabit(name, HabitKind.DAYS, "", 1, 1, thisWeek.minusWeeks(maxOf(metWeeks, 1).toLong()))
         for (week in 1..metWeeks) setAmount(habit.id, thisWeek.minusWeeks(week.toLong()), 1)
     }
+    for (stage in 0..TREE_STAGES) make("Tree $stage", stage)
+    for (weeks in listOf(14, 27, 40, 66, 80)) make("Forest $weeks", weeks)
 }

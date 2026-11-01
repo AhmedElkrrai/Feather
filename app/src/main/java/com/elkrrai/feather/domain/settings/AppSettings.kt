@@ -40,6 +40,8 @@ data class AppSettings(
     /** How many times the "swipe to see earlier weeks" hint on a habit's weekly page was shown, and the week of the last time. */
     val habitSwipeHintsShown: Int = 0,
     val habitSwipeHintWeek: LocalDate? = null,
+    /** For each habit (by id): how many met weeks its tree had when the tree was last opened, so the card can say it grew. */
+    val habitTreesSeen: Map<String, Int> = emptyMap(),
     /** Asks for a fingerprint, a face or the screen lock when the app is opened. Off until the person turns it on, and only takes effect on a phone that has one. */
     val appLock: Boolean = false,
     /** Lets the bird move; off keeps it still. */
@@ -107,6 +109,8 @@ interface SettingsRepository {
     suspend fun setWelcomeSeen(seen: Boolean)
 
     suspend fun setHabitSwipeHint(shown: Int, week: LocalDate)
+
+    suspend fun setHabitTreeSeen(habitId: String, metWeeks: Int)
 
     suspend fun setAppLock(enabled: Boolean)
 

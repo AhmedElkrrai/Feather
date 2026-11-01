@@ -42,6 +42,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val welcomeSeen = booleanPreferencesKey("welcome_seen")
         val habitSwipeHintsShown = intPreferencesKey("habit_swipe_hints_shown")
         val habitSwipeHintWeek = stringPreferencesKey("habit_swipe_hint_week")
+        val habitTreesSeen = stringSetPreferencesKey("habit_trees_seen")
         val appLock = booleanPreferencesKey("app_lock")
         val birdAnimations = booleanPreferencesKey("bird_animations")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
@@ -82,6 +83,10 @@ class DataStoreSettingsRepository @Inject constructor(
             welcomeSeen = prefs[Keys.welcomeSeen] ?: defaults.welcomeSeen,
             habitSwipeHintsShown = prefs[Keys.habitSwipeHintsShown] ?: defaults.habitSwipeHintsShown,
             habitSwipeHintWeek = prefs[Keys.habitSwipeHintWeek]?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
+            habitTreesSeen = prefs[Keys.habitTreesSeen].orEmpty().mapNotNull { entry ->
+                val at = entry.lastIndexOf('|')
+                entry.substring(at + 1).toIntOrNull()?.takeIf { at > 0 }?.let { entry.substring(0, at) to it }
+            }.toMap(),
             appLock = prefs[Keys.appLock] ?: defaults.appLock,
             birdAnimations = prefs[Keys.birdAnimations] ?: defaults.birdAnimations,
             reduceMotion = prefs[Keys.reduceMotion] ?: defaults.reduceMotion,
@@ -178,6 +183,13 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit {
             it[Keys.habitSwipeHintsShown] = shown
             it[Keys.habitSwipeHintWeek] = week.toString()
+        }
+    }
+
+    override suspend fun setHabitTreeSeen(habitId: String, metWeeks: Int) {
+        dataStore.edit { prefs ->
+            val others = prefs[Keys.habitTreesSeen].orEmpty().filterNot { it.startsWith("$habitId|") }
+            prefs[Keys.habitTreesSeen] = others.toSet() + "$habitId|$metWeeks"
         }
     }
 

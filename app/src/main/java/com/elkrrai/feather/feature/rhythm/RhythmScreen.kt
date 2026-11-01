@@ -111,9 +111,11 @@ fun RhythmScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val habits by habitsViewModel.habits.collectAsStateWithLifecycle()
+    val treesSeen by habitsViewModel.treesSeen.collectAsStateWithLifecycle()
     RhythmContent(
         state = state,
         habits = habits,
+        treesSeen = treesSeen,
         onOpenHabit = onOpenHabit,
         onOpenHabitOverview = onOpenHabitOverview,
         onOpenHabitTree = onOpenHabitTree,
@@ -140,6 +142,8 @@ fun RhythmContent(
     today: LocalDate = LocalDate.now(),
     /** The habits for the second tab; null while they load. */
     habits: List<HabitState>? = emptyList(),
+    /** For each habit: how many met weeks its tree had when it was last opened. */
+    treesSeen: Map<String, Int> = emptyMap(),
     onOpenHabit: (habitId: String) -> Unit = {},
     onOpenHabitOverview: (habitId: String) -> Unit = {},
     onOpenHabitTree: (habitId: String) -> Unit = {},
@@ -184,6 +188,8 @@ fun RhythmContent(
             HabitsRhythmTab(
                 habits = habits,
                 weekStart = weekStartOf(today, firstDay),
+                treesSeen = treesSeen,
+                firstDay = firstDay,
                 contentPadding = padding,
                 onOpenHabit = onOpenHabit,
                 onOpenOverview = onOpenHabitOverview,

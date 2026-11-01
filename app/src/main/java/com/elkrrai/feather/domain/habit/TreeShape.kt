@@ -9,22 +9,26 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 /**
- * The tree of a habit grows in stages: one stage for every [TREE_WEEKS_PER_STAGE] weeks that met the
- * goal, [TREE_STAGES] stages in all (a year of met weeks). It never shrinks: a week that was not met
- * adds nothing, and takes nothing away.
+ * The tree of a habit grows one stage for every week that met the goal, [TREE_STAGES] stages to a full tree.
+ * The next met week starts a new tree and the full one stays behind it: a forest, a tree for every quarter of
+ * met weeks. It never shrinks: a week that was not met adds nothing, and takes nothing away.
  */
 const val TREE_STAGES = 13
-const val TREE_WEEKS_PER_STAGE = 4
 
-/** The stage after [metWeeks] weeks that met the goal: 0 is the seed, 1 starts with the first met week. */
-fun treeStage(metWeeks: Int): Int =
-    if (metWeeks <= 0) 0 else min(TREE_STAGES, (metWeeks - 1) / TREE_WEEKS_PER_STAGE + 1)
+/** How many finished trees stand behind the one that is growing; the oldest are left out of the picture. */
+const val FOREST_MAX_BEHIND = 5
 
-/** The met weeks still needed for the next stage, or null once the tree is fully grown. */
-fun weeksToNextTreeStage(metWeeks: Int): Int? {
-    val stage = treeStage(metWeeks)
-    return if (stage >= TREE_STAGES) null else stage * TREE_WEEKS_PER_STAGE + 1 - maxOf(metWeeks, 0)
-}
+/**
+ * The tree a habit is growing after some met weeks: [tree] counts from 0 and is also how many trees are finished,
+ * [stage] is 0 for the seed and 1 to [TREE_STAGES] after the first met week of the tree.
+ */
+class TreeProgress(val tree: Int, val stage: Int)
+
+fun treeProgress(metWeeks: Int): TreeProgress =
+    if (metWeeks <= 0) TreeProgress(0, 0) else TreeProgress((metWeeks - 1) / TREE_STAGES, (metWeeks - 1) % TREE_STAGES + 1)
+
+/** The seed of the habit's [tree]: the first tree has the habit's own seed, every other a different one. */
+fun treeSeed(habitSeed: Int, tree: Int): Int = habitSeed + tree * 7919
 
 /**
  * The fixed shape of one tree (the same seed always grows the same tree), in a unit drawing: the tree is
@@ -252,18 +256,24 @@ fun treeShape(seed: Int): TreeShape {
     return TreeShape(branches, spots)
 }
 
-/** From stage 10 on the trunk stands tall; the most it grows, as a part of the tree's height. */
+/** From stage 8 to 10 the trunk grows tall; the most it grows then, as a part of the tree's height. */
 const val TREE_LIFT_MAX = 0.70f * TRUNK
+
+/** Then it keeps growing taller through stages 11 and 12, by this much more. */
+const val TREE_LATE_LIFT = 0.50f * TRUNK
 
 /** After stage 10 the crown grows taller, stretched upward from the top of the trunk, by this much at the end. */
 const val TREE_CROWN_STRETCH = 0.42f
 
 /** The height the picture has to leave room for, as a multiple of the tree's own height. */
-const val TREE_HEIGHT_ROOM = 1f + TREE_LIFT_MAX + TREE_CROWN_STRETCH * 0.62f
+const val TREE_HEIGHT_ROOM = 1f + TREE_LIFT_MAX + TREE_LATE_LIFT + TREE_CROWN_STRETCH * 0.62f
 
-/** When each depth of branches grows, as a share of the way to the full tree. */
+/**
+ * When each depth of branches grows, as a share of the way to the full tree. Each depth starts when the one
+ * under it has finished, so a side branch never starts growing in mid-air.
+ */
 private val WINDOWS = arrayOf(
-    0.00f to 0.04f, 0.02f to 0.11f, 0.06f to 0.19f, 0.12f to 0.27f, 0.19f to 0.34f, 0.26f to 0.41f,
+    0.00f to 0.04f, 0.04f to 0.11f, 0.11f to 0.19f, 0.19f to 0.27f, 0.27f to 0.34f, 0.34f to 0.41f,
 )
 
 private const val STAGE_THICKER = 5f / TREE_STAGES
@@ -278,9 +288,10 @@ private fun smooth(t: Float): Float {
  * How much of the tree has grown at [stage] (0 to 13, in between while it grows): which branches are
  * out, how many leaves, how thick and tall the trunk is.
  *
- * Stages 1 to 7 grow the whole tree. Stages 8, 9 and 10 take the trunk to its full, tall and thick form
- * (they look as the tree did at 9, 11 and 13 of an even run of stages); after stage 10 the trunk stays
- * as it is and the crown grows taller.
+ * Stage 1 already looks as the tree did at 3 of an even run of stages (a young tree, not a stub), and stages 2
+ * to 7 fill it out. Stages 8, 9 and 10 take the trunk to its full, tall and thick form (they look as the tree
+ * did at 9, 11 and 13 of an even run); after stage 10 the trunk keeps growing taller through stages 11 and 12,
+ * and the crown grows taller to stage 13.
  */
 class TreeLook(stage: Float) {
     /** The share of the way to the tree with its full trunk, 0 to 1. */
@@ -290,7 +301,8 @@ class TreeLook(stage: Float) {
     val roots: Float = min(1f, share * 6f)
 
     /** How far up the whole crown is lifted by the trunk growing tall. */
-    val lift: Float = TREE_LIFT_MAX * ((share - STAGE_TALLER) / (1 - STAGE_TALLER)).coerceIn(0f, 1f)
+    val lift: Float = TREE_LIFT_MAX * ((share - STAGE_TALLER) / (1 - STAGE_TALLER)).coerceIn(0f, 1f) +
+        TREE_LATE_LIFT * ((stage - 10f) / 2f).coerceIn(0f, 1f)
 
     /** How much taller than before the crown has grown, as a share of its height above the trunk. */
     val stretch: Float = TREE_CROWN_STRETCH * ((stage - 10f) / 3f).coerceIn(0f, 1f)
@@ -350,9 +362,9 @@ class TreeLook(stage: Float) {
     }
 
     companion object {
-        /** The stage whose trunk the tree has: 8, 9 and 10 have the trunk of 9, 11 and 13, and it stays so. */
+        /** The stage whose trunk the tree has: 1 has that of 3, 8, 9 and 10 have that of 9, 11 and 13, and it stays so. */
         fun trunkStage(stage: Float): Float {
-            val points = arrayOf(0f to 0f, 7f to 7f, 8f to 9f, 9f to 11f, 10f to 13f, 13f to 13f)
+            val points = arrayOf(0f to 0f, 1f to 3f, 7f to 7f, 8f to 9f, 9f to 11f, 10f to 13f, 13f to 13f)
             for (i in 0 until points.size - 1) {
                 val (a, la) = points[i]
                 val (b, lb) = points[i + 1]

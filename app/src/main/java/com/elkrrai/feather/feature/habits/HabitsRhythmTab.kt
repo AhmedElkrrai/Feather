@@ -1,6 +1,7 @@
 package com.elkrrai.feather.feature.habits
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -8,14 +9,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -24,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -36,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.habit.HabitState
 import com.elkrrai.feather.domain.habit.history
+import com.elkrrai.feather.domain.habit.overview
 import com.elkrrai.feather.domain.habit.weeksMetInARow
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.components.EmptyState
@@ -43,6 +49,7 @@ import com.elkrrai.feather.ui.theme.Space
 import com.elkrrai.feather.ui.theme.featherColors
 import com.elkrrai.feather.ui.theme.leafColor
 import com.elkrrai.feather.ui.theme.rememberSeason
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 /** How many weeks the Habits tab of Your rhythm looks back. */
@@ -52,7 +59,7 @@ private const val WEEKS_SHOWN = 8
  * The Habits tab of Your rhythm: for each habit the last eight weeks, one bar a week that rises with
  * how much of that week's goal was reached (a week that met it is the full colour), and a quiet line
  * about weeks in a row. A week that was not met is only a shorter bar: no red, no "you missed". Tapping
- * a card opens the tree of that habit.
+ * a card opens the tree of that habit; a card whose tree has grown since it was last opened says so.
  */
 @Composable
 fun HabitsRhythmTab(
@@ -63,6 +70,9 @@ fun HabitsRhythmTab(
     onOpenHabit: (habitId: String) -> Unit = {},
     onOpenOverview: (habitId: String) -> Unit = {},
     onOpenTree: (habitId: String) -> Unit = {},
+    /** For each habit: how many met weeks its tree had when it was last opened. */
+    treesSeen: Map<String, Int> = emptyMap(),
+    firstDay: DayOfWeek = DayOfWeek.MONDAY,
 ) {
     when {
         habits == null -> Box(modifier.fillMaxSize().padding(contentPadding))
@@ -86,9 +96,11 @@ fun HabitsRhythmTab(
             verticalArrangement = Arrangement.spacedBy(Space.x3),
         ) {
             items(habits, key = { it.habit.id }) { state ->
+                val metWeeks = remember(state, weekStart, firstDay) { state.overview(weekStart, firstDay).weeksMet }
                 HabitHistoryCard(
                     state = state,
                     weekStart = weekStart,
+                    treeGrew = metWeeks > (treesSeen[state.habit.id] ?: 0),
                     onOpenWeek = { onOpenHabit(state.habit.id) },
                     onOpenOverview = { onOpenOverview(state.habit.id) },
                     onOpenTree = { onOpenTree(state.habit.id) },
@@ -102,6 +114,7 @@ fun HabitsRhythmTab(
 private fun HabitHistoryCard(
     state: HabitState,
     weekStart: LocalDate,
+    treeGrew: Boolean,
     onOpenWeek: () -> Unit,
     onOpenOverview: () -> Unit,
     onOpenTree: () -> Unit,
@@ -121,12 +134,20 @@ private fun HabitHistoryCard(
         modifier = Modifier.border(androidx.compose.foundation.BorderStroke(1.dp, scheme.outlineVariant), RoundedCornerShape(20.dp)),
     ) {
         Column(Modifier.padding(Space.x4)) {
-            Text(text = state.habit.name, style = MaterialTheme.typography.titleMedium)
-            Text(
-                text = summary,
-                style = MaterialTheme.typography.bodyMedium,
-                color = scheme.onSurfaceVariant,
-            )
+            Row(verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(1f)) {
+                    Text(text = state.habit.name, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = summary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = scheme.onSurfaceVariant,
+                    )
+                }
+                if (treeGrew) {
+                    Spacer(Modifier.width(Space.x2))
+                    TreeGrewBadge()
+                }
+            }
             Spacer(Modifier.height(Space.x3))
             val track = scheme.surfaceVariant
             val full = scheme.primary
@@ -173,5 +194,28 @@ private fun HabitHistoryCard(
                 }
             }
         }
+    }
+}
+
+/**
+ * A small leaf-coloured pill on a habit's card: its tree has grown since the person last looked, so the card is worth
+ * a tap. It goes away once the tree has been opened.
+ */
+@Composable
+private fun TreeGrewBadge() {
+    val leaf = MaterialTheme.featherColors.leafColor(rememberSeason())
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .background(leaf.copy(alpha = 0.18f), RoundedCornerShape(percent = 50))
+            .padding(horizontal = Space.x2, vertical = Space.x1),
+    ) {
+        Box(Modifier.size(8.dp).background(leaf, CircleShape))
+        Spacer(Modifier.width(Space.x1))
+        Text(
+            text = stringResource(R.string.habit_tree_new_growth),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
