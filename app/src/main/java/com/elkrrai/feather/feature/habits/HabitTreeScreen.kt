@@ -46,6 +46,7 @@ import com.elkrrai.feather.domain.habit.TREE_HEIGHT_ROOM
 import com.elkrrai.feather.domain.habit.TREE_ROOTS
 import com.elkrrai.feather.domain.habit.TREE_ROOT_WIDTH
 import com.elkrrai.feather.domain.habit.TREE_STAGES
+import com.elkrrai.feather.domain.habit.TreeBranch
 import com.elkrrai.feather.domain.habit.TreeLook
 import com.elkrrai.feather.domain.habit.TreeRandom
 import com.elkrrai.feather.domain.habit.TreeShape
@@ -251,13 +252,13 @@ private fun DrawScope.drawTree(shape: TreeShape, look: TreeLook, seed: Int, leaf
         drawPath(outline, Trunk)
     }
 
-    // the trunk and the branches, each a curved strip that thins toward its tip
+    // the trunk and the branches, each a curved strip that thins toward its tip. First every body, so they join
+    // into one shape; then the dark sides on top, each fading in from nothing where a limb leaves the trunk
+    // (and out at the top of the trunk), so no flat end shows where they meet.
     val steps = 14
     val left = FloatArray((steps + 1) * 2)
     val right = FloatArray((steps + 1) * 2)
-    branches.forEachIndexed { index, b ->
-        val g = look.branchGrowth(b.depth)
-        if (g <= 0.001f) return@forEachIndexed
+    fun strip(index: Int, b: TreeBranch, g: Float) {
         for (k in 0..steps) {
             val t = g * k / steps
             var width = b.widthAt(t)
@@ -276,27 +277,39 @@ private fun DrawScope.drawTree(shape: TreeShape, look: TreeLook, seed: Int, leaf
             right[k * 2] = px(x + nx * width / 2)
             right[k * 2 + 1] = py(y + ny * width / 2)
         }
+    }
+    branches.forEachIndexed { index, b ->
+        val g = look.branchGrowth(b.depth)
+        if (g <= 0.001f) return@forEachIndexed
+        strip(index, b, g)
         val body = Path()
-        val shade = Path()
         for (k in 0..steps) {
             if (k == 0) body.moveTo(left[0], left[1]) else body.lineTo(left[k * 2], left[k * 2 + 1])
         }
         for (k in steps downTo 0) body.lineTo(right[k * 2], right[k * 2 + 1])
         body.close()
         drawPath(body, Trunk)
+        if (b.depth >= 2) {
+            val footWidth = b.widthAt(0f) * look.girth(b.depth) * (0.5f + 0.5f * g)
+            drawCircle(Trunk, radius = footWidth * scale / 2, center = Offset(px(b.x(0f)), py(b.y(0f))))
+        }
+    }
+    branches.forEachIndexed { index, b ->
+        val g = look.branchGrowth(b.depth)
+        if (g <= 0.001f) return@forEachIndexed
+        strip(index, b, g)
         // the side away from the light is a little darker
+        val shade = Path()
         for (k in 0..steps) {
-            val x = left[k * 2] * 0.35f + right[k * 2] * 0.65f
-            val y = left[k * 2 + 1] * 0.35f + right[k * 2 + 1] * 0.65f
+            val fade = if (index == 0) min(1f, (steps - k) / (steps * 0.3f)) else min(1f, k / (steps * 0.3f))
+            val toLeft = 0.35f * fade
+            val x = left[k * 2] * toLeft + right[k * 2] * (1f - toLeft)
+            val y = left[k * 2 + 1] * toLeft + right[k * 2 + 1] * (1f - toLeft)
             if (k == 0) shade.moveTo(x, y) else shade.lineTo(x, y)
         }
         for (k in steps downTo 0) shade.lineTo(right[k * 2], right[k * 2 + 1])
         shade.close()
         drawPath(shade, TrunkShade)
-        if (b.depth >= 2) {
-            val footWidth = b.widthAt(0f) * look.girth(b.depth) * (0.5f + 0.5f * g)
-            drawCircle(Trunk, radius = footWidth * scale / 2, center = Offset(px(b.x(0f)), py(b.y(0f))))
-        }
     }
 
     // the leaves

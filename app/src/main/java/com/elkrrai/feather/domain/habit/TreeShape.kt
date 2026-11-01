@@ -85,8 +85,11 @@ private const val TRUNK = 0.38f
 /** How far up the trunk each of the six limbs leaves it (1 is the very top): the outer ones peel off lower down. */
 private val LIMB_ATTACH = floatArrayOf(0.80f, 0.90f, 1.0f, 1.0f, 0.90f, 0.80f)
 
-/** How far toward the side of the trunk a limb leaves from, and how thick it starts compared with the trunk there. */
-private const val LIMB_SIDE = 0.35f
+/**
+ * How far toward the side of the trunk a limb leaves from (0 is the middle, so its foot is hidden inside the trunk
+ * and the limb flows out of it), and how thick it starts compared with the trunk there.
+ */
+private const val LIMB_SIDE = 0f
 private const val LIMB_WIDTH = 0.95f
 
 /** The roots: which way each reaches (-1 left to 1 right) and how far, as a part of the tree's height. */

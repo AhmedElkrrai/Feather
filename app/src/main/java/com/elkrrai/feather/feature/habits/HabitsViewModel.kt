@@ -55,11 +55,6 @@ class HabitsViewModel @Inject constructor(
         viewModelScope.launch { repository.setAmount(id, date, amount) }
     }
 
-    /** Debug builds only: sample habits with months of history (see [addSampleHabits]). */
-    fun addSamples(today: LocalDate, firstDay: DayOfWeek) {
-        viewModelScope.launch { repository.addSampleHabits(today, firstDay) }
-    }
-
     /** Debug builds only: a habit for every picture of the tree (see [addTreeStageHabits]). */
     fun addTreeStages(today: LocalDate, firstDay: DayOfWeek) {
         viewModelScope.launch { repository.addTreeStageHabits(today, firstDay) }

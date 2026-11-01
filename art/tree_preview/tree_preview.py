@@ -38,7 +38,7 @@ LIMB_LENGTHS = [0.60, 0.68, 0.74, 0.74, 0.68, 0.60]  # how long each limb is, co
 LIMB_LENGTH_SCALE = 1.35     # one number to make all limbs longer or shorter
 TAPER = 0.62                 # a branch ends this thick compared with where it starts (smaller = thinner tips)
 LIMB_ATTACH = [0.80, 0.90, 1.0, 1.0, 0.90, 0.80]   # how far up the trunk each limb leaves it (1.0 = the very top; lower = a limb that peels off the side)
-LIMB_SIDE = 0.35             # how far toward the side of the trunk a limb leaves from (0 = from the middle of the trunk)
+LIMB_SIDE = 0.0             # how far toward the side of the trunk a limb leaves from (0 = from the middle of the trunk)
 LIMB_WIDTH = 0.95            # a limb starts this thick compared with the trunk where it leaves (smaller = thinner limbs)
 ROOT_ARMS = [(-1.0, 0.17), (1.0, 0.16), (-0.5, 0.10), (0.55, 0.11)]   # the roots: (which way, how far they reach)
 ROOT_WIDTH = 0.65            # a root starts this thick compared with the foot of the trunk
@@ -340,7 +340,9 @@ def render(seed, stage, W=250, H=400):
             bottom_edge.append(P(x, y - w / 2))
         dr.polygon(top_edge + bottom_edge[::-1], fill=TRUNK_COLOR + (255,))
 
-    # the trunk and the branches
+    # the trunk and the branches: first every body, so they join into one shape, then the dark sides on top,
+    # each fading in from nothing where a limb leaves the trunk (and out at the trunk's top)
+    drawn = []
     for i, b in enumerate(branches):
         g = growth(b['depth'])
         if g <= 0.001:
@@ -362,12 +364,18 @@ def render(seed, stage, W=250, H=400):
             left.append(P(x - nx * w / 2, y - ny * w / 2))
             right.append(P(x + nx * w / 2, y + ny * w / 2))
         dr.polygon(left + right[::-1], fill=TRUNK_COLOR + (255,))
-        shade = [(l[0] * 0.35 + r[0] * 0.65, l[1] * 0.35 + r[1] * 0.65) for l, r in zip(left, right)]
-        dr.polygon(shade + right[::-1], fill=(40, 28, 18, 70))
         if b['depth'] >= 2:
             x, y, w = pts[0]
             px, py = P(x, y)
             dr.ellipse([px - w * sc / 2, py - w * sc / 2, px + w * sc / 2, py + w * sc / 2], fill=TRUNK_COLOR + (255,))
+        drawn.append((i, left, right, steps))
+    for i, left, right, steps in drawn:
+        shade = []
+        for k, (l, r) in enumerate(zip(left, right)):
+            fade = min(1.0, k / (steps * 0.3)) if i != 0 else min(1.0, (steps - k) / (steps * 0.3))
+            wl = 0.35 * fade
+            shade.append((l[0] * wl + r[0] * (1 - wl), l[1] * wl + r[1] * (1 - wl)))
+        dr.polygon(shade + right[::-1], fill=(40, 28, 18, 70))
 
     # the leaves
     leaf_len = sc * (LEAF_SIZE + LEAF_SIZE_GROWTH * smooth(min(1.0, f / 0.9)) + LEAF_SIZE_STRETCH * (stretch / CROWN_STRETCH))

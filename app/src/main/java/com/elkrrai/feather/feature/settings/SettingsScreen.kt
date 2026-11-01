@@ -160,11 +160,6 @@ fun SettingsScreen(
             onBackupNow = backupViewModel::backupNow,
         ),
         backupBusy = backupState.busy,
-        onAddSampleHabits = if (debuggable) {
-            { habitsViewModel.addSamples(LocalDate.now(), firstDayOfWeek(sampleLocale)) }
-        } else {
-            null
-        },
         onAddTreeStages = if (debuggable) {
             { habitsViewModel.addTreeStages(LocalDate.now(), firstDayOfWeek(sampleLocale)) }
         } else {
@@ -233,8 +228,6 @@ fun SettingsContent(
     /** Whether the phone has a fingerprint, a face or a screen lock the app lock could use. */
     appLockAvailable: Boolean = true,
     onAppLockChange: (Boolean) -> Unit = {},
-    /** Debug builds: makes sample habits with months of history. Null in a release build. */
-    onAddSampleHabits: (() -> Unit)? = null,
     /** Debug builds: makes a habit for every picture of the tree. Null in a release build. */
     onAddTreeStages: (() -> Unit)? = null,
     versionName: String = "",
@@ -358,14 +351,6 @@ fun SettingsContent(
                 onClick = { dialog = SettingsDialog.Language },
             )
 
-            if (onAddSampleHabits != null) {
-                SettingsRow(
-                    title = stringResource(R.string.debug_add_sample_habits),
-                    summary = null,
-                    supporting = stringResource(R.string.debug_add_sample_habits_summary),
-                    onClick = onAddSampleHabits,
-                )
-            }
             if (onAddTreeStages != null) {
                 SettingsRow(
                     title = stringResource(R.string.debug_add_tree_stages),
