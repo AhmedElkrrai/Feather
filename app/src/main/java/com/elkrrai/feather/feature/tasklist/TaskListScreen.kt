@@ -71,6 +71,8 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.focus.FocusSession
 import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.feature.focus.FocusBadgeViewModel
+import com.elkrrai.feather.feature.habits.TodayHabitsBlock
+import com.elkrrai.feather.feature.habits.TodayHabitsViewModel
 import com.elkrrai.feather.domain.support.TipResult
 import com.elkrrai.feather.domain.view.TagFilter
 import com.elkrrai.feather.domain.view.TaskScope
@@ -134,6 +136,7 @@ fun TaskListScreen(
     onOpenHabits: () -> Unit = {},
     viewModel: TaskListViewModel = hiltViewModel(),
     dayCards: DayCardsViewModel = hiltViewModel(),
+    todayHabits: TodayHabitsViewModel = hiltViewModel(),
     tips: TipViewModel = hiltViewModel(),
     focusBadge: FocusBadgeViewModel = hiltViewModel(),
 ) {
@@ -150,6 +153,7 @@ fun TaskListScreen(
         }
     }
     val dayCard by dayCards.card.collectAsStateWithLifecycle()
+    val habitsUi by todayHabits.ui.collectAsStateWithLifecycle()
     val focusSession by focusBadge.session.collectAsStateWithLifecycle()
     val showWelcome by dayCards.showWelcome.collectAsStateWithLifecycle()
     val nestNews by dayCards.nestNews.collectAsStateWithLifecycle()
@@ -319,6 +323,31 @@ fun TaskListScreen(
             onWarmFeathers = { origin -> confetti.celebrate(origin, 1f, 12, true) },
             onClearCompleted = { deleteWithUndo(state.sections.flatMap { it.tasks }.map { it.id }) },
             dayCard = dayCard,
+            // the habits of Today sit above the tasks; the tag tabs are for tasks, so only the first tab (all) has them
+            habitsBlock = if (habitsUi.rows.isNotEmpty() && state.tagFilter == TagFilter.All) {
+                {
+                    TodayHabitsBlock(
+                        ui = habitsUi,
+                        onFinish = { row ->
+                            todayHabits.finishDay(row) { undo ->
+                                coroutineScope.launch {
+                                    snackbarHostState.currentSnackbarData?.dismiss()
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = resources.getString(R.string.habit_today_finished, row.name),
+                                        actionLabel = undoLabel,
+                                        duration = SnackbarDuration.Short,
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) undo()
+                                }
+                            }
+                        },
+                        onToggleStage = todayHabits::toggleStage,
+                        onSetAmount = todayHabits::setAmount,
+                    )
+                }
+            } else {
+                null
+            },
             onDismissDayCard = dayCards::dismiss,
             onMoveToTomorrow = {
                 dayCards.moveToTomorrow { moved ->
@@ -447,6 +476,8 @@ fun TaskListContent(
     onFly: (from: Offset, to: Offset?) -> Unit = { _, _ -> },
     onWarmFeathers: (Offset) -> Unit = {},
     dayCard: DayCard? = null,
+    /** The habits of Today as one block above the tasks, or null when there are none to show. */
+    habitsBlock: (@Composable () -> Unit)? = null,
     onDismissDayCard: (DayCardKind) -> Unit = {},
     onMoveToTomorrow: () -> Unit = {},
     onTagFilterChange: (TagFilter) -> Unit = {},
@@ -526,6 +557,7 @@ fun TaskListContent(
     } else {
         var index = 0
         if (todayView && dayCard != null) index++
+        if (todayView && habitsBlock != null) index++
         var found = -1
         for (section in state.sections) {
             if (section.date != null) index++
@@ -671,6 +703,11 @@ fun TaskListContent(
                             onMoveToTomorrow = onMoveToTomorrow,
                             modifier = Modifier.animateItem(),
                         )
+                    }
+                }
+                if (todayView && habitsBlock != null) {
+                    item(key = "habits-block") {
+                        Box(Modifier.animateItem()) { habitsBlock() }
                     }
                 }
                 state.sections.forEach { section ->

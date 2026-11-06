@@ -31,6 +31,8 @@ data class TodayHabit(
     val weekTarget: Int,
     /** Minutes since midnight the row sorts by, or null for a habit with no time. */
     val sortMinute: Int?,
+    /** What was logged today (the amount for an amount habit). */
+    val todayAmount: Int = 0,
 )
 
 /**
@@ -60,6 +62,7 @@ private fun todayHabit(state: HabitState, today: LocalDate, minute: Int, weekSta
             doneToday = false, doneCount = progress.total, totalCount = progress.target,
             weekTotal = progress.total, weekTarget = progress.target,
             sortMinute = habit.time.start(),
+            todayAmount = state.entries[today] ?: 0,
         )
     }
 
@@ -81,6 +84,7 @@ private fun todayHabit(state: HabitState, today: LocalDate, minute: Int, weekSta
             doneToday = doneToday, doneCount = state.entries[today] ?: 0, totalCount = needed,
             weekTotal = progress.total, weekTarget = progress.target,
             sortMinute = habit.time.start(),
+            todayAmount = state.entries[today] ?: 0,
         )
     }
 
@@ -95,6 +99,7 @@ private fun todayHabit(state: HabitState, today: LocalDate, minute: Int, weekSta
         doneToday = doneToday, doneCount = doneStages, totalCount = stages.size,
         weekTotal = progress.total, weekTarget = progress.target,
         sortMinute = (current?.stage?.time ?: stages.first().time).start(),
+        todayAmount = state.entries[today] ?: 0,
     )
 }
 

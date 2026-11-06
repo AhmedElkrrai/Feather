@@ -476,7 +476,7 @@ private fun DayCell(
 
 /** The amount logged on a day, as a number to set (0 clears the day). */
 @Composable
-private fun AmountDialog(title: String, initial: Int, onSet: (Int) -> Unit, onDismiss: () -> Unit) {
+internal fun AmountDialog(title: String, initial: Int, onSet: (Int) -> Unit, onDismiss: () -> Unit) {
     var text by rememberSaveable { mutableStateOf(if (initial > 0) initial.toString() else "") }
     val value = text.toIntOrNull() ?: if (text.isEmpty()) 0 else null
     AlertDialog(
