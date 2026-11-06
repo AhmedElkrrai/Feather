@@ -38,6 +38,8 @@ data class Habit(
     val todayFromStart: Boolean = false,
     /** Notify at its time (the start of each stage's time). */
     val remind: Boolean = false,
+    /** The look of its weekly leaf, a code from 0 to [LEAF_LOOKS] - 1 dealt when the habit was made; negative until it is dealt. */
+    val leaf: Int = -1,
 )
 
 /**

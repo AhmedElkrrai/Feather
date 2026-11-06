@@ -50,6 +50,17 @@ interface HabitDao {
     @Upsert
     suspend fun upsertHabit(habit: HabitEntity)
 
+    /** The leaf looks the listed habits have, for dealing the next one. */
+    @Query("SELECT leaf FROM habits WHERE deletedAt IS NULL AND leaf >= 0")
+    suspend fun assignedLeaves(): List<Int>
+
+    @Query("SELECT * FROM habits WHERE deletedAt IS NULL AND leaf < 0 ORDER BY createdAt, id")
+    suspend fun habitsWithoutLeaf(): List<HabitEntity>
+
+    /** Only the look changes: a deal is not an edit of the habit, so it does not touch `updatedAt`. */
+    @Query("UPDATE habits SET leaf = :leaf WHERE id = :id")
+    suspend fun setLeaf(id: String, leaf: Int)
+
     @Query("UPDATE habits SET sortOrder = :sortOrder, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setSortOrder(id: String, sortOrder: Long, updatedAt: Long)
 

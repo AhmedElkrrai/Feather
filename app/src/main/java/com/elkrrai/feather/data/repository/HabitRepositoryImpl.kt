@@ -1,5 +1,7 @@
 package com.elkrrai.feather.data.repository
 
+import com.elkrrai.feather.domain.habit.nextLeaf
+import kotlinx.coroutines.flow.onStart
 import com.elkrrai.feather.data.db.HabitDao
 import com.elkrrai.feather.data.db.HabitEntity
 import com.elkrrai.feather.data.db.HabitEntryEntity
@@ -45,7 +47,7 @@ class HabitRepositoryImpl @Inject constructor(
         val staging = combine(dao.observeStages(), dao.observeGoalStages(), dao.observeStageLog()) { stages, goalStages, log ->
             Triple(stages, goalStages, log)
         }
-        return combine(base, staging) { (habits, goals, entries), (stages, goalStages, log) ->
+        val states = combine(base, staging) { (habits, goals, entries), (stages, goalStages, log) ->
             val goalsByHabit = goals.groupBy { it.habitId }
             val entriesByHabit = entries.groupBy { it.habitId }
             val stagesByHabit = stages.groupBy { it.habitId }
@@ -64,6 +66,21 @@ class HabitRepositoryImpl @Inject constructor(
                         .groupBy({ LocalDate.parse(it.date) }, { it.stageId })
                         .mapValues { it.value.toSet() },
                 )
+            }
+        }
+        // the habits of an older version have no leaf look yet: they are dealt theirs, in the order they were made
+        return states.onStart { assignMissingLeaves() }
+    }
+
+    private suspend fun assignMissingLeaves() {
+        tx.run {
+            val missing = dao.habitsWithoutLeaf()
+            if (missing.isEmpty()) return@run
+            val used = dao.assignedLeaves().toMutableList()
+            missing.forEach { habit ->
+                val leaf = nextLeaf(used)
+                dao.setLeaf(habit.id, leaf)
+                used += leaf
             }
         }
     }
@@ -101,6 +118,8 @@ class HabitRepositoryImpl @Inject constructor(
             stageMode = stageMode.code,
             todayFromStart = draft.todayFromStart,
             remind = draft.remind,
+            // a new habit is dealt a look; an edited one keeps its own (or none yet, which listing the habits deals)
+            leaf = existing?.leaf ?: nextLeaf(dao.assignedLeaves()),
         )
         val stageEntities = stages.mapIndexed { index, stage ->
             val stageTime = stage.time.normalized()
@@ -207,6 +226,7 @@ private fun HabitEntity.toDomain() = Habit(
     stageMode = StageMode.fromCode(stageMode),
     todayFromStart = todayFromStart,
     remind = remind,
+    leaf = leaf,
 )
 
 private fun HabitGoalEntity.toDomain(stageIds: List<String>) = HabitGoal(LocalDate.parse(effectiveFrom), target, dailyTarget, stageIds)

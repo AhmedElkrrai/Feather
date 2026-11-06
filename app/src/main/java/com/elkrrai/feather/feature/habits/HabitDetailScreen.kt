@@ -189,7 +189,7 @@ private fun WeeksPager(
                     week = progress,
                     today = today,
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    style = leafStyleFor(habit.habit.id),
+                    style = leafStyleFor(habit.habit),
                     onDayClick = if (habit.stagesFor(weekStart).isNotEmpty()) ({ date -> partsDay = date }) else null,
                 )
                 Spacer(Modifier.height(Space.x2))

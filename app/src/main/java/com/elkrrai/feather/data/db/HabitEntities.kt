@@ -28,6 +28,8 @@ data class HabitEntity(
     @ColumnInfo(defaultValue = "0") val stageMode: Int = 0,
     @ColumnInfo(defaultValue = "0") val todayFromStart: Boolean = false,
     @ColumnInfo(defaultValue = "0") val remind: Boolean = false,
+    /** From version 3: the look of the weekly leaf (see `nextLeaf`); negative until it is dealt, which the habits of version 2 are. */
+    @ColumnInfo(defaultValue = "-1") val leaf: Int = -1,
 )
 
 /** The goal of a habit from the week that starts on [effectiveFrom] (ISO date) on. */

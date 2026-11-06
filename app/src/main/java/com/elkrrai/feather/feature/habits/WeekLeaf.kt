@@ -1,5 +1,6 @@
 package com.elkrrai.feather.feature.habits
 
+import com.elkrrai.feather.domain.habit.Habit
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
@@ -62,12 +63,12 @@ private const val DAYS = 7
 /** The looks of the weekly leaf: a smooth edge, a serrated one, or a botanical one (a finely toothed blade with parallel veins). */
 enum class LeafStyle { Smooth, Serrated, Botanical }
 
-/** The look a habit's leaf has: picked from its id, so it seems random between habits but never changes for one. */
-fun leafStyleFor(habitId: String): LeafStyle = when (Math.floorMod(habitId.hashCode(), 3)) {
-    0 -> LeafStyle.Smooth
-    1 -> LeafStyle.Serrated
-    else -> LeafStyle.Botanical
-}
+/**
+ * The look a habit's leaf has: the one it was dealt (see `nextLeaf`), kept for good. The order of [LeafStyle] is the code that is saved, so it
+ * must not change. Until a habit is dealt one, a look picked from its id stands in.
+ */
+fun leafStyleFor(habit: Habit): LeafStyle =
+    LeafStyle.entries.getOrNull(habit.leaf) ?: LeafStyle.entries[Math.floorMod(habit.id.hashCode(), LeafStyle.entries.size)]
 
 /** The sawtooth along a toothed edge: from 1 - [depth] to 1 of the smooth width, [count] teeth up the leaf, shifted by [seed] so the two edges differ. */
 private fun tooth(t: Float, count: Int, seed: Float, depth: Float): Float {

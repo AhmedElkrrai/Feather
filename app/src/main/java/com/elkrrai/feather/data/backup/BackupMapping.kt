@@ -101,12 +101,12 @@ fun CompletionRecord.toEntity() = CompletionEntity(id, taskId, completedAt, dueD
 
 fun HabitEntity.toRecord() = HabitRecord(
     id, name, kind, unit, sortOrder, createdAt, updatedAt, deletedAt,
-    showInToday, timeMode, startMinute, endMinute, stageMode, todayFromStart, remind,
+    showInToday, timeMode, startMinute, endMinute, stageMode, todayFromStart, remind, leaf,
 )
 
 fun HabitRecord.toEntity() = HabitEntity(
     id, name, kind, unit, sortOrder, createdAt, updatedAt, deletedAt,
-    showInToday, timeMode, startMinute, endMinute, stageMode, todayFromStart, remind,
+    showInToday, timeMode, startMinute, endMinute, stageMode, todayFromStart, remind, leaf,
 )
 
 fun HabitGoalEntity.toRecord() = HabitGoalRecord(habitId, effectiveFrom, target, dailyTarget, updatedAt)

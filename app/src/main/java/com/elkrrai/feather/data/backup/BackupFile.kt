@@ -128,6 +128,8 @@ data class HabitRecord(
     val stageMode: Int = 0,
     val todayFromStart: Boolean = false,
     val remind: Boolean = false,
+    /** The look of the weekly leaf; negative when the backup has none (an older one), and the habit is dealt one when listed. */
+    val leaf: Int = -1,
 )
 
 @Serializable

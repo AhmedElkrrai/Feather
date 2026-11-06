@@ -14,6 +14,8 @@ import androidx.room.RoomDatabase
  * Version 2 adds the times and the Today settings of a habit (columns with defaults) and three tables for the stages of a habit (`habit_stages`,
  * `habit_goal_stages`, `habit_stage_log`); the automatic migration keeps every habit as it was.
  *
+ * Version 3 gives each habit the look of its weekly leaf (a column with a default: the habits of version 2 get theirs when the app first lists them).
+ *
  * [ListEntity] stays: every task is kept in the Inbox list, see [INBOX_LIST_ID].
  */
 @Database(
@@ -31,9 +33,9 @@ import androidx.room.RoomDatabase
         HabitGoalStageEntity::class,
         HabitStageLogEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 abstract class FeatherDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
