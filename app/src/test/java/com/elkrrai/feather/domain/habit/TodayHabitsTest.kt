@@ -170,4 +170,13 @@ class TodayHabitsTest {
         assertNull(row.current)
         assertTrue(rows(done, hour = 9).isEmpty())
     }
+
+    @Test
+    fun anAmountThatReachesTheGoalTodayIsListedAsDoneSoTheRowCanCelebrate() {
+        val reached = HabitState(habit("read", HabitKind.AMOUNT), listOf(HabitGoal(week, 20)), mapOf(today to 30))
+
+        val row = rows(reached, hour = 9).single()
+        assertTrue(row.doneToday)
+        assertEquals(30, row.weekTotal)
+    }
 }

@@ -56,11 +56,12 @@ private fun todayHabit(state: HabitState, today: LocalDate, minute: Int, weekSta
     val goal = progress.goal ?: return null
 
     if (habit.kind == HabitKind.AMOUNT) {
-        if (progress.met) return null
+        // met by the other days: it rests. Met by what was logged today: it is listed, done, so the row can celebrate before it leaves.
+        if (progress.met && (state.entries[today] ?: 0) == 0) return null
         return TodayHabit(
             id = habit.id, name = habit.name, kind = habit.kind, unit = habit.unit,
             stages = emptyList(), mode = StageMode.NONE, current = null, time = habit.time,
-            doneToday = false, doneCount = progress.total, totalCount = progress.target,
+            doneToday = progress.met, doneCount = progress.total, totalCount = progress.target,
             weekTotal = progress.total, weekTarget = progress.target,
             sortMinute = habit.time.start(),
             todayAmount = state.entries[today] ?: 0,

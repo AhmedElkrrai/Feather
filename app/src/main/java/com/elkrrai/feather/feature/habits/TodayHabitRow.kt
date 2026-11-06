@@ -55,6 +55,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -102,6 +104,8 @@ fun TodayHabitsBlock(
     onToggleStage: (TodayHabit, String) -> Unit,
     onSetAmount: (TodayHabit, Int) -> Unit,
     modifier: Modifier = Modifier,
+    /** A day was finished (by holding, by the last tick, or by an amount that reaches the goal): where on the screen the ring is. */
+    onCelebrate: (origin: Offset) -> Unit = {},
     today: LocalDate = LocalDate.now(),
 ) {
     val scope = rememberCoroutineScope()
@@ -142,6 +146,7 @@ fun TodayHabitsBlock(
                     onFinish = { onFinish(row) },
                     onToggleStage = { onToggleStage(row, it) },
                     onPickAmount = { amountFor = row.id },
+                    onCelebrate = onCelebrate,
                 )
                 Spacer(Modifier.height(Space.x2))
             }
@@ -172,9 +177,12 @@ private fun HabitTodayRow(
     onFinish: () -> Unit,
     onToggleStage: (stageId: String) -> Unit,
     onPickAmount: () -> Unit,
+    onCelebrate: (Offset) -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
     val leaf = MaterialTheme.featherColors.leafColor(rememberSeason())
+    var ringCenter by remember { mutableStateOf(Offset.Zero) }
+    val celebrate by rememberUpdatedState(onCelebrate)
     val haptics = rememberHaptics()
     val scope = rememberCoroutineScope()
     val still = rememberReduceMotion()
@@ -194,6 +202,8 @@ private fun HabitTodayRow(
     }
     LaunchedEffect(done) {
         if (done) {
+            // however the day was finished, the bird and the feathers celebrate, as for a task
+            celebrate(ringCenter)
             if (!still) {
                 scope.launch { burst.snapTo(0f); burst.animateTo(1f, tween(650)) }
                 bloom.snapTo(0.6f)
@@ -283,7 +293,14 @@ private fun HabitTodayRow(
                     Modifier.padding(horizontal = Space.x3, vertical = 11.dp),
                     horizontalArrangement = Arrangement.spacedBy(Space.x3),
                 ) {
-                    HoldRing(progress = { progress.value }, bloom = { bloom.value }, burst = { burst.value }, done = done, leaf = leaf)
+                    HoldRing(
+                        progress = { progress.value },
+                        bloom = { bloom.value },
+                        burst = { burst.value },
+                        done = done,
+                        leaf = leaf,
+                        modifier = Modifier.onGloballyPositioned { ringCenter = it.boundsInRoot().center },
+                    )
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.x1)) {
                         Text(title, style = MaterialTheme.typography.bodyLarge)
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -362,8 +379,15 @@ private fun HabitTodayRow(
 
 /** The ring around the leaf: its track says "this can be filled", the arc is the hold, and the leaf blooms when the day is done. */
 @Composable
-private fun HoldRing(progress: () -> Float, bloom: () -> Float, burst: () -> Float, done: Boolean, leaf: Color) {
-    Canvas(Modifier.size(40.dp)) {
+private fun HoldRing(
+    progress: () -> Float,
+    bloom: () -> Float,
+    burst: () -> Float,
+    done: Boolean,
+    leaf: Color,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier.size(40.dp)) {
         val stroke = 2.5.dp.toPx()
         val radius = size.minDimension / 2 - stroke
         drawCircle(leaf.copy(alpha = 0.30f), radius, style = Stroke(stroke))
