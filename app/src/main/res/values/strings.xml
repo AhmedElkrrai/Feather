@@ -542,12 +542,11 @@
     <string name="habit_named_label">Name each time</string>
     <string name="habit_named_hint">Off: a simple counter. On: you list the times, like Fajr, Dhuhr and Asr.</string>
     <string name="habit_stages_label">Times of the day</string>
-    <string name="habit_stages_hint">Tap a time to rename it or to set an exact time or a window. Adding, removing or reordering starts next week.</string>
+    <string name="habit_stages_hint">Tap a time to rename it or to set an exact time or a window. Adding or removing a time starts next week.</string>
     <string name="habit_stage_name">Name</string>
     <string name="habit_stage_unnamed">Name this time</string>
     <string name="habit_stage_add">Add a time</string>
-    <string name="habit_stage_move_up">Move up</string>
-    <string name="habit_stage_move_down">Move down</string>
+    <string name="habit_stage_done_editing">Done editing this time</string>
     <string name="habit_stage_remove">Remove this time</string>
     <string name="habit_time_none">None</string>
     <string name="habit_time_at">At a time</string>

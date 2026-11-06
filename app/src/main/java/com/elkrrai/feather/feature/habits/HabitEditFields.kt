@@ -31,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -147,7 +146,6 @@ internal fun StageList(
     stages: List<StageUi>,
     onName: (key: Long, name: String) -> Unit,
     onTime: (key: Long, time: DayTime) -> Unit,
-    onMove: (key: Long, by: Int) -> Unit,
     onRemove: (key: Long) -> Unit,
     onAdd: () -> Long?,
 ) {
@@ -160,13 +158,10 @@ internal fun StageList(
                 number = index + 1,
                 stage = stage,
                 isOpen = open == stage.key,
-                canMoveUp = index > 0,
-                canMoveDown = index < stages.lastIndex,
                 canRemove = stages.size > 1,
                 onToggle = { open = if (open == stage.key) null else stage.key },
                 onName = { onName(stage.key, it) },
                 onTime = { onTime(stage.key, it) },
-                onMove = { onMove(stage.key, it) },
                 onRemove = { onRemove(stage.key) },
             )
         }
@@ -184,13 +179,10 @@ private fun StageRow(
     number: Int,
     stage: StageUi,
     isOpen: Boolean,
-    canMoveUp: Boolean,
-    canMoveDown: Boolean,
     canRemove: Boolean,
     onToggle: () -> Unit,
     onName: (String) -> Unit,
     onTime: (DayTime) -> Unit,
-    onMove: (Int) -> Unit,
     onRemove: () -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -225,6 +217,11 @@ private fun StageRow(
                         color = scheme.onSurfaceVariant,
                     )
                 }
+                if (isOpen) {
+                    IconButton(onClick = onToggle) {
+                        Icon(painterResource(R.drawable.ic_check), stringResource(R.string.habit_stage_done_editing), tint = scheme.primary)
+                    }
+                }
             }
             if (isOpen) {
                 OutlinedTextField(
@@ -237,16 +234,6 @@ private fun StageRow(
                 )
                 TimeSetting(stage.time, onTime)
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    IconButton(onClick = { onMove(-1) }, enabled = canMoveUp) {
-                        Icon(
-                            painterResource(R.drawable.ic_chevron_down),
-                            stringResource(R.string.habit_stage_move_up),
-                            modifier = Modifier.graphicsLayer { rotationZ = 180f },
-                        )
-                    }
-                    IconButton(onClick = { onMove(1) }, enabled = canMoveDown) {
-                        Icon(painterResource(R.drawable.ic_chevron_down), stringResource(R.string.habit_stage_move_down))
-                    }
                     IconButton(onClick = onRemove, enabled = canRemove) {
                         Icon(painterResource(R.drawable.ic_delete), stringResource(R.string.habit_stage_remove))
                     }

@@ -64,7 +64,6 @@ internal class HabitEditActions(
     val onNamedChange: (Boolean) -> Unit = {},
     val onStageName: (key: Long, name: String) -> Unit = { _, _ -> },
     val onStageTime: (key: Long, time: DayTime) -> Unit = { _, _ -> },
-    val onStageMove: (key: Long, by: Int) -> Unit = { _, _ -> },
     val onStageRemove: (key: Long) -> Unit = {},
     val onStageAdd: () -> Long? = { null },
     val onNeededChange: (String) -> Unit = {},
@@ -110,7 +109,6 @@ fun HabitEditScreen(
             onNamedChange = viewModel::onNamedChange,
             onStageName = viewModel::onStageNameChange,
             onStageTime = viewModel::onStageTimeChange,
-            onStageMove = viewModel::moveStage,
             onStageRemove = viewModel::removeStage,
             onStageAdd = viewModel::addStage,
             onNeededChange = viewModel::onNeededChange,
@@ -234,7 +232,6 @@ internal fun HabitEditContent(
                             stages = state.stages,
                             onName = actions.onStageName,
                             onTime = actions.onStageTime,
-                            onMove = actions.onStageMove,
                             onRemove = actions.onStageRemove,
                             onAdd = actions.onStageAdd,
                         )
