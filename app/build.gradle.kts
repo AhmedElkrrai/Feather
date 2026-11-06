@@ -25,8 +25,8 @@ android {
         applicationId = "com.elkrrai.feather"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -48,6 +48,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // With a keystore.properties (on the developer's PC only) a debug build carries the release signature, so it
+            // installs over a release build without uninstalling it first. Without the file: the usual debug key.
+            if (keystoreProperties.isNotEmpty()) signingConfig = signingConfigs.getByName("release")
+        }
         release {
             if (keystoreProperties.isNotEmpty()) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
