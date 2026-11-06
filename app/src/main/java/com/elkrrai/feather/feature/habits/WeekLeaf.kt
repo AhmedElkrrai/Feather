@@ -1,5 +1,8 @@
 package com.elkrrai.feather.feature.habits
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.clickable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -72,6 +75,8 @@ fun WeekLeaf(
     week: WeekProgress,
     today: LocalDate,
     modifier: Modifier = Modifier,
+    /** Makes the circles of the days up to today tappable; null leaves the leaf to be looked at only. */
+    onDayClick: ((LocalDate) -> Unit)? = null,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val season = rememberSeason()
@@ -184,6 +189,7 @@ fun WeekLeaf(
                 label = day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
                 done = day.done,
                 dimmed = day.date.isAfter(today),
+                onClick = onDayClick?.takeUnless { day.date.isAfter(today) }?.let { click -> { click(day.date) } },
                 size = circle,
                 leaf = leaf,
                 surface = surface,
@@ -201,6 +207,7 @@ private fun DayCircle(
     label: String,
     done: Boolean,
     dimmed: Boolean,
+    onClick: (() -> Unit)?,
     size: Dp,
     leaf: Color,
     surface: Color,
@@ -231,7 +238,8 @@ private fun DayCircle(
                     }
                 }
                 .background(if (done) leaf else surface, CircleShape)
-                .border(BorderStroke(1.5.dp, if (done) leaf else leaf.copy(alpha = 0.55f)), CircleShape),
+                .border(BorderStroke(1.5.dp, if (done) leaf else leaf.copy(alpha = 0.55f)), CircleShape)
+                .then(if (onClick != null) Modifier.clip(CircleShape).clickable(role = Role.Button, onClick = onClick) else Modifier),
             contentAlignment = Alignment.Center,
         ) {
             if (number > 0) {

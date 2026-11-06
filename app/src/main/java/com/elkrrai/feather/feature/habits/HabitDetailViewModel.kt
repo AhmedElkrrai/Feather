@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class HabitDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    repository: HabitRepository,
+    private val repository: HabitRepository,
     private val settings: SettingsRepository,
 ) : ViewModel() {
 
@@ -40,6 +40,11 @@ class HabitDetailViewModel @Inject constructor(
     val habit: StateFlow<HabitState?> = repository.observeHabits()
         .map { all -> all.firstOrNull { it.habit.id == habitId } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Ticks or unticks one part of a day. */
+    fun setStageDone(date: LocalDate, stageId: String, done: Boolean) {
+        viewModelScope.launch { repository.setStageDone(habitId, date, stageId, done) }
+    }
 
     private val _swipeHint = MutableStateFlow(false)
 

@@ -1,5 +1,8 @@
 package com.elkrrai.feather.feature.habits
 
+import java.time.format.TextStyle
+import com.elkrrai.feather.domain.habit.stagesDoneOn
+import com.elkrrai.feather.domain.habit.stagesFor
 import android.text.format.DateUtils
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -71,6 +74,7 @@ fun HabitDetailScreen(
         initialWeek = viewModel.initialWeek,
         showSwipeHint = swipeHint,
         onCheckSwipeHint = viewModel::decideSwipeHint,
+        onSetStageDone = viewModel::setStageDone,
         onBack = onBack,
         modifier = modifier,
     )
@@ -85,6 +89,7 @@ internal fun HabitDetailContent(
     initialWeek: LocalDate? = null,
     showSwipeHint: Boolean = false,
     onCheckSwipeHint: (hasEarlierWeek: Boolean, thisWeek: LocalDate) -> Unit = { _, _ -> },
+    onSetStageDone: (date: LocalDate, stageId: String, done: Boolean) -> Unit = { _, _, _ -> },
     today: LocalDate = LocalDate.now(),
 ) {
     Scaffold(
@@ -110,6 +115,7 @@ internal fun HabitDetailContent(
             initialWeek = initialWeek,
             showSwipeHint = showSwipeHint,
             onCheckSwipeHint = onCheckSwipeHint,
+            onSetStageDone = onSetStageDone,
             modifier = Modifier.padding(padding),
         )
     }
@@ -122,6 +128,7 @@ private fun WeeksPager(
     initialWeek: LocalDate?,
     showSwipeHint: Boolean,
     onCheckSwipeHint: (hasEarlierWeek: Boolean, thisWeek: LocalDate) -> Unit,
+    onSetStageDone: (date: LocalDate, stageId: String, done: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val locale = LocalConfiguration.current.locales[0]
@@ -140,6 +147,8 @@ private fun WeeksPager(
     // The first goal also covers a first page that starts a little before it (a changed week start).
     val shown = remember(habit, firstStart) { habit.coveringFrom(firstStart) }
     val zone = remember { ZoneId.systemDefault() }
+    // the day whose parts are open in a dialog
+    var partsDay by remember { mutableStateOf<LocalDate?>(null) }
 
     // A hint that there are earlier weeks to swipe to, now and then (see shouldShowSwipeHint).
     LaunchedEffect(pageCount > 1) { onCheckSwipeHint(pageCount > 1, currentStart) }
@@ -179,7 +188,13 @@ private fun WeeksPager(
                 )
                 Spacer(Modifier.height(Space.x2))
                 // the leaf takes all the room between the header and the summary
-                WeekLeaf(week = progress, today = today, modifier = Modifier.fillMaxWidth().weight(1f))
+                // a habit with parts: a tap on a day opens that day's parts to tick
+                WeekLeaf(
+                    week = progress,
+                    today = today,
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    onDayClick = if (habit.stagesFor(weekStart).isNotEmpty()) ({ date -> partsDay = date }) else null,
+                )
                 Spacer(Modifier.height(Space.x2))
 
                 val goal = progress.goal
@@ -215,6 +230,20 @@ private fun WeeksPager(
         Box(Modifier.fillMaxWidth().navigationBarsPadding()) {
             if (showSwipeHint) SwipeHint(visible = !swiped)
         }
+    }
+
+    partsDay?.let { date ->
+        StageChecklistDialog(
+            title = stringResource(
+                R.string.habit_amount_title,
+                habit.habit.name,
+                date.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
+            ),
+            stages = habit.stagesFor(weekStartOf(date, firstDay)),
+            done = habit.stagesDoneOn(date),
+            onToggle = { stage, done -> onSetStageDone(date, stage.id, done) },
+            onDismiss = { partsDay = null },
+        )
     }
 }
 
