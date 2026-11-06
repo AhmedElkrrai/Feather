@@ -393,6 +393,8 @@
 
     <!-- Backup and data -->
     <string name="settings_section_backup">النسخ الاحتياطي والاستعادة</string>
+    <string name="backup_share">مشاركة نسخة احتياطية</string>
+    <string name="backup_share_summary">أرسل نسخة عبر واتساب أو البريد أو أي تطبيق. افتحها على هاتف آخر من «استيراد نسخة احتياطية».</string>
     <string name="backup_import">استيراد نسخة احتياطية</string>
     <string name="backup_import_summary">استعد المهام والعادات والإعدادات من ملف نسخة احتياطية من Feather.</string>
     <string name="backup_import_settings">استعد إعداداتي أيضًا</string>

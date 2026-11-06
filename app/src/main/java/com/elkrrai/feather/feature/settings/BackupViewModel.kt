@@ -13,6 +13,7 @@ import com.elkrrai.feather.domain.backup.BackupRepository
 import com.elkrrai.feather.domain.backup.ImportMode
 import com.elkrrai.feather.domain.backup.ImportSummary
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +39,8 @@ sealed interface BackupResult {
 data class BackupUiState(
     val busy: Boolean = false,
     val result: BackupResult? = null,
+    /** A backup file ready for the share sheet; the screen opens the sheet and then clears it. */
+    val shareUri: Uri? = null,
 )
 
 @HiltViewModel
@@ -54,6 +57,27 @@ class BackupViewModel @Inject constructor(
     fun exportTo(uri: Uri) = launchWrite(BackupResult.Exported) {
         files.write(uri, backup.exportJson())
     }
+
+    /** Writes the backup to a temporary file and hands its link to the screen, which opens the share sheet. */
+    fun shareBackup() {
+        if (_state.value.busy) return
+        _state.update { it.copy(busy = true, result = null) }
+        viewModelScope.launch {
+            try {
+                val uri = files.writeShareable("feather-backup-${LocalDate.now()}.json", backup.exportJson())
+                // a copy that leaves the phone is a backup too: the nest gets its fairy lights
+                settings.setBackedUp(true)
+                _state.update { it.copy(busy = false, shareUri = uri) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(busy = false, result = BackupResult.Failed) }
+            }
+        }
+    }
+
+    /** Called once the share sheet has been opened. */
+    fun shareHandled() = _state.update { it.copy(shareUri = null) }
 
     fun exportCsvTo(uri: Uri) = launchWrite(BackupResult.CsvExported) {
         files.write(uri, backup.exportCsv())

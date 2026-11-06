@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Where a backup is placed to be shared: only this folder of the cache is ever handed to another app. -->
+<paths>
+    <cache-path name="backup_share" path="backup-share/" />
+</paths>

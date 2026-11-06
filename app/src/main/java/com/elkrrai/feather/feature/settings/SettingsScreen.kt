@@ -146,6 +146,18 @@ fun SettingsScreen(
             backupViewModel.resultShown()
         }
     }
+    val shareTitle = stringResource(R.string.backup_share)
+    LaunchedEffect(backupState.shareUri) {
+        backupState.shareUri?.let { uri ->
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "application/json"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivitySafely(Intent.createChooser(send, shareTitle))
+            backupViewModel.shareHandled()
+        }
+    }
     savedMessage?.let { message -> BackupSavedDialog(detail = message, onDismiss = { savedMessage = null }) }
     val activity = LocalActivity.current as? FragmentActivity
     // Only a debug build offers the sample data.
@@ -170,6 +182,7 @@ fun SettingsScreen(
         onDailySummaryChange = viewModel::setDailySummaryEnabled,
         onDailySummaryTimeChange = viewModel::setDailySummaryTime,
         backup = BackupActions(
+            onShare = backupViewModel::shareBackup,
             onImport = { importLauncher.launch(arrayOf("*/*")) },
             onExportCsv = { csvLauncher.launch("feather-tasks-${LocalDate.now()}.csv") },
             onAutoBackupChange = { enable ->

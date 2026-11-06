@@ -333,6 +333,8 @@
 
     <!-- Backup and data -->
     <string name="settings_section_backup">Backup and restore</string>
+    <string name="backup_share">Share backup</string>
+    <string name="backup_share_summary">Send a copy through WhatsApp, email or any app. Open it on another phone with Import backup.</string>
     <string name="backup_import">Import backup</string>
     <string name="backup_import_summary">Bring in tasks, habits and settings from a Feather backup file.</string>
     <string name="backup_import_settings">Also restore my settings</string>
