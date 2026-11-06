@@ -1,5 +1,8 @@
 package com.elkrrai.feather.feature.habits
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.BoxWithConstraints
 import kotlin.math.sin
 import kotlin.math.PI
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -240,83 +243,40 @@ private fun MiniLeaf(
     art: LeafArt?,
     onClick: () -> Unit,
 ) {
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.8f)
             .semantics { contentDescription = description }
             .clickable(role = Role.Button, onClick = onClick),
     ) {
-        Canvas(Modifier.fillMaxSize()) {
-            if (week.goal == null) return@Canvas
-            val strokeAlpha = if (week.met) 0.95f else 0.45f
-            val fillAlpha = if (week.met) 0.85f else 0.10f + 0.50f * week.fraction
-
-            if (art != null) {
-                // a leaf drawn as a picture: its board fitted into the cell
-                val fit = minOf(size.width / BOARD_W, size.height / BOARD_H)
-                withTransform({
-                    translate((size.width - BOARD_W * fit) / 2f, (size.height - BOARD_H * fit) / 2f)
-                    scale(fit, fit, pivot = Offset.Zero)
-                }) {
-                    if (week.met) {
-                        // a soft light round a week that reached its goal
-                        for (layer in 1..3) {
-                            drawPath(art.outline, leaf.copy(alpha = 0.10f * (1f - layer / 4f)), style = Stroke(width = (layer * 4).dp.toPx() / fit))
-                        }
-                    }
-                    drawPath(
-                        art.outline,
-                        Brush.verticalGradient(listOf(leaf.copy(alpha = fillAlpha * 0.7f), leaf.copy(alpha = fillAlpha)), startY = 0f, endY = BOARD_H),
-                    )
-                    drawPath(art.outline, leaf.copy(alpha = strokeAlpha), style = Stroke(width = 1.5.dp.toPx() / fit))
-                    drawLine(leaf.copy(alpha = 0.8f), art.stem.first, art.stem.second, 1.5.dp.toPx() / fit)
-                }
-            } else {
-                val height = size.height * 0.84f
-                val top = size.height * 0.04f
-                val base = top + height
-                val half = size.width * 0.40f
-                val cx = size.width / 2f
-                val botanical = style == LeafStyle.Botanical
-                // the botanical leaf bends a little to one side (9 of the 150 units of half its width on the weekly page)
-                val shiftPx = if (botanical) half * 0.06f else 0f
-                fun midX(t: Float) = cx + shiftPx * sin(PI.toFloat() * t)
-                fun width(t: Float) = if (botanical) botanicalWidth(t) else leafWidth(t)
-                fun edge(t: Float, seed: Float) = when (style) {
-                    LeafStyle.Serrated -> tooth(t, 9, seed, 0.28f)
-                    LeafStyle.Botanical -> tooth(t, 26, seed, 0.055f)
-                    else -> 1f
-                }
-                val outline = Path().apply {
-                    val steps = if (style == LeafStyle.Smooth) 32 else 120
-                    for (step in 0..steps) {
-                        val t = step / steps.toFloat()
-                        val point = Offset(midX(t) + half * width(t) * edge(t, 0.1f), base - height * t)
-                        if (step == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
-                    }
-                    for (step in steps downTo 0) {
-                        val t = step / steps.toFloat()
-                        lineTo(midX(t) - half * width(t) * edge(t, if (botanical) 0.55f else 0.45f), base - height * t)
-                    }
-                    close()
-                }
-                if (week.met) {
-                    // a soft light round a week that reached its goal
-                    for (layer in 1..3) {
-                        drawPath(outline, leaf.copy(alpha = 0.10f * (1f - layer / 4f)), style = Stroke(width = (layer * 4).dp.toPx()))
-                    }
-                }
-                drawPath(
-                    outline,
-                    Brush.verticalGradient(listOf(leaf.copy(alpha = fillAlpha * 0.7f), leaf.copy(alpha = fillAlpha)), startY = base - height, endY = base),
+        if (week.goal != null) {
+            // The weekly leaf itself, made on its own 328 by 470 board and scaled down to the cell, so the small leaf is a true miniature:
+            // the same shape, veins and fill. A week that met its goal is at full strength and glows; a week that did not is the fainter
+            // the less of its goal was reached, and never red.
+            val fit = minOf(maxWidth / 328.dp, maxHeight / 470.dp)
+            val strength = if (week.met) 1f else 0.30f + 0.45f * week.fraction.coerceIn(0f, 1f)
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                WeekLeaf(
+                    week = week,
+                    today = LocalDate.now(),
+                    modifier = Modifier
+                        .requiredSize(328.dp, 470.dp)
+                        .graphicsLayer {
+                            scaleX = fit
+                            scaleY = fit
+                            alpha = strength
+                        },
+                    style = style,
+                    preview = true,
+                    lineBoost = 3.5f,
+                    precomputedArt = art,
                 )
-                drawPath(outline, leaf.copy(alpha = strokeAlpha), style = Stroke(width = 1.5.dp.toPx()))
-                drawLine(leaf.copy(alpha = 0.6f), Offset(cx, base), Offset(cx, top + height * 0.08f), 1.dp.toPx())
-                drawLine(leaf.copy(alpha = 0.8f), Offset(cx, base), Offset(cx + 2.dp.toPx(), size.height), 1.5.dp.toPx())
             }
             if (goalChanged) {
-                drawCircle(dot, radius = 3.dp.toPx(), center = Offset(size.width - 5.dp.toPx(), size.height * 0.04f + 4.dp.toPx()))
+                Canvas(Modifier.fillMaxSize()) {
+                    drawCircle(dot, radius = 3.dp.toPx(), center = Offset(size.width - 5.dp.toPx(), size.height * 0.04f + 4.dp.toPx()))
+                }
             }
         }
     }

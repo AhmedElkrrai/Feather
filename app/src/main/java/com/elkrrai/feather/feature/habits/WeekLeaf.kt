@@ -110,11 +110,17 @@ fun WeekLeaf(
     /** Makes the circles of the days up to today tappable; null leaves the leaf to be looked at only. */
     onDayClick: ((LocalDate) -> Unit)? = null,
     style: LeafStyle = LeafStyle.Smooth,
+    /** A miniature for the overview: the leaf alone, with no circles, no day veins and no breathing. */
+    preview: Boolean = false,
+    /** How much thicker the outline, stem and main veins are drawn: a miniature is scaled down, and its thin lines would vanish. */
+    lineBoost: Float = 1f,
+    /** The art of a picture leaf when the caller has made it once for many leaves; otherwise it is made here. */
+    precomputedArt: LeafArt? = null,
 ) {
     val serrated = style == LeafStyle.Serrated
     val botanical = style == LeafStyle.Botanical
     // the frond, the sprig and the maple are pictures with a place for each day, not a width profile with veins
-    val art = remember(style) { leafArtFor(style) }
+    val art = precomputedArt ?: remember(style) { leafArtFor(style) }
     fun width(t: Float) = if (botanical) botanicalWidth(t) else leafWidth(t)
     // the sawtooth factor of one edge at t; the seed tells the two edges apart
     fun edge(t: Float, seed: Float) = when (style) {
@@ -129,18 +135,11 @@ fun WeekLeaf(
     val surface = MaterialTheme.colorScheme.surface
     val still = rememberReduceMotion() || rememberLowEndMode()
 
-    // One slow breath shared by the leaf and the circles that glow.
-    val transition = rememberInfiniteTransition(label = "leafBreath")
-    val breathing by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "breath",
-    )
-    val breath = if (still) 0.5f else breathing
+    // One slow breath shared by the leaf and the circles that glow; a miniature stands still.
+    val breath = if (still || preview) 0.5f else rememberBreath()
 
     if (art != null) {
-        ArtLeaf(art, style, week, today, onDayClick, leaf, surface, breath, modifier)
+        ArtLeaf(art, style, week, today, onDayClick, leaf, surface, breath, modifier, preview, lineBoost)
         return
     }
 
@@ -239,7 +238,7 @@ fun WeekLeaf(
                     drawPath(
                         outline,
                         leaf.copy(alpha = (0.05f + 0.10f * breath) * (1f - layer / 6f)),
-                        style = Stroke(width = (6 + layer * 7).dp.toPx(), cap = StrokeCap.Round),
+                        style = Stroke(width = (6 + layer * 7).dp.toPx() * lineBoost, cap = StrokeCap.Round),
                     )
                 }
             }
@@ -260,10 +259,10 @@ fun WeekLeaf(
                 )
             }
             drawPath(outline, fill)
-            drawPath(outline, leaf.copy(alpha = 0.75f), style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+            drawPath(outline, leaf.copy(alpha = 0.75f), style = Stroke(width = 2.dp.toPx() * lineBoost, cap = StrokeCap.Round))
 
             // the stem and the midrib
-            drawLine(leaf.copy(alpha = 0.8f), Offset(cx, base), Offset(cx + 6.dp.toPx(), base + stem.toPx()), 3.dp.toPx(), StrokeCap.Round)
+            drawLine(leaf.copy(alpha = 0.8f), Offset(cx, base), Offset(cx + 6.dp.toPx(), base + stem.toPx()), 3.dp.toPx() * lineBoost, StrokeCap.Round)
             val midrib = Path().apply {
                 val steps = 24
                 for (step in 0..steps) {
@@ -272,7 +271,7 @@ fun WeekLeaf(
                     if (step == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
                 }
             }
-            drawPath(midrib, leaf.copy(alpha = 0.6f), style = Stroke(width = (if (botanical) 3.5f else 2f).dp.toPx(), cap = StrokeCap.Round))
+            drawPath(midrib, leaf.copy(alpha = 0.6f), style = Stroke(width = (if (botanical) 3.5f else 2f).dp.toPx() * lineBoost, cap = StrokeCap.Round))
 
             // the botanical leaf: twelve pairs of parallel veins curving up to the edge, with fine cross veins between
             if (botanical) {
@@ -290,7 +289,7 @@ fun WeekLeaf(
                             moveTo(from.x, from.y)
                             quadraticTo(control.x, control.y, to.x, to.y)
                         }
-                        drawPath(vein, leaf.copy(alpha = 0.5f), style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round))
+                        drawPath(vein, leaf.copy(alpha = 0.5f), style = Stroke(width = 1.5.dp.toPx() * lineBoost, cap = StrokeCap.Round))
                         for (m in 1..3) {
                             val f = m / 4f
                             val u = 1f - f
@@ -312,9 +311,9 @@ fun WeekLeaf(
                             if (s == 0) moveTo(p.x.dp.toPx(), p.y.dp.toPx()) else lineTo(p.x.dp.toPx(), p.y.dp.toPx())
                         }
                     }
-                    drawPath(line, leaf.copy(alpha = 0.9f), style = Stroke(width = 2.4.dp.toPx(), cap = StrokeCap.Round))
+                    drawPath(line, leaf.copy(alpha = 0.9f), style = Stroke(width = 2.4.dp.toPx() * lineBoost, cap = StrokeCap.Round))
                 }
-            } else {
+            } else if (!preview) {
                 // a vein from the midrib up to each circle, rising in a gentle curve
                 spots.forEach { spot ->
                     val from = Offset(cx, spot.veinFrom.toPx())
@@ -328,7 +327,7 @@ fun WeekLeaf(
             }
         }
 
-        week.days.forEachIndexed { index, day ->
+        if (!preview) week.days.forEachIndexed { index, day ->
             val spot = spots[index]
             DayCircle(
                 number = day.amount,
@@ -346,6 +345,19 @@ fun WeekLeaf(
     }
 }
 
+/** The slow breath of the glow, 0 to 1 and back. Only a leaf that breathes makes it: an animation costs something for as long as it runs. */
+@Composable
+private fun rememberBreath(): Float {
+    val transition = rememberInfiniteTransition(label = "leafBreath")
+    val breathing by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "breath",
+    )
+    return breathing
+}
+
 /** One of the leaves drawn as a picture: the board scaled to the room, centred, and a circle placed in each part of the shape. */
 @Composable
 private fun ArtLeaf(
@@ -358,6 +370,8 @@ private fun ArtLeaf(
     surface: Color,
     breath: Float,
     modifier: Modifier,
+    preview: Boolean,
+    lineBoost: Float,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val density = LocalDensity.current
@@ -379,7 +393,7 @@ private fun ArtLeaf(
                         drawPath(
                             art.outline,
                             leaf.copy(alpha = (0.05f + 0.10f * breath) * (1f - layer / 6f)),
-                            style = Stroke(width = 6f + layer * 7f, cap = StrokeCap.Round, join = StrokeJoin.Round),
+                            style = Stroke(width = (6f + layer * 7f) * lineBoost, cap = StrokeCap.Round, join = StrokeJoin.Round),
                         )
                     }
                 }
@@ -398,12 +412,12 @@ private fun ArtLeaf(
                     )
                 }
                 drawPath(art.outline, fill)
-                drawPath(art.outline, leaf.copy(alpha = 0.75f), style = Stroke(width = 2f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(art.outline, leaf.copy(alpha = 0.75f), style = Stroke(width = 2f * lineBoost, cap = StrokeCap.Round, join = StrokeJoin.Round))
                 art.details(this, leaf)
             }
         }
 
-        week.days.forEachIndexed { index, day ->
+        if (!preview) week.days.forEachIndexed { index, day ->
             val spot = art.spots[index]
             val circle = with(density) { (spot.radius * 2f * fit).toDp() }
             val centerX = with(density) { (originX + spot.x * fit).toDp() }
