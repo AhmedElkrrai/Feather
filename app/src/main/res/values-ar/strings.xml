@@ -102,6 +102,8 @@
     <!-- Notifications -->
     <string name="channel_reminders_name">التذكيرات</string>
     <string name="channel_reminders_description">إشعارات تذكيرات المهام</string>
+    <string name="channel_habits_name">العادات</string>
+    <string name="channel_habits_description">تنبيه عند بدء وقت العادة</string>
     <string name="channel_summary_name">الملخص اليومي</string>
     <string name="channel_summary_description">نظرة صباحية على مهامك</string>
     <string name="reminder_due">موعدها %1$s</string>
@@ -660,6 +662,10 @@
     <string name="habit_today_progress_amount">%1$d من %2$d %3$s</string>
     <string name="habit_stage_state_done">%1$s، تم</string>
     <string name="habit_stage_state_open">%1$s، لم يتم</string>
+    <string name="habit_notification_done">تم</string>
+    <string name="habit_remind_label">ذكّرني</string>
+    <string name="habit_remind_hint">إشعار عند بدء كل وقت، مع زر «تم».</string>
+    <string name="habit_remind_needs_time">حدِّد وقتًا أولًا: يأتي التذكير عند بداية الوقت أو الفترة.</string>
     <string name="habit_unit">ما الذي تعدّه</string>
     <string name="habit_unit_hint">صفحات، كم، دقائق</string>
     <string name="habit_goal_next_week">الهدف الجديد يبدأ الأسبوع القادم. هذا الأسبوع يبقى بهدفه الأول.</string>

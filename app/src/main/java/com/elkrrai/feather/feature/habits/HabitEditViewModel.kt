@@ -63,6 +63,8 @@ data class HabitEditUiState(
     /** The habit has named times. A stage without a name is not one. */
     val staged: Boolean get() = kind == HabitKind.DAYS && named
     val namedStages: List<StageUi> get() = stages.filter { it.name.isNotBlank() }
+    /** A reminder comes at the start of a time, so there has to be one: a stage with a time, or the habit's own. */
+    val canRemind: Boolean get() = kind == HabitKind.DAYS && if (staged) namedStages.any { it.time.isSet } else time.isSet
     val neededValid: Boolean get() = needed?.toIntOrNull()?.let { it in 1..namedStages.size } ?: (needed == null)
 
     /** How many times a day counts: for a habit with stages, how many of them (all by default); else the typed number. */
@@ -184,6 +186,8 @@ class HabitEditViewModel @Inject constructor(
     fun onStageModeChange(mode: StageMode) = _uiState.update { it.copy(stageMode = mode) }
 
     fun onTimeChange(time: DayTime) = _uiState.update { it.copy(time = time) }
+
+    fun onRemindChange(on: Boolean) = _uiState.update { it.copy(remind = on) }
 
     fun save() {
         val state = _uiState.value

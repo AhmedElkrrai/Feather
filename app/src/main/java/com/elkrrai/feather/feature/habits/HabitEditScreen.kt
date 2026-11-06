@@ -1,5 +1,10 @@
 package com.elkrrai.feather.feature.habits
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -33,6 +39,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
@@ -41,7 +48,9 @@ import com.elkrrai.feather.domain.habit.HabitKind
 import com.elkrrai.feather.domain.habit.StageMode
 import com.elkrrai.feather.ui.components.FieldSection
 import com.elkrrai.feather.ui.components.FormHint
+import com.elkrrai.feather.ui.components.ReminderWarning
 import com.elkrrai.feather.ui.components.SwitchRow
+import com.elkrrai.feather.ui.components.rememberReminderHealth
 
 /** What the habit form can change; the stateful screen supplies them. */
 internal class HabitEditActions(
@@ -63,6 +72,9 @@ internal class HabitEditActions(
     val onTodayFromStartChange: (Boolean) -> Unit = {},
     val onStageModeChange: (StageMode) -> Unit = {},
     val onTimeChange: (DayTime) -> Unit = {},
+    val onRemindChange: (Boolean) -> Unit = {},
+    val onRequestNotificationPermission: () -> Unit = {},
+    val onOpenReliability: () -> Unit = {},
 )
 
 /** The screen that makes a habit or edits one. It replaces the dialog the Habits screen used to open. */
@@ -70,9 +82,20 @@ internal class HabitEditActions(
 fun HabitEditScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenReliability: () -> Unit = {},
     viewModel: HabitEditViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    // Asked for when a reminder is switched on; the answer shows up in the reminder health on return.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val requestNotificationPermission = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
     LaunchedEffect(state.finished) { if (state.finished) onBack() }
     HabitEditContent(
         state = state,
@@ -95,6 +118,9 @@ fun HabitEditScreen(
             onTodayFromStartChange = viewModel::onTodayFromStartChange,
             onStageModeChange = viewModel::onStageModeChange,
             onTimeChange = viewModel::onTimeChange,
+            onRemindChange = viewModel::onRemindChange,
+            onRequestNotificationPermission = requestNotificationPermission,
+            onOpenReliability = onOpenReliability,
         ),
         modifier = modifier,
     )
@@ -108,6 +134,7 @@ internal fun HabitEditContent(
     modifier: Modifier = Modifier,
 ) {
     val days = state.kind == HabitKind.DAYS
+    val health by rememberReminderHealth()
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -282,6 +309,19 @@ internal fun HabitEditContent(
                         FormHint(stringResource(R.string.habit_own_time_hint))
                     }
                 }
+            }
+
+            if (days) {
+                SwitchRow(
+                    label = stringResource(R.string.habit_remind_label),
+                    checked = state.remind,
+                    onCheckedChange = { on ->
+                        actions.onRemindChange(on)
+                        if (on) actions.onRequestNotificationPermission()
+                    },
+                    hint = stringResource(if (state.canRemind) R.string.habit_remind_hint else R.string.habit_remind_needs_time),
+                )
+                if (state.remind && state.canRemind && !health.canDeliverOnTime) ReminderWarning(onFix = actions.onOpenReliability)
             }
         }
     }

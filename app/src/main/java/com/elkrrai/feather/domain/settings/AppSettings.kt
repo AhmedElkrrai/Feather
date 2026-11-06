@@ -64,6 +64,8 @@ data class AppSettings(
     /** How many times the "hold the card to finish" line was shown, and whether a habit was finished by holding (then the line is not needed). */
     val habitHoldHintShown: Int = 0,
     val habitHoldLearned: Boolean = false,
+    /** Keys of the habit reminders already shown (habit|stage|day), so each is shown once; only the last few days are kept. Stays on this phone. */
+    val habitRemindersFired: Set<String> = emptySet(),
     /** The day each card was last put away, so it shows once a day. */
     val morningCardDismissedOn: LocalDate? = null,
     val eveningCardDismissedOn: LocalDate? = null,
@@ -158,6 +160,9 @@ interface SettingsRepository : BackupPreferences {
     suspend fun setHabitHoldHintShown(count: Int)
 
     suspend fun setHabitHoldLearned(learned: Boolean)
+
+    /** Remembers that the habit reminder with [key] was shown, and forgets the ones of days before [today] minus a few. */
+    suspend fun markHabitReminderFired(key: String, today: LocalDate)
 
     suspend fun setMorningCardDismissedOn(date: LocalDate?)
 

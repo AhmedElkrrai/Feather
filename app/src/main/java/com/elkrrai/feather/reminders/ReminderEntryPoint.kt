@@ -1,5 +1,6 @@
 package com.elkrrai.feather.reminders
 
+import com.elkrrai.feather.domain.repository.HabitRepository
 import com.elkrrai.feather.domain.repository.ReminderRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
 import com.elkrrai.feather.domain.settings.SettingsRepository
@@ -17,6 +18,7 @@ interface ReminderEntryPoint {
     fun scheduler(): ReminderScheduler
     fun notifier(): ReminderNotifier
     fun taskRepository(): TaskRepository
+    fun habitRepository(): HabitRepository
     fun reminderRepository(): ReminderRepository
     fun settingsRepository(): SettingsRepository
 }

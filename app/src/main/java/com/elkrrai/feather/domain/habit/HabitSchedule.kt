@@ -75,3 +75,20 @@ fun HabitState.queuedStagesAfter(weekStart: LocalDate): List<HabitStage>? =
 
 /** The ids of the stages that were done on [date]. */
 fun HabitState.stagesDoneOn(date: LocalDate): Set<String> = stageLog[date].orEmpty()
+
+/**
+ * Whether [date] is finished for a habit that counts days: enough of its stages are done, or the day's count is reached. An amount habit has no
+ * finished day.
+ */
+fun HabitState.isDayDone(date: LocalDate, weekStart: LocalDate): Boolean {
+    val goal = goals.forWeek(weekStart) ?: return false
+    if (habit.kind == HabitKind.AMOUNT) return false
+    val needed = goal.dailyTarget.coerceAtLeast(1)
+    val stages = stagesFor(weekStart)
+    val done = stagesDoneOn(date)
+    return if (stages.isNotEmpty()) {
+        stages.count { it.id in done } >= needed.coerceAtMost(stages.size)
+    } else {
+        (entries[date] ?: 0) >= needed
+    }
+}

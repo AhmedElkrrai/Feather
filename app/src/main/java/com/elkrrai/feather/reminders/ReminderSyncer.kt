@@ -1,5 +1,6 @@
 package com.elkrrai.feather.reminders
 
+import com.elkrrai.feather.domain.repository.HabitRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import javax.inject.Inject
@@ -11,19 +12,20 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 
 /**
- * Re-schedules reminders whenever tasks (including their reminders, due dates and completion)
- * or the settings that affect trigger times change, so no other code has to remember to.
+ * Re-schedules reminders whenever tasks (including their reminders, due dates and completion), habits (their times, stages and what
+ * was done) or the settings that affect trigger times change, so no other code has to remember to.
  */
 @Singleton
 class ReminderSyncer @Inject constructor(
     private val tasks: TaskRepository,
+    private val habits: HabitRepository,
     private val settings: SettingsRepository,
     private val scheduler: ReminderScheduler,
 ) {
     @OptIn(FlowPreview::class)
     fun start(scope: CoroutineScope) {
         scope.launch {
-            combine(tasks.observeTasks(), settings.settings) { _, _ -> }
+            combine(tasks.observeTasks(), habits.observeHabits(), settings.settings) { _, _, _ -> }
                 .debounce(DEBOUNCE_MILLIS)
                 .collect { scheduler.reschedule() }
         }

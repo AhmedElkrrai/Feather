@@ -11,6 +11,7 @@ object ReminderChannels {
     const val SUMMARY = "daily_summary"
     const val FOCUS_RUNNING = "focus_running"
     const val FOCUS_DONE = "focus_done"
+    const val HABITS = "habits"
 
     fun ensure(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
@@ -23,6 +24,16 @@ object ReminderChannels {
             ).apply {
                 description = context.getString(R.string.channel_reminders_description)
                 enableVibration(true)
+            }
+        )
+        // habits have a channel of their own, so they can be quieter (or silenced) without touching task reminders
+        manager.createNotificationChannel(
+            NotificationChannel(
+                HABITS,
+                context.getString(R.string.channel_habits_name),
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                description = context.getString(R.string.channel_habits_description)
             }
         )
         manager.createNotificationChannel(

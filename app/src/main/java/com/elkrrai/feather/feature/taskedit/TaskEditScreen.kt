@@ -93,6 +93,7 @@ import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
 import com.elkrrai.feather.ui.components.DurationDialog
 import com.elkrrai.feather.ui.components.FieldSection
+import com.elkrrai.feather.ui.components.ReminderWarning
 import com.elkrrai.feather.ui.components.TimeOfDayDialog
 import com.elkrrai.feather.ui.components.rememberReminderHealth
 import com.elkrrai.feather.ui.format.formatDueDate
@@ -864,23 +865,3 @@ private fun PickerRow(label: String, enabled: Boolean, onClick: () -> Unit) {
     )
 }
 
-/** Shown above the reminders when the phone is set up so that they might not arrive on time. */
-@Composable
-private fun ReminderWarning(onFix: () -> Unit) {
-    Card {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = stringResource(R.string.reminder_warning),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f),
-            )
-            TextButton(onClick = onFix) { Text(stringResource(R.string.reminder_warning_fix)) }
-        }
-    }
-}

@@ -8,12 +8,16 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.elkrrai.feather.MainActivity
 import com.elkrrai.feather.R
+import com.elkrrai.feather.domain.habit.DayTime
+import com.elkrrai.feather.domain.habit.TimeMode
 import com.elkrrai.feather.domain.model.Task
+import com.elkrrai.feather.domain.reminders.PendingHabitReminder
 import com.elkrrai.feather.feature.snooze.SnoozeActivity
 import com.elkrrai.feather.ui.format.formatDueDate
 import com.elkrrai.feather.ui.format.formatDueTime
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDate
+import java.time.LocalTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -73,6 +77,82 @@ class ReminderNotifier @Inject constructor(
         }
 
         manager.notify(task.id, NOTIFICATION_ID, builder.build())
+    }
+
+    /**
+     * The reminder of a habit: its name and the stage it is for as the title, the time as the text, a Done button that marks it (the stage,
+     * or the day of a habit without stages), and a tap that opens the app on Today. One notification for each habit, so the next stage
+     * replaces the last one.
+     */
+    @SuppressLint("MissingPermission") // guarded by areNotificationsEnabled()
+    fun showHabit(pending: PendingHabitReminder) {
+        if (!manager.areNotificationsEnabled()) return
+        val context = appContext.withAppLocale()
+        ReminderChannels.ensure(context)
+        val locale = context.resources.configuration.locales[0]
+        val habit = pending.habit
+        val title = pending.stage?.let { "${habit.name}: ${it.name}" } ?: habit.name
+        val time = pending.stage?.time ?: habit.time
+        val builder = NotificationCompat.Builder(context, ReminderChannels.HABITS)
+            .setSmallIcon(R.drawable.ic_stat_feather)
+            .setContentTitle(title)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(openAppIntent(context))
+            .addAction(
+                0,
+                context.getString(R.string.habit_notification_done),
+                habitDoneIntent(context, pending),
+            )
+        if (time.isSet) builder.setContentText(timeText(context, time, locale))
+        manager.notify(habitTag(habit.id), NOTIFICATION_ID, builder.build())
+    }
+
+    /** "4:30 to 6:00 AM" or one moment, in the app language. */
+    private fun timeText(context: Context, time: DayTime, locale: java.util.Locale): String {
+        fun at(minute: Int) = formatDueTime(LocalTime.of(minute / 60, minute % 60), locale)
+        val start = time.startMinute ?: return ""
+        val end = time.endMinute
+        return if (time.mode == TimeMode.WINDOW && end != null) context.getString(R.string.habit_time_range, at(start), at(end)) else at(start)
+    }
+
+    fun cancelHabit(habitId: String) {
+        manager.cancel(habitTag(habitId), NOTIFICATION_ID)
+    }
+
+    /** Removes habit notifications whose habit is not waiting for anything any more (finished for today, deleted, or switched off). */
+    @SuppressLint("MissingPermission")
+    fun cancelStaleHabits(waitingHabitIds: Set<String>) {
+        for (posted in manager.activeNotifications) {
+            val tag = posted.tag ?: continue
+            if (posted.id == NOTIFICATION_ID && tag.startsWith(HABIT_TAG_PREFIX) && tag.removePrefix(HABIT_TAG_PREFIX) !in waitingHabitIds) {
+                manager.cancel(tag, NOTIFICATION_ID)
+            }
+        }
+    }
+
+    private fun habitTag(habitId: String) = HABIT_TAG_PREFIX + habitId
+
+    private fun openAppIntent(context: Context): PendingIntent = PendingIntent.getActivity(
+        context,
+        0,
+        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
+    private fun habitDoneIntent(context: Context, pending: PendingHabitReminder): PendingIntent {
+        val intent = Intent(context, ReminderActionReceiver::class.java)
+            .setAction(ReminderActionReceiver.ACTION_HABIT_DONE)
+            .putExtra(ReminderActionReceiver.EXTRA_HABIT_ID, pending.habit.id)
+            .putExtra(ReminderActionReceiver.EXTRA_DATE, pending.date.toString())
+        pending.stage?.let { intent.putExtra(ReminderActionReceiver.EXTRA_STAGE_ID, it.id) }
+        return PendingIntent.getBroadcast(
+            context,
+            "habit-done:${pending.habit.id}".hashCode(),
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
     }
 
     /** A notification the reliability helper uses to prove that reminders can reach the user. */
@@ -135,7 +215,7 @@ class ReminderNotifier @Inject constructor(
     fun cancelStale(openTaskIds: Set<String>) {
         for (posted in manager.activeNotifications) {
             val tag = posted.tag ?: continue
-            val isTaskReminder = tag != TEST_TAG && tag != SUMMARY_TAG
+            val isTaskReminder = tag != TEST_TAG && tag != SUMMARY_TAG && !tag.startsWith(HABIT_TAG_PREFIX)
             if (posted.id == NOTIFICATION_ID && isTaskReminder && tag !in openTaskIds) {
                 manager.cancel(tag, NOTIFICATION_ID)
             }
@@ -184,5 +264,8 @@ class ReminderNotifier @Inject constructor(
         const val NOTIFICATION_ID = 1001
         private const val TEST_TAG = "test"
         private const val SUMMARY_TAG = "summary"
+
+        /** Habit notifications are tagged with this and the habit id, so they are never taken for the notification of a task. */
+        private const val HABIT_TAG_PREFIX = "habit:"
     }
 }

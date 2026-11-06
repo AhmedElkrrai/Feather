@@ -119,7 +119,10 @@ fun FeatherNavHost(
             NestScreen(onBack = { navController.goBack() })
         }
         composable<HabitEditRoute> {
-            HabitEditScreen(onBack = { navController.goBack() })
+            HabitEditScreen(
+                onBack = { navController.goBack() },
+                onOpenReliability = { navController.navigate(ReliabilityRoute) },
+            )
         }
         composable<HabitOverviewRoute> {
             HabitOverviewScreen(

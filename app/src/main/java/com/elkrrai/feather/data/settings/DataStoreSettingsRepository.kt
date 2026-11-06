@@ -66,6 +66,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val habitsInToday = booleanPreferencesKey("habits_in_today")
         val habitHoldHintShown = intPreferencesKey("habit_hold_hint_shown")
         val habitHoldLearned = booleanPreferencesKey("habit_hold_learned")
+        val habitRemindersFired = stringSetPreferencesKey("habit_reminders_fired")
         val morningCardDismissedOn = stringPreferencesKey("morning_card_dismissed_on")
         val eveningCardDismissedOn = stringPreferencesKey("evening_card_dismissed_on")
     }
@@ -115,6 +116,7 @@ class DataStoreSettingsRepository @Inject constructor(
             habitsInToday = prefs[Keys.habitsInToday] ?: defaults.habitsInToday,
             habitHoldHintShown = prefs[Keys.habitHoldHintShown] ?: defaults.habitHoldHintShown,
             habitHoldLearned = prefs[Keys.habitHoldLearned] ?: defaults.habitHoldLearned,
+            habitRemindersFired = prefs[Keys.habitRemindersFired].orEmpty(),
             morningCardDismissedOn = prefs[Keys.morningCardDismissedOn]?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
             eveningCardDismissedOn = prefs[Keys.eveningCardDismissedOn]?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
             rhythmPausedDays = prefs[Keys.rhythmPausedDays].orEmpty().mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }.toSet(),
@@ -264,6 +266,15 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit { it[Keys.habitHoldLearned] = learned }
     }
 
+    override suspend fun markHabitReminderFired(key: String, today: LocalDate) {
+        dataStore.edit { prefs ->
+            val oldest = today.minusDays(3).toString()
+            // the day is the last part of a key; ISO dates sort as text
+            val kept = prefs[Keys.habitRemindersFired].orEmpty().filter { it.substringAfterLast('|') >= oldest }
+            prefs[Keys.habitRemindersFired] = (kept + key).toSet()
+        }
+    }
+
     override suspend fun setMorningCardDismissedOn(date: LocalDate?) {
         dataStore.edit { if (date == null) it.remove(Keys.morningCardDismissedOn) else it[Keys.morningCardDismissedOn] = date.toString() }
     }
@@ -331,7 +342,7 @@ class DataStoreSettingsRepository @Inject constructor(
         /** Left out of a backup on purpose: they only make sense on this phone (a folder permission, the lock, today's dismissed cards). */
         private val deviceOnly = listOf<Preferences.Key<*>>(
             Keys.autoBackupEnabled, Keys.backupFolder, Keys.lastBackupAt, Keys.appLock,
-            Keys.morningCardDismissedOn, Keys.eveningCardDismissedOn,
+            Keys.morningCardDismissedOn, Keys.eveningCardDismissedOn, Keys.habitRemindersFired,
         )
 
         internal fun backedUpNames(): Set<String> =

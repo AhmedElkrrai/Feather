@@ -5,16 +5,23 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import com.elkrrai.feather.domain.habit.HabitState
+import com.elkrrai.feather.domain.habit.isDayDone
+import com.elkrrai.feather.domain.habit.weekStartOf
 import com.elkrrai.feather.domain.model.ReminderKind
+import com.elkrrai.feather.domain.reminders.PendingHabitReminder
 import com.elkrrai.feather.domain.reminders.PendingReminder
+import com.elkrrai.feather.domain.reminders.planHabitReminders
 import com.elkrrai.feather.domain.reminders.nextDailySummary
 import com.elkrrai.feather.domain.reminders.planReminders
+import com.elkrrai.feather.domain.repository.HabitRepository
 import com.elkrrai.feather.domain.repository.ReminderRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.domain.view.TaskScope
 import com.elkrrai.feather.domain.view.openCountIn
+import com.elkrrai.feather.domain.time.FIRST_DAY_OF_WEEK
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Clock
 import java.time.Instant
@@ -22,6 +29,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -35,6 +43,7 @@ class AlarmReminderScheduler @Inject constructor(
     @ApplicationContext private val context: Context,
     private val tasks: TaskRepository,
     private val reminders: ReminderRepository,
+    private val habits: HabitRepository,
     private val settings: SettingsRepository,
     private val notifier: ReminderNotifier,
     private val clock: Clock,
@@ -50,13 +59,35 @@ class AlarmReminderScheduler @Inject constructor(
         val appSettings = settings.current()
         val active = tasks.getActiveTasks()
 
-        val plan = planReminders(active, now, appSettings.defaultReminderTime, ZoneId.systemDefault())
+        val zone = ZoneId.systemDefault()
+        val plan = planReminders(active, now, appSettings.defaultReminderTime, zone)
         showDue(plan.due, appSettings.snoozeMinutes)
-        armAlarm(plan.next)
+
+        // Habits ride on the same alarm: it is armed for whichever comes first, a task's reminder or a habit's.
+        val habitStates = habits.observeHabits().first()
+        val habitPlan = planHabitReminders(habitStates, now, zone, appSettings.habitRemindersFired)
+        showDueHabits(habitPlan.due, LocalDate.now(clock.withZone(zone)))
+        armAlarm(listOfNotNull(plan.next, habitPlan.next).minOrNull())
         armSummaryAlarm(appSettings, now)
 
         // Notifications of tasks that were finished or deleted in the meantime go away.
         notifier.cancelStale(active.filter { !it.isCompleted }.map { it.id }.toSet())
+        notifier.cancelStaleHabits(waitingHabits(habitStates, now, zone))
+    }
+
+    /** One notification for each habit, even if several of its stages are due together: the latest is the one shown. */
+    private suspend fun showDueHabits(due: List<PendingHabitReminder>, today: LocalDate) {
+        for ((_, group) in due.groupBy { it.habit.id }) {
+            notifier.showHabit(group.maxBy { it.trigger })
+            group.forEach { settings.markHabitReminderFired(it.key, today) }
+        }
+    }
+
+    /** The habits that still have something to do today: reminders on, and today not finished. */
+    private fun waitingHabits(states: List<HabitState>, now: Instant, zone: ZoneId): Set<String> {
+        val today = now.atZone(zone).toLocalDate()
+        val weekStart = weekStartOf(today, FIRST_DAY_OF_WEEK)
+        return states.filter { it.habit.remind && !it.isDayDone(today, weekStart) }.map { it.habit.id }.toSet()
     }
 
     /** One notification per task, even if several of its reminders are due together. */
