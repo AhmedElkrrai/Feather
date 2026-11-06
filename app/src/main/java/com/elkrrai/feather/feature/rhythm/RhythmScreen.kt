@@ -219,100 +219,90 @@ fun RhythmContent(
                 item(key = "feather") { WeeklyFeatherCard(feather) }
             }
 
-            if (stats.isNew) {
-                item(key = "new") {
-                    SectionCard(title = stringResource(R.string.rhythm_new_title)) {
-                        Text(
-                            text = stringResource(R.string.rhythm_new_body),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = Space.x4),
-                        )
-                    }
-                }
-            } else {
-                item(key = "week") {
-                    SectionCard(title = stringResource(R.string.rhythm_last_seven)) {
-                        val resources = LocalContext.current.resources
-                        val summary = stringResource(
-                            R.string.rhythm_last_seven_summary,
-                            stats.lastSeven.joinToString(", ") {
-                                resources.getString(
-                                    R.string.rhythm_day_count,
-                                    it.date.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
-                                    it.count,
-                                )
-                            },
-                        )
-                        Column(
-                            Modifier.padding(horizontal = Space.x4).semantics { contentDescription = summary },
-                        ) {
-                            WeekBars(stats.lastSeven, entry)
-                            WeekdayLabels(stats.lastSeven.map { it.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale) })
-                        }
-                    }
-                }
-
-                item(key = "dots") {
-                    SectionCard(title = stringResource(R.string.rhythm_dots_title)) {
-                        val headline = stringResource(R.string.rhythm_dots_headline, stats.dotsShowedUp, stats.dots.size)
-                        Column(Modifier.padding(horizontal = Space.x4)) {
-                            Text(
-                                text = headline,
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
+            item(key = "week") {
+                SectionCard(title = stringResource(R.string.rhythm_last_seven)) {
+                    val resources = LocalContext.current.resources
+                    val summary = stringResource(
+                        R.string.rhythm_last_seven_summary,
+                        stats.lastSeven.joinToString(", ") {
+                            resources.getString(
+                                R.string.rhythm_day_count,
+                                it.date.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
+                                it.count,
                             )
-                            Spacer(Modifier.height(Space.x2))
-                            RhythmDots(stats.dots, entry, Modifier.semantics { contentDescription = headline })
+                        },
+                    )
+                    Column(
+                        Modifier.padding(horizontal = Space.x4).semantics { contentDescription = summary },
+                    ) {
+                        WeekBars(stats.lastSeven, entry)
+                        WeekdayLabels(stats.lastSeven.map { it.date.dayOfWeek.getDisplayName(TextStyle.NARROW, locale) })
+                    }
+                }
+            }
+
+            item(key = "dots") {
+                SectionCard(title = stringResource(R.string.rhythm_dots_title)) {
+                    val headline = stringResource(R.string.rhythm_dots_headline, stats.dotsShowedUp, stats.dots.size)
+                    Column(Modifier.padding(horizontal = Space.x4)) {
+                        Text(
+                            text = headline,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Spacer(Modifier.height(Space.x2))
+                        RhythmDots(stats.dots, entry, Modifier.semantics { contentDescription = headline })
+                        Text(
+                            text = stringResource(R.string.rhythm_dots_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        if (paused) {
                             Text(
-                                text = stringResource(R.string.rhythm_dots_hint),
+                                text = stringResource(R.string.rhythm_pause_note),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = Space.x2),
                             )
-                            if (paused) {
-                                Text(
-                                    text = stringResource(R.string.rhythm_pause_note),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = Space.x2),
-                                )
-                            }
-                            OutlinedButton(
-                                onClick = { if (paused) onResume() else showPause = true },
-                                modifier = Modifier.padding(top = Space.x3).heightIn(min = 48.dp),
-                            ) {
-                                Text(stringResource(if (paused) R.string.rhythm_resume else R.string.rhythm_pause))
-                            }
+                        }
+                        OutlinedButton(
+                            onClick = { if (paused) onResume() else showPause = true },
+                            modifier = Modifier.padding(top = Space.x3).heightIn(min = 48.dp),
+                        ) {
+                            Text(stringResource(if (paused) R.string.rhythm_resume else R.string.rhythm_pause))
                         }
                     }
                 }
+            }
 
-                item(key = "month") {
-                    SectionCard(title = monthTitle(stats.month.month, locale)) {
-                        MonthSection(stats, entry, locale, firstDay) { day ->
-                            haptics.tick()
-                            selectedDay = day
-                        }
+            item(key = "month") {
+                SectionCard(title = monthTitle(stats.month.month, locale)) {
+                    MonthSection(stats, entry, locale, firstDay) { day ->
+                        haptics.tick()
+                        selectedDay = day
                     }
                 }
+            }
 
+            // nothing to say until a few tasks are done: then the card would be an empty box
+            if (stats.busiestWeekday != null || stats.bestTime != null) {
                 item(key = "when") {
                     SectionCard(title = stringResource(R.string.rhythm_when_title)) {
                         WhenSection(stats, entry, locale)
                     }
                 }
+            }
 
-                if (stats.steady.isNotEmpty()) {
-                    item(key = "steady") {
-                        SectionCard(title = stringResource(R.string.rhythm_steady_title)) {
-                            Column(Modifier.padding(horizontal = Space.x4), verticalArrangement = Arrangement.spacedBy(Space.x3)) {
-                                Text(
-                                    text = stringResource(R.string.rhythm_steady_hint),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                stats.steady.forEach { SteadyRow(it) }
-                            }
+            if (stats.steady.isNotEmpty()) {
+                item(key = "steady") {
+                    SectionCard(title = stringResource(R.string.rhythm_steady_title)) {
+                        Column(Modifier.padding(horizontal = Space.x4), verticalArrangement = Arrangement.spacedBy(Space.x3)) {
+                            Text(
+                                text = stringResource(R.string.rhythm_steady_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            stats.steady.forEach { SteadyRow(it) }
                         }
                     }
                 }
