@@ -13,7 +13,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -190,7 +194,7 @@ fun ReliabilityContent(
     }
 }
 
-/** One thing that can block reminders: what it is, whether it is fine, and a button to fix it. */
+/** One thing that can block reminders: what it is and whether it is fine. The whole card opens the phone setting that fixes it. */
 @Composable
 private fun CheckCard(
     title: String,
@@ -198,7 +202,7 @@ private fun CheckCard(
     ok: Boolean,
     onFix: () -> Unit,
 ) {
-    Card {
+    Card(modifier = Modifier.clip(CardDefaults.shape).clickable(role = Role.Button, onClick = onFix)) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -227,9 +231,6 @@ private fun CheckCard(
                 )
             }
             Text(text = body, style = MaterialTheme.typography.bodyMedium)
-            if (!ok) {
-                OutlinedButton(onClick = onFix) { Text(stringResource(R.string.reliability_fix)) }
-            }
         }
     }
 }
