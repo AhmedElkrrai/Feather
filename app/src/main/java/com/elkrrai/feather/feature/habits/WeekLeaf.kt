@@ -1,5 +1,6 @@
 package com.elkrrai.feather.feature.habits
 
+import kotlin.math.abs
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.StrokeJoin
@@ -63,6 +64,9 @@ import kotlin.math.sin
 
 private val LabelHeight = 16.dp
 private const val DAYS = 7
+
+/** The botanical leaf: the parallel vein (its side, and which of the eleven up from the base) that each day, Saturday to Friday, grows from. */
+private val BOTANICAL_DAY_VEINS = listOf(-1f to 2, 1f to 3, -1f to 4, 1f to 5, -1f to 6, 1f to 7, -1f to 8)
 
 /**
  * The looks of the weekly leaf: a smooth edge, a serrated one, a botanical one (a finely toothed blade with parallel veins), and three drawn as
@@ -176,7 +180,33 @@ fun WeekLeaf(
         }
         // the botanical leaf bends a little to one side: how far its midrib is from the middle at t
         fun shift(t: Float): Dp = if (botanical) 9.dp * sin(PI.toFloat() * t) else 0.dp
+        // a point on one of the botanical leaf's parallel veins, f of the way from the midrib to the edge, in dp
+        fun veinPoint(k: Int, side: Float, f: Float): Offset {
+            val tk = 0.06f + 0.80f * k / 11f
+            val te = (tk + 0.17f).coerceAtMost(0.97f)
+            val fromX = centerX.value + shift(tk).value
+            val fromY = baseY.value - leafHeight.value * tk
+            val toX = centerX.value + shift(te).value + side * halfMax.value * width(te) * 0.90f
+            val toY = baseY.value - leafHeight.value * te
+            val controlX = fromX + side * halfMax.value * width(tk + 0.07f) * 0.62f
+            val controlY = fromY - leafHeight.value * 0.035f
+            val u = 1f - f
+            return Offset(u * u * fromX + 2f * u * f * controlX + f * f * toX, u * u * fromY + 2f * u * f * controlY + f * f * toY)
+        }
         val spots = (0 until DAYS).map { index ->
+            if (botanical) {
+                // the day sits on its own parallel vein, as far out along it as the circle fits inside the leaf
+                val (side, k) = BOTANICAL_DAY_VEINS[index]
+                var f = 0.7f
+                var point = veinPoint(k, side, f)
+                while (f > 0.2f) {
+                    val t = (baseY.value - point.y) / leafHeight.value
+                    if (abs(point.x - (centerX.value + shift(t).value)) <= room(t).value) break
+                    f -= 0.05f
+                    point = veinPoint(k, side, f)
+                }
+                return@map Spot(point.x.dp, point.y.dp, point.y.dp, index)
+            }
             // the last day stops well short of the tip, where the leaf is narrow and a circle would touch its edge
             val t = 0.20f + 0.56f * (index / (DAYS - 1f))
             val y = baseY - leafHeight * t
@@ -279,16 +309,28 @@ fun WeekLeaf(
                 }
             }
 
-            // a vein from the midrib up to each circle, rising in a gentle curve (on the botanical leaf, from its bent midrib)
-            spots.forEach { spot ->
-                val fromT = (base - spot.veinFrom.toPx()) / height
-                val from = Offset(midX(fromT), spot.veinFrom.toPx())
-                val to = Offset(spot.x.toPx(), spot.y.toPx())
-                val path = Path().apply {
-                    moveTo(from.x, from.y)
-                    quadraticTo(from.x + (to.x - from.x) * 0.15f, to.y + (from.y - to.y) * 0.15f, to.x, to.y)
+            if (botanical) {
+                // the veins the days grow from: drawn stronger than the rest, from the midrib to the edge
+                for ((side, k) in BOTANICAL_DAY_VEINS) {
+                    val line = Path().apply {
+                        for (s in 0..10) {
+                            val p = veinPoint(k, side, s / 10f)
+                            if (s == 0) moveTo(p.x.dp.toPx(), p.y.dp.toPx()) else lineTo(p.x.dp.toPx(), p.y.dp.toPx())
+                        }
+                    }
+                    drawPath(line, leaf.copy(alpha = 0.9f), style = Stroke(width = 2.4.dp.toPx(), cap = StrokeCap.Round))
                 }
-                drawPath(path, leaf.copy(alpha = 0.55f), style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round))
+            } else {
+                // a vein from the midrib up to each circle, rising in a gentle curve
+                spots.forEach { spot ->
+                    val from = Offset(cx, spot.veinFrom.toPx())
+                    val to = Offset(spot.x.toPx(), spot.y.toPx())
+                    val path = Path().apply {
+                        moveTo(from.x, from.y)
+                        quadraticTo(from.x + (to.x - from.x) * 0.15f, to.y + (from.y - to.y) * 0.15f, to.x, to.y)
+                    }
+                    drawPath(path, leaf.copy(alpha = 0.55f), style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round))
+                }
             }
         }
 
