@@ -101,7 +101,8 @@ fun WeekLeaf(
         val topY = 10.dp
         val baseY = boxHeight - stem - LabelHeight
         val leafHeight = baseY - topY
-        val halfMax = minOf(boxWidth * 0.46f, leafHeight * 0.36f)
+        // half the widest the leaf gets: nearly the whole width when the screen is wide enough, else about 0.9 of its height
+        val halfMax = minOf(boxWidth * 0.48f, leafHeight * 0.46f)
         val centerX = boxWidth / 2
         val circle: Dp = minOf(46.dp, boxWidth * 0.12f)
 
