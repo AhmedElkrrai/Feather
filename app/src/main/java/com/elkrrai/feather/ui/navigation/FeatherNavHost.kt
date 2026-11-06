@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.elkrrai.feather.feature.focus.FocusScreen
 import com.elkrrai.feather.feature.habits.HabitDetailScreen
+import com.elkrrai.feather.feature.habits.HabitEditScreen
 import com.elkrrai.feather.feature.habits.HabitOverviewScreen
 import com.elkrrai.feather.feature.habits.HabitTreeScreen
 import com.elkrrai.feather.feature.habits.HabitsScreen
