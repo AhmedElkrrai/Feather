@@ -31,7 +31,9 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
+import com.elkrrai.feather.ui.components.FeatherSnackbarHost
+import com.elkrrai.feather.ui.components.SnackKind
+import com.elkrrai.feather.ui.components.showFeather
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
@@ -177,7 +179,8 @@ fun TaskListScreen(
         viewModel.deleteTasks(ids)
         coroutineScope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
-            val result = snackbarHostState.showSnackbar(
+            val result = snackbarHostState.showFeather(
+                kind = SnackKind.Trash,
                 message = resources.getQuantityString(R.plurals.tasks_deleted, ids.size, ids.size),
                 actionLabel = undoLabel,
                 duration = SnackbarDuration.Short,
@@ -289,7 +292,8 @@ fun TaskListScreen(
                     if (completed && task.recurrence != null && after != null && !after.isCompleted && comesBack != null) {
                         coroutineScope.launch {
                             snackbarHostState.currentSnackbarData?.dismiss()
-                            val result = snackbarHostState.showSnackbar(
+                            val result = snackbarHostState.showFeather(
+                                kind = SnackKind.Repeat,
                                 message = backMessage(context, comesBack),
                                 actionLabel = undoLabel,
                                 duration = SnackbarDuration.Short,
@@ -304,7 +308,8 @@ fun TaskListScreen(
                 viewModel.deleteTask(task.id)
                 coroutineScope.launch {
                     snackbarHostState.currentSnackbarData?.dismiss()
-                    val result = snackbarHostState.showSnackbar(
+                    val result = snackbarHostState.showFeather(
+                        kind = SnackKind.Trash,
                         message = deletedMessage,
                         actionLabel = undoLabel,
                         duration = SnackbarDuration.Short,
@@ -332,7 +337,8 @@ fun TaskListScreen(
                             todayHabits.finishDay(row) { undo ->
                                 coroutineScope.launch {
                                     snackbarHostState.currentSnackbarData?.dismiss()
-                                    val result = snackbarHostState.showSnackbar(
+                                    val result = snackbarHostState.showFeather(
+                                        kind = SnackKind.Habit,
                                         message = resources.getString(R.string.habit_today_finished, row.name),
                                         actionLabel = undoLabel,
                                         duration = SnackbarDuration.Short,
@@ -357,7 +363,8 @@ fun TaskListScreen(
                 dayCards.moveToTomorrow { moved ->
                     coroutineScope.launch {
                         snackbarHostState.currentSnackbarData?.dismiss()
-                        val result = snackbarHostState.showSnackbar(
+                        val result = snackbarHostState.showFeather(
+                            kind = SnackKind.Moved,
                             message = resources.getQuantityString(R.plurals.day_card_moved, moved.size, moved.size),
                             actionLabel = undoLabel,
                             duration = SnackbarDuration.Short,
@@ -377,7 +384,8 @@ fun TaskListScreen(
                 viewModel.moveToToday(task.id) { before ->
                     coroutineScope.launch {
                         snackbarHostState.currentSnackbarData?.dismiss()
-                        val result = snackbarHostState.showSnackbar(
+                        val result = snackbarHostState.showFeather(
+                            kind = SnackKind.Moved,
                             message = movedToTodayMessage,
                             actionLabel = undoLabel,
                             duration = SnackbarDuration.Short,
@@ -660,7 +668,7 @@ fun TaskListContent(
             }
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { FeatherSnackbarHost(snackbarHostState) },
         floatingActionButton = {
             // Nothing is added to a view of late or finished tasks.
             if (state.scope != TaskScope.Completed && state.scope != TaskScope.Overdue && !selecting) {

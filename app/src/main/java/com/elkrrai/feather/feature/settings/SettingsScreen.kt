@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
@@ -49,6 +48,12 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import com.elkrrai.feather.ui.components.FeatherSnackbarHost
+import com.elkrrai.feather.ui.components.SnackKind
+import com.elkrrai.feather.ui.components.showFeather
+import kotlinx.coroutines.launch
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -133,15 +138,22 @@ fun SettingsScreen(
         enableAfterFolder = false
     }
 
-    // A finished export gets a small dialog with a picture; everything else stays a toast.
+    // A finished export gets a small dialog with a picture; everything else is a message in the snackbar.
     var savedMessage by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackScope = rememberCoroutineScope()
     LaunchedEffect(backupState.result) {
         backupState.result?.let { result ->
             val message = backupMessage(context, result)
             if (result == BackupResult.Exported || result == BackupResult.CsvExported) {
                 savedMessage = message
             } else {
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                val kind = when (result) {
+                    is BackupResult.Imported, BackupResult.AutoBackedUp -> SnackKind.Cloud
+                    else -> SnackKind.Alert
+                }
+                // its own coroutine: this effect restarts as soon as the result is cleared, which would end the message at once
+                snackScope.launch { snackbarHostState.showFeather(message, kind) }
             }
             backupViewModel.resultShown()
         }
@@ -166,6 +178,7 @@ fun SettingsScreen(
     val sampleLocale = LocalConfiguration.current.locales[0]
 
     SettingsContent(
+        snackbarHostState = snackbarHostState,
         settings = settings,
         // the battery mark is for the case where every permission is granted and only battery saving may still hold a reminder back
         batteryRestricted = health.canDeliverOnTime && !health.batteryUnrestricted,
@@ -273,6 +286,7 @@ fun SettingsContent(
     onAddTreeStages: (() -> Unit)? = null,
     versionName: String = "",
     onOpenTags: () -> Unit = {},
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val context = LocalContext.current
@@ -285,6 +299,7 @@ fun SettingsContent(
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { FeatherSnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(page.titleRes)) },
