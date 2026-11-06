@@ -63,11 +63,10 @@ private fun BackupStyle.summaryRes(): Int = when (this) {
     BackupStyle.ONE_PLUS_OLDER -> R.string.backup_auto_summary_older
 }
 
-/** The rows of the "Backup and data" section. */
+/** The rows of the Backup and restore page. */
 @Composable
 internal fun BackupRows(actions: BackupActions, settings: AppSettings, onPickStyle: () -> Unit) {
     val locale = LocalConfiguration.current.locales[0]
-    SectionTitle(stringResource(R.string.settings_section_backup))
     SettingsRow(
         title = stringResource(R.string.backup_export),
         summary = null,
@@ -121,7 +120,7 @@ internal fun BackupRows(actions: BackupActions, settings: AppSettings, onPickSty
 private fun folderName(uri: String): String =
     Uri.parse(uri).lastPathSegment?.substringAfterLast(':')?.substringAfterLast('/')?.ifEmpty { null } ?: uri
 
-private fun formatBackupTime(epochMillis: Long, locale: Locale): String =
+internal fun formatBackupTime(epochMillis: Long, locale: Locale): String =
     DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
         .withLocale(locale)
         .format(Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()))

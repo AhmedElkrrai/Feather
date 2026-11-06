@@ -68,15 +68,14 @@ internal fun TimeFormat.labelRes(): Int = when (this) {
     TimeFormat.H24 -> R.string.time_format_24
 }
 
-/** The rows of the "Appearance and formats" section. */
+/** The Appearance page: how the app looks (the first group) and how it feels (the second). */
 @Composable
 internal fun AppearanceRows(
     settings: AppSettings,
     actions: AppearanceActions,
     onPickTheme: () -> Unit,
-    onPickTimeFormat: () -> Unit,
 ) {
-    SectionTitle(stringResource(R.string.settings_section_appearance))
+    SectionTitle(stringResource(R.string.settings_group_look))
     SettingsRow(
         title = stringResource(R.string.settings_theme),
         summary = stringResource(settings.themeMode.labelRes()),
@@ -105,19 +104,7 @@ internal fun AppearanceRows(
             )
         },
     )
-    SettingsRow(
-        title = stringResource(R.string.settings_time_format),
-        summary = stringResource(settings.timeFormat.labelRes()),
-        supporting = null,
-        onClick = onPickTimeFormat,
-    )
-    SettingsRow(
-        title = stringResource(R.string.settings_menu_hints),
-        summary = null,
-        supporting = stringResource(R.string.settings_menu_hints_summary),
-        onClick = { actions.onMenuHintsChange(!settings.menuHints) },
-        trailing = { Switch(checked = settings.menuHints, onCheckedChange = actions.onMenuHintsChange) },
-    )
+    SectionTitle(stringResource(R.string.settings_group_feel))
     SettingsRow(
         title = stringResource(R.string.settings_haptics),
         summary = null,
@@ -148,7 +135,18 @@ internal fun AppearanceRows(
         onClick = { actions.onReduceMotionChange(!settings.reduceMotion) },
         trailing = { Switch(checked = settings.reduceMotion, onCheckedChange = actions.onReduceMotionChange) },
     )
-    SectionTitle(stringResource(R.string.settings_section_company))
+    SettingsRow(
+        title = stringResource(R.string.settings_menu_hints),
+        summary = null,
+        supporting = stringResource(R.string.settings_menu_hints_summary),
+        onClick = { actions.onMenuHintsChange(!settings.menuHints) },
+        trailing = { Switch(checked = settings.menuHints, onCheckedChange = actions.onMenuHintsChange) },
+    )
+}
+
+/** The Today screen page: the cards and rows that keep you company there. */
+@Composable
+internal fun TodayScreenRows(settings: AppSettings, actions: AppearanceActions) {
     SettingsRow(
         title = stringResource(R.string.settings_weekly_feather),
         summary = null,

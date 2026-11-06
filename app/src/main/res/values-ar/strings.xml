@@ -134,8 +134,18 @@
 
     <!-- Settings -->
     <string name="settings">الإعدادات</string>
+    <string name="settings_section_today">شاشة اليوم</string>
+    <string name="settings_section_language_time">اللغة والوقت</string>
+    <string name="settings_group_look">الشكل</string>
+    <string name="settings_group_feel">التفاعل</string>
+    <string name="settings_summary_pair">%1$s، %2$s</string>
+    <string name="settings_home_reminders_summary">الافتراضي %1$s، غفوة %2$s</string>
+    <string name="settings_home_today_summary">البطاقات والريشة الأسبوعية والعادات</string>
+    <string name="settings_home_lock_on">قفل التطبيق مفعّل</string>
+    <string name="settings_home_lock_off">قفل التطبيق متوقف</string>
+    <string name="settings_home_warning">قد تتأخر التذكيرات على هذا الهاتف</string>
+    <string name="settings_home_warning_fix">إصلاح</string>
     <string name="settings_section_reminders">التذكيرات</string>
-    <string name="settings_section_general">عام</string>
     <string name="settings_default_time">وقت التذكير الافتراضي</string>
     <string name="settings_default_time_summary">يُستخدم موعدًا للمهام التي لها تاريخ بدون وقت.</string>
     <string name="settings_snooze_length">مدة الغفوة</string>
@@ -384,7 +394,7 @@
     <string name="quick_add_done">تمت إضافة المهمة</string>
 
     <!-- Backup and data -->
-    <string name="settings_section_backup">النسخ الاحتياطي والبيانات</string>
+    <string name="settings_section_backup">النسخ الاحتياطي والاستعادة</string>
     <string name="backup_export">تصدير نسخة احتياطية</string>
     <string name="backup_export_summary">احفظ مهامك وعاداتك وإعداداتك في ملف يمكنك الاحتفاظ به أو نقله إلى هاتف آخر.</string>
     <string name="backup_import">استيراد نسخة احتياطية</string>
@@ -441,7 +451,7 @@
     <string name="widget_quick_add_description">نقرة واحدة لإضافة مهمة.</string>
 
     <!-- Appearance and formats -->
-    <string name="settings_section_appearance">المظهر والتنسيقات</string>
+    <string name="settings_section_appearance">المظهر</string>
     <string name="settings_theme">السمة</string>
     <string name="theme_system">اتباع النظام</string>
     <string name="theme_light">فاتح</string>
@@ -589,7 +599,7 @@
     <string name="move_to_today_short">إلى اليوم</string>
     <string name="action_move_to_today">انقل %1$s إلى اليوم</string>
     <string name="moved_to_today">نُقلت إلى اليوم</string>
-    <string name="settings_section_privacy">الخصوصية</string>
+    <string name="settings_section_privacy">الخصوصية والأمان</string>
     <string name="settings_app_lock">قفل التطبيق</string>
     <string name="settings_app_lock_summary">اطلب بصمتك أو وجهك أو قفل الشاشة عند فتح ريشة، ومرة أخرى بعد غياب قصير.</string>
     <string name="settings_app_lock_unavailable">فعّل بصمة أو وجهًا أو قفل شاشة من إعدادات هاتفك أولًا، ثم يمكنك قفل ريشة.</string>
@@ -815,7 +825,6 @@
     <!-- M9 step 7: widgets -->
     <string name="widget_mark_done">علّم «%1$s» كمنجزة</string>
     <!-- M9 step 8: day cards -->
-    <string name="settings_section_company">رفقة لطيفة</string>
     <string name="settings_morning_card">بطاقة الصباح</string>
     <string name="settings_morning_card_summary">نظرة سريعة على يومك، مرة كل صباح. يمكنك إخفاؤها.</string>
     <string name="settings_habits_in_today">العادات في اليوم</string>

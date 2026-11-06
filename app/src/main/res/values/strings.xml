@@ -126,8 +126,18 @@
 
     <!-- Settings -->
     <string name="settings">Settings</string>
+    <string name="settings_section_today">Today screen</string>
+    <string name="settings_section_language_time">Language and time</string>
+    <string name="settings_group_look">Look</string>
+    <string name="settings_group_feel">Feel</string>
+    <string name="settings_summary_pair">%1$s, %2$s</string>
+    <string name="settings_home_reminders_summary">Default %1$s, snooze %2$s</string>
+    <string name="settings_home_today_summary">Cards, weekly feather, habits</string>
+    <string name="settings_home_lock_on">App lock is on</string>
+    <string name="settings_home_lock_off">App lock is off</string>
+    <string name="settings_home_warning">Reminders may arrive late on this phone</string>
+    <string name="settings_home_warning_fix">Fix</string>
     <string name="settings_section_reminders">Reminders</string>
-    <string name="settings_section_general">General</string>
     <string name="settings_default_time">Default reminder time</string>
     <string name="settings_default_time_summary">Used as the due time for tasks that have a date but no time.</string>
     <string name="settings_snooze_length">Snooze length</string>
@@ -324,7 +334,7 @@
     <string name="quick_add_done">Task added</string>
 
     <!-- Backup and data -->
-    <string name="settings_section_backup">Backup and data</string>
+    <string name="settings_section_backup">Backup and restore</string>
     <string name="backup_export">Export backup</string>
     <string name="backup_export_summary">Save your tasks, habits and settings to a file you can keep or move to another phone.</string>
     <string name="backup_import">Import backup</string>
@@ -377,7 +387,7 @@
     <string name="widget_quick_add_description">One tap to add a task.</string>
 
     <!-- Appearance and formats -->
-    <string name="settings_section_appearance">Appearance and formats</string>
+    <string name="settings_section_appearance">Appearance</string>
     <string name="settings_theme">Theme</string>
     <string name="theme_system">Follow system</string>
     <string name="theme_light">Light</string>
@@ -513,7 +523,7 @@
     <string name="move_to_today_short">To today</string>
     <string name="action_move_to_today">Move %1$s to today</string>
     <string name="moved_to_today">Moved to today</string>
-    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_section_privacy">Privacy and security</string>
     <string name="settings_app_lock">Lock the app</string>
     <string name="settings_app_lock_summary">Ask for your fingerprint, face or screen lock when Feather is opened, and again after you have been away for a little while.</string>
     <string name="settings_app_lock_unavailable">Set up a fingerprint, a face or a screen lock in your phone\u2019s settings first, then you can lock Feather.</string>
@@ -733,7 +743,6 @@
     <!-- M9 step 7: widgets -->
     <string name="widget_mark_done">Mark %1$s as done</string>
     <!-- M9 step 8: day cards -->
-    <string name="settings_section_company">Gentle company</string>
     <string name="settings_morning_card">Morning card</string>
     <string name="settings_morning_card_summary">A short look at your day, once each morning. You can put it away.</string>
     <string name="settings_habits_in_today">Habits in Today</string>
