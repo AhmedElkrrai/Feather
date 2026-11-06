@@ -1,5 +1,9 @@
 package com.elkrrai.feather.feature.habits
 
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.platform.LocalDensity
 import com.elkrrai.feather.domain.habit.Habit
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
@@ -60,8 +64,11 @@ import kotlin.math.sin
 private val LabelHeight = 16.dp
 private const val DAYS = 7
 
-/** The looks of the weekly leaf: a smooth edge, a serrated one, or a botanical one (a finely toothed blade with parallel veins). */
-enum class LeafStyle { Smooth, Serrated, Botanical }
+/**
+ * The looks of the weekly leaf: a smooth edge, a serrated one, a botanical one (a finely toothed blade with parallel veins), and three drawn as
+ * pictures: a palm-style frond, a sprig of seven leaflets and a maple of seven lobes. The order is the code saved with a habit: only add at the end.
+ */
+enum class LeafStyle { Smooth, Serrated, Botanical, Frond, Sprig, Maple }
 
 /**
  * The look a habit's leaf has: the one it was dealt (see `nextLeaf`), kept for good. The order of [LeafStyle] is the code that is saved, so it
@@ -102,6 +109,15 @@ fun WeekLeaf(
 ) {
     val serrated = style == LeafStyle.Serrated
     val botanical = style == LeafStyle.Botanical
+    // the frond, the sprig and the maple are pictures with a place for each day, not a width profile with veins
+    val art = remember(style) {
+        when (style) {
+            LeafStyle.Frond -> frondArt()
+            LeafStyle.Sprig -> sprigArt()
+            LeafStyle.Maple -> mapleArt()
+            else -> null
+        }
+    }
     fun width(t: Float) = if (botanical) botanicalWidth(t) else leafWidth(t)
     // the sawtooth factor of one edge at t; the seed tells the two edges apart
     fun edge(t: Float, seed: Float) = when (style) {
@@ -124,6 +140,11 @@ fun WeekLeaf(
         label = "breath",
     )
     val breath = if (still) 0.5f else breathing
+
+    if (art != null) {
+        ArtLeaf(art, style, week, today, onDayClick, leaf, surface, breath, modifier)
+        return
+    }
 
     BoxWithConstraints(modifier.fillMaxSize()) {
         val boxWidth = maxWidth
@@ -301,6 +322,84 @@ fun WeekLeaf(
                 surface = surface,
                 breath = breath,
                 modifier = Modifier.offset(x = spot.x - circle, y = spot.y - circle / 2).width(circle * 2),
+            )
+        }
+    }
+}
+
+/** One of the leaves drawn as a picture: the board scaled to the room, centred, and a circle placed in each part of the shape. */
+@Composable
+private fun ArtLeaf(
+    art: LeafArt,
+    style: LeafStyle,
+    week: WeekProgress,
+    today: LocalDate,
+    onDayClick: ((LocalDate) -> Unit)?,
+    leaf: Color,
+    surface: Color,
+    breath: Float,
+    modifier: Modifier,
+) {
+    val locale = LocalConfiguration.current.locales[0]
+    val density = LocalDensity.current
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val widthPx = with(density) { maxWidth.toPx() }
+        val heightPx = with(density) { maxHeight.toPx() }
+        val fit = minOf(widthPx / BOARD_W, heightPx / BOARD_H)
+        val originX = (widthPx - BOARD_W * fit) / 2f
+        val originY = (heightPx - BOARD_H * fit) / 2f
+
+        Canvas(Modifier.fillMaxSize()) {
+            withTransform({
+                translate(originX, originY)
+                scale(fit, fit, pivot = Offset.Zero)
+            }) {
+                if (week.met) {
+                    // a soft light round the leaf, breathing
+                    for (layer in 1..5) {
+                        drawPath(
+                            art.outline,
+                            leaf.copy(alpha = (0.05f + 0.10f * breath) * (1f - layer / 6f)),
+                            style = Stroke(width = 6f + layer * 7f, cap = StrokeCap.Round, join = StrokeJoin.Round),
+                        )
+                    }
+                }
+                val fill = if (style == LeafStyle.Maple) {
+                    // deeper at the top, lighter at the bottom, like the leaf of an autumn tree
+                    Brush.verticalGradient(
+                        listOf(leaf.copy(alpha = 0.44f), leaf.copy(alpha = 0.34f), lerp(leaf, Color.White, 0.25f).copy(alpha = 0.30f)),
+                        startY = 0f,
+                        endY = BOARD_H,
+                    )
+                } else {
+                    Brush.verticalGradient(
+                        listOf(leaf.copy(alpha = 0.12f), leaf.copy(alpha = if (week.met) 0.30f + 0.12f * breath else 0.22f)),
+                        startY = 0f,
+                        endY = BOARD_H,
+                    )
+                }
+                drawPath(art.outline, fill)
+                drawPath(art.outline, leaf.copy(alpha = 0.75f), style = Stroke(width = 2f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                art.details(this, leaf)
+            }
+        }
+
+        week.days.forEachIndexed { index, day ->
+            val spot = art.spots[index]
+            val circle = with(density) { (spot.radius * 2f * fit).toDp() }
+            val centerX = with(density) { (originX + spot.x * fit).toDp() }
+            val centerY = with(density) { (originY + spot.y * fit).toDp() }
+            DayCircle(
+                number = day.amount,
+                label = day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+                done = day.done,
+                dimmed = day.date.isAfter(today),
+                onClick = onDayClick?.takeUnless { day.date.isAfter(today) }?.let { click -> { click(day.date) } },
+                size = circle,
+                leaf = leaf,
+                surface = surface,
+                breath = breath,
+                modifier = Modifier.offset(x = centerX - circle, y = centerY - circle / 2).width(circle * 2),
             )
         }
     }
