@@ -241,40 +241,6 @@ fun RhythmContent(
                 }
             }
 
-            item(key = "dots") {
-                SectionCard(title = stringResource(R.string.rhythm_dots_title)) {
-                    val headline = stringResource(R.string.rhythm_dots_headline, stats.dotsShowedUp, stats.dots.size)
-                    Column(Modifier.padding(horizontal = Space.x4)) {
-                        Text(
-                            text = headline,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Spacer(Modifier.height(Space.x2))
-                        RhythmDots(stats.dots, entry, Modifier.semantics { contentDescription = headline })
-                        Text(
-                            text = stringResource(R.string.rhythm_dots_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        if (paused) {
-                            Text(
-                                text = stringResource(R.string.rhythm_pause_note),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = Space.x2),
-                            )
-                        }
-                        OutlinedButton(
-                            onClick = { if (paused) onResume() else showPause = true },
-                            modifier = Modifier.padding(top = Space.x3).heightIn(min = 48.dp),
-                        ) {
-                            Text(stringResource(if (paused) R.string.rhythm_resume else R.string.rhythm_pause))
-                        }
-                    }
-                }
-            }
-
             item(key = "month") {
                 SectionCard(title = monthTitle(stats.month.month, locale)) {
                     MonthSection(stats, entry, locale, firstDay) { day ->
@@ -304,6 +270,24 @@ fun RhythmContent(
                             )
                             stats.steady.forEach { SteadyRow(it) }
                         }
+                    }
+                }
+            }
+
+            item(key = "pause") {
+                Column(Modifier.padding(horizontal = Space.x1)) {
+                    if (paused) {
+                        Text(
+                            text = stringResource(R.string.rhythm_pause_note),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = { if (paused) onResume() else showPause = true },
+                        modifier = Modifier.padding(top = Space.x2).heightIn(min = 48.dp),
+                    ) {
+                        Text(stringResource(if (paused) R.string.rhythm_resume else R.string.rhythm_pause))
                     }
                 }
             }
