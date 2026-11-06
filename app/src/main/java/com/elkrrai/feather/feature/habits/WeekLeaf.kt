@@ -279,22 +279,16 @@ fun WeekLeaf(
                 }
             }
 
+            // a vein from the midrib up to each circle, rising in a gentle curve (on the botanical leaf, from its bent midrib)
             spots.forEach { spot ->
-                if (style == LeafStyle.Smooth) {
-                    // the smooth leaf keeps its first veins: each rises from the midrib in a gentle curve to its circle
-                    val from = Offset(cx, spot.veinFrom.toPx())
-                    val to = Offset(spot.x.toPx(), spot.y.toPx())
-                    val path = Path().apply {
-                        moveTo(from.x, from.y)
-                        quadraticTo(from.x + (to.x - from.x) * 0.15f, to.y + (from.y - to.y) * 0.15f, to.x, to.y)
-                    }
-                    drawPath(path, leaf.copy(alpha = 0.55f), style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round))
-                } else {
-                    // the other leaves: a straight, level vein from the midrib out to the circle, so the day grows from it
-                    val y = spot.y.toPx()
-                    val t = (base - y) / height
-                    drawLine(leaf.copy(alpha = 0.55f), Offset(midX(t), y), Offset(spot.x.toPx(), y), 1.6.dp.toPx(), StrokeCap.Round)
+                val fromT = (base - spot.veinFrom.toPx()) / height
+                val from = Offset(midX(fromT), spot.veinFrom.toPx())
+                val to = Offset(spot.x.toPx(), spot.y.toPx())
+                val path = Path().apply {
+                    moveTo(from.x, from.y)
+                    quadraticTo(from.x + (to.x - from.x) * 0.15f, to.y + (from.y - to.y) * 0.15f, to.x, to.y)
                 }
+                drawPath(path, leaf.copy(alpha = 0.55f), style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round))
             }
         }
 
