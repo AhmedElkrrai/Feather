@@ -160,7 +160,6 @@ fun RhythmContent(
     }
     val entry = rememberEntry()
     val haptics = rememberHaptics()
-    var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
     var showPause by remember { mutableStateOf(false) }
     val paused = state.pausedDays.any { !it.isBefore(today) }
 
@@ -241,15 +240,6 @@ fun RhythmContent(
                 }
             }
 
-            item(key = "month") {
-                SectionCard(title = monthTitle(stats.month.month, locale)) {
-                    MonthSection(stats, entry, locale, firstDay) { day ->
-                        haptics.tick()
-                        selectedDay = day
-                    }
-                }
-            }
-
             // nothing to say until a few tasks are done: then the card would be an empty box
             if (stats.busiestWeekday != null || stats.bestTime != null) {
                 item(key = "when") {
@@ -294,9 +284,6 @@ fun RhythmContent(
         }
     }
 
-    selectedDay?.let { day ->
-        DaySheet(day, stats, locale, onDismiss = { selectedDay = null })
-    }
     if (showPause) {
         PauseDialog(
             onPick = { days ->
