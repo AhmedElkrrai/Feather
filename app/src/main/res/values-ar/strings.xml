@@ -140,10 +140,14 @@
     <string name="settings_group_feel">التفاعل</string>
     <string name="settings_summary_pair">%1$s، %2$s</string>
     <string name="settings_home_reminders_summary">الافتراضي %1$s، غفوة %2$s</string>
+    <string name="settings_home_tags_summary">إعادة التسمية والترتيب والحذف</string>
     <string name="settings_home_today_summary">البطاقات والريشة الأسبوعية والعادات</string>
     <string name="settings_home_lock_on">قفل التطبيق مفعّل</string>
     <string name="settings_home_lock_off">قفل التطبيق متوقف</string>
     <string name="settings_home_warning">قد تتأخر التذكيرات على هذا الهاتف</string>
+    <string name="settings_home_warning_notifications">الإشعارات متوقفة، فلن تصلك التذكيرات</string>
+    <string name="settings_home_warning_alarms">المنبهات والتذكيرات متوقفة، فقد تتأخر التذكيرات</string>
+    <string name="settings_home_warning_battery">توفير البطارية قد يؤخر تذكيراتك</string>
     <string name="settings_home_warning_fix">إصلاح</string>
     <string name="settings_section_reminders">التذكيرات</string>
     <string name="settings_default_time">وقت التذكير الافتراضي</string>

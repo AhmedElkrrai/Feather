@@ -132,10 +132,14 @@
     <string name="settings_group_feel">Feel</string>
     <string name="settings_summary_pair">%1$s, %2$s</string>
     <string name="settings_home_reminders_summary">Default %1$s, snooze %2$s</string>
+    <string name="settings_home_tags_summary">Rename, arrange, delete</string>
     <string name="settings_home_today_summary">Cards, weekly feather, habits</string>
     <string name="settings_home_lock_on">App lock is on</string>
     <string name="settings_home_lock_off">App lock is off</string>
     <string name="settings_home_warning">Reminders may arrive late on this phone</string>
+    <string name="settings_home_warning_notifications">Notifications are off, so reminders cannot reach you</string>
+    <string name="settings_home_warning_alarms">Alarms and reminders are off, so reminders may be late</string>
+    <string name="settings_home_warning_battery">Battery saving may delay your reminders</string>
     <string name="settings_home_warning_fix">Fix</string>
     <string name="settings_section_reminders">Reminders</string>
     <string name="settings_default_time">Default reminder time</string>

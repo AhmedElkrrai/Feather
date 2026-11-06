@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -17,9 +18,12 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -153,6 +157,11 @@ fun SettingsScreen(
     SettingsContent(
         settings = settings,
         remindersHealthy = health.canDeliverOnTime && health.batteryUnrestricted,
+        reminderWarning = when {
+            !health.canNotify -> R.string.settings_home_warning_notifications
+            !health.exactAlarmsAllowed -> R.string.settings_home_warning_alarms
+            else -> R.string.settings_home_warning_battery
+        },
         onBack = onBack,
         onOpenReliability = onOpenReliability,
         onOpenTags = onOpenTags,
@@ -233,6 +242,8 @@ fun SettingsScreen(
 fun SettingsContent(
     settings: AppSettings,
     remindersHealthy: Boolean,
+    /** What the warning on the first page says when [remindersHealthy] is false: the thing that is wrong. */
+    @StringRes reminderWarning: Int = R.string.settings_home_warning,
     onBack: () -> Unit,
     onOpenReliability: () -> Unit,
     onDefaultTimeChange: (LocalTime) -> Unit,
@@ -290,6 +301,7 @@ fun SettingsContent(
                     SettingsPage.Home -> SettingsHome(
                         settings = settings,
                         remindersHealthy = remindersHealthy,
+                        reminderWarning = reminderWarning,
                         appLockAvailable = appLockAvailable,
                         versionName = versionName,
                         onOpen = { page = it },
@@ -519,6 +531,7 @@ private enum class SettingsPage(@StringRes val titleRes: Int) {
 private fun SettingsHome(
     settings: AppSettings,
     remindersHealthy: Boolean,
+    @StringRes reminderWarning: Int,
     appLockAvailable: Boolean,
     versionName: String,
     onOpen: (SettingsPage) -> Unit,
@@ -526,33 +539,42 @@ private fun SettingsHome(
     onOpenTags: () -> Unit,
 ) {
     val locale = LocalConfiguration.current.locales[0]
-    val resources = LocalContext.current.resources
+    val context = LocalContext.current
+    val resources = context.resources
     fun pair(first: String, second: String) = resources.getString(R.string.settings_summary_pair, first, second)
 
     if (!remindersHealthy) {
         // the one thing worth saying out loud: reminders that may not arrive
         Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 6.dp)
+                .clip(RoundedCornerShape(14.dp))
                 .clickable(role = Role.Button, onClick = onOpenReliability),
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_alert),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(20.dp),
+                )
                 Text(
-                    text = stringResource(R.string.settings_home_warning),
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = stringResource(reminderWarning),
+                    style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.weight(1f),
                 )
-                Spacer(Modifier.width(12.dp))
                 Text(
                     text = stringResource(R.string.settings_home_warning_fix),
                     style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.secondary,
                 )
             }
         }
@@ -566,30 +588,37 @@ private fun SettingsHome(
                 formatDueTime(settings.defaultReminderTime, locale),
                 resources.getQuantityString(R.plurals.duration_minutes, settings.snoozeMinutes, settings.snoozeMinutes),
             ),
+            icon = R.drawable.ic_bell,
+            first = true,
             onClick = { onOpen(SettingsPage.Reminders) },
         )
         val theme = stringResource(settings.themeMode.labelRes())
         CategoryRow(
             title = stringResource(SettingsPage.Appearance.titleRes),
-            summary = if (settings.pureBlack) pair(theme, stringResource(R.string.settings_pure_black)) else theme,
+            summary = if (settings.pureBlack) pair(theme, stringResource(R.string.settings_pure_black).lowercase(locale)) else theme,
+            icon = R.drawable.ic_palette,
             onClick = { onOpen(SettingsPage.Appearance) },
         )
         CategoryRow(
             title = stringResource(SettingsPage.Today.titleRes),
             summary = stringResource(R.string.settings_home_today_summary),
+            icon = R.drawable.ic_calendar,
             onClick = { onOpen(SettingsPage.Today) },
         )
     }
     SettingsGroup {
         CategoryRow(
             title = stringResource(R.string.tags_title),
-            summary = stringResource(R.string.tags_row_summary),
+            summary = stringResource(R.string.settings_home_tags_summary),
+            icon = R.drawable.ic_tag,
+            first = true,
             onClick = onOpenTags,
         )
         CategoryRow(
             title = stringResource(SettingsPage.Backup.titleRes),
             summary = settings.lastBackupAt?.let { stringResource(R.string.backup_last, formatBackupTime(it, locale)) }
                 ?: stringResource(R.string.backup_never),
+            icon = R.drawable.ic_cloud_upload,
             onClick = { onOpen(SettingsPage.Backup) },
         )
         CategoryRow(
@@ -597,16 +626,34 @@ private fun SettingsHome(
             summary = stringResource(
                 if (settings.appLock && appLockAvailable) R.string.settings_home_lock_on else R.string.settings_home_lock_off,
             ),
+            icon = R.drawable.ic_lock,
             onClick = { onOpen(SettingsPage.Privacy) },
         )
+        // a language that follows the phone is named, and a clock that follows it says which clock it is
+        val language = AppLanguage.current().let { chosen ->
+            if (chosen == AppLanguage.SYSTEM) {
+                locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }
+            } else {
+                stringResource(chosen.labelRes)
+            }
+        }
+        val clock = when (settings.timeFormat) {
+            TimeFormat.H12 -> stringResource(R.string.time_format_12)
+            TimeFormat.H24 -> stringResource(R.string.time_format_24)
+            TimeFormat.SYSTEM -> stringResource(
+                if (android.text.format.DateFormat.is24HourFormat(context)) R.string.time_format_24 else R.string.time_format_12,
+            )
+        }
         CategoryRow(
             title = stringResource(SettingsPage.LanguageTime.titleRes),
-            summary = pair(stringResource(AppLanguage.current().labelRes), stringResource(settings.timeFormat.labelRes())),
+            summary = pair(language, clock),
+            icon = R.drawable.ic_language,
             onClick = { onOpen(SettingsPage.LanguageTime) },
         )
         CategoryRow(
             title = stringResource(SettingsPage.About.titleRes),
             summary = if (versionName.isNotBlank()) stringResource(R.string.settings_version, versionName) else null,
+            icon = R.drawable.ic_info,
             onClick = { onOpen(SettingsPage.About) },
         )
     }
@@ -626,28 +673,48 @@ private fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
     }
 }
 
-/** One category in the list: its name, how it is set now, and a chevron that points the way the page opens. */
+/** One category in the list: a small icon, its name, how it is set now, and a chevron that points the way the page opens. */
 @Composable
-private fun CategoryRow(title: String, summary: String?, onClick: () -> Unit) {
+private fun CategoryRow(
+    title: String,
+    summary: String?,
+    @DrawableRes icon: Int,
+    onClick: () -> Unit,
+    first: Boolean = false,
+) {
+    val scheme = MaterialTheme.colorScheme
     val ltr = LocalLayoutDirection.current == LayoutDirection.Ltr
-    ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        headlineContent = { Text(title) },
-        supportingContent = if (summary != null) {
-            { Text(summary, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        } else {
-            null
-        },
-        trailingContent = {
-            Icon(
-                painter = painterResource(R.drawable.ic_chevron_down),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.graphicsLayer { rotationZ = if (ltr) -90f else 90f },
-            )
-        },
-    )
+    if (!first) HorizontalDivider(modifier = Modifier.padding(start = 62.dp), color = scheme.outlineVariant.copy(alpha = 0.5f))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(scheme.primary.copy(alpha = 0.16f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(painter = painterResource(icon), contentDescription = null, tint = scheme.primary, modifier = Modifier.size(20.dp))
+        }
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            if (summary != null) {
+                Text(summary, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+            }
+        }
+        Icon(
+            painter = painterResource(R.drawable.ic_chevron_down),
+            contentDescription = null,
+            tint = scheme.onSurfaceVariant,
+            modifier = Modifier.graphicsLayer { rotationZ = if (ltr) -90f else 90f },
+        )
+    }
 }
 
 /** Which settings dialog is open. An enum so it survives rotation with `rememberSaveable`. */
