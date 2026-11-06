@@ -287,7 +287,6 @@ private fun HabitTodayRow(
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.x1)) {
                         Text(title, style = MaterialTheme.typography.bodyLarge)
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                            MetaChip(stringResource(R.string.habit_chip_habit), leaf.copy(alpha = 0.20f), scheme.onSurface)
                             if (row.current?.state == StageState.NOW) {
                                 MetaChip(stringResource(R.string.habit_chip_now), leaf, Color(0xFF0B1409))
                             }

@@ -653,7 +653,6 @@
     <string name="habit_today_finished">تمّت «%1$s» لليوم</string>
     <string name="habit_today_mark_done">أنهِ عادة اليوم</string>
     <string name="habit_today_row_desc">%1$s. اضغط مطولًا لإنهاء عادة اليوم.</string>
-    <string name="habit_chip_habit">عادة</string>
     <string name="habit_chip_now">الآن</string>
     <string name="habit_today_progress_stages">%1$d من %2$d</string>
     <string name="habit_today_progress_times">%1$d من %2$d اليوم</string>

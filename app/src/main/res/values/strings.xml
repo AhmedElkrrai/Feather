@@ -577,7 +577,6 @@
     <string name="habit_today_finished">%1$s done for today</string>
     <string name="habit_today_mark_done">Mark done for today</string>
     <string name="habit_today_row_desc">%1$s. Press and hold to finish for today.</string>
-    <string name="habit_chip_habit">Habit</string>
     <string name="habit_chip_now">Now</string>
     <string name="habit_today_progress_stages">%1$d of %2$d</string>
     <string name="habit_today_progress_times">%1$d of %2$d today</string>
