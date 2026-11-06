@@ -281,11 +281,12 @@ fun WeekLeaf(
             }
             drawPath(midrib, leaf.copy(alpha = 0.6f), style = Stroke(width = (if (botanical) 3.5f else 2f).dp.toPx(), cap = StrokeCap.Round))
 
-            // the botanical leaf: eleven pairs of parallel veins curving up to the edge, with fine cross veins between
+            // the botanical leaf: twelve pairs of parallel veins curving up to the edge, with fine cross veins between
             if (botanical) {
                 val pairs = 11
                 for (side in listOf(-1f, 1f)) {
-                    for (k in 1..pairs) {
+                    // from 0, one more pair than the days use: the lowest starts near the base, so no wedge is left empty under the others
+                    for (k in 0..pairs) {
                         val tk = 0.06f + 0.80f * k / pairs
                         val te = (tk + 0.17f).coerceAtMost(0.97f)
                         val from = Offset(midX(tk), base - height * tk)
