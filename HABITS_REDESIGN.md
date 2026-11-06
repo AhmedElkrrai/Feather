@@ -77,6 +77,16 @@ Existing habits must keep working: every new column has a default, so old habits
 ### M4. Habits in Today
 1. Mockup of the habit row and its placement for approval (distinct look: leaf-tinted surface, a leaf-shaped check instead of the
    barbed ring, stage dots like `● ● ○ ○ ○`, a time or window chip such as `12–2 PM`, a "Habit" chip; no swipe-to-delete).
+   Approved interaction of the habit row (mockup agreed with the user):
+   - A press and hold of 0.7 s anywhere on the card finishes the habit for today (every stage; a counted habit fills to its target). A tap never
+     finishes it, so a stray touch cannot. While holding: a ring around the leaf fills, a green wash spreads from the leaf, the card sinks
+     slightly, light haptic ticks; at the end a stronger haptic, the leaf blooms, the card dims and an Undo snackbar appears. Letting go early
+     (or sliding the finger) eases everything back.
+   - Teaching the gesture: the ring track is always visible; the first habit row shows a dim "Hold the card to finish today" line (fades after a
+     few uses or the first successful hold, stored like the swipe hint); a quick tap plays a small partial fill and a "Hold to finish" label;
+     the ring plays the fill once by itself the first time a habit row is seen; TalkBack gets a "Mark done for today" custom action.
+   - Stage strip instead of an "Earlier" link: one chip per stage (done / missed, amber dashed, never red / now / later). A single tap on a chip
+     ticks or unticks that one stage; ticking the last one finishes the habit. Dots are drawn shapes of one size in every state.
 2. Setting "Show habits in Today" (default on) in the "Company" block (`AppearanceSection.kt`) through `AppSettings`,
    `DataStoreSettingsRepository`, `SettingsViewModel`; per-habit "Show in Today" switch in the form (default on for new habits).
 3. Pure logic `ui/today/TodayHabits.kt`: which habits show today (showInToday, goal exists this week, week goal not yet met, today not done),
