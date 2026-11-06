@@ -220,7 +220,7 @@ fun RhythmContent(
             }
 
             item(key = "week") {
-                SectionCard(title = stringResource(R.string.rhythm_last_seven)) {
+                SectionCard(title = null) {
                     val resources = LocalContext.current.resources
                     val summary = stringResource(
                         R.string.rhythm_last_seven_summary,
@@ -313,7 +313,7 @@ private fun monthTitle(month: java.time.YearMonth, locale: Locale): String =
 
 /** A rounded card on the paper with a title, the way every chart on this screen sits. */
 @Composable
-private fun SectionCard(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+private fun SectionCard(title: String?, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -321,14 +321,17 @@ private fun SectionCard(title: String, modifier: Modifier = Modifier, content: @
             .background(MaterialTheme.featherColors.card)
             .padding(vertical = Space.x4),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .padding(start = Space.x4, end = Space.x4, bottom = Space.x3)
-                .semantics { heading() },
-        )
+        // a card can go without a heading when what it shows says enough by itself
+        if (title != null) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .padding(start = Space.x4, end = Space.x4, bottom = Space.x3)
+                    .semantics { heading() },
+            )
+        }
         content()
     }
 }
