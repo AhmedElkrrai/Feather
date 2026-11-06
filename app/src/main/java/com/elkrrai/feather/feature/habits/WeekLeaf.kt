@@ -82,14 +82,14 @@ fun leafStyleFor(habit: Habit): LeafStyle =
     LeafStyle.entries.getOrNull(habit.leaf) ?: LeafStyle.entries[Math.floorMod(habit.id.hashCode(), LeafStyle.entries.size)]
 
 /** The sawtooth along a toothed edge: from 1 - [depth] to 1 of the smooth width, [count] teeth up the leaf, shifted by [seed] so the two edges differ. */
-private fun tooth(t: Float, count: Int, seed: Float, depth: Float): Float {
+internal fun tooth(t: Float, count: Int, seed: Float, depth: Float): Float {
     val p = (t * count + seed) % 1f
     val ramp = if (p < 0.62f) p / 0.62f else (1f - p) / 0.38f
     return 1f - depth + depth * ramp
 }
 
 /** How wide the botanical leaf is at [t]: fullest low down, tapering to a point. */
-private fun botanicalWidth(t: Float): Float = sin(PI.toFloat() * t.coerceIn(0f, 1f).pow(0.62f)).coerceAtLeast(0f).pow(0.85f)
+internal fun botanicalWidth(t: Float): Float = sin(PI.toFloat() * t.coerceIn(0f, 1f).pow(0.62f)).coerceAtLeast(0f).pow(0.85f)
 
 /** How wide the leaf is at [t] (0 at the stem, 1 at the tip), as a share of its widest part: pointed at the tip, round at the base. */
 internal fun leafWidth(t: Float): Float = sin(PI.toFloat() * t.coerceIn(0f, 1f).pow(0.75f)).coerceAtLeast(0f).pow(0.9f)
@@ -114,14 +114,7 @@ fun WeekLeaf(
     val serrated = style == LeafStyle.Serrated
     val botanical = style == LeafStyle.Botanical
     // the frond, the sprig and the maple are pictures with a place for each day, not a width profile with veins
-    val art = remember(style) {
-        when (style) {
-            LeafStyle.Frond -> frondArt()
-            LeafStyle.Sprig -> sprigArt()
-            LeafStyle.Maple -> mapleArt()
-            else -> null
-        }
-    }
+    val art = remember(style) { leafArtFor(style) }
     fun width(t: Float) = if (botanical) botanicalWidth(t) else leafWidth(t)
     // the sawtooth factor of one edge at t; the seed tells the two edges apart
     fun edge(t: Float, seed: Float) = when (style) {

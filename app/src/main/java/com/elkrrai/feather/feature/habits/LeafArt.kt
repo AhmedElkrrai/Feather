@@ -40,7 +40,17 @@ internal class LeafArt(
     val details: DrawScope.(leaf: Color) -> Unit,
     /** The seven circles, Saturday to Friday (the first day of the week to the last), each wholly inside its part of the leaf. */
     val spots: List<DaySpot>,
+    /** The stem as a line, from its free end up to the leaf: the small leaves of the overview draw only this and the outline. */
+    val stem: Pair<Offset, Offset>,
 )
+
+/** The art for a look drawn as a picture, or null for a look drawn as a width profile (smooth, serrated, botanical). */
+internal fun leafArtFor(style: LeafStyle): LeafArt? = when (style) {
+    LeafStyle.Frond -> frondArt()
+    LeafStyle.Sprig -> sprigArt()
+    LeafStyle.Maple -> mapleArt()
+    else -> null
+}
 
 private fun polygon(points: List<Offset>): Path = Path().apply {
     points.forEachIndexed { index, p -> if (index == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) }
@@ -125,6 +135,7 @@ internal fun mapleArt(): LeafArt {
     return LeafArt(
         outline = polygon(points),
         spots = spots,
+        stem = Offset(MID + 2f, BASE + STEM) to Offset(MID, centerY),
         details = { leaf ->
             val line = leaf.copy(alpha = 0.75f)
             val light = lerp(leaf, Color.White, 0.5f)
@@ -216,6 +227,7 @@ internal fun sprigArt(): LeafArt {
     return LeafArt(
         outline = outline,
         spots = spots,
+        stem = Offset(stemX(0f), BASE + STEM) to Offset(stemX(SPRIG_TOP), BASE - HEIGHT * SPRIG_TOP),
         details = { leaf ->
             val line = leaf.copy(alpha = 0.75f)
             // The stem is drawn by the same height as the leaflets' bases (t), from below the board's base up to where the last leaflet
@@ -267,6 +279,7 @@ internal fun frondArt(): LeafArt {
     return LeafArt(
         outline = outline,
         spots = spots,
+        stem = Offset(stemX(0f) + 8f, BASE + STEM) to Offset(stemX(0f), BASE),
         details = { leaf ->
             val line = leaf.copy(alpha = 0.75f)
             val light = lerp(leaf, Color.White, 0.6f)

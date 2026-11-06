@@ -1,5 +1,8 @@
 package com.elkrrai.feather.feature.habits
 
+import kotlin.math.sin
+import kotlin.math.PI
+import androidx.compose.ui.graphics.drawscope.withTransform
 import android.text.format.DateUtils
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -123,6 +126,9 @@ private fun Garden(
     val leaf = MaterialTheme.featherColors.leafColor(rememberSeason())
     val scheme = MaterialTheme.colorScheme
     val unit = habit.habit.unit
+    // each week's small leaf has the shape of the habit's own leaf; the art is made once, not for each week
+    val style = leafStyleFor(habit.habit)
+    val art = remember(style) { leafArtFor(style) }
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(44.dp),
@@ -201,6 +207,8 @@ private fun Garden(
                 } else {
                     stringResource(R.string.habit_garden_week_amount, range, week.total, week.target, unit).replace("  ", " ")
                 },
+                style = style,
+                art = art,
                 onClick = { onOpenWeek(week.weekStart) },
             )
         }
@@ -228,6 +236,8 @@ private fun MiniLeaf(
     leaf: Color,
     dot: Color,
     description: String,
+    style: LeafStyle,
+    art: LeafArt?,
     onClick: () -> Unit,
 ) {
     Box(
@@ -238,42 +248,75 @@ private fun MiniLeaf(
             .clickable(role = Role.Button, onClick = onClick),
     ) {
         Canvas(Modifier.fillMaxSize()) {
-            val height = size.height * 0.84f
-            val top = size.height * 0.04f
-            val base = top + height
-            val half = size.width * 0.40f
-            val cx = size.width / 2f
-            val outline = Path().apply {
-                val steps = 32
-                for (step in 0..steps) {
-                    val t = step / steps.toFloat()
-                    val point = Offset(cx + half * leafWidth(t), base - height * t)
-                    if (step == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
+            if (week.goal == null) return@Canvas
+            val strokeAlpha = if (week.met) 0.95f else 0.45f
+            val fillAlpha = if (week.met) 0.85f else 0.10f + 0.50f * week.fraction
+
+            if (art != null) {
+                // a leaf drawn as a picture: its board fitted into the cell
+                val fit = minOf(size.width / BOARD_W, size.height / BOARD_H)
+                withTransform({
+                    translate((size.width - BOARD_W * fit) / 2f, (size.height - BOARD_H * fit) / 2f)
+                    scale(fit, fit, pivot = Offset.Zero)
+                }) {
+                    if (week.met) {
+                        // a soft light round a week that reached its goal
+                        for (layer in 1..3) {
+                            drawPath(art.outline, leaf.copy(alpha = 0.10f * (1f - layer / 4f)), style = Stroke(width = (layer * 4).dp.toPx() / fit))
+                        }
+                    }
+                    drawPath(
+                        art.outline,
+                        Brush.verticalGradient(listOf(leaf.copy(alpha = fillAlpha * 0.7f), leaf.copy(alpha = fillAlpha)), startY = 0f, endY = BOARD_H),
+                    )
+                    drawPath(art.outline, leaf.copy(alpha = strokeAlpha), style = Stroke(width = 1.5.dp.toPx() / fit))
+                    drawLine(leaf.copy(alpha = 0.8f), art.stem.first, art.stem.second, 1.5.dp.toPx() / fit)
                 }
-                for (step in steps downTo 0) {
-                    val t = step / steps.toFloat()
-                    lineTo(cx - half * leafWidth(t), base - height * t)
+            } else {
+                val height = size.height * 0.84f
+                val top = size.height * 0.04f
+                val base = top + height
+                val half = size.width * 0.40f
+                val cx = size.width / 2f
+                val botanical = style == LeafStyle.Botanical
+                // the botanical leaf bends a little to one side (9 of the 150 units of half its width on the weekly page)
+                val shiftPx = if (botanical) half * 0.06f else 0f
+                fun midX(t: Float) = cx + shiftPx * sin(PI.toFloat() * t)
+                fun width(t: Float) = if (botanical) botanicalWidth(t) else leafWidth(t)
+                fun edge(t: Float, seed: Float) = when (style) {
+                    LeafStyle.Serrated -> tooth(t, 9, seed, 0.28f)
+                    LeafStyle.Botanical -> tooth(t, 26, seed, 0.055f)
+                    else -> 1f
                 }
-                close()
-            }
-            if (week.goal != null) {
+                val outline = Path().apply {
+                    val steps = if (style == LeafStyle.Smooth) 32 else 120
+                    for (step in 0..steps) {
+                        val t = step / steps.toFloat()
+                        val point = Offset(midX(t) + half * width(t) * edge(t, 0.1f), base - height * t)
+                        if (step == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
+                    }
+                    for (step in steps downTo 0) {
+                        val t = step / steps.toFloat()
+                        lineTo(midX(t) - half * width(t) * edge(t, if (botanical) 0.55f else 0.45f), base - height * t)
+                    }
+                    close()
+                }
                 if (week.met) {
                     // a soft light round a week that reached its goal
                     for (layer in 1..3) {
                         drawPath(outline, leaf.copy(alpha = 0.10f * (1f - layer / 4f)), style = Stroke(width = (layer * 4).dp.toPx()))
                     }
                 }
-                val fill = if (week.met) 0.85f else 0.10f + 0.50f * week.fraction
                 drawPath(
                     outline,
-                    Brush.verticalGradient(listOf(leaf.copy(alpha = fill * 0.7f), leaf.copy(alpha = fill)), startY = base - height, endY = base),
+                    Brush.verticalGradient(listOf(leaf.copy(alpha = fillAlpha * 0.7f), leaf.copy(alpha = fillAlpha)), startY = base - height, endY = base),
                 )
-                drawPath(outline, leaf.copy(alpha = if (week.met) 0.95f else 0.45f), style = Stroke(width = 1.5.dp.toPx()))
+                drawPath(outline, leaf.copy(alpha = strokeAlpha), style = Stroke(width = 1.5.dp.toPx()))
                 drawLine(leaf.copy(alpha = 0.6f), Offset(cx, base), Offset(cx, top + height * 0.08f), 1.dp.toPx())
                 drawLine(leaf.copy(alpha = 0.8f), Offset(cx, base), Offset(cx + 2.dp.toPx(), size.height), 1.5.dp.toPx())
-                if (goalChanged) {
-                    drawCircle(dot, radius = 3.dp.toPx(), center = Offset(size.width - 5.dp.toPx(), top + 4.dp.toPx()))
-                }
+            }
+            if (goalChanged) {
+                drawCircle(dot, radius = 3.dp.toPx(), center = Offset(size.width - 5.dp.toPx(), size.height * 0.04f + 4.dp.toPx()))
             }
         }
     }
