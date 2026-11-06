@@ -38,6 +38,10 @@ class HabitsViewModel @Inject constructor(
         viewModelScope.launch { repository.setAmount(id, date, amount) }
     }
 
+    fun setStageDone(habitId: String, date: LocalDate, stageId: String, done: Boolean) {
+        viewModelScope.launch { repository.setStageDone(habitId, date, stageId, done) }
+    }
+
     /** Debug builds only: a habit for every picture of the tree (see [addTreeStageHabits]). */
     fun addTreeStages(today: LocalDate, firstDay: DayOfWeek) {
         viewModelScope.launch { repository.addTreeStageHabits(today, firstDay) }

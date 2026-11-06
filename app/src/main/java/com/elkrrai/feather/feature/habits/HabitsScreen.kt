@@ -75,6 +75,8 @@ import com.elkrrai.feather.domain.habit.MAX_HABIT_TARGET
 import com.elkrrai.feather.domain.habit.canLog
 import com.elkrrai.feather.domain.habit.forWeek
 import com.elkrrai.feather.domain.habit.queuedAfter
+import com.elkrrai.feather.domain.habit.stagesDoneOn
+import com.elkrrai.feather.domain.habit.stagesFor
 import com.elkrrai.feather.domain.habit.week
 import com.elkrrai.feather.domain.habit.weekStartOf
 import com.elkrrai.feather.domain.habit.weeksMetInARow
@@ -154,6 +156,7 @@ fun HabitsScreen(
             onMenuClick = { coroutineScope.launch { drawerState.open() } },
             onNewHabit = onNewHabit,
             onEditHabit = onEditHabit,
+            onSetStageDone = viewModel::setStageDone,
             onSetAmount = viewModel::setAmount,
             onDelete = viewModel::delete,
         )
@@ -162,6 +165,7 @@ fun HabitsScreen(
 
 private sealed interface HabitDialog {
     data class Delete(val id: String) : HabitDialog
+    data class Stages(val id: String, val date: LocalDate) : HabitDialog
     data class SetAmount(val id: String, val date: LocalDate) : HabitDialog
 }
 
@@ -173,6 +177,7 @@ internal fun HabitsContent(
     onNewHabit: () -> Unit,
     onEditHabit: (habitId: String) -> Unit,
     onSetAmount: (String, LocalDate, Int) -> Unit,
+    onSetStageDone: (habitId: String, date: LocalDate, stageId: String, done: Boolean) -> Unit,
     onDelete: (String) -> Unit,
     modifier: Modifier = Modifier,
     today: LocalDate = LocalDate.now(),
@@ -229,6 +234,7 @@ internal fun HabitsContent(
                         locale = locale,
                         onLog = { date, amount -> onSetAmount(state.habit.id, date, amount) },
                         onPickAmount = { date -> dialog = HabitDialog.SetAmount(state.habit.id, date) },
+                        onPickStages = { date -> dialog = HabitDialog.Stages(state.habit.id, date) },
                         onEdit = { onEditHabit(state.habit.id) },
                         onDelete = { dialog = HabitDialog.Delete(state.habit.id) },
                     )
@@ -248,6 +254,20 @@ internal fun HabitsContent(
                     onDelete(state.habit.id)
                     dialog = null
                 },
+                onDismiss = { dialog = null },
+            )
+        }
+
+        is HabitDialog.Stages -> habits?.firstOrNull { it.habit.id == open.id }?.let { state ->
+            StageChecklistDialog(
+                title = stringResource(
+                    R.string.habit_amount_title,
+                    state.habit.name,
+                    open.date.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
+                ),
+                stages = state.stagesFor(weekStart),
+                done = state.stagesDoneOn(open.date),
+                onToggle = { stage, done -> onSetStageDone(state.habit.id, open.date, stage.id, done) },
                 onDismiss = { dialog = null },
             )
         }
@@ -280,6 +300,7 @@ private fun HabitCard(
     locale: Locale,
     onLog: (LocalDate, Int) -> Unit,
     onPickAmount: (LocalDate) -> Unit,
+    onPickStages: (LocalDate) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -289,6 +310,8 @@ private fun HabitCard(
     val queued = state.goals.queuedAfter(weekStart)
     val inARow = state.weeksMetInARow(weekStart)
     val daily = goal?.dailyTarget ?: 1
+    // a habit with named times is logged by ticking them, not by counting taps
+    val staged = state.stagesFor(weekStart).isNotEmpty()
 
     Surface(
         shape = RoundedCornerShape(20.dp),
@@ -344,12 +367,13 @@ private fun HabitCard(
                             fullName = day.date.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
                             onTap = {
                                 when {
+                                    staged -> onPickStages(day.date)
                                     state.habit.kind == HabitKind.AMOUNT -> onPickAmount(day.date)
                                     daily <= 1 -> onLog(day.date, if (day.amount > 0) 0 else 1)
                                     else -> onLog(day.date, if (day.amount >= daily) 0 else day.amount + 1)
                                 }
                             },
-                            onLongTap = { onPickAmount(day.date) },
+                            onLongTap = { if (staged) onPickStages(day.date) else onPickAmount(day.date) },
                         )
                     }
                 }
