@@ -1,5 +1,14 @@
 package com.elkrrai.feather.feature.habits
 
+import com.elkrrai.feather.feature.tasklist.ReorderState
+import com.elkrrai.feather.feature.tasklist.DragHandle
+import androidx.compose.ui.zIndex
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -158,6 +167,7 @@ fun HabitsScreen(
             onEditHabit = onEditHabit,
             onSetStageDone = viewModel::setStageDone,
             onSetAmount = viewModel::setAmount,
+            onReorder = viewModel::reorder,
             onDelete = viewModel::delete,
         )
     }
@@ -180,6 +190,7 @@ internal fun HabitsContent(
     onSetStageDone: (habitId: String, date: LocalDate, stageId: String, done: Boolean) -> Unit,
     onDelete: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onReorder: (List<String>) -> Unit = {},
     today: LocalDate = LocalDate.now(),
 ) {
     val locale = LocalConfiguration.current.locales[0]
@@ -216,28 +227,55 @@ internal fun HabitsContent(
                 )
             }
 
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = Space.gutter,
-                    end = Space.gutter,
-                    top = padding.calculateTopPadding() + Space.x2,
-                    bottom = padding.calculateBottomPadding() + 96.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(Space.x3),
-            ) {
-                items(habits, key = { it.habit.id }) { state ->
-                    HabitCard(
-                        state = state,
-                        today = today,
-                        weekStart = weekStart,
-                        locale = locale,
-                        onLog = { date, amount -> onSetAmount(state.habit.id, date, amount) },
-                        onPickAmount = { date -> dialog = HabitDialog.SetAmount(state.habit.id, date) },
-                        onPickStages = { date -> dialog = HabitDialog.Stages(state.habit.id, date) },
-                        onEdit = { onEditHabit(state.habit.id) },
-                        onDelete = { dialog = HabitDialog.Delete(state.habit.id) },
-                    )
+            else -> {
+                // Cards can be dragged into any order: the list shows a local copy of the saved order, which the drag rearranges,
+                // and the new order of ids goes to the saved habits when the finger lifts.
+                val listState = rememberLazyListState()
+                val haptics = rememberHaptics()
+                val order = remember(habits) { mutableStateListOf<HabitState>().apply { addAll(habits) } }
+                val currentOnReorder by rememberUpdatedState(onReorder)
+                val reorder = remember(listState, order, haptics) {
+                    ReorderState(listState, order, { it.habit.id }, haptics) { ids -> currentOnReorder(ids) }
+                }
+                // one card has nothing to be put before or after
+                val canReorder = order.size > 1
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = Space.gutter,
+                        end = Space.gutter,
+                        top = padding.calculateTopPadding() + Space.x2,
+                        bottom = padding.calculateBottomPadding() + 96.dp,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(Space.x3),
+                ) {
+                    items(order, key = { it.habit.id }) { state ->
+                        val id = state.habit.id
+                        val index = order.indexOfFirst { it.habit.id == id }
+                        Box(
+                            if (reorder.draggingId == id) {
+                                Modifier.zIndex(1f).graphicsLayer { translationY = reorder.offset }
+                            } else {
+                                Modifier.animateItem()
+                            },
+                        ) {
+                            HabitCard(
+                                state = state,
+                                today = today,
+                                weekStart = weekStart,
+                                locale = locale,
+                                onLog = { date, amount -> onSetAmount(id, date, amount) },
+                                onPickAmount = { date -> dialog = HabitDialog.SetAmount(id, date) },
+                                onPickStages = { date -> dialog = HabitDialog.Stages(id, date) },
+                                onEdit = { onEditHabit(id) },
+                                onDelete = { dialog = HabitDialog.Delete(id) },
+                                dragHandle = if (canReorder) ({ DragHandle(reorder, id) }) else null,
+                                onMoveUp = if (canReorder && index > 0) ({ reorder.moveBy(id, -1) }) else null,
+                                onMoveDown = if (canReorder && index < order.lastIndex) ({ reorder.moveBy(id, 1) }) else null,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -303,8 +341,14 @@ private fun HabitCard(
     onPickStages: (LocalDate) -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    /** The grip that drags the card, shown only when there is more than one card. */
+    dragHandle: (@Composable () -> Unit)? = null,
+    onMoveUp: (() -> Unit)? = null,
+    onMoveDown: (() -> Unit)? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
+    val moveUpLabel = stringResource(R.string.action_move_up)
+    val moveDownLabel = stringResource(R.string.action_move_down)
     val progress = state.week(weekStart)
     val goal = progress.goal
     val queued = state.goals.queuedAfter(weekStart)
@@ -314,6 +358,13 @@ private fun HabitCard(
     val staged = state.stagesFor(weekStart).isNotEmpty()
 
     Surface(
+        modifier = Modifier.semantics {
+            // TalkBack: the same moves as the drag, without a finger
+            customActions = buildList {
+                if (onMoveUp != null) add(CustomAccessibilityAction(moveUpLabel) { onMoveUp(); true })
+                if (onMoveDown != null) add(CustomAccessibilityAction(moveDownLabel) { onMoveDown(); true })
+            }
+        },
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(1.dp, scheme.outlineVariant),
@@ -325,6 +376,7 @@ private fun HabitCard(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f).padding(vertical = Space.x2),
                 )
+                dragHandle?.invoke()
                 OverflowButton(
                     actions = listOf(
                         MenuAction(stringResource(R.string.habit_edit)) { onEdit() },

@@ -50,6 +50,9 @@ interface HabitDao {
     @Upsert
     suspend fun upsertHabit(habit: HabitEntity)
 
+    @Query("UPDATE habits SET sortOrder = :sortOrder, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun setSortOrder(id: String, sortOrder: Long, updatedAt: Long)
+
     @Upsert
     suspend fun upsertGoal(goal: HabitGoalEntity)
 

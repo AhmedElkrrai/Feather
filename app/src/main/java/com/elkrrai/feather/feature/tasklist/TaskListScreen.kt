@@ -516,7 +516,7 @@ fun TaskListContent(
     val currentOnSortChange by rememberUpdatedState(onSortChange)
     val currentSort by rememberUpdatedState(state.sort)
     val reorder = remember(listState, order, haptics) {
-        ReorderState(listState, order, haptics) { ids ->
+        ReorderState(listState, order, Task::id, haptics) { ids ->
             currentOnReorder(ids)
             if (currentSort != TaskSort.MANUAL) currentOnSortChange(TaskSort.MANUAL)
         }

@@ -37,6 +37,12 @@ interface HabitRepository {
      */
     suspend fun setStagesDone(habitId: String, date: LocalDate, stageIds: Set<String>)
 
+    /**
+     * Puts the habits in the order of [orderedIds]. The order lives in the habits' own sort values, and each habit that moved counts as
+     * edited, so a backup merge keeps the order that was made last.
+     */
+    suspend fun reorderHabits(orderedIds: List<String>)
+
     /** A soft delete, like a task: the rows stay and the habit is no longer listed. */
     suspend fun delete(id: String)
 }

@@ -19,7 +19,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
-import com.elkrrai.feather.domain.model.Task
 import com.elkrrai.feather.ui.Haptics
 
 /**
@@ -31,9 +30,11 @@ import com.elkrrai.feather.ui.Haptics
  * these rows (no headers), so a row's index in the list is its index in [order].
  */
 @Stable
-class ReorderState(
+class ReorderState<T>(
     private val listState: LazyListState,
-    private val order: SnapshotStateList<Task>,
+    private val order: SnapshotStateList<T>,
+    /** The id of a row: what the list is keyed by and what [onCommit] receives. */
+    private val idOf: (T) -> String,
     private val haptics: Haptics,
     private val onCommit: (List<String>) -> Unit,
 ) {
@@ -71,8 +72,8 @@ class ReorderState(
         val target = info.visibleItemsInfo.firstOrNull {
             it.key != id && center >= it.offset && center <= it.offset + it.size
         } ?: return
-        val from = order.indexOfFirst { it.id == id }
-        val to = order.indexOfFirst { it.id == target.key }
+        val from = order.indexOfFirst { idOf(it) == id }
+        val to = order.indexOfFirst { idOf(it) == target.key }
         if (from < 0 || to < 0) return
 
         order.add(to, order.removeAt(from))
@@ -85,16 +86,16 @@ class ReorderState(
         val id = draggingId ?: return
         draggingId = null
         offset = 0f
-        if (id.isNotEmpty()) onCommit(order.map { it.id })
+        if (id.isNotEmpty()) onCommit(order.map(idOf))
     }
 
     /** Moves a row one place up or down without dragging (the TalkBack actions "Move up" and "Move down"). */
     fun moveBy(id: String, steps: Int) {
-        val from = order.indexOfFirst { it.id == id }
+        val from = order.indexOfFirst { idOf(it) == id }
         val to = from + steps
         if (from < 0 || to !in order.indices) return
         order.add(to, order.removeAt(from))
-        onCommit(order.map { it.id })
+        onCommit(order.map(idOf))
     }
 
     private companion object {
@@ -105,13 +106,13 @@ class ReorderState(
 
 /** The grip at the end of a row; dragging it up or down moves the row. */
 @Composable
-fun DragHandle(reorder: ReorderState, taskId: String, modifier: Modifier = Modifier) {
+fun DragHandle(reorder: ReorderState<*>, id: String, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(48.dp)
-            .pointerInput(taskId, reorder) {
+            .pointerInput(id, reorder) {
                 detectVerticalDragGestures(
-                    onDragStart = { reorder.start(taskId) },
+                    onDragStart = { reorder.start(id) },
                     onVerticalDrag = { change, amount ->
                         change.consume()
                         reorder.drag(amount)

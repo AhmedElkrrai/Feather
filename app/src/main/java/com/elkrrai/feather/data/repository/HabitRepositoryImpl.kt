@@ -147,6 +147,19 @@ class HabitRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun reorderHabits(orderedIds: List<String>) {
+        tx.run {
+            val rows = orderedIds.distinct().mapNotNull { dao.getHabit(it) }
+            // The slots are the habits' own sort values, strictly increasing so two habits never tie.
+            val slots = rows.map { it.sortOrder }.sorted().toMutableList()
+            for (i in 1 until slots.size) if (slots[i] <= slots[i - 1]) slots[i] = slots[i - 1] + 1
+            val now = clock.millis()
+            rows.forEachIndexed { index, row ->
+                if (row.sortOrder != slots[index]) dao.setSortOrder(row.id, slots[index], now)
+            }
+        }
+    }
+
     override suspend fun setAmount(id: String, date: LocalDate, amount: Int) {
         if (dao.getHabit(id) == null) return
         dao.upsertEntry(HabitEntryEntity(id, date.toString(), amount.coerceIn(0, MAX_HABIT_TARGET), clock.millis()))

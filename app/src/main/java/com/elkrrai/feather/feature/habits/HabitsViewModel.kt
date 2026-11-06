@@ -47,6 +47,11 @@ class HabitsViewModel @Inject constructor(
         viewModelScope.launch { repository.addTreeStageHabits(today, firstDay) }
     }
 
+    /** The habits dragged into a new order. */
+    fun reorder(orderedIds: List<String>) {
+        viewModelScope.launch { repository.reorderHabits(orderedIds) }
+    }
+
     fun delete(id: String) {
         viewModelScope.launch { repository.delete(id) }
     }
