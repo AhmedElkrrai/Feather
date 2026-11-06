@@ -175,12 +175,19 @@ fun RhythmContent(
                         }
                     },
                 )
-                SegmentedSwitch(
-                    options = listOf(stringResource(R.string.rhythm_tab_tasks), stringResource(R.string.rhythm_tab_habits)),
-                    selected = tab,
-                    onSelect = { tab = it },
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-                )
+                // on the screen's own color, so the cards that scroll up behind it are hidden, not seen through the gaps around the switch
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                ) {
+                    SegmentedSwitch(
+                        options = listOf(stringResource(R.string.rhythm_tab_tasks), stringResource(R.string.rhythm_tab_habits)),
+                        selected = tab,
+                        onSelect = { tab = it },
+                    )
+                }
             }
         },
     ) { padding ->
