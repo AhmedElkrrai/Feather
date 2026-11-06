@@ -155,9 +155,15 @@ fun RhythmContent(
     val stats = remember(state.records, state.pausedDays, today, firstDay) {
         rhythmStats(state.records, today, zone, firstDay, state.pausedDays)
     }
-    val feather = remember(state.records, state.weeklyFeather, today, firstDay) {
+    val realFeather = remember(state.records, state.weeklyFeather, today, firstDay) {
         if (state.weeklyFeather && isFeatherDay(today, firstDay)) weeklyFeather(state.records, today, zone, firstDay) else null
     }
+    // debug builds can force the card (see DebugFeather); a release build never has an override
+    val forcedDays by DebugFeather.days.collectAsStateWithLifecycle()
+    val debuggable = LocalContext.current.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
+    val feather = forcedDays?.takeIf { debuggable }?.let { n ->
+        WeeklyFeather(today.minusWeeks(1), List(7) { day -> if (day < n) 1 else 0 })
+    } ?: realFeather
     val entry = rememberEntry()
     val haptics = rememberHaptics()
     var showPause by remember { mutableStateOf(false) }

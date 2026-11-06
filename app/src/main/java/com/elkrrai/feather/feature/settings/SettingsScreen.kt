@@ -1,5 +1,12 @@
 package com.elkrrai.feather.feature.settings
 
+import androidx.compose.ui.text.style.TextAlign
+import com.elkrrai.feather.feature.rhythm.WeeklyFeatherView
+import com.elkrrai.feather.feature.rhythm.DebugFeather
+import com.elkrrai.feather.domain.rhythm.WeeklyFeather
+import androidx.compose.material3.FilterChip
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -458,6 +465,8 @@ fun SettingsContent(
 
         SettingsDialog.About -> AboutDialog(versionName = versionName, onDismiss = { dialog = null })
 
+        SettingsDialog.Feathers -> DebugFeathersDialog(onDismiss = { dialog = null })
+
         SettingsDialog.Privacy -> PrivacyDialog(
             appLock = settings.appLock,
             available = appLockAvailable,
@@ -505,6 +514,43 @@ private fun PrivacyDialog(
                     )
                 }
                 Switch(checked = appLock && available, onCheckedChange = onChange, enabled = available)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) }
+        },
+    )
+}
+
+/**
+ * Debug builds only: all eight weekly feathers as the card shows them, labelled with the days that earn each, and a way to force the card on
+ * Progress to show one of them on any day.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DebugFeathersDialog(onDismiss: () -> Unit) {
+    val forced by DebugFeather.days.collectAsStateWithLifecycle()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.debug_feathers)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    for (days in 0..7) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            WeeklyFeatherView(WeeklyFeather(LocalDate.now(), List(7) { if (it < days) 1 else 0 }), size = 72.dp)
+                            Text(days.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+                Text(stringResource(R.string.debug_feathers_card), style = MaterialTheme.typography.labelLarge)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = forced == null, onClick = { DebugFeather.days.value = null }, label = { Text(stringResource(R.string.debug_feathers_off)) })
+                    for (days in 0..7) {
+                        FilterChip(selected = forced == days, onClick = { DebugFeather.days.value = days }, label = { Text(days.toString()) })
+                    }
+                }
+                Text(stringResource(R.string.debug_feathers_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
         confirmButton = {
@@ -663,6 +709,12 @@ private fun SettingsHome(
                 supporting = stringResource(R.string.debug_add_tree_stages_summary),
                 onClick = onAddTreeStages,
             )
+            SettingsRow(
+                title = stringResource(R.string.debug_feathers),
+                summary = null,
+                supporting = stringResource(R.string.debug_feathers_summary),
+                onClick = { onOpenDialog(SettingsDialog.Feathers) },
+            )
         }
     }
 }
@@ -764,7 +816,7 @@ private fun CategoryRow(
 }
 
 /** Which settings dialog is open. An enum so it survives rotation with `rememberSaveable`. */
-private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Theme, BackupStyle, LanguageTime, About, Privacy }
+private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Theme, BackupStyle, LanguageTime, About, Privacy, Feathers }
 
 @Composable
 internal fun SectionTitle(text: String) {

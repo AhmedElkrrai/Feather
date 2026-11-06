@@ -674,6 +674,11 @@
     <string name="habit_garden_legend">One leaf for each week. A glowing leaf met its goal. A dot is a week the goal changed. Tap a leaf to open that week.</string>
     <string name="habit_garden_week_days">%1$s: %2$d of %3$d days</string>
     <string name="habit_garden_week_amount">%1$s: %2$d of %3$d %4$s</string>
+    <string name="debug_feathers">Weekly feathers (debug build)</string>
+    <string name="debug_feathers_summary">See all eight feathers, or show one on Progress on any day.</string>
+    <string name="debug_feathers_card">Show on Progress as if this many days had a finished task</string>
+    <string name="debug_feathers_off">Off</string>
+    <string name="debug_feathers_hint">Open Progress, Tasks tab: the Last week\'s feather card appears with that feather. It resets when the app is closed.</string>
     <string name="debug_add_tree_stages" translatable="false">Add tree stage habits (debug build)</string>
     <string name="debug_add_tree_stages_summary" translatable="false">Habits Tree 0 to Tree 13 (a stage each), Forest 14, 27, 40, 66 and 80 (finished trees behind a new one), and five that show in Today (Today: Pray, Meds, Workout, Water, Read). Open them in Progress, Habits. Delete them from the Habits screen.</string>
     <string name="counter_of">%1$d / %2$d</string>

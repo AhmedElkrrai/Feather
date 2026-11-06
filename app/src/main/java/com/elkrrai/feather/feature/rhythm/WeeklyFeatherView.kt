@@ -1,5 +1,6 @@
 package com.elkrrai.feather.feature.rhythm
 
+import androidx.compose.ui.unit.Dp
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,12 +41,13 @@ internal fun featherDrawable(activeDays: Int): Int = when (activeDays.coerceIn(0
 internal fun WeeklyFeatherView(
     feather: WeeklyFeather,
     modifier: Modifier = Modifier,
+    size: Dp = 120.dp,
 ) {
     Box(
         modifier = modifier
-            .size(120.dp)
-            .background(Color(0xFFE8E3D8), RoundedCornerShape(24.dp))
-            .padding(12.dp)
+            .size(size)
+            .background(Color(0xFFE8E3D8), RoundedCornerShape(size / 5))
+            .padding(size / 10)
             .clearAndSetSemantics { },
     ) {
         Image(
