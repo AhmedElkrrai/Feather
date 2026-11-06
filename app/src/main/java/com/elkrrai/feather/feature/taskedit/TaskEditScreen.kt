@@ -68,7 +68,6 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -93,6 +92,7 @@ import com.elkrrai.feather.reminders.startActivitySafely
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
 import com.elkrrai.feather.ui.components.DurationDialog
+import com.elkrrai.feather.ui.components.FieldSection
 import com.elkrrai.feather.ui.components.TimeOfDayDialog
 import com.elkrrai.feather.ui.components.rememberReminderHealth
 import com.elkrrai.feather.ui.format.formatDueDate
@@ -647,19 +647,6 @@ private fun CounterEditor(state: TaskEditUiState, actions: TaskEditActions) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-    }
-}
-
-@Composable
-private fun FieldSection(label: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.semantics { heading() },
-        )
-        content()
     }
 }
 
