@@ -129,10 +129,11 @@ private fun formatBackupTime(epochMillis: Long, locale: Locale): String =
 /** Asks how an imported backup is combined with what is on the phone; "replace" needs a warning. */
 @Composable
 internal fun ImportModeDialog(
-    onConfirm: (ImportMode) -> Unit,
+    onConfirm: (ImportMode, restoreSettings: Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var mode by rememberSaveable { mutableStateOf(ImportMode.MERGE) }
+    var restoreSettings by rememberSaveable { mutableStateOf(true) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.backup_import_title)) },
@@ -156,10 +157,25 @@ internal fun ImportModeDialog(
                     detailIsWarning = true,
                     onSelect = { mode = ImportMode.REPLACE },
                 )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.backup_import_settings), style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            text = stringResource(R.string.backup_import_settings_detail),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(checked = restoreSettings, onCheckedChange = { restoreSettings = it })
+                }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(mode) }) { Text(stringResource(R.string.action_import)) }
+            TextButton(onClick = { onConfirm(mode, restoreSettings) }) { Text(stringResource(R.string.action_import)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }

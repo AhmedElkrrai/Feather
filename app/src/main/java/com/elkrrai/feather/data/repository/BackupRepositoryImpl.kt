@@ -8,12 +8,14 @@ import com.elkrrai.feather.data.backup.toEntity
 import com.elkrrai.feather.data.backup.toRecord
 import com.elkrrai.feather.data.db.BackupDao
 import com.elkrrai.feather.data.db.TransactionRunner
+import com.elkrrai.feather.domain.backup.BackupPreferences
 import com.elkrrai.feather.domain.backup.BackupRepository
 import com.elkrrai.feather.domain.backup.ImportMode
 import com.elkrrai.feather.domain.backup.ImportSummary
 import com.elkrrai.feather.domain.backup.TaskCsv
 import com.elkrrai.feather.domain.repository.InboxRepository
 import com.elkrrai.feather.domain.repository.TaskRepository
+import androidx.appcompat.app.AppCompatDelegate
 import java.time.Clock
 import javax.inject.Inject
 
@@ -23,13 +25,14 @@ class BackupRepositoryImpl @Inject constructor(
     private val clock: Clock,
     private val taskRepository: TaskRepository,
     private val inboxRepository: InboxRepository,
+    private val preferences: BackupPreferences,
 ) : BackupRepository {
 
     override suspend fun exportJson(): String = BackupCodec.encode(tx.run { readAll() })
 
     override suspend fun exportCsv(): String = TaskCsv.build(taskRepository.getActiveTasks())
 
-    override suspend fun importJson(text: String, mode: ImportMode): ImportSummary {
+    override suspend fun importJson(text: String, mode: ImportMode, restoreSettings: Boolean): ImportSummary {
         // Decoding comes first: a file that cannot be used must not change anything.
         val incoming = BackupCodec.decode(text)
         // Every imported task goes into the Inbox, which has to be there first.
@@ -43,9 +46,13 @@ class BackupRepositoryImpl @Inject constructor(
             }
             apply(BackupMerger.plan(local, incoming))
         }
+        val restored = restoreSettings && incoming.settings.isNotEmpty()
+        if (restored) preferences.restoreBackedUpPreferences(incoming.settings)
         return ImportSummary(
             tasks = incoming.tasks.count { it.parentTaskId == null && it.deletedAt == null },
             tags = incoming.tags.count { it.deletedAt == null },
+            settingsRestored = restored,
+            language = incoming.language.takeIf { restored },
         )
     }
 
@@ -59,6 +66,8 @@ class BackupRepositoryImpl @Inject constructor(
         habits = dao.habits().map { it.toRecord() },
         habitGoals = dao.habitGoals().map { it.toRecord() },
         habitEntries = dao.habitEntries().map { it.toRecord() },
+        settings = preferences.backedUpPreferences(),
+        language = AppCompatDelegate.getApplicationLocales().toLanguageTags(),
     )
 
     private suspend fun wipe() {

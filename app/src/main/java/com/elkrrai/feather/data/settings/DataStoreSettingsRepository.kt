@@ -17,6 +17,7 @@ import com.elkrrai.feather.domain.settings.TimeFormat
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import java.time.LocalDate
@@ -257,6 +258,35 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit { it[Keys.rhythmPausedDays] = days.map { day -> day.toString() }.toSet() }
     }
 
+    override suspend fun backedUpPreferences(): Map<String, String> {
+        val prefs = dataStore.data.first()
+        val out = LinkedHashMap<String, String>()
+        fun <T : Any> add(keys: List<Preferences.Key<T>>) = keys.forEach { key ->
+            prefs[key]?.let { value -> PrefCodec.encode(value)?.let { out[key.name] = it } }
+        }
+        add(booleanKeys)
+        add(intKeys)
+        add(stringKeys)
+        add(setKeys)
+        return out
+    }
+
+    override suspend fun restoreBackedUpPreferences(values: Map<String, String>) {
+        dataStore.edit { prefs ->
+            // A value is taken only for a key this app knows and only when its type is the key's own: a file from another
+            // version must never put the wrong kind of value under a name, which would break every later read.
+            fun <T : Any> restore(keys: List<Preferences.Key<T>>, cast: (Any) -> T?) = keys.forEach { key ->
+                val incoming = values[key.name]?.let { PrefCodec.decode(it) }?.let(cast) ?: return@forEach
+                val merged = cast(mergedPreference(key.name, prefs[key], incoming)) ?: return@forEach
+                prefs[key] = merged
+            }
+            restore(booleanKeys) { it as? Boolean }
+            restore(intKeys) { it as? Int }
+            restore(stringKeys) { it as? String }
+            restore(setKeys) { (it as? Set<*>)?.filterIsInstance<String>()?.toSet() }
+        }
+    }
+
     /** A stored enum by name; a missing or unknown name (say, from a newer version) gives [default]. */
     private inline fun <reified E : Enum<E>> Preferences.enumOf(key: Preferences.Key<String>, default: E): E =
         this[key]?.let { name -> enumValues<E>().firstOrNull { it.name == name } } ?: default
@@ -265,4 +295,30 @@ class DataStoreSettingsRepository @Inject constructor(
 
     private fun Int.toTime(): LocalTime =
         LocalTime.of((this / 60).coerceIn(0, 23), (this % 60).coerceIn(0, 59))
+
+    companion object {
+        // Every preference is in one of these lists, by the type of its value, or in [deviceOnly]. A test fails when a new key is in neither.
+        private val booleanKeys = listOf(
+            Keys.dailySummaryEnabled, Keys.pureBlack, Keys.dynamicColor, Keys.haptics, Keys.menuHints, Keys.welcomeSeen,
+            Keys.birdAnimations, Keys.reduceMotion, Keys.celebrations, Keys.weeklyFeather, Keys.voiceUsed, Keys.backedUp,
+            Keys.morningCard, Keys.eveningCard,
+        )
+        private val intKeys = listOf(
+            Keys.defaultReminderMinute, Keys.snoozeMinutes, Keys.dailySummaryMinute, Keys.habitSwipeHintsShown,
+            Keys.nestScarf, Keys.nestGlasses, Keys.nestHat, Keys.nestPot,
+        )
+        private val stringKeys = listOf(Keys.themeMode, Keys.timeFormat, Keys.backupStyle, Keys.habitSwipeHintWeek, Keys.nestStyle)
+        private val setKeys = listOf(Keys.habitTreesSeen, Keys.rhythmPausedDays, Keys.nestUnlocked, Keys.nestSeen)
+
+        /** Left out of a backup on purpose: they only make sense on this phone (a folder permission, the lock, today's dismissed cards). */
+        private val deviceOnly = listOf<Preferences.Key<*>>(
+            Keys.autoBackupEnabled, Keys.backupFolder, Keys.lastBackupAt, Keys.appLock,
+            Keys.morningCardDismissedOn, Keys.eveningCardDismissedOn,
+        )
+
+        internal fun backedUpNames(): Set<String> =
+            (booleanKeys + intKeys + stringKeys + setKeys).map { it.name }.toSet()
+
+        internal fun deviceOnlyNames(): Set<String> = deviceOnly.map { it.name }.toSet()
+    }
 }

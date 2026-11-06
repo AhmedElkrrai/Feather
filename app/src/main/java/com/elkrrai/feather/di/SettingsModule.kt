@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.elkrrai.feather.data.settings.DataStoreSettingsRepository
+import com.elkrrai.feather.domain.backup.BackupPreferences
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import dagger.Binds
 import dagger.Module
@@ -21,6 +22,9 @@ abstract class SettingsModule {
 
     @Binds
     abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
+
+    @Binds
+    abstract fun bindBackupPreferences(impl: DataStoreSettingsRepository): BackupPreferences
 
     companion object {
         /** One DataStore instance per file; a singleton keeps it that way. */

@@ -320,9 +320,11 @@
     <!-- Backup and data -->
     <string name="settings_section_backup">Backup and data</string>
     <string name="backup_export">Export backup</string>
-    <string name="backup_export_summary">Save all your tasks and lists to a file you can keep or move to another phone.</string>
+    <string name="backup_export_summary">Save your tasks, habits and settings to a file you can keep or move to another phone.</string>
     <string name="backup_import">Import backup</string>
-    <string name="backup_import_summary">Bring in tasks from a Feather backup file.</string>
+    <string name="backup_import_summary">Bring in tasks, habits and settings from a Feather backup file.</string>
+    <string name="backup_import_settings">Also restore my settings</string>
+    <string name="backup_import_settings_detail">Theme, reminder times, the nest and so on. Skipped if the file has none.</string>
     <string name="backup_csv">Export tasks as CSV</string>
     <string name="backup_csv_summary">A list of your tasks for a spreadsheet.</string>
     <string name="backup_import_title">Import backup</string>

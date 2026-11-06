@@ -13,6 +13,7 @@ import com.elkrrai.feather.data.repository.InboxRepositoryImpl
 import com.elkrrai.feather.data.repository.TagRepositoryImpl
 import com.elkrrai.feather.data.repository.TaskRepositoryImpl
 import com.elkrrai.feather.domain.backup.BackupFormatException
+import com.elkrrai.feather.domain.backup.BackupPreferences
 import com.elkrrai.feather.domain.backup.ImportMode
 import com.elkrrai.feather.domain.model.Priority
 import com.elkrrai.feather.domain.model.Reminder
@@ -51,7 +52,14 @@ class BackupRepositoryTest {
         tasks = TaskRepositoryImpl(db.taskDao(), db.reminderDao(), db.completionDao(), tx, clock)
         inboxRepo = InboxRepositoryImpl(db.listDao(), clock)
         tags = TagRepositoryImpl(db.tagDao(), clock)
-        backup = BackupRepositoryImpl(db.backupDao(), tx, clock, tasks, inboxRepo)
+        backup = BackupRepositoryImpl(
+            db.backupDao(), tx, clock, tasks, inboxRepo,
+            object : BackupPreferences {
+                override suspend fun backedUpPreferences(): Map<String, String> = emptyMap()
+
+                override suspend fun restoreBackedUpPreferences(values: Map<String, String>) = Unit
+            },
+        )
         inboxRepo.ensureInbox()
     }
 

@@ -202,8 +202,8 @@ fun SettingsScreen(
 
     pendingImport?.let { picked ->
         ImportModeDialog(
-            onConfirm = { mode ->
-                backupViewModel.importFrom(Uri.parse(picked), mode)
+            onConfirm = { mode, restoreSettings ->
+                backupViewModel.importFrom(Uri.parse(picked), mode, restoreSettings)
                 pendingImport = null
             },
             onDismiss = { pendingImport = null },

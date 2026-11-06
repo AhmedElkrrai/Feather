@@ -28,6 +28,10 @@ data class BackupFile(
     val habits: List<HabitRecord> = emptyList(),
     val habitGoals: List<HabitGoalRecord> = emptyList(),
     val habitEntries: List<HabitEntryRecord> = emptyList(),
+    /** The preferences, as text by name (see `BackupPreferences`); absent in older files. */
+    val settings: Map<String, String> = emptyMap(),
+    /** The app language as a language tag, empty for the phone's own; null in older files. */
+    val language: String? = null,
 ) {
     companion object {
         const val FORMAT = "feather-backup"

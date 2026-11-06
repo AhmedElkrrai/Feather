@@ -1,6 +1,8 @@
 package com.elkrrai.feather.feature.settings
 
 import android.net.Uri
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elkrrai.feather.data.backup.AutoBackup
@@ -57,10 +59,19 @@ class BackupViewModel @Inject constructor(
         files.write(uri, backup.exportCsv())
     }
 
-    fun importFrom(uri: Uri, mode: ImportMode) {
+    fun importFrom(uri: Uri, mode: ImportMode, restoreSettings: Boolean = true) {
         launchAction {
-            val summary = backup.importJson(files.read(uri), mode)
+            val summary = backup.importJson(files.read(uri), mode, restoreSettings)
+            summary.language?.let(::applyLanguage)
             BackupResult.Imported(summary)
+        }
+    }
+
+    /** The language of a restored backup; the activity is recreated only when it differs from the one in use. */
+    private fun applyLanguage(tags: String) {
+        val wanted = LocaleListCompat.forLanguageTags(tags)
+        if (wanted.toLanguageTags() != AppCompatDelegate.getApplicationLocales().toLanguageTags()) {
+            AppCompatDelegate.setApplicationLocales(wanted)
         }
     }
 
