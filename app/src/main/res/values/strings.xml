@@ -84,6 +84,7 @@
     <string name="delete_tag_message">“%1$s” will be removed from all tasks.</string>
     <string name="tags_title">Tags</string>
     <string name="tab_all">All</string>
+    <string name="tab_back_to">‹ %1$s</string>
     <string name="tab_all_in">All %1$s</string>
     <string name="tab_no_tag">No tag</string>
     <string name="tags_row_summary">Rename, delete and arrange your tags. A tag can sit under another.</string>

@@ -29,9 +29,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.PrimaryTabRow
+import com.elkrrai.feather.ui.components.SegmentedSwitch
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -177,10 +176,12 @@ fun RhythmContent(
                         }
                     },
                 )
-                PrimaryTabRow(selectedTabIndex = tab) {
-                    Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.rhythm_tab_tasks)) })
-                    Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.rhythm_tab_habits)) })
-                }
+                SegmentedSwitch(
+                    options = listOf(stringResource(R.string.rhythm_tab_tasks), stringResource(R.string.rhythm_tab_habits)),
+                    selected = tab,
+                    onSelect = { tab = it },
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                )
             }
         },
     ) { padding ->

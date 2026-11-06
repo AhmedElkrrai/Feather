@@ -80,6 +80,7 @@
     <string name="delete_tag_message">ستتم إزالة «%1$s» من جميع المهام.</string>
     <string name="tags_title">الوسوم</string>
     <string name="tab_all">الكل</string>
+    <string name="tab_back_to">› %1$s</string>
     <string name="tab_all_in">كل %1$s</string>
     <string name="tab_no_tag">بلا وسم</string>
     <string name="tags_row_summary">أعد تسمية وسومك أو احذفها أو رتّبها. يمكن وضع وسم تحت وسم آخر.</string>
