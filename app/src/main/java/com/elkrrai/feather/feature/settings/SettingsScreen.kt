@@ -513,7 +513,7 @@ private fun AboutDialog(versionName: String, onDismiss: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = stringResource(R.string.settings_open_source, SOURCE_CODE_LINK),
+                    text = stringResource(R.string.settings_open_source, "https://$SOURCE_CODE_LINK"),
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable {
                         context.startActivitySafely(Intent(Intent.ACTION_VIEW, Uri.parse("https://$SOURCE_CODE_LINK")))
@@ -851,5 +851,5 @@ private fun SnoozeLengthDialog(
     )
 }
 
-/** Where the code of the app is, shown in About without the scheme. */
+/** Where the code of the app is, without the scheme; About shows it with https:// and opens it. */
 private const val SOURCE_CODE_LINK = "github.com/AhmedElkrrai/Feather"
