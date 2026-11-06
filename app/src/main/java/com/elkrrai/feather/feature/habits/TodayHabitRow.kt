@@ -2,6 +2,7 @@ package com.elkrrai.feather.feature.habits
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -247,7 +248,7 @@ private fun HabitTodayRow(
                     val quick = System.currentTimeMillis() - started < 220
                     scope.launch {
                         if (up != null && quick) progress.animateTo(0.24f, tween(110))
-                        progress.animateTo(0f, spring(dampingRatio = 0.6f, stiffness = 300f))
+                        progress.animateTo(0f, tween(220, easing = FastOutSlowInEasing))
                     }
                     // a tap or a short press teaches the gesture
                     if (up != null) tip = true
@@ -266,7 +267,7 @@ private fun HabitTodayRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .graphicsLayer {
-                    val scale = 1f - 0.018f * progress.value
+                    val scale = 1f - 0.018f * progress.value.coerceIn(0f, 1f)
                     scaleX = scale
                     scaleY = scale
                 }
@@ -283,7 +284,7 @@ private fun HabitTodayRow(
                     if (progress.value > 0f) {
                         drawCircle(
                             leaf.copy(alpha = 0.30f),
-                            radius = progress.value * (size.width + size.height),
+                            radius = progress.value.coerceIn(0f, 1f) * (size.width + size.height),
                             center = Offset(32.dp.toPx(), 31.dp.toPx()),
                         )
                     }
@@ -391,7 +392,7 @@ private fun HoldRing(
         val stroke = 2.5.dp.toPx()
         val radius = size.minDimension / 2 - stroke
         drawCircle(leaf.copy(alpha = 0.30f), radius, style = Stroke(stroke))
-        val held = progress()
+        val held = progress().coerceIn(0f, 1f)
         if (held > 0f && !done) {
             drawArc(
                 color = leaf,
