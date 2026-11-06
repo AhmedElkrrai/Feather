@@ -136,10 +136,8 @@
     <string name="settings_home_today_summary">Cards, weekly feather, habits</string>
     <string name="settings_home_lock_on">App lock is on</string>
     <string name="settings_home_lock_off">App lock is off</string>
-    <string name="settings_home_warning">Reminders may arrive late on this phone</string>
     <string name="settings_home_warning_notifications">Notifications are off, so reminders cannot reach you</string>
     <string name="settings_home_warning_alarms">Alarms and reminders are off, so reminders may be late</string>
-    <string name="settings_home_warning_battery">Battery saving may delay your reminders</string>
     <string name="settings_home_warning_fix">Fix</string>
     <string name="settings_section_reminders">Reminders</string>
     <string name="settings_default_time">Default reminder time</string>
@@ -149,7 +147,7 @@
     <string name="settings_daily_summary">Daily summary</string>
     <string name="settings_daily_summary_summary">A morning notification with what is due today.</string>
     <string name="settings_daily_summary_time">Summary time</string>
-    <string name="settings_reliability">Reminder reliability</string>
+    <string name="settings_reliability">Reminder permissions</string>
     <string name="settings_reliability_ok">Everything looks good</string>
     <string name="settings_reliability_attention">Needs attention</string>
     <string name="settings_language">Language</string>
@@ -159,7 +157,7 @@
     </plurals>
 
     <!-- Reliability helper -->
-    <string name="reliability_title">Reminder reliability</string>
+    <string name="reliability_title">Reminder permissions</string>
     <string name="reliability_intro">Phones often hold back notifications to save battery. Check these items so reminders reach you on time.</string>
     <string name="reliability_all_good">Everything looks good. Send a test reminder below to be sure.</string>
     <string name="reliability_status_ok">OK</string>

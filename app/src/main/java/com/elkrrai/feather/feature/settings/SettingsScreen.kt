@@ -162,7 +162,7 @@ fun SettingsScreen(
         reminderWarning = when {
             !health.canNotify -> R.string.settings_home_warning_notifications
             !health.exactAlarmsAllowed -> R.string.settings_home_warning_alarms
-            else -> R.string.settings_home_warning_battery
+            else -> null
         },
         onBack = onBack,
         onOpenReliability = onOpenReliability,
@@ -244,8 +244,8 @@ fun SettingsScreen(
 fun SettingsContent(
     settings: AppSettings,
     remindersHealthy: Boolean,
-    /** What the warning on the first page says when [remindersHealthy] is false: the thing that is wrong. */
-    @StringRes reminderWarning: Int = R.string.settings_home_warning,
+    /** What the warning on the Reminders page says when a permission is missing, or null when none is. Battery saving is not a permission and gets no warning. */
+    @StringRes reminderWarning: Int? = null,
     onBack: () -> Unit,
     onOpenReliability: () -> Unit,
     onDefaultTimeChange: (LocalTime) -> Unit,
@@ -309,7 +309,7 @@ fun SettingsContent(
                     )
 
                     SettingsPage.Reminders -> {
-                        if (!remindersHealthy) ReminderWarningCard(reminderWarning, onOpenReliability)
+                        reminderWarning?.let { ReminderWarningCard(it, onOpenReliability) }
                         SettingsGroup {
                         SettingsRow(
                             first = true,
@@ -348,6 +348,7 @@ fun SettingsContent(
                             onClick = { dialog = SettingsDialog.SummaryTime },
                         )
                         SettingsRow(
+                            leadingIcon = R.drawable.ic_battery,
                             title = stringResource(R.string.settings_reliability),
                             summary = stringResource(
                                 if (remindersHealthy) R.string.settings_reliability_ok else R.string.settings_reliability_attention
@@ -746,6 +747,8 @@ internal fun SettingsRow(
     enabled: Boolean = true,
     /** The first row of a card has no line above it. */
     first: Boolean = false,
+    /** A small icon before the title. */
+    @DrawableRes leadingIcon: Int? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -762,6 +765,17 @@ internal fun SettingsRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (leadingIcon != null) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(scheme.primary.copy(alpha = 0.16f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(painter = painterResource(leadingIcon), contentDescription = null, tint = scheme.primary, modifier = Modifier.size(20.dp))
+                }
+            }
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
                 if (supporting != null) {

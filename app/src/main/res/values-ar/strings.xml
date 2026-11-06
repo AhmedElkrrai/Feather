@@ -144,10 +144,8 @@
     <string name="settings_home_today_summary">البطاقات والريشة الأسبوعية والعادات</string>
     <string name="settings_home_lock_on">قفل التطبيق مفعّل</string>
     <string name="settings_home_lock_off">قفل التطبيق متوقف</string>
-    <string name="settings_home_warning">قد تتأخر التذكيرات على هذا الهاتف</string>
     <string name="settings_home_warning_notifications">الإشعارات متوقفة، فلن تصلك التذكيرات</string>
     <string name="settings_home_warning_alarms">المنبهات والتذكيرات متوقفة، فقد تتأخر التذكيرات</string>
-    <string name="settings_home_warning_battery">توفير البطارية قد يؤخر تذكيراتك</string>
     <string name="settings_home_warning_fix">إصلاح</string>
     <string name="settings_section_reminders">التذكيرات</string>
     <string name="settings_default_time">وقت التذكير الافتراضي</string>
@@ -157,7 +155,7 @@
     <string name="settings_daily_summary">الملخص اليومي</string>
     <string name="settings_daily_summary_summary">إشعار صباحي بما يستحق اليوم.</string>
     <string name="settings_daily_summary_time">وقت الملخص</string>
-    <string name="settings_reliability">موثوقية التذكيرات</string>
+    <string name="settings_reliability">أذونات التذكير</string>
     <string name="settings_reliability_ok">كل شيء يبدو جيدًا</string>
     <string name="settings_reliability_attention">يحتاج إلى انتباه</string>
     <string name="settings_language">اللغة</string>
@@ -171,7 +169,7 @@
     </plurals>
 
     <!-- Reliability helper -->
-    <string name="reliability_title">موثوقية التذكيرات</string>
+    <string name="reliability_title">أذونات التذكير</string>
     <string name="reliability_intro">كثيرًا ما تؤخر الهواتف الإشعارات لتوفير البطارية. راجع هذه البنود لتصلك التذكيرات في وقتها.</string>
     <string name="reliability_all_good">كل شيء يبدو جيدًا. أرسل تذكيرًا تجريبيًا أدناه للتأكد.</string>
     <string name="reliability_status_ok">جيد</string>
