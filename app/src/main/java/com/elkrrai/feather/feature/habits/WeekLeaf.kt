@@ -121,9 +121,10 @@ fun WeekLeaf(
     fun width(t: Float) = if (botanical) botanicalWidth(t) else leafWidth(t)
     // the sawtooth factor of one edge at t; the seed tells the two edges apart
     fun edge(t: Float, seed: Float) = when (style) {
-        LeafStyle.Smooth -> 1f
         LeafStyle.Serrated -> tooth(t, 9, seed, 0.28f)
         LeafStyle.Botanical -> tooth(t, 26, seed, 0.055f)
+        // the smooth leaf; the frond, the sprig and the maple are drawn by ArtLeaf and never get here
+        else -> 1f
     }
     val locale = LocalConfiguration.current.locales[0]
     val season = rememberSeason()
@@ -167,9 +168,9 @@ fun WeekLeaf(
             val above = (t + radius / leafHeight).coerceAtMost(1f)
             // a toothed edge is, between its teeth, 0.72 (serrated) or 0.945 (botanical) of the smooth one
             val deepest = when (style) {
-                LeafStyle.Smooth -> 1f
                 LeafStyle.Serrated -> 0.72f
                 LeafStyle.Botanical -> 0.945f
+                else -> 1f
             }
             return halfMax * (minOf(width(below), width(above)) * deepest) - radius - 8.dp
         }
