@@ -1,17 +1,24 @@
 package com.elkrrai.feather.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.semantics.Role
@@ -33,6 +40,27 @@ fun FieldSection(label: String, content: @Composable () -> Unit) {
         )
         content()
     }
+}
+
+/**
+ * Asks before a form with unsaved changes is left. Returns what the back arrow should call; the system back gesture is guarded too.
+ * Without changes it leaves at once.
+ */
+@Composable
+fun rememberLeaveGuard(hasChanges: Boolean, onLeave: () -> Unit): () -> Unit {
+    var asking by rememberSaveable { mutableStateOf(false) }
+    val leave by rememberUpdatedState(onLeave)
+    BackHandler(enabled = hasChanges) { asking = true }
+    if (asking) {
+        AlertDialog(
+            onDismissRequest = { asking = false },
+            title = { Text(stringResource(R.string.discard_title)) },
+            text = { Text(stringResource(R.string.discard_message)) },
+            confirmButton = { TextButton(onClick = { asking = false; leave() }) { Text(stringResource(R.string.discard_confirm)) } },
+            dismissButton = { TextButton(onClick = { asking = false }) { Text(stringResource(R.string.discard_keep)) } },
+        )
+    }
+    return { if (hasChanges) asking = true else leave() }
 }
 
 /** A dimmed line under a setting that says what it does. */

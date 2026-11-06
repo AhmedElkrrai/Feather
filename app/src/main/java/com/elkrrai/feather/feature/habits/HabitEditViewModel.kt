@@ -23,6 +23,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -92,6 +95,14 @@ class HabitEditViewModel @Inject constructor(
 
     private var nextKey = 1L
 
+    /** The form as it was when it opened, to tell whether anything was changed. */
+    private var initial: HabitEditUiState? = if (habitId == null) HabitEditUiState(isLoading = false, isNew = true) else null
+
+    /** True once the form differs from how it opened, so leaving it asks first. */
+    val hasChanges: StateFlow<Boolean> = _uiState
+        .map { state -> initial?.let { state.copy(finished = false) != it } ?: false }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     /** The habit as it was when the form opened. */
     private var loaded: HabitState? = null
 
@@ -105,7 +116,7 @@ class HabitEditViewModel @Inject constructor(
                 }
                 loaded = habit
                 val draft = habit.toDraft(thisWeek())
-                _uiState.value = HabitEditUiState(
+                val opened = HabitEditUiState(
                     isLoading = false,
                     isNew = false,
                     name = draft.name,
@@ -122,6 +133,8 @@ class HabitEditViewModel @Inject constructor(
                     time = draft.time,
                     remind = draft.remind,
                 )
+                initial = opened
+                _uiState.value = opened
             }
         }
     }

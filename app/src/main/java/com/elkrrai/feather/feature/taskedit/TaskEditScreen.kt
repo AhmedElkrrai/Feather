@@ -95,6 +95,7 @@ import com.elkrrai.feather.ui.components.DurationDialog
 import com.elkrrai.feather.ui.components.FieldSection
 import com.elkrrai.feather.ui.components.ReminderWarning
 import com.elkrrai.feather.ui.components.TimeOfDayDialog
+import com.elkrrai.feather.ui.components.rememberLeaveGuard
 import com.elkrrai.feather.ui.components.rememberReminderHealth
 import com.elkrrai.feather.ui.format.formatDueDate
 import com.elkrrai.feather.ui.format.formatDueTime
@@ -172,6 +173,8 @@ fun TaskEditScreen(
     LaunchedEffect(state.finished) {
         if (state.finished) onBack()
     }
+    val hasChanges by viewModel.hasChanges.collectAsStateWithLifecycle()
+    val leave = rememberLeaveGuard(hasChanges && !state.finished, onBack)
     LaunchedEffect(state.duplicatedId) {
         state.duplicatedId?.let(onOpenTask)
     }
@@ -180,7 +183,7 @@ fun TaskEditScreen(
     TaskEditContent(
         state = state,
         actions = TaskEditActions(
-            onBack = onBack,
+            onBack = leave,
             onSave = viewModel::save,
             onTitleChange = viewModel::onTitleChange,
             onNotesChange = viewModel::onNotesChange,

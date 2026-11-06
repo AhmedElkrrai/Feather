@@ -5,6 +5,10 @@
     <string name="action_add">إضافة</string>
     <string name="action_save">حفظ</string>
     <string name="action_cancel">إلغاء</string>
+    <string name="discard_title">تجاهل التغييرات؟</string>
+    <string name="discard_message">لم تُحفظ التغييرات التي أجريتها.</string>
+    <string name="discard_confirm">تجاهل</string>
+    <string name="discard_keep">متابعة التعديل</string>
     <string name="action_ok">موافق</string>
     <string name="action_clear">مسح</string>
     <string name="action_undo">تراجع</string>

@@ -22,6 +22,9 @@ import java.time.LocalTime
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -65,6 +68,8 @@ data class TaskEditUiState(
     val canSave: Boolean get() = title.isNotBlank() && !isSaving && (!counterOn || counter != null)
 }
 
+private fun TaskEditUiState.forCompare() = copy(availableTags = emptyList(), isSaving = false, duplicatedId = null, finished = false)
+
 @HiltViewModel
 class TaskEditViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -84,6 +89,14 @@ class TaskEditViewModel @Inject constructor(
 
     /** The task as loaded, kept so saving preserves fields the editor does not show. */
     private var original: Task? = null
+
+    /** The form as it was when it opened, to tell whether anything was changed. What the user did not type is left out. */
+    private var initial: TaskEditUiState? = if (taskId == null) TaskEditUiState(isLoading = false, isNew = true).forCompare() else null
+
+    /** True once the form differs from how it opened, so leaving it asks first. */
+    val hasChanges: StateFlow<Boolean> = _uiState
+        .map { state -> initial?.let { state.forCompare() != it } ?: false }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     init {
         viewModelScope.launch {
@@ -121,6 +134,7 @@ class TaskEditViewModel @Inject constructor(
                     counterDone = task.counter?.done?.toString().orEmpty(),
                 )
             }
+            initial = _uiState.value.forCompare()
         }
     }
 

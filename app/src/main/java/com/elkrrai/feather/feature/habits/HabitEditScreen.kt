@@ -50,6 +50,7 @@ import com.elkrrai.feather.ui.components.FieldSection
 import com.elkrrai.feather.ui.components.FormHint
 import com.elkrrai.feather.ui.components.ReminderWarning
 import com.elkrrai.feather.ui.components.SwitchRow
+import com.elkrrai.feather.ui.components.rememberLeaveGuard
 import com.elkrrai.feather.ui.components.rememberReminderHealth
 
 /** What the habit form can change; the stateful screen supplies them. */
@@ -97,10 +98,12 @@ fun HabitEditScreen(
         }
     }
     LaunchedEffect(state.finished) { if (state.finished) onBack() }
+    val hasChanges by viewModel.hasChanges.collectAsStateWithLifecycle()
+    val leave = rememberLeaveGuard(hasChanges && !state.finished, onBack)
     HabitEditContent(
         state = state,
         actions = HabitEditActions(
-            onBack = onBack,
+            onBack = leave,
             onSave = viewModel::save,
             onNameChange = viewModel::onNameChange,
             onKindChange = viewModel::onKindChange,
