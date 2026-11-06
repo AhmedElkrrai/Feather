@@ -34,6 +34,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -132,14 +134,17 @@ fun TodayHabitsBlock(
             modifier = Modifier.padding(vertical = Space.x2).semantics { heading() },
         )
         visible.forEachIndexed { index, row ->
-            HabitTodayRow(
-                row = row,
-                showHint = ui.showHoldHint && index == 0,
-                onFinish = { onFinish(row) },
-                onToggleStage = { onToggleStage(row, it) },
-                onPickAmount = { amountFor = row.id },
-            )
-            Spacer(Modifier.height(Space.x2))
+            // each row keeps its own hold and bloom when the rows change places
+            key(row.id) {
+                HabitTodayRow(
+                    row = row,
+                    showHint = ui.showHoldHint && index == 0,
+                    onFinish = { onFinish(row) },
+                    onToggleStage = { onToggleStage(row, it) },
+                    onPickAmount = { amountFor = row.id },
+                )
+                Spacer(Modifier.height(Space.x2))
+            }
         }
     }
     visible.firstOrNull { it.id == amountFor }?.let { row ->
@@ -202,6 +207,8 @@ private fun HabitTodayRow(
         }
     }
 
+    // the hold runs in a gesture that outlives recompositions: it must call the latest finish, with the row as it is now
+    val finish by rememberUpdatedState(onFinish)
     val markDone = stringResource(R.string.habit_today_mark_done)
     val gesture = if (amountHabit) {
         Modifier.clickable(onClick = onPickAmount)
@@ -221,7 +228,7 @@ private fun HabitTodayRow(
                         }
                     }
                     haptics.confirm()
-                    onFinish()
+                    finish()
                 }
                 val up = waitForUpOrCancellation()
                 if (hold.isActive) {

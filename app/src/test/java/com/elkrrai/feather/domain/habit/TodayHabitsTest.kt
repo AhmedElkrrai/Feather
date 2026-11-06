@@ -152,6 +152,14 @@ class TodayHabitsTest {
     }
 
     @Test
+    fun aHabitFinishedTodayComesAfterTheOthers() {
+        val early = HabitState(habit("early", time = DayTime(TimeMode.AT, 420)), listOf(HabitGoal(week, 3)), mapOf(today to 1))
+        val open = HabitState(habit("open", time = DayTime(TimeMode.AT, 900)), listOf(HabitGoal(week, 3)), emptyMap())
+
+        assertEquals(listOf("open", "early"), rows(early, open, hour = 9).map { it.id })
+    }
+
+    @Test
     fun anAmountHabitShowsWithItsWeeklyProgressUntilTheGoalIsMet() {
         val reading = HabitState(habit("read", HabitKind.AMOUNT), listOf(HabitGoal(week, 20)), mapOf(week to 12))
         val done = HabitState(habit("read", HabitKind.AMOUNT), listOf(HabitGoal(week, 20)), mapOf(week to 20))
