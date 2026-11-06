@@ -37,8 +37,29 @@ interface BackupDao {
     @Query("SELECT * FROM habit_entries")
     suspend fun habitEntries(): List<HabitEntryEntity>
 
+    @Query("SELECT * FROM habit_stages")
+    suspend fun habitStages(): List<HabitStageEntity>
+
+    @Query("SELECT * FROM habit_goal_stages")
+    suspend fun habitGoalStages(): List<HabitGoalStageEntity>
+
+    @Query("SELECT * FROM habit_stage_log")
+    suspend fun habitStageLog(): List<HabitStageLogEntity>
+
     @Upsert
     suspend fun upsertHabits(rows: List<HabitEntity>)
+
+    @Upsert
+    suspend fun upsertHabitStages(rows: List<HabitStageEntity>)
+
+    @Upsert
+    suspend fun upsertHabitGoalStages(rows: List<HabitGoalStageEntity>)
+
+    @Upsert
+    suspend fun upsertHabitStageLog(rows: List<HabitStageLogEntity>)
+
+    @Query("DELETE FROM habit_goal_stages WHERE habitId = :habitId AND effectiveFrom = :effectiveFrom")
+    suspend fun deleteGoalStages(habitId: String, effectiveFrom: String)
 
     @Upsert
     suspend fun upsertHabitGoals(rows: List<HabitGoalEntity>)
@@ -46,7 +67,7 @@ interface BackupDao {
     @Upsert
     suspend fun upsertHabitEntries(rows: List<HabitEntryEntity>)
 
-    /** Removes every habit with its goals and logged days (they cascade). */
+    /** Removes every habit with its goals, stages and logged days (they cascade). */
     @Query("DELETE FROM habits")
     suspend fun deleteAllHabits()
 

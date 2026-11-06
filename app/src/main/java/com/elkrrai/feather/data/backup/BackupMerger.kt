@@ -17,6 +17,11 @@ data class MergePlan(
     val habits: List<HabitRecord> = emptyList(),
     val habitGoals: List<HabitGoalRecord> = emptyList(),
     val habitEntries: List<HabitEntryRecord> = emptyList(),
+    val habitStages: List<HabitStageRecord> = emptyList(),
+    val habitGoalStages: List<HabitGoalStageRecord> = emptyList(),
+    /** The goal weeks (habit id, first day) whose stage list of the phone is replaced whole by [habitGoalStages]; clear them first. */
+    val rewrittenGoalStageWeeks: Set<Pair<String, String>> = emptySet(),
+    val habitStageLog: List<HabitStageLogRecord> = emptyList(),
 )
 
 /**
@@ -32,6 +37,9 @@ data class MergePlan(
  *   Completion history is a union.
  * - Habits are taken like tasks (the later `updatedAt` wins). Their goals and logged days are taken one by
  *   one, each when the phone does not have it or the file's copy is later, for habits the phone ends up with.
+ * - The stages of a habit are taken like its goals. The list of stages of one goal week is taken whole, from the side whose copy of it is
+ *   newer (a phone's list and the file's list are never mixed, so a stage that was removed does not come back). A done stage is taken
+ *   one by one, like a logged day.
  */
 object BackupMerger {
 
@@ -80,6 +88,29 @@ object BackupMerger {
             { it.updatedAt },
         )
 
+        val habitStages = newer(
+            local.habitStages,
+            incoming.habitStages.filter { it.habitId in knownHabits },
+            { it.id },
+            { it.updatedAt },
+        )
+        val knownStages = local.habitStages.map { it.id }.toSet() + habitStages.map { it.id }
+        val localWeeks = local.habitGoalStages.groupBy { it.habitId to it.effectiveFrom }
+        val takenWeeks = incoming.habitGoalStages
+            .filter { it.habitId in knownHabits }
+            .groupBy { it.habitId to it.effectiveFrom }
+            .filter { (week, rows) ->
+                val mine = localWeeks[week]
+                mine == null || rows.maxOf { it.updatedAt } > mine.maxOf { it.updatedAt }
+            }
+        val habitGoalStages = takenWeeks.values.flatten().filter { it.stageId in knownStages }
+        val habitStageLog = newer(
+            local.habitStageLog,
+            incoming.habitStageLog.filter { it.habitId in knownHabits && it.stageId in knownStages },
+            { "${it.habitId}|${it.date}|${it.stageId}" },
+            { it.updatedAt },
+        )
+
         return MergePlan(
             tags = tags,
             tasks = tasks,
@@ -90,6 +121,10 @@ object BackupMerger {
             habits = habits,
             habitGoals = habitGoals,
             habitEntries = habitEntries,
+            habitStages = habitStages,
+            habitGoalStages = habitGoalStages,
+            rewrittenGoalStageWeeks = takenWeeks.keys.filter { it in localWeeks }.toSet(),
+            habitStageLog = habitStageLog,
         )
     }
 

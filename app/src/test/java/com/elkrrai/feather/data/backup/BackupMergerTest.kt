@@ -142,4 +142,73 @@ class BackupMergerTest {
 
         assertEquals(setOf("old", "new"), plan.habits.map { it.id }.toSet())
     }
+
+    @Test
+    fun theStageListOfAGoalWeekIsTakenWholeFromTheNewerSide() {
+        val local = BackupFile(
+            habits = listOf(HabitRecord("h", "Pray", updatedAt = 1)),
+            habitStages = listOf(HabitStageRecord("a", "h", "A"), HabitStageRecord("b", "h", "B")),
+            habitGoalStages = listOf(
+                HabitGoalStageRecord("h", "2026-10-31", "a", position = 0, updatedAt = 10),
+                HabitGoalStageRecord("h", "2026-10-31", "b", position = 1, updatedAt = 10),
+            ),
+        )
+        val incoming = BackupFile(
+            habits = listOf(HabitRecord("h", "Pray", updatedAt = 1)),
+            habitStages = listOf(HabitStageRecord("a", "h", "A"), HabitStageRecord("c", "h", "C", updatedAt = 1)),
+            habitGoalStages = listOf(
+                // newer: only a and c; b was removed on the other phone
+                HabitGoalStageRecord("h", "2026-10-31", "a", position = 0, updatedAt = 20),
+                HabitGoalStageRecord("h", "2026-10-31", "c", position = 1, updatedAt = 20),
+                // a week the phone does not have
+                HabitGoalStageRecord("h", "2026-11-07", "a", position = 0, updatedAt = 5),
+            ),
+        )
+
+        val plan = plan(local, incoming)
+
+        assertEquals(setOf("c", "a"), plan.habitGoalStages.filter { it.effectiveFrom == "2026-10-31" }.map { it.stageId }.toSet())
+        assertEquals(1, plan.habitGoalStages.count { it.effectiveFrom == "2026-11-07" })
+        // only the week that exists on the phone has to be cleared first
+        assertEquals(setOf("h" to "2026-10-31"), plan.rewrittenGoalStageWeeks)
+    }
+
+    @Test
+    fun anOlderStageListDoesNotReplaceTheNewerOneOnThePhone() {
+        val local = BackupFile(
+            habits = listOf(HabitRecord("h", "Pray")),
+            habitStages = listOf(HabitStageRecord("a", "h", "A")),
+            habitGoalStages = listOf(HabitGoalStageRecord("h", "2026-10-31", "a", updatedAt = 30)),
+        )
+        val incoming = local.copy(habitGoalStages = listOf(HabitGoalStageRecord("h", "2026-10-31", "a", updatedAt = 10)))
+
+        val plan = plan(local, incoming)
+
+        assertTrue(plan.habitGoalStages.isEmpty() && plan.rewrittenGoalStageWeeks.isEmpty())
+    }
+
+    @Test
+    fun aDoneStageIsTakenOneByOneAndStagesOfUnknownHabitsAreDropped() {
+        val local = BackupFile(
+            habits = listOf(HabitRecord("h", "Pray")),
+            habitStages = listOf(HabitStageRecord("a", "h", "A")),
+            habitStageLog = listOf(HabitStageLogRecord("h", "2026-11-01", "a", done = true, updatedAt = 10)),
+        )
+        val incoming = BackupFile(
+            habits = listOf(HabitRecord("h", "Pray"), HabitRecord("gone", "Other")),
+            habitStages = listOf(HabitStageRecord("a", "h", "A"), HabitStageRecord("x", "unknown", "X")),
+            habitStageLog = listOf(
+                // newer: the stage was undone on the other phone
+                HabitStageLogRecord("h", "2026-11-01", "a", done = false, updatedAt = 20),
+                HabitStageLogRecord("h", "2026-11-02", "a", done = true, updatedAt = 1),
+                // a stage that belongs to no known habit
+                HabitStageLogRecord("unknown", "2026-11-01", "x", done = true, updatedAt = 1),
+            ),
+        )
+
+        val plan = plan(local, incoming)
+
+        assertEquals(setOf("2026-11-01" to false, "2026-11-02" to true), plan.habitStageLog.map { it.date to it.done }.toSet())
+        assertTrue(plan.habitStages.none { it.habitId == "unknown" })
+    }
 }

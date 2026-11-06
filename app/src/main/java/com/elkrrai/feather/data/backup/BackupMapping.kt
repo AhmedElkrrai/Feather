@@ -4,6 +4,9 @@ import com.elkrrai.feather.data.db.CompletionEntity
 import com.elkrrai.feather.data.db.HabitEntity
 import com.elkrrai.feather.data.db.HabitEntryEntity
 import com.elkrrai.feather.data.db.HabitGoalEntity
+import com.elkrrai.feather.data.db.HabitGoalStageEntity
+import com.elkrrai.feather.data.db.HabitStageEntity
+import com.elkrrai.feather.data.db.HabitStageLogEntity
 import com.elkrrai.feather.data.db.INBOX_LIST_ID
 import com.elkrrai.feather.data.db.ReminderEntity
 import com.elkrrai.feather.data.db.TagEntity
@@ -96,9 +99,15 @@ fun CompletionEntity.toRecord() = CompletionRecord(id, taskId, completedAt, dueD
 
 fun CompletionRecord.toEntity() = CompletionEntity(id, taskId, completedAt, dueDate)
 
-fun HabitEntity.toRecord() = HabitRecord(id, name, kind, unit, sortOrder, createdAt, updatedAt, deletedAt)
+fun HabitEntity.toRecord() = HabitRecord(
+    id, name, kind, unit, sortOrder, createdAt, updatedAt, deletedAt,
+    showInToday, timeMode, startMinute, endMinute, stageMode, todayFromStart, remind,
+)
 
-fun HabitRecord.toEntity() = HabitEntity(id, name, kind, unit, sortOrder, createdAt, updatedAt, deletedAt)
+fun HabitRecord.toEntity() = HabitEntity(
+    id, name, kind, unit, sortOrder, createdAt, updatedAt, deletedAt,
+    showInToday, timeMode, startMinute, endMinute, stageMode, todayFromStart, remind,
+)
 
 fun HabitGoalEntity.toRecord() = HabitGoalRecord(habitId, effectiveFrom, target, dailyTarget, updatedAt)
 
@@ -107,3 +116,15 @@ fun HabitGoalRecord.toEntity() = HabitGoalEntity(habitId, effectiveFrom, target,
 fun HabitEntryEntity.toRecord() = HabitEntryRecord(habitId, date, amount, updatedAt)
 
 fun HabitEntryRecord.toEntity() = HabitEntryEntity(habitId, date, amount, updatedAt)
+
+fun HabitStageEntity.toRecord() = HabitStageRecord(id, habitId, name, timeMode, startMinute, endMinute, updatedAt)
+
+fun HabitStageRecord.toEntity() = HabitStageEntity(id, habitId, name, timeMode, startMinute, endMinute, updatedAt)
+
+fun HabitGoalStageEntity.toRecord() = HabitGoalStageRecord(habitId, effectiveFrom, stageId, position, updatedAt)
+
+fun HabitGoalStageRecord.toEntity() = HabitGoalStageEntity(habitId, effectiveFrom, stageId, position, updatedAt)
+
+fun HabitStageLogEntity.toRecord() = HabitStageLogRecord(habitId, date, stageId, done, updatedAt)
+
+fun HabitStageLogRecord.toEntity() = HabitStageLogEntity(habitId, date, stageId, done, updatedAt)

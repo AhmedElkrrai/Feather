@@ -48,7 +48,7 @@ class BackupCodecTest {
         val text = BackupCodec.encode(BackupFile())
 
         assertTrue(text.contains("\"format\": \"feather-backup\""))
-        assertTrue(text.contains("\"version\": 1"))
+        assertTrue(text.contains("\"version\": ${BackupFile.VERSION}"))
     }
 
     @Test
@@ -118,6 +118,38 @@ class BackupCodecTest {
     @Test
     fun aTagThatSitsUnderAnotherSurvivesAWriteAndRead() {
         val file = BackupFile(tags = listOf(TagRecord("t", "bugfix", parentId = "w"), TagRecord("w", "work")))
+
+        assertEquals(file, BackupCodec.decode(BackupCodec.encode(file)))
+    }
+
+    @Test
+    fun aVersionOneFileWithHabitsReadsWithoutStages() {
+        val text = """
+            {
+              "format": "feather-backup",
+              "version": 1,
+              "habits": [{ "id": "h", "name": "Read" }],
+              "habitGoals": [{ "habitId": "h", "effectiveFrom": "2026-10-31", "target": 3 }]
+            }
+        """.trimIndent()
+
+        val file = BackupCodec.decode(text)
+
+        val habit = file.habits.single()
+        assertEquals("Read", habit.name)
+        assertEquals(false, habit.showInToday)
+        assertEquals(0, habit.stageMode)
+        assertTrue(file.habitStages.isEmpty() && file.habitGoalStages.isEmpty() && file.habitStageLog.isEmpty())
+    }
+
+    @Test
+    fun theStagesOfAHabitSurviveAWriteAndRead() {
+        val file = BackupFile(
+            habits = listOf(HabitRecord("h", "Pray", showInToday = true, stageMode = 2)),
+            habitStages = listOf(HabitStageRecord("s1", "h", "Fajr", timeMode = 2, startMinute = 270, endMinute = 360)),
+            habitGoalStages = listOf(HabitGoalStageRecord("h", "2026-10-31", "s1", position = 0)),
+            habitStageLog = listOf(HabitStageLogRecord("h", "2026-11-01", "s1", done = false, updatedAt = 5)),
+        )
 
         assertEquals(file, BackupCodec.decode(BackupCodec.encode(file)))
     }

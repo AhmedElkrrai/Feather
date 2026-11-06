@@ -28,6 +28,10 @@ data class BackupFile(
     val habits: List<HabitRecord> = emptyList(),
     val habitGoals: List<HabitGoalRecord> = emptyList(),
     val habitEntries: List<HabitEntryRecord> = emptyList(),
+    /** The named times of habits, which of them belong to a week's goal, and which were done on a day; absent before version 2. */
+    val habitStages: List<HabitStageRecord> = emptyList(),
+    val habitGoalStages: List<HabitGoalStageRecord> = emptyList(),
+    val habitStageLog: List<HabitStageLogRecord> = emptyList(),
     /** The preferences, as text by name (see `BackupPreferences`); absent in older files. */
     val settings: Map<String, String> = emptyMap(),
     /** The app language as a language tag, empty for the phone's own; null in older files. */
@@ -36,8 +40,8 @@ data class BackupFile(
     companion object {
         const val FORMAT = "feather-backup"
 
-        /** The newest file version this app can read. */
-        const val VERSION = 1
+        /** The newest file version this app can read. Version 2 added the stages of habits: an app that knows only 1 refuses such a file rather than drop them. */
+        const val VERSION = 2
     }
 }
 
@@ -116,6 +120,14 @@ data class HabitRecord(
     val createdAt: Long = 0,
     val updatedAt: Long = 0,
     val deletedAt: Long? = null,
+    /** From version 2: the times and the Today settings. */
+    val showInToday: Boolean = false,
+    val timeMode: Int = 0,
+    val startMinute: Int? = null,
+    val endMinute: Int? = null,
+    val stageMode: Int = 0,
+    val todayFromStart: Boolean = false,
+    val remind: Boolean = false,
 )
 
 @Serializable
@@ -132,5 +144,34 @@ data class HabitEntryRecord(
     val habitId: String,
     val date: String,
     val amount: Int,
+    val updatedAt: Long = 0,
+)
+
+@Serializable
+data class HabitStageRecord(
+    val id: String,
+    val habitId: String,
+    val name: String,
+    val timeMode: Int = 0,
+    val startMinute: Int? = null,
+    val endMinute: Int? = null,
+    val updatedAt: Long = 0,
+)
+
+@Serializable
+data class HabitGoalStageRecord(
+    val habitId: String,
+    val effectiveFrom: String,
+    val stageId: String,
+    val position: Int = 0,
+    val updatedAt: Long = 0,
+)
+
+@Serializable
+data class HabitStageLogRecord(
+    val habitId: String,
+    val date: String,
+    val stageId: String,
+    val done: Boolean = true,
     val updatedAt: Long = 0,
 )

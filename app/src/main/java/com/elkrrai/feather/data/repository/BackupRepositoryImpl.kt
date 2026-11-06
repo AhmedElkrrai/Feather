@@ -66,6 +66,9 @@ class BackupRepositoryImpl @Inject constructor(
         habits = dao.habits().map { it.toRecord() },
         habitGoals = dao.habitGoals().map { it.toRecord() },
         habitEntries = dao.habitEntries().map { it.toRecord() },
+        habitStages = dao.habitStages().map { it.toRecord() },
+        habitGoalStages = dao.habitGoalStages().map { it.toRecord() },
+        habitStageLog = dao.habitStageLog().map { it.toRecord() },
         settings = preferences.backedUpPreferences(),
         language = AppCompatDelegate.getApplicationLocales().toLanguageTags(),
     )
@@ -73,7 +76,7 @@ class BackupRepositoryImpl @Inject constructor(
     private suspend fun wipe() {
         dao.deleteAllTasks() // tag links, reminders and history go with them
         dao.deleteAllTags()
-        dao.deleteAllHabits() // goals and logged days go with them
+        dao.deleteAllHabits() // goals, stages and logged days go with them
     }
 
     /** Parents before children, so every foreign key points at a row that already exists. */
@@ -86,8 +89,13 @@ class BackupRepositoryImpl @Inject constructor(
         dao.upsertReminders(plan.reminders.map { it.toEntity() })
         dao.insertCompletions(plan.completions.map { it.toEntity() })
         dao.upsertHabits(plan.habits.map { it.toEntity() })
+        dao.upsertHabitStages(plan.habitStages.map { it.toEntity() })
         dao.upsertHabitGoals(plan.habitGoals.map { it.toEntity() })
+        // the stage list of a goal week is replaced whole, so the phone's rows of that week go first
+        plan.rewrittenGoalStageWeeks.forEach { (habitId, from) -> dao.deleteGoalStages(habitId, from) }
+        dao.upsertHabitGoalStages(plan.habitGoalStages.map { it.toEntity() })
         dao.upsertHabitEntries(plan.habitEntries.map { it.toEntity() })
+        dao.upsertHabitStageLog(plan.habitStageLog.map { it.toEntity() })
     }
 
     private companion object {
