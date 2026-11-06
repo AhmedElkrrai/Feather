@@ -53,7 +53,19 @@ fun Illustration(kind: SceneKind, modifier: Modifier = Modifier, size: Dp = 190.
         SceneKind.RemindersBlocked -> RemindersBlockedScene(size, modifier)
         SceneKind.FirstLaunch -> FirstLaunchScene(size, modifier)
         SceneKind.TrashEmpty -> TrashEmptyScene(size, modifier)
+        SceneKind.OwlAlone -> OwlAloneScene(size, modifier)
     }
+}
+
+/** The owl by itself, centred on the board. */
+@Composable
+private fun OwlAloneScene(size: Dp, modifier: Modifier) = SceneFrame(size, modifier) {
+    val owl = BirdPlacement(x = 36f, y = 40f, scale = 1.3f)
+    OwlIllustration(
+        modifier = Modifier
+            .offset(x = unit * owl.x, y = unit * owl.y)
+            .size(unit * owl.side),
+    )
 }
 
 /** The owl beneath the leafy goal tree. */

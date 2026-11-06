@@ -140,7 +140,7 @@ fun TagsContent(
             state.isLoading -> Box(Modifier.fillMaxSize().padding(padding))
 
             state.rows.isEmpty() -> EmptyState(
-                scene = SceneKind.EmptyList,
+                scene = SceneKind.OwlAlone,
                 title = stringResource(R.string.tags_empty_title),
                 body = stringResource(R.string.tags_empty_body),
                 modifier = Modifier.padding(padding),

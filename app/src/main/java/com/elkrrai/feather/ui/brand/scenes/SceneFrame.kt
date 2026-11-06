@@ -44,6 +44,8 @@ enum class SceneKind {
     RemindersBlocked,
     FirstLaunch,
     TrashEmpty,
+    /** The owl on its own, without the goal tree: for screens that are empty but have no goals to grow. */
+    OwlAlone,
 }
 
 /** What a scene's drawing needs: the scale, the colors and the two animated values. */
