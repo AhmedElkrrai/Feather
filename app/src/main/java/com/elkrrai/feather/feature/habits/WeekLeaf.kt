@@ -59,6 +59,20 @@ import kotlin.math.sin
 private val LabelHeight = 16.dp
 private const val DAYS = 7
 
+/** The two looks of the weekly leaf: a smooth edge, or a serrated one. */
+enum class LeafStyle { Smooth, Serrated }
+
+/** The look a habit's leaf has: picked from its id, so it seems random between habits but never changes for one. */
+fun leafStyleFor(habitId: String): LeafStyle =
+    if (habitId.hashCode() and 1 == 0) LeafStyle.Smooth else LeafStyle.Serrated
+
+/** The sawtooth along a serrated edge: 0.72 to 1 of the smooth width, [count] teeth up the leaf, shifted by [seed] so the two edges differ. */
+private fun tooth(t: Float, count: Int, seed: Float): Float {
+    val p = (t * count + seed) % 1f
+    val ramp = if (p < 0.62f) p / 0.62f else (1f - p) / 0.38f
+    return 0.72f + 0.28f * ramp
+}
+
 /** How wide the leaf is at [t] (0 at the stem, 1 at the tip), as a share of its widest part: pointed at the tip, round at the base. */
 internal fun leafWidth(t: Float): Float = sin(PI.toFloat() * t.coerceIn(0f, 1f).pow(0.75f)).coerceAtLeast(0f).pow(0.9f)
 
@@ -77,7 +91,9 @@ fun WeekLeaf(
     modifier: Modifier = Modifier,
     /** Makes the circles of the days up to today tappable; null leaves the leaf to be looked at only. */
     onDayClick: ((LocalDate) -> Unit)? = null,
+    style: LeafStyle = LeafStyle.Smooth,
 ) {
+    val serrated = style == LeafStyle.Serrated
     val locale = LocalConfiguration.current.locales[0]
     val season = rememberSeason()
     val leaf = MaterialTheme.featherColors.leafColor(season)
@@ -113,7 +129,9 @@ fun WeekLeaf(
         fun room(t: Float): Dp {
             val below = (t - (radius + LabelHeight) / leafHeight).coerceAtLeast(0f)
             val above = (t + radius / leafHeight).coerceAtMost(1f)
-            return halfMax * minOf(leafWidth(below), leafWidth(above)) - radius - 8.dp
+            // a serrated edge is up to 0.72 of the smooth one between its teeth
+            val edge = if (serrated) 0.72f else 1f
+            return halfMax * (minOf(leafWidth(below), leafWidth(above)) * edge) - radius - 8.dp
         }
         val spots = (0 until DAYS).map { index ->
             // the last day stops well short of the tip, where the leaf is narrow and a circle would touch its edge
@@ -134,15 +152,15 @@ fun WeekLeaf(
 
             // the outline, drawn up the right side and back down the left
             val outline = Path().apply {
-                val steps = 64
+                val steps = if (serrated) 140 else 64
                 for (step in 0..steps) {
                     val t = step / steps.toFloat()
-                    val point = Offset(cx + half * leafWidth(t), base - height * t)
+                    val point = Offset(cx + half * leafWidth(t) * (if (serrated) tooth(t, 9, 0.1f) else 1f), base - height * t)
                     if (step == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
                 }
                 for (step in steps downTo 0) {
                     val t = step / steps.toFloat()
-                    lineTo(cx - half * leafWidth(t), base - height * t)
+                    lineTo(cx - half * leafWidth(t) * (if (serrated) tooth(t, 9, 0.45f) else 1f), base - height * t)
                 }
                 close()
             }
@@ -170,6 +188,23 @@ fun WeekLeaf(
             // the stem and the midrib
             drawLine(leaf.copy(alpha = 0.8f), Offset(cx, base), Offset(cx + 6.dp.toPx(), base + stem.toPx()), 3.dp.toPx(), StrokeCap.Round)
             drawLine(leaf.copy(alpha = 0.6f), Offset(cx, base), Offset(cx, top + height * 0.04f), 2.dp.toPx(), StrokeCap.Round)
+
+            // a serrated leaf also has fine side veins between the day veins
+            if (serrated) {
+                for (k in 0 until 14) {
+                    val t = 0.10f + 0.80f * (k / 13f)
+                    val side = if (k % 2 == 0) -1f else 1f
+                    val tipT = (t + 0.08f).coerceAtMost(0.97f)
+                    val fine = Path().apply {
+                        moveTo(cx, base - height * t)
+                        quadraticTo(
+                            cx + side * half * leafWidth(t) * 0.45f, base - height * (t + 0.03f),
+                            cx + side * half * leafWidth(tipT) * 0.9f, base - height * tipT,
+                        )
+                    }
+                    drawPath(fine, leaf.copy(alpha = 0.30f), style = Stroke(width = 1.3.dp.toPx(), cap = StrokeCap.Round))
+                }
+            }
 
             // a vein from the midrib up to each circle, and a little beyond it
             spots.forEach { spot ->
