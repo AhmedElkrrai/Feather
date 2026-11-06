@@ -8,6 +8,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import com.elkrrai.feather.domain.settings.TimeFormat
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
@@ -52,39 +61,77 @@ enum class AppLanguage(val tag: String, @StringRes val labelRes: Int) {
     }
 }
 
+/** Language and time format in one dialog: two groups of radio buttons that apply as soon as one is picked. */
 @Composable
-fun LanguageDialog(onDismiss: () -> Unit) {
-    val selected = remember { AppLanguage.current() }
+fun LanguageTimeDialog(
+    timeFormat: TimeFormat,
+    onTimeFormatChange: (TimeFormat) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var language by remember { mutableStateOf(AppLanguage.current()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.language_dialog_title)) },
+        title = { Text(stringResource(R.string.settings_section_language_time)) },
         text = {
-            Column(Modifier.selectableGroup()) {
-                AppLanguage.entries.forEach { language ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .selectable(
-                                selected = language == selected,
-                                onClick = {
-                                    language.apply()
-                                    onDismiss()
-                                },
-                                role = Role.RadioButton,
-                            )
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = language == selected, onClick = null)
-                        Spacer(Modifier.width(16.dp))
-                        Text(stringResource(language.labelRes))
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                DialogSection(stringResource(R.string.settings_language))
+                Column(Modifier.selectableGroup()) {
+                    AppLanguage.entries.forEach { option ->
+                        RadioLine(
+                            label = stringResource(option.labelRes),
+                            selected = option == language,
+                            onClick = {
+                                if (option != language) {
+                                    language = option
+                                    // the app restarts its screen in the new language; this dialog comes back with it
+                                    option.apply()
+                                }
+                            },
+                        )
+                    }
+                }
+                DialogSection(stringResource(R.string.settings_time_format))
+                Column(Modifier.selectableGroup()) {
+                    TimeFormat.entries.forEach { option ->
+                        RadioLine(
+                            label = stringResource(option.labelRes()),
+                            selected = option == timeFormat,
+                            onClick = { onTimeFormatChange(option) },
+                        )
                     }
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) }
         },
     )
+}
+
+@Composable
+private fun DialogSection(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .padding(top = 8.dp, bottom = 2.dp)
+            .semantics { heading() },
+    )
+}
+
+@Composable
+private fun RadioLine(label: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Spacer(Modifier.width(16.dp))
+        Text(label)
+    }
 }

@@ -306,6 +306,8 @@ fun SettingsContent(
                         appLockAvailable = appLockAvailable,
                         versionName = versionName,
                         onOpen = { page = it },
+                        onOpenDialog = { dialog = it },
+                        onAddTreeStages = onAddTreeStages,
                         onOpenTags = onOpenTags,
                     )
 
@@ -367,80 +369,6 @@ fun SettingsContent(
                     SettingsPage.Today -> TodayScreenRows(settings, appearance)
 
                     SettingsPage.Backup -> BackupRows(backup, settings, onPickStyle = { dialog = SettingsDialog.BackupStyle })
-
-                    SettingsPage.Privacy -> SettingsGroup { SettingsRow(
-                        first = true,
-                        title = stringResource(R.string.settings_app_lock),
-                        summary = null,
-                        supporting = stringResource(
-                            if (appLockAvailable) R.string.settings_app_lock_summary else R.string.settings_app_lock_unavailable,
-                        ),
-                        enabled = appLockAvailable,
-                        onClick = { onAppLockChange(!settings.appLock) },
-                        trailing = {
-                            Switch(
-                                checked = settings.appLock && appLockAvailable,
-                                onCheckedChange = onAppLockChange,
-                                enabled = appLockAvailable,
-                            )
-                        },
-                    ) }
-
-                    SettingsPage.LanguageTime -> SettingsGroup {
-                        SettingsRow(
-                            first = true,
-                            title = stringResource(R.string.settings_language),
-                            summary = stringResource(AppLanguage.current().labelRes),
-                            supporting = null,
-                            onClick = { dialog = SettingsDialog.Language },
-                        )
-                        SettingsRow(
-                            title = stringResource(R.string.settings_time_format),
-                            summary = stringResource(settings.timeFormat.labelRes()),
-                            supporting = null,
-                            onClick = { dialog = SettingsDialog.TimeFormat },
-                        )
-                    }
-
-                    SettingsPage.About -> {
-                        ListItem(
-                            leadingContent = {
-                                Image(
-                                    painter = painterResource(R.drawable.settings_chick),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(40.dp),
-                                )
-                            },
-                            headlineContent = { Text(stringResource(R.string.settings_about)) },
-                            supportingContent = {
-                                Column {
-                                    if (versionName.isNotBlank()) {
-                                        Text(stringResource(R.string.settings_version, versionName))
-                                    }
-                                    Text(
-                                        text = stringResource(R.string.settings_about_summary),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.settings_open_source, SOURCE_CODE_LINK),
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.clickable {
-                                            context.startActivitySafely(Intent(Intent.ACTION_VIEW, Uri.parse("https://$SOURCE_CODE_LINK")))
-                                        },
-                                    )
-                                }
-                            },
-                        )
-                        if (onAddTreeStages != null) {
-                            SettingsRow(
-                                first = true,
-                                title = stringResource(R.string.debug_add_tree_stages),
-                                summary = null,
-                                supporting = stringResource(R.string.debug_add_tree_stages_summary),
-                                onClick = onAddTreeStages,
-                            )
-                        }
-                    }
                 }
             }
         }
@@ -476,8 +404,6 @@ fun SettingsContent(
             onDismiss = { dialog = null },
         )
 
-        SettingsDialog.Language -> LanguageDialog(onDismiss = { dialog = null })
-
         SettingsDialog.Theme -> ChoiceDialog(
             title = stringResource(R.string.settings_theme),
             options = ThemeMode.entries.map { it to stringResource(it.labelRes()) },
@@ -500,14 +426,18 @@ fun SettingsContent(
             onDismiss = { dialog = null },
         )
 
-        SettingsDialog.TimeFormat -> ChoiceDialog(
-            title = stringResource(R.string.settings_time_format),
-            options = TimeFormat.entries.map { it to stringResource(it.labelRes()) },
-            selected = settings.timeFormat,
-            onSelect = {
-                appearance.onTimeFormatChange(it)
-                dialog = null
-            },
+        SettingsDialog.LanguageTime -> LanguageTimeDialog(
+            timeFormat = settings.timeFormat,
+            onTimeFormatChange = appearance.onTimeFormatChange,
+            onDismiss = { dialog = null },
+        )
+
+        SettingsDialog.About -> AboutDialog(versionName = versionName, onDismiss = { dialog = null })
+
+        SettingsDialog.Privacy -> PrivacyDialog(
+            appLock = settings.appLock,
+            available = appLockAvailable,
+            onChange = onAppLockChange,
             onDismiss = { dialog = null },
         )
     }
@@ -520,6 +450,83 @@ private fun versionNameOf(context: Context): String = try {
     ""
 }
 
+/** Privacy and security: the app lock switch, in a dialog since it is the only setting. */
+@Composable
+private fun PrivacyDialog(
+    appLock: Boolean,
+    available: Boolean,
+    onChange: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_section_privacy)) },
+        text = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .alpha(if (available) 1f else 0.38f)
+                    .then(if (available) Modifier.clickable { onChange(!appLock) } else Modifier),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.settings_app_lock), style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = stringResource(
+                            if (available) R.string.settings_app_lock_summary else R.string.settings_app_lock_unavailable,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = appLock && available, onCheckedChange = onChange, enabled = available)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) }
+        },
+    )
+}
+
+/** About Feather: the chick, the version, a line on the app and where its code is. A dialog, not a page. */
+@Composable
+private fun AboutDialog(versionName: String, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Image(
+                painter = painterResource(R.drawable.settings_chick),
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+            )
+        },
+        title = { Text(stringResource(R.string.settings_about)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (versionName.isNotBlank()) {
+                    Text(stringResource(R.string.settings_version, versionName))
+                }
+                Text(
+                    text = stringResource(R.string.settings_about_summary),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.settings_open_source, SOURCE_CODE_LINK),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable {
+                        context.startActivitySafely(Intent(Intent.ACTION_VIEW, Uri.parse("https://$SOURCE_CODE_LINK")))
+                    },
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) }
+        },
+    )
+}
+
 /** The pages of Settings: the list of categories, and one page for each. An enum so the open page survives rotation. */
 private enum class SettingsPage(@StringRes val titleRes: Int) {
     Home(R.string.settings),
@@ -527,9 +534,6 @@ private enum class SettingsPage(@StringRes val titleRes: Int) {
     Appearance(R.string.settings_section_appearance),
     Today(R.string.settings_section_today),
     Backup(R.string.settings_section_backup),
-    Privacy(R.string.settings_section_privacy),
-    LanguageTime(R.string.settings_section_language_time),
-    About(R.string.settings_about),
 }
 
 /** The first page of Settings: a short list of categories, each with a line on how it is set now. */
@@ -539,6 +543,8 @@ private fun SettingsHome(
     appLockAvailable: Boolean,
     versionName: String,
     onOpen: (SettingsPage) -> Unit,
+    onOpenDialog: (SettingsDialog) -> Unit,
+    onAddTreeStages: (() -> Unit)?,
     onOpenTags: () -> Unit,
 ) {
     val locale = LocalConfiguration.current.locales[0]
@@ -588,12 +594,12 @@ private fun SettingsHome(
             onClick = { onOpen(SettingsPage.Backup) },
         )
         CategoryRow(
-            title = stringResource(SettingsPage.Privacy.titleRes),
+            title = stringResource(R.string.settings_section_privacy),
             summary = stringResource(
                 if (settings.appLock && appLockAvailable) R.string.settings_home_lock_on else R.string.settings_home_lock_off,
             ),
             icon = R.drawable.ic_lock,
-            onClick = { onOpen(SettingsPage.Privacy) },
+            onClick = { onOpenDialog(SettingsDialog.Privacy) },
         )
         // a language that follows the phone is named, and a clock that follows it says which clock it is
         val language = AppLanguage.current().let { chosen ->
@@ -611,17 +617,29 @@ private fun SettingsHome(
             )
         }
         CategoryRow(
-            title = stringResource(SettingsPage.LanguageTime.titleRes),
+            title = stringResource(R.string.settings_section_language_time),
             summary = pair(language, clock),
             icon = R.drawable.ic_language,
-            onClick = { onOpen(SettingsPage.LanguageTime) },
+            onClick = { onOpenDialog(SettingsDialog.LanguageTime) },
         )
         CategoryRow(
-            title = stringResource(SettingsPage.About.titleRes),
+            title = stringResource(R.string.settings_about),
             summary = if (versionName.isNotBlank()) stringResource(R.string.settings_version, versionName) else null,
             icon = R.drawable.ic_feather,
-            onClick = { onOpen(SettingsPage.About) },
+            onClick = { onOpenDialog(SettingsDialog.About) },
         )
+    }
+    if (onAddTreeStages != null) {
+        // debug builds only
+        SettingsGroup {
+            SettingsRow(
+                first = true,
+                title = stringResource(R.string.debug_add_tree_stages),
+                summary = null,
+                supporting = stringResource(R.string.debug_add_tree_stages_summary),
+                onClick = onAddTreeStages,
+            )
+        }
     }
 }
 
@@ -722,7 +740,7 @@ private fun CategoryRow(
 }
 
 /** Which settings dialog is open. An enum so it survives rotation with `rememberSaveable`. */
-private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Language, Theme, TimeFormat, BackupStyle }
+private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Theme, BackupStyle, LanguageTime, About, Privacy }
 
 @Composable
 internal fun SectionTitle(text: String) {
