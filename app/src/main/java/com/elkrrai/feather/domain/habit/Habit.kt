@@ -28,6 +28,16 @@ data class Habit(
     val sortOrder: Long,
     val createdAt: Instant,
     val updatedAt: Instant,
+    /** Show the habit as a row in Today. Off for a habit that was made before this existed. */
+    val showInToday: Boolean = false,
+    /** The habit's own time of day, when it has no stages (with stages, each stage has its own). */
+    val time: DayTime = DayTime(),
+    /** How the stages show in Today; [StageMode.NONE] for a habit without stages. */
+    val stageMode: StageMode = StageMode.NONE,
+    /** Show it in Today only from its start time, not all day. */
+    val todayFromStart: Boolean = false,
+    /** Notify at its time (the start of each stage's time). */
+    val remind: Boolean = false,
 )
 
 /**
@@ -40,13 +50,20 @@ data class HabitGoal(
     val target: Int,
     /** [HabitKind.DAYS] only: how many times a day counts as done (1 is a single tap). */
     val dailyTarget: Int = 1,
+    /** The stages that count from [effectiveFrom] on, in order (ids into [HabitState.stages]); empty for a habit without stages. */
+    val stageIds: List<String> = emptyList(),
 )
 
-/** A habit with its goals (oldest first) and what was logged on each day (days with nothing logged are absent). */
+/**
+ * A habit with its goals (oldest first) and what was logged on each day (days with nothing logged are absent). For a habit with stages,
+ * [stages] are all it ever had (by id), and [stageLog] says which were done on each day; the day's amount in [entries] is how many.
+ */
 data class HabitState(
     val habit: Habit,
     val goals: List<HabitGoal>,
     val entries: Map<LocalDate, Int>,
+    val stages: Map<String, HabitStage> = emptyMap(),
+    val stageLog: Map<LocalDate, Set<String>> = emptyMap(),
 )
 
 const val MAX_HABIT_TARGET = 9_999

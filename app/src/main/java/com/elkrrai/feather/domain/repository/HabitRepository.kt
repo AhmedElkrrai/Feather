@@ -1,40 +1,35 @@
 package com.elkrrai.feather.domain.repository
 
 import com.elkrrai.feather.domain.habit.Habit
-import com.elkrrai.feather.domain.habit.HabitKind
+import com.elkrrai.feather.domain.habit.HabitDraft
 import com.elkrrai.feather.domain.habit.HabitState
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
-/** Habits, their weekly goals and what was logged. Separate from tasks: nothing here shows in Today, Overdue or Goals. */
+/**
+ * Habits, their weekly goals, their stages and what was logged. Separate from tasks: nothing here is a task, and a habit
+ * reaches Today only through its own row, never as a task.
+ */
 interface HabitRepository {
-    /** Every habit that was not deleted, in the order they were made, each with its goals and logged days. */
+    /** Every habit that was not deleted, in the order they were made, each with its goals, stages and logged days. */
     fun observeHabits(): Flow<List<HabitState>>
 
     /**
-     * Makes a habit whose first goal is in force from [thisWeekStart], so it counts from this week.
-     * The name must not be blank.
+     * Makes a habit ([id] is null) or edits one. A new habit's first goal is in force from [thisWeekStart], so it counts from this week.
+     * For an existing habit the name, the unit, the times and the Today settings change at once; a changed goal (the target, the times
+     * a day or the list of stages) is queued for the start of the next week and replaces one that was already waiting.
+     * The name must not be blank. Stages only count for a habit that counts days; a stage without a name is dropped.
      */
-    suspend fun addHabit(
-        name: String,
-        kind: HabitKind,
-        unit: String,
-        target: Int,
-        dailyTarget: Int,
-        thisWeekStart: LocalDate,
-    ): Habit
-
-    /** The name and the unit change at once; they do not touch any week's goal. */
-    suspend fun rename(id: String, name: String, unit: String)
-
-    /**
-     * An edit of the goal, made during a week: it takes effect on [nextWeekStart] and replaces an
-     * edit that was already waiting. The goal of the week that has begun does not change.
-     */
-    suspend fun queueGoal(id: String, target: Int, dailyTarget: Int, nextWeekStart: LocalDate)
+    suspend fun saveHabit(id: String?, draft: HabitDraft, thisWeekStart: LocalDate): Habit
 
     /** Sets how much was logged on [date] (0 clears the day). */
     suspend fun setAmount(id: String, date: LocalDate, amount: Int)
+
+    /**
+     * Marks a stage of a habit done, or not done, on [date]. The day's amount becomes the number of stages done that day, so the
+     * week, the tree and the rhythm see it like any other logged day.
+     */
+    suspend fun setStageDone(habitId: String, date: LocalDate, stageId: String, done: Boolean)
 
     /** A soft delete, like a task: the rows stay and the habit is no longer listed. */
     suspend fun delete(id: String)

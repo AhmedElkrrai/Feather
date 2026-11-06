@@ -9,8 +9,8 @@ import com.elkrrai.feather.domain.habit.HabitKind
 import com.elkrrai.feather.domain.habit.HabitState
 import com.elkrrai.feather.domain.habit.MAX_DAILY_TARGET
 import com.elkrrai.feather.domain.habit.MAX_HABIT_TARGET
-import com.elkrrai.feather.domain.habit.forWeek
-import com.elkrrai.feather.domain.habit.queuedAfter
+import com.elkrrai.feather.domain.habit.HabitDraft
+import com.elkrrai.feather.domain.habit.toDraft
 import com.elkrrai.feather.domain.habit.weekStartOf
 import com.elkrrai.feather.domain.repository.HabitRepository
 import com.elkrrai.feather.domain.time.FIRST_DAY_OF_WEEK
@@ -71,16 +71,15 @@ class HabitEditViewModel @Inject constructor(
                     return@launch
                 }
                 loaded = habit
-                val weekStart = thisWeek()
-                val shown = habit.goals.queuedAfter(weekStart) ?: habit.goals.forWeek(weekStart)
+                val draft = habit.toDraft(thisWeek())
                 _uiState.value = HabitEditUiState(
                     isLoading = false,
                     isNew = false,
-                    name = habit.habit.name,
-                    kind = habit.habit.kind,
-                    unit = habit.habit.unit,
-                    target = shown?.target?.toString() ?: if (habit.habit.kind == HabitKind.DAYS) "3" else "20",
-                    daily = shown?.dailyTarget?.toString() ?: "1",
+                    name = draft.name,
+                    kind = draft.kind,
+                    unit = draft.unit,
+                    target = draft.target.toString(),
+                    daily = draft.dailyTarget.toString(),
                 )
             }
         }
@@ -108,13 +107,12 @@ class HabitEditViewModel @Inject constructor(
             val weekStart = thisWeek()
             val existing = loaded
             if (existing == null) {
-                repository.addHabit(state.name, state.kind, state.unit, target, state.dailyValue, weekStart)
+                repository.saveHabit(null, HabitDraft(state.name, state.kind, state.unit, target, state.dailyValue), weekStart)
             } else {
-                val id = existing.habit.id
-                repository.rename(id, state.name, state.unit)
-                val shown = existing.goals.queuedAfter(weekStart) ?: existing.goals.forWeek(weekStart)
-                val changed = shown == null || shown.target != target || shown.dailyTarget != state.dailyValue
-                if (changed) repository.queueGoal(id, target, state.dailyValue, weekStart.plusWeeks(1))
+                // what the form does not show (the Today settings, the stages) stays as it was
+                val draft = existing.toDraft(weekStart)
+                    .copy(name = state.name, unit = state.unit, target = target, dailyTarget = state.dailyValue)
+                repository.saveHabit(existing.habit.id, draft, weekStart)
             }
             _uiState.update { it.copy(finished = true) }
         }

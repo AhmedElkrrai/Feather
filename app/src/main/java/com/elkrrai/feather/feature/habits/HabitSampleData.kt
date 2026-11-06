@@ -1,5 +1,6 @@
 package com.elkrrai.feather.feature.habits
 
+import com.elkrrai.feather.domain.habit.HabitDraft
 import com.elkrrai.feather.domain.habit.HabitKind
 import com.elkrrai.feather.domain.habit.TREE_STAGES
 import com.elkrrai.feather.domain.habit.weekStartOf
@@ -26,7 +27,7 @@ suspend fun HabitRepository.addTreeStageHabits(today: LocalDate, firstDay: DayOf
     observeHabits().first().filter { TreeHabitName.matches(it.habit.name) }.forEach { delete(it.habit.id) }
     val thisWeek = weekStartOf(today, firstDay)
     suspend fun make(name: String, metWeeks: Int) {
-        val habit = addHabit(name, HabitKind.DAYS, "", 1, 1, thisWeek.minusWeeks(maxOf(metWeeks, 1).toLong()))
+        val habit = saveHabit(null, HabitDraft(name, HabitKind.DAYS, target = 1), thisWeek.minusWeeks(maxOf(metWeeks, 1).toLong()))
         for (week in 1..metWeeks) setAmount(habit.id, thisWeek.minusWeeks(week.toLong()), 1)
     }
     for (stage in 0..TREE_STAGES) make("Tree $stage", stage)
