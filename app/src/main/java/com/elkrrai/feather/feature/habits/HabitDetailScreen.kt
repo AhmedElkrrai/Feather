@@ -74,7 +74,6 @@ fun HabitDetailScreen(
         initialWeek = viewModel.initialWeek,
         showSwipeHint = swipeHint,
         onCheckSwipeHint = viewModel::decideSwipeHint,
-        onSetStageDone = viewModel::setStageDone,
         onBack = onBack,
         modifier = modifier,
     )
@@ -89,7 +88,6 @@ internal fun HabitDetailContent(
     initialWeek: LocalDate? = null,
     showSwipeHint: Boolean = false,
     onCheckSwipeHint: (hasEarlierWeek: Boolean, thisWeek: LocalDate) -> Unit = { _, _ -> },
-    onSetStageDone: (date: LocalDate, stageId: String, done: Boolean) -> Unit = { _, _, _ -> },
     today: LocalDate = LocalDate.now(),
 ) {
     Scaffold(
@@ -115,7 +113,6 @@ internal fun HabitDetailContent(
             initialWeek = initialWeek,
             showSwipeHint = showSwipeHint,
             onCheckSwipeHint = onCheckSwipeHint,
-            onSetStageDone = onSetStageDone,
             modifier = Modifier.padding(padding),
         )
     }
@@ -128,7 +125,6 @@ private fun WeeksPager(
     initialWeek: LocalDate?,
     showSwipeHint: Boolean,
     onCheckSwipeHint: (hasEarlierWeek: Boolean, thisWeek: LocalDate) -> Unit,
-    onSetStageDone: (date: LocalDate, stageId: String, done: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val locale = LocalConfiguration.current.locales[0]
@@ -188,7 +184,7 @@ private fun WeeksPager(
                 )
                 Spacer(Modifier.height(Space.x2))
                 // the leaf takes all the room between the header and the summary
-                // a habit with parts: a tap on a day opens that day's parts to tick
+                // a habit with parts: a tap on a day shows which parts were done that day (history is looked at, not changed)
                 WeekLeaf(
                     week = progress,
                     today = today,
@@ -233,7 +229,7 @@ private fun WeeksPager(
     }
 
     partsDay?.let { date ->
-        StageChecklistDialog(
+        StageHistoryDialog(
             title = stringResource(
                 R.string.habit_amount_title,
                 habit.habit.name,
@@ -241,7 +237,6 @@ private fun WeeksPager(
             ),
             stages = habit.stagesFor(weekStartOf(date, firstDay)),
             done = habit.stagesDoneOn(date),
-            onToggle = { stage, done -> onSetStageDone(date, stage.id, done) },
             onDismiss = { partsDay = null },
         )
     }
