@@ -13,9 +13,14 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 private val TreeHabitName = Regex("(Tree|Forest) \\d+|Today: .+")
+
+/** One run at a time: a double tap waits for the first run, then replaces what it made instead of doubling it. */
+private val SampleLock = Mutex()
 
 /**
  * Habits to see every picture of the tree, each of one day a week with that many past weeks logged: "Tree 0"
@@ -27,7 +32,7 @@ private val TreeHabitName = Regex("(Tree|Forest) \\d+|Today: .+")
  * even if the person leaves Settings, and it first removes any "Tree n" habits made earlier, so a second tap
  * never doubles them and a cut short one never leaves half a set.
  */
-suspend fun HabitRepository.addTreeStageHabits(today: LocalDate, firstDay: DayOfWeek) = withContext(NonCancellable) {
+suspend fun HabitRepository.addTreeStageHabits(today: LocalDate, firstDay: DayOfWeek) = withContext(NonCancellable) { SampleLock.withLock {
     observeHabits().first().filter { TreeHabitName.matches(it.habit.name) }.forEach { delete(it.habit.id) }
     val thisWeek = weekStartOf(today, firstDay)
     suspend fun make(name: String, metWeeks: Int) {
@@ -65,4 +70,4 @@ suspend fun HabitRepository.addTreeStageHabits(today: LocalDate, firstDay: DayOf
     saveHabit(null, HabitDraft("Today: Workout", HabitKind.DAYS, target = 3, showInToday = true, time = window(17, 19)), thisWeek)
     saveHabit(null, HabitDraft("Today: Water", HabitKind.DAYS, target = 7, dailyTarget = 3, showInToday = true), thisWeek)
     saveHabit(null, HabitDraft("Today: Read", HabitKind.AMOUNT, unit = "pages", target = 20, showInToday = true), thisWeek)
-}
+} }

@@ -28,4 +28,17 @@ class AppSettingsDefaultsTest {
         assertTrue(defaults.celebrations)
         assertFalse(defaults.reduceMotion)
     }
+
+    @Test
+    fun habitsShowInTodayAndTheirHintsAndRemindersStartFresh() {
+        val defaults = AppSettings()
+
+        assertTrue(defaults.habitsInToday)
+        assertEquals(0, defaults.habitHoldHintShown)
+        assertFalse(defaults.habitHoldLearned)
+        assertTrue(defaults.habitRemindersFired.isEmpty())
+        assertTrue(defaults.habitTreesSeen.isEmpty())
+        // one backup file by default, so the folder never fills with copies
+        assertEquals(BackupStyle.ONE_FILE, defaults.backupStyle)
+    }
 }

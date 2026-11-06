@@ -1,5 +1,11 @@
 # Habits redesign: create-habit screen, habits in Today, named stages
 
+> **Status (2026-11-06): M1 to M6 are built and checked on a phone.** Milestones below are kept as the record of what was agreed.
+> Changes made along the way: the "Habit" chip and the "Habits" heading were dropped from Today; a stage card is reordered by dragging
+> its handle (the up and down arrows were removed) and an open card has a check at its top right; reminders and the "Done" button work from
+> the notification; leaving the habit or task editor with unsaved changes asks "Discard changes?".
+> Not run: the unit tests (written, run only on request). Strings missing in Arabic on purpose: the app name, the two language names and the debug-only sample button.
+
 ## Context
 Habits today are a weekly-goal tracker kept apart from tasks: a dialog creates them, a day is a plain counter
 (`habit_entries.amount`), and nothing links a habit to a time of day. The goal is to make habits part of the day:
