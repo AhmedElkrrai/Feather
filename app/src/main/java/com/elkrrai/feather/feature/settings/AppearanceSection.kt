@@ -76,7 +76,9 @@ internal fun AppearanceRows(
     onPickTheme: () -> Unit,
 ) {
     SectionTitle(stringResource(R.string.settings_group_look))
+    SettingsGroup {
     SettingsRow(
+        first = true,
         title = stringResource(R.string.settings_theme),
         summary = stringResource(settings.themeMode.labelRes()),
         supporting = null,
@@ -104,8 +106,11 @@ internal fun AppearanceRows(
             )
         },
     )
+    }
     SectionTitle(stringResource(R.string.settings_group_feel))
+    SettingsGroup {
     SettingsRow(
+        first = true,
         title = stringResource(R.string.settings_haptics),
         summary = null,
         supporting = stringResource(R.string.settings_haptics_summary),
@@ -142,12 +147,15 @@ internal fun AppearanceRows(
         onClick = { actions.onMenuHintsChange(!settings.menuHints) },
         trailing = { Switch(checked = settings.menuHints, onCheckedChange = actions.onMenuHintsChange) },
     )
+    }
 }
 
 /** The Today screen page: the cards and rows that keep you company there. */
 @Composable
 internal fun TodayScreenRows(settings: AppSettings, actions: AppearanceActions) {
+    SettingsGroup {
     SettingsRow(
+        first = true,
         title = stringResource(R.string.settings_weekly_feather),
         summary = null,
         supporting = stringResource(R.string.settings_weekly_feather_summary),
@@ -175,6 +183,7 @@ internal fun TodayScreenRows(settings: AppSettings, actions: AppearanceActions) 
         onClick = { actions.onHabitsInTodayChange(!settings.habitsInToday) },
         trailing = { Switch(checked = settings.habitsInToday, onCheckedChange = actions.onHabitsInTodayChange) },
     )
+    }
 }
 
 /** A short list of radio choices in a dialog; picking one applies it and closes the dialog. */

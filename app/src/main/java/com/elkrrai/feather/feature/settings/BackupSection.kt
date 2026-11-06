@@ -67,7 +67,9 @@ private fun BackupStyle.summaryRes(): Int = when (this) {
 @Composable
 internal fun BackupRows(actions: BackupActions, settings: AppSettings, onPickStyle: () -> Unit) {
     val locale = LocalConfiguration.current.locales[0]
+    SettingsGroup {
     SettingsRow(
+        first = true,
         title = stringResource(R.string.backup_export),
         summary = null,
         supporting = stringResource(R.string.backup_export_summary),
@@ -114,6 +116,7 @@ internal fun BackupRows(actions: BackupActions, settings: AppSettings, onPickSty
         enabled = settings.backupFolder != null,
         onClick = actions.onBackupNow,
     )
+    }
 }
 
 /** A short name for a folder chosen with the system picker, such as "Backups". */

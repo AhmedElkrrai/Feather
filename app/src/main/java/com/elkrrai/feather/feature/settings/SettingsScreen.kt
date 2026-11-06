@@ -17,6 +17,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
@@ -300,17 +302,17 @@ fun SettingsContent(
                 when (shown) {
                     SettingsPage.Home -> SettingsHome(
                         settings = settings,
-                        remindersHealthy = remindersHealthy,
-                        reminderWarning = reminderWarning,
                         appLockAvailable = appLockAvailable,
                         versionName = versionName,
                         onOpen = { page = it },
-                        onOpenReliability = onOpenReliability,
                         onOpenTags = onOpenTags,
                     )
 
                     SettingsPage.Reminders -> {
+                        if (!remindersHealthy) ReminderWarningCard(reminderWarning, onOpenReliability)
+                        SettingsGroup {
                         SettingsRow(
+                            first = true,
                             title = stringResource(R.string.settings_default_time),
                             summary = formatDueTime(settings.defaultReminderTime, locale),
                             supporting = stringResource(R.string.settings_default_time_summary),
@@ -353,6 +355,7 @@ fun SettingsContent(
                             supporting = null,
                             onClick = onOpenReliability,
                         )
+                        }
                     }
 
                     SettingsPage.Appearance -> AppearanceRows(
@@ -365,7 +368,8 @@ fun SettingsContent(
 
                     SettingsPage.Backup -> BackupRows(backup, settings, onPickStyle = { dialog = SettingsDialog.BackupStyle })
 
-                    SettingsPage.Privacy -> SettingsRow(
+                    SettingsPage.Privacy -> SettingsGroup { SettingsRow(
+                        first = true,
                         title = stringResource(R.string.settings_app_lock),
                         summary = null,
                         supporting = stringResource(
@@ -380,10 +384,11 @@ fun SettingsContent(
                                 enabled = appLockAvailable,
                             )
                         },
-                    )
+                    ) }
 
-                    SettingsPage.LanguageTime -> {
+                    SettingsPage.LanguageTime -> SettingsGroup {
                         SettingsRow(
+                            first = true,
                             title = stringResource(R.string.settings_language),
                             summary = stringResource(AppLanguage.current().labelRes),
                             supporting = null,
@@ -428,6 +433,7 @@ fun SettingsContent(
                         )
                         if (onAddTreeStages != null) {
                             SettingsRow(
+                                first = true,
                                 title = stringResource(R.string.debug_add_tree_stages),
                                 summary = null,
                                 supporting = stringResource(R.string.debug_add_tree_stages_summary),
@@ -530,55 +536,15 @@ private enum class SettingsPage(@StringRes val titleRes: Int) {
 @Composable
 private fun SettingsHome(
     settings: AppSettings,
-    remindersHealthy: Boolean,
-    @StringRes reminderWarning: Int,
     appLockAvailable: Boolean,
     versionName: String,
     onOpen: (SettingsPage) -> Unit,
-    onOpenReliability: () -> Unit,
     onOpenTags: () -> Unit,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val context = LocalContext.current
     val resources = context.resources
     fun pair(first: String, second: String) = resources.getString(R.string.settings_summary_pair, first, second)
-
-    if (!remindersHealthy) {
-        // the one thing worth saying out loud: reminders that may not arrive
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .clickable(role = Role.Button, onClick = onOpenReliability),
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_alert),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.size(20.dp),
-                )
-                Text(
-                    text = stringResource(reminderWarning),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = stringResource(R.string.settings_home_warning_fix),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-            }
-        }
-    }
 
     SettingsGroup {
         CategoryRow(
@@ -659,9 +625,47 @@ private fun SettingsHome(
     }
 }
 
+/** The one thing worth saying out loud on the Reminders page: something that may keep a reminder from arriving on time. */
+@Composable
+private fun ReminderWarningCard(@StringRes text: Int, onFix: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(role = Role.Button, onClick = onFix),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_alert),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                text = stringResource(text),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = stringResource(R.string.settings_home_warning_fix),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        }
+    }
+}
+
 /** A rounded block that holds a few category rows. */
 @Composable
-private fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
+internal fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -740,29 +744,43 @@ internal fun SettingsRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    /** The first row of a card has no line above it. */
+    first: Boolean = false,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    ListItem(
+    val scheme = MaterialTheme.colorScheme
+    Column(
         modifier = modifier
             .alpha(if (enabled) 1f else 0.38f)
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier),
-        headlineContent = { Text(title) },
-        supportingContent = if (summary != null || supporting != null) {
-            {
-                Column {
-                    if (summary != null) {
-                        Text(summary, color = MaterialTheme.colorScheme.primary)
-                    }
-                    if (supporting != null) {
-                        Text(supporting, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+    ) {
+        if (!first) HorizontalDivider(color = scheme.outlineVariant.copy(alpha = 0.5f))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.bodyLarge)
+                if (supporting != null) {
+                    Text(supporting, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
                 }
             }
-        } else {
-            null
-        },
-        trailingContent = trailing,
-    )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = scheme.primary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 180.dp),
+                )
+            }
+            trailing?.invoke()
+        }
+    }
 }
 
 @Composable
