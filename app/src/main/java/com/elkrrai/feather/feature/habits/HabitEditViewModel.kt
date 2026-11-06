@@ -162,6 +162,17 @@ class HabitEditViewModel @Inject constructor(
         return key
     }
 
+    /** Moves a stage one place up (-1) or down (1). */
+    fun moveStage(key: Long, by: Int) = _uiState.update { state ->
+        val from = state.stages.indexOfFirst { it.key == key }
+        val to = from + by
+        if (from < 0 || to !in state.stages.indices) {
+            state
+        } else {
+            state.copy(stages = state.stages.toMutableList().also { list -> list.add(to, list.removeAt(from)) })
+        }
+    }
+
     fun removeStage(key: Long) = _uiState.update { it.copy(stages = it.stages.filterNot { stage -> stage.key == key }) }
 
     fun onNeededChange(text: String) = _uiState.update {

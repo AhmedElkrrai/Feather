@@ -618,11 +618,14 @@
     <string name="habit_named_label">سمِّ كل وقت</string>
     <string name="habit_named_hint">مغلق: عدّاد بسيط. مفتوح: تكتب الأوقات بنفسك، مثل الفجر والظهر والعصر.</string>
     <string name="habit_stages_label">أوقات اليوم</string>
-    <string name="habit_stages_hint">اضغط على وقت لتغيير اسمه أو لتحديد وقت بعينه أو فترة. إضافة وقت أو حذفه يبدأ من الأسبوع القادم.</string>
+    <string name="habit_stages_hint">اضغط على وقت لتغيير اسمه أو لتحديد وقت بعينه أو فترة. اسحب المقبض لترتيب الأوقات. الإضافة والحذف وإعادة الترتيب تبدأ من الأسبوع القادم.</string>
     <string name="habit_stage_name">الاسم</string>
     <string name="habit_stage_unnamed">سمِّ هذا الوقت</string>
     <string name="habit_stage_add">أضف وقتًا</string>
     <string name="habit_stage_done_editing">انتهيت من تعديل هذا الوقت</string>
+    <string name="habit_stage_drag">اسحب لإعادة الترتيب</string>
+    <string name="habit_stage_move_up">انقل لأعلى</string>
+    <string name="habit_stage_move_down">انقل لأسفل</string>
     <string name="habit_stage_remove">احذف هذا الوقت</string>
     <string name="habit_time_none">بلا</string>
     <string name="habit_time_at">في وقت محدد</string>
