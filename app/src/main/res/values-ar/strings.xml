@@ -80,6 +80,7 @@
     <string name="delete_tag_message">ستتم إزالة «%1$s» من جميع المهام.</string>
     <string name="tags_title">الوسوم</string>
     <string name="tab_all">الكل</string>
+    <string name="tab_back_to">› %1$s</string>
     <string name="tab_all_in">كل %1$s</string>
     <string name="tab_no_tag">بلا وسم</string>
     <string name="tags_row_summary">أعد تسمية وسومك أو احذفها أو رتّبها. يمكن وضع وسم تحت وسم آخر.</string>
@@ -786,8 +787,6 @@
     <string name="rhythm_hero_few">خطوات صغيرة، وتتراكم مع الوقت.</string>
     <string name="rhythm_hero_steady">أسبوع ثابت. أحسنت.</string>
     <string name="rhythm_hero_busy">أسبوع مزدحم ومشرق.</string>
-    <string name="rhythm_new_title">تقدّمك يبدأ من هنا</string>
-    <string name="rhythm_new_body">أنهِ مهمة وسيظهر أول بيضة.</string>
     <string name="rhythm_last_seven">آخر 7 أيام</string>
     <string name="rhythm_last_seven_summary">آخر 7 أيام: %1$s</string>
     <string name="rhythm_day_count">%1$s %2$d</string>

@@ -84,6 +84,7 @@
     <string name="delete_tag_message">“%1$s” will be removed from all tasks.</string>
     <string name="tags_title">Tags</string>
     <string name="tab_all">All</string>
+    <string name="tab_back_to">‹ %1$s</string>
     <string name="tab_all_in">All %1$s</string>
     <string name="tab_no_tag">No tag</string>
     <string name="tags_row_summary">Rename, delete and arrange your tags. A tag can sit under another.</string>
@@ -708,8 +709,6 @@
     <string name="rhythm_hero_few">A few small steps. They add up.</string>
     <string name="rhythm_hero_steady">A steady week. Nicely done.</string>
     <string name="rhythm_hero_busy">A busy, bright week.</string>
-    <string name="rhythm_new_title">Your progress starts here</string>
-    <string name="rhythm_new_body">Finish a task and the first egg will appear.</string>
     <string name="rhythm_last_seven">Last 7 days</string>
     <string name="rhythm_last_seven_summary">Last 7 days: %1$s</string>
     <string name="rhythm_day_count">%1$s %2$d</string>
