@@ -1,5 +1,7 @@
 package com.elkrrai.feather.feature.rhythm
 
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.unit.Dp
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -34,8 +36,9 @@ internal fun featherDrawable(activeDays: Int): Int = when (activeDays.coerceIn(0
 
 /**
  * The weekly feather: one of the owl's eight feathers, by how many days of last week had a finished task. It keeps its own colors in every
- * season. The feathers are dark, so a light badge sits behind them, which keeps them in view on the dark card. Decoration; the words next
- * to it carry the meaning.
+ * season. The feathers are dark, so a thin light outline follows the shape of the feather (the same picture, as a light silhouette a little
+ * to every side behind it): there is no box, and the feather still stands out on the dark card. Decoration; the words next to it carry the
+ * meaning.
  */
 @Composable
 internal fun WeeklyFeatherView(
@@ -43,18 +46,32 @@ internal fun WeeklyFeatherView(
     modifier: Modifier = Modifier,
     size: Dp = 120.dp,
 ) {
-    Box(
-        modifier = modifier
-            .size(size)
-            .background(Color(0xFFE8E3D8), RoundedCornerShape(size / 5))
-            .padding(size / 10)
-            .clearAndSetSemantics { },
-    ) {
+    val picture = featherDrawable(feather.activeDays)
+    val rim = size / 80
+    Box(modifier = modifier.size(size).padding(size / 20).clearAndSetSemantics { }) {
+        // the outline: the silhouette of the feather, in eight directions
+        for ((dx, dy) in RIM_DIRECTIONS) {
+            Image(
+                painter = painterResource(picture),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize().offset(rim * dx, rim * dy),
+                contentScale = ContentScale.Fit,
+                colorFilter = ColorFilter.tint(RIM),
+            )
+        }
         Image(
-            painter = painterResource(featherDrawable(feather.activeDays)),
+            painter = painterResource(picture),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Fit,
         )
     }
 }
+
+/** A warm light, a little see-through, so the outline is soft. */
+private val RIM = Color(0xFFE8E3D8).copy(alpha = 0.85f)
+
+private val RIM_DIRECTIONS = listOf(
+    -1f to 0f, 1f to 0f, 0f to -1f, 0f to 1f,
+    -0.7f to -0.7f, 0.7f to -0.7f, -0.7f to 0.7f, 0.7f to 0.7f,
+)
