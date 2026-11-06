@@ -149,6 +149,8 @@ internal fun mapleArt(): LeafArt {
     )
 }
 
+private const val SPRIG_TOP = 0.74f
+
 /** A sprig: a thin stem with six pointed leaflets alternating up it and a seventh at its tip, each marked with a midline and short dashes. */
 internal fun sprigArt(): LeafArt {
     fun stemX(t: Float) = MID + 8f * sin(PI.toFloat() * t * 1.4f)
@@ -159,11 +161,13 @@ internal fun sprigArt(): LeafArt {
     val spots = ArrayList<DaySpot>()
 
     for (i in 0 until 7) {
-        val t = 0.16f + 0.60f * i / 6f
+        // Six leaflets climb the stem and the seventh ends it. They are spaced so that no leaflet reaches the next one up on its own side
+        // (a leaflet is about 70 units tall, and two on one side are 80 apart), and the last one stops short of the top of the board.
         val top = i == 6
+        val t = if (top) SPRIG_TOP else 0.12f + 0.10f * i
         val side = if (i % 2 == 0) -1f else 1f
-        val length = if (top) 118f else 124f
-        val width = if (top) 52f else 56f
+        val length = 104f
+        val width = if (top) 50f else 46f
         val baseX = stemX(t)
         val baseY = BASE - HEIGHT * t
         val dx: Float
@@ -173,7 +177,7 @@ internal fun sprigArt(): LeafArt {
         if (top) {
             dx = 0f; dy = -1f; nx = 1f; ny = 0f
         } else {
-            val a = 56f * DEG
+            val a = 40f * DEG
             dx = side * cos(a); dy = -sin(a); nx = -dy * side; ny = dx * side
         }
         val left = ArrayList<Offset>()
@@ -211,7 +215,8 @@ internal fun sprigArt(): LeafArt {
             val stem = Path().apply {
                 moveTo(stemX(0f), BASE + STEM)
                 for (k in 0..40) {
-                    val u = k / 40f * 0.84f
+                    // up to where the last leaflet begins: the stem never runs through it
+                    val u = k / 40f * SPRIG_TOP
                     lineTo(stemX(u), BASE + STEM - (HEIGHT + STEM) * u)
                 }
             }
