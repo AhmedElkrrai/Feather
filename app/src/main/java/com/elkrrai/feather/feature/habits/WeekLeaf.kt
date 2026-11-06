@@ -103,7 +103,7 @@ internal fun leafWidth(t: Float): Float = sin(PI.toFloat() * t.coerceIn(0f, 1f).
  * motion is reduced.
  */
 @Composable
-fun WeekLeaf(
+internal fun WeekLeaf(
     week: WeekProgress,
     today: LocalDate,
     modifier: Modifier = Modifier,
