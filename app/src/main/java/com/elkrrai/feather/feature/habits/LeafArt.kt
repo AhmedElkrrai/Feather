@@ -261,8 +261,9 @@ internal fun frondArt(): LeafArt {
             ribs.forEach { (a, b) -> drawLine(light.copy(alpha = 0.45f), a, b, 1f) }
             drawLine(line, Offset(stemX(0f), BASE), Offset(stemX(0f) + 8f, BASE + STEM), 4f, StrokeCap.Round)
             val rachis = Path().apply {
+                // from where the stem leaves the leaf, so the two meet with no gap
                 for (k in 0..30) {
-                    val t = 0.02f + 0.96f * k / 30f
+                    val t = 0.98f * k / 30f
                     if (k == 0) moveTo(stemX(t), BASE - HEIGHT * t) else lineTo(stemX(t), BASE - HEIGHT * t)
                 }
             }
