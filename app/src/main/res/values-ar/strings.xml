@@ -646,9 +646,8 @@
     <string name="habit_today_when">متى تظهر</string>
     <string name="habit_today_all_day">طوال اليوم</string>
     <string name="habit_today_from_time">من وقتها</string>
-    <string name="habit_today_when_hint">يحدد متى تظهر البطاقة خلال اليوم. «طوال اليوم»: من منتصف الليل. «من وقتها»: عندما يبدأ وقتها من اليوم.</string>
-    <string name="habit_today_from_needs_time">حدِّد وقتًا أولًا: «من وقتها» تنتظره، وتظهر البطاقة طوال اليوم إلى أن تضبطه.</string>
-    <string name="habit_today_when_hint_stages">يحدد متى تظهر البطاقة خلال اليوم. «طوال اليوم»: من منتصف الليل. «من وقتها»: عندما يبدأ أول جزء.</string>
+    <string name="habit_today_when_hint">يحدد متى تظهر البطاقة خلال اليوم</string>
+    <string name="habit_today_when_hint_stages">يحدد متى تظهر البطاقة خلال اليوم</string>
     <string name="habit_row_style">شكل البطاقة</string>
     <string name="habit_row_one">واحد في كل مرة</string>
     <string name="habit_row_checklist">قائمة</string>

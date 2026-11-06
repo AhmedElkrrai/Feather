@@ -289,15 +289,7 @@ internal fun HabitEditContent(
                             label = { Text(stringResource(R.string.habit_today_from_time)) },
                         )
                     }
-                    FormHint(
-                        stringResource(
-                            when {
-                                !state.hasTime -> R.string.habit_today_from_needs_time
-                                state.staged -> R.string.habit_today_when_hint_stages
-                                else -> R.string.habit_today_when_hint
-                            },
-                        ),
-                    )
+                    FormHint(stringResource(if (state.staged) R.string.habit_today_when_hint_stages else R.string.habit_today_when_hint))
                 }
 
                 if (state.staged) {

@@ -570,9 +570,8 @@
     <string name="habit_today_when">When it shows</string>
     <string name="habit_today_all_day">All day</string>
     <string name="habit_today_from_time">From its time</string>
-    <string name="habit_today_when_hint">Controls when the card shows up during the day. All day: from midnight. From its time: once its time of day starts.</string>
-    <string name="habit_today_from_needs_time">Set a time first: From its time waits for it, and the card shows all day until then.</string>
-    <string name="habit_today_when_hint_stages">Controls when the card shows up during the day. All day: from midnight. From its time: once the first part starts.</string>
+    <string name="habit_today_when_hint">Controls when the card shows up during the day</string>
+    <string name="habit_today_when_hint_stages">Controls when the card shows up during the day</string>
     <string name="habit_row_style">Card style</string>
     <string name="habit_row_one">One at a time</string>
     <string name="habit_row_checklist">Checklist</string>
