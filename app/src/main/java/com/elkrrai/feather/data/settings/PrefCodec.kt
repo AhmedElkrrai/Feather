@@ -29,10 +29,11 @@ internal object PrefCodec {
 }
 
 private const val HABIT_TREES_SEEN = "habit_trees_seen"
-private const val HABIT_SWIPE_HINTS_SHOWN = "habit_swipe_hints_shown"
+/** Counters of how often a hint was shown: the larger one stays. */
+private val CountersToKeepLargest = setOf("habit_swipe_hints_shown", "habit_hold_hint_shown")
 
 /** Things that were reached once stay reached: restoring a backup never turns them off. */
-private val ProgressFlags = setOf("voice_used", "backed_up", "welcome_seen")
+private val ProgressFlags = setOf("voice_used", "backed_up", "welcome_seen", "habit_hold_learned")
 
 /**
  * What a restore puts in the preference [name] when this phone already has a value ([current]). What was earned
@@ -48,7 +49,7 @@ internal fun mergedPreference(name: String, current: Any?, incoming: Any): Any {
             if (name == HABIT_TREES_SEEN) mostWeeksPerHabit(here + there) else (here + there).toSet()
         }
         name in ProgressFlags -> current == true || incoming == true
-        name == HABIT_SWIPE_HINTS_SHOWN && current is Int && incoming is Int -> maxOf(current, incoming)
+        name in CountersToKeepLargest && current is Int && incoming is Int -> maxOf(current, incoming)
         else -> incoming
     }
 }

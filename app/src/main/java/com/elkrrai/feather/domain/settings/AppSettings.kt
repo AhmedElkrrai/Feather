@@ -59,6 +59,11 @@ data class AppSettings(
     /** The "your day" card on Today in the morning, and the wind-down card in the evening. */
     val morningCard: Boolean = true,
     val eveningCard: Boolean = true,
+    /** Habits that are switched on for Today show as rows there. */
+    val habitsInToday: Boolean = true,
+    /** How many times the "hold the card to finish" line was shown, and whether a habit was finished by holding (then the line is not needed). */
+    val habitHoldHintShown: Int = 0,
+    val habitHoldLearned: Boolean = false,
     /** The day each card was last put away, so it shows once a day. */
     val morningCardDismissedOn: LocalDate? = null,
     val eveningCardDismissedOn: LocalDate? = null,
@@ -147,6 +152,12 @@ interface SettingsRepository : BackupPreferences {
     suspend fun setMorningCard(enabled: Boolean)
 
     suspend fun setEveningCard(enabled: Boolean)
+
+    suspend fun setHabitsInToday(enabled: Boolean)
+
+    suspend fun setHabitHoldHintShown(count: Int)
+
+    suspend fun setHabitHoldLearned(learned: Boolean)
 
     suspend fun setMorningCardDismissedOn(date: LocalDate?)
 

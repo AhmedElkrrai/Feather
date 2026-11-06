@@ -195,6 +195,7 @@ fun SettingsScreen(
             onMorningCardChange = viewModel::setMorningCard,
             onEveningCardChange = viewModel::setEveningCard,
             onWeeklyFeatherChange = viewModel::setWeeklyFeather,
+            onHabitsInTodayChange = viewModel::setHabitsInToday,
         ),
         versionName = remember { versionNameOf(context) },
         modifier = modifier,

@@ -51,6 +51,7 @@ class AppearanceActions(
     val onMorningCardChange: (Boolean) -> Unit = {},
     val onEveningCardChange: (Boolean) -> Unit = {},
     val onWeeklyFeatherChange: (Boolean) -> Unit = {},
+    val onHabitsInTodayChange: (Boolean) -> Unit = {},
 )
 
 @StringRes
@@ -168,6 +169,13 @@ internal fun AppearanceRows(
         supporting = stringResource(R.string.settings_evening_card_summary),
         onClick = { actions.onEveningCardChange(!settings.eveningCard) },
         trailing = { Switch(checked = settings.eveningCard, onCheckedChange = actions.onEveningCardChange) },
+    )
+    SettingsRow(
+        title = stringResource(R.string.settings_habits_in_today),
+        summary = null,
+        supporting = stringResource(R.string.settings_habits_in_today_summary),
+        onClick = { actions.onHabitsInTodayChange(!settings.habitsInToday) },
+        trailing = { Switch(checked = settings.habitsInToday, onCheckedChange = actions.onHabitsInTodayChange) },
     )
 }
 

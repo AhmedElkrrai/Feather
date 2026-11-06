@@ -31,6 +31,12 @@ interface HabitRepository {
      */
     suspend fun setStageDone(habitId: String, date: LocalDate, stageId: String, done: Boolean)
 
+    /**
+     * Makes exactly [stageIds] the stages done on [date] (others of the habit are undone): finishing a whole day, or putting it back as it was.
+     * One change, so the row of Today does not flicker through every stage.
+     */
+    suspend fun setStagesDone(habitId: String, date: LocalDate, stageIds: Set<String>)
+
     /** A soft delete, like a task: the rows stay and the habit is no longer listed. */
     suspend fun delete(id: String)
 }

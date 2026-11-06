@@ -793,6 +793,8 @@
     <string name="settings_section_company">رفقة لطيفة</string>
     <string name="settings_morning_card">بطاقة الصباح</string>
     <string name="settings_morning_card_summary">نظرة سريعة على يومك، مرة كل صباح. يمكنك إخفاؤها.</string>
+    <string name="settings_habits_in_today">العادات في اليوم</string>
+    <string name="settings_habits_in_today_summary">أظهر عاداتك كصفوف في شاشة اليوم، في أوقاتها. ولكل عادة مفتاحها الخاص أيضًا.</string>
     <string name="settings_evening_card">بطاقة المساء</string>
     <string name="settings_evening_card_summary">تهدئة هادئة بعد السابعة مساءً، مع إمكانية نقل ما تبقّى إلى الغد.</string>
     <string name="day_card_morning_title">يومك</string>

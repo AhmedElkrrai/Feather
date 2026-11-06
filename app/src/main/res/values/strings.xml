@@ -711,6 +711,8 @@
     <string name="settings_section_company">Gentle company</string>
     <string name="settings_morning_card">Morning card</string>
     <string name="settings_morning_card_summary">A short look at your day, once each morning. You can put it away.</string>
+    <string name="settings_habits_in_today">Habits in Today</string>
+    <string name="settings_habits_in_today_summary">Show your habits as rows in Today, at their time. Each habit also has its own switch.</string>
     <string name="settings_evening_card">Evening card</string>
     <string name="settings_evening_card_summary">A quiet wind-down after 7 PM, with a way to move what is left to tomorrow.</string>
     <string name="day_card_morning_title">Your day</string>

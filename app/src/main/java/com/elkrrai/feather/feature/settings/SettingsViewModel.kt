@@ -56,6 +56,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repository.setTimeFormat(format) }
     }
 
+    fun setHabitsInToday(enabled: Boolean) {
+        viewModelScope.launch { repository.setHabitsInToday(enabled) }
+    }
+
     fun setBackupStyle(style: BackupStyle) {
         viewModelScope.launch { repository.setBackupStyle(style) }
     }

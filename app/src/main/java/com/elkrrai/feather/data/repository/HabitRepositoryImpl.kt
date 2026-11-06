@@ -162,6 +162,20 @@ class HabitRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun setStagesDone(habitId: String, date: LocalDate, stageIds: Set<String>) {
+        if (dao.getHabit(habitId) == null) return
+        val day = date.toString()
+        val now = clock.millis()
+        tx.run {
+            val known = dao.stagesOf(habitId).map { it.id }.toSet()
+            val wanted = stageIds.filter { it in known }.toSet()
+            val current = dao.doneStageIds(habitId, day).toSet()
+            (wanted - current).forEach { dao.upsertStageLog(HabitStageLogEntity(habitId, day, it, true, now)) }
+            (current - wanted).forEach { dao.upsertStageLog(HabitStageLogEntity(habitId, day, it, false, now)) }
+            dao.upsertEntry(HabitEntryEntity(habitId, day, dao.doneStageCount(habitId, day).coerceIn(0, MAX_HABIT_TARGET), now))
+        }
+    }
+
     override suspend fun delete(id: String) {
         dao.softDelete(id, clock.millis())
     }

@@ -63,6 +63,9 @@ class DataStoreSettingsRepository @Inject constructor(
         val backedUp = booleanPreferencesKey("backed_up")
         val morningCard = booleanPreferencesKey("morning_card")
         val eveningCard = booleanPreferencesKey("evening_card")
+        val habitsInToday = booleanPreferencesKey("habits_in_today")
+        val habitHoldHintShown = intPreferencesKey("habit_hold_hint_shown")
+        val habitHoldLearned = booleanPreferencesKey("habit_hold_learned")
         val morningCardDismissedOn = stringPreferencesKey("morning_card_dismissed_on")
         val eveningCardDismissedOn = stringPreferencesKey("evening_card_dismissed_on")
     }
@@ -109,6 +112,9 @@ class DataStoreSettingsRepository @Inject constructor(
             backedUp = prefs[Keys.backedUp] ?: defaults.backedUp,
             morningCard = prefs[Keys.morningCard] ?: defaults.morningCard,
             eveningCard = prefs[Keys.eveningCard] ?: defaults.eveningCard,
+            habitsInToday = prefs[Keys.habitsInToday] ?: defaults.habitsInToday,
+            habitHoldHintShown = prefs[Keys.habitHoldHintShown] ?: defaults.habitHoldHintShown,
+            habitHoldLearned = prefs[Keys.habitHoldLearned] ?: defaults.habitHoldLearned,
             morningCardDismissedOn = prefs[Keys.morningCardDismissedOn]?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
             eveningCardDismissedOn = prefs[Keys.eveningCardDismissedOn]?.let { runCatching { LocalDate.parse(it) }.getOrNull() },
             rhythmPausedDays = prefs[Keys.rhythmPausedDays].orEmpty().mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }.toSet(),
@@ -246,6 +252,18 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit { it[Keys.eveningCard] = enabled }
     }
 
+    override suspend fun setHabitsInToday(enabled: Boolean) {
+        dataStore.edit { it[Keys.habitsInToday] = enabled }
+    }
+
+    override suspend fun setHabitHoldHintShown(count: Int) {
+        dataStore.edit { it[Keys.habitHoldHintShown] = count }
+    }
+
+    override suspend fun setHabitHoldLearned(learned: Boolean) {
+        dataStore.edit { it[Keys.habitHoldLearned] = learned }
+    }
+
     override suspend fun setMorningCardDismissedOn(date: LocalDate?) {
         dataStore.edit { if (date == null) it.remove(Keys.morningCardDismissedOn) else it[Keys.morningCardDismissedOn] = date.toString() }
     }
@@ -301,11 +319,11 @@ class DataStoreSettingsRepository @Inject constructor(
         private val booleanKeys = listOf(
             Keys.dailySummaryEnabled, Keys.pureBlack, Keys.dynamicColor, Keys.haptics, Keys.menuHints, Keys.welcomeSeen,
             Keys.birdAnimations, Keys.reduceMotion, Keys.celebrations, Keys.weeklyFeather, Keys.voiceUsed, Keys.backedUp,
-            Keys.morningCard, Keys.eveningCard,
+            Keys.morningCard, Keys.eveningCard, Keys.habitsInToday, Keys.habitHoldLearned,
         )
         private val intKeys = listOf(
             Keys.defaultReminderMinute, Keys.snoozeMinutes, Keys.dailySummaryMinute, Keys.habitSwipeHintsShown,
-            Keys.nestScarf, Keys.nestGlasses, Keys.nestHat, Keys.nestPot,
+            Keys.nestScarf, Keys.nestGlasses, Keys.nestHat, Keys.nestPot, Keys.habitHoldHintShown,
         )
         private val stringKeys = listOf(Keys.themeMode, Keys.timeFormat, Keys.backupStyle, Keys.habitSwipeHintWeek, Keys.nestStyle)
         private val setKeys = listOf(Keys.habitTreesSeen, Keys.rhythmPausedDays, Keys.nestUnlocked, Keys.nestSeen)

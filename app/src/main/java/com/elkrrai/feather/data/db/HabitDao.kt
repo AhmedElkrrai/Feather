@@ -41,6 +41,9 @@ interface HabitDao {
     @Query("SELECT stageId FROM habit_goal_stages WHERE habitId = :habitId AND effectiveFrom = :effectiveFrom ORDER BY position")
     suspend fun goalStageIds(habitId: String, effectiveFrom: String): List<String>
 
+    @Query("SELECT stageId FROM habit_stage_log WHERE habitId = :habitId AND date = :date AND done = 1")
+    suspend fun doneStageIds(habitId: String, date: String): List<String>
+
     @Query("SELECT COUNT(*) FROM habit_stage_log WHERE habitId = :habitId AND date = :date AND done = 1")
     suspend fun doneStageCount(habitId: String, date: String): Int
 
