@@ -2,7 +2,6 @@ package com.elkrrai.feather.feature.habits
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.elkrrai.feather.domain.habit.HabitKind
 import com.elkrrai.feather.domain.habit.HabitState
 import com.elkrrai.feather.domain.repository.HabitRepository
 import com.elkrrai.feather.domain.settings.SettingsRepository
@@ -34,30 +33,6 @@ class HabitsViewModel @Inject constructor(
     val treesSeen: StateFlow<Map<String, Int>> = settings.settings
         .map { it.habitTreesSeen }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
-
-    fun add(name: String, kind: HabitKind, unit: String, target: Int, dailyTarget: Int, thisWeekStart: LocalDate) {
-        if (name.isBlank()) return
-        viewModelScope.launch { repository.addHabit(name, kind, unit, target, dailyTarget, thisWeekStart) }
-    }
-
-    /**
-     * The name and the unit change at once. A changed goal is queued for the start of the next week;
-     * [goalChanged] says whether the numbers differ from what was shown.
-     */
-    fun edit(
-        id: String,
-        name: String,
-        unit: String,
-        target: Int,
-        dailyTarget: Int,
-        goalChanged: Boolean,
-        nextWeekStart: LocalDate,
-    ) {
-        viewModelScope.launch {
-            repository.rename(id, name, unit)
-            if (goalChanged) repository.queueGoal(id, target, dailyTarget, nextWeekStart)
-        }
-    }
 
     fun setAmount(id: String, date: LocalDate, amount: Int) {
         viewModelScope.launch { repository.setAmount(id, date, amount) }

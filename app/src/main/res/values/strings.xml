@@ -524,6 +524,11 @@
     <string name="habit_target_amount">Goal for the week</string>
     <string name="habit_daily_target">Times a day</string>
     <string name="habit_daily_target_hint">A day counts when it gets this many. Leave 1 for a single tap.</string>
+    <string name="habit_type_label">Type</string>
+    <string name="habit_type_hint">Days in a week counts the days you did it. A total for the week adds up pages, minutes or anything else you measure.</string>
+    <string name="habit_type_locked_hint">The type is chosen when the habit is made and can\'t change.</string>
+    <string name="habit_target_days_hint">How many days in a week make it a week you met your goal.</string>
+    <string name="habit_target_amount_hint">The total you aim for in a week.</string>
     <string name="habit_unit">What you count</string>
     <string name="habit_unit_hint">Pages, km, minutes</string>
     <string name="habit_goal_next_week">A new goal starts next week. This week keeps the goal it began with.</string>

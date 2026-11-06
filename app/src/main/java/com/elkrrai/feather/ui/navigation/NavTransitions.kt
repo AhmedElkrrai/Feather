@@ -43,6 +43,7 @@ private fun NavBackStackEntry.isDrillDown(): Boolean = destination.let {
         it.hasRoute<SearchRoute>() ||
         it.hasRoute<ReliabilityRoute>() ||
         it.hasRoute<TagsRoute>() ||
+        it.hasRoute<HabitEditRoute>() ||
         it.hasRoute<HabitDetailRoute>() ||
         it.hasRoute<HabitOverviewRoute>() ||
         it.hasRoute<HabitTreeRoute>()

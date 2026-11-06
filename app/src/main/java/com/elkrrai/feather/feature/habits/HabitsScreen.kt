@@ -109,6 +109,8 @@ fun HabitsScreen(
     onOpenRhythm: () -> Unit,
     onOpenNest: () -> Unit,
     onOpenSettings: () -> Unit,
+    onNewHabit: () -> Unit,
+    onEditHabit: (habitId: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HabitsViewModel = hiltViewModel(),
 ) {
@@ -150,8 +152,8 @@ fun HabitsScreen(
         HabitsContent(
             habits = habits,
             onMenuClick = { coroutineScope.launch { drawerState.open() } },
-            onAdd = viewModel::add,
-            onEdit = viewModel::edit,
+            onNewHabit = onNewHabit,
+            onEditHabit = onEditHabit,
             onSetAmount = viewModel::setAmount,
             onDelete = viewModel::delete,
         )
@@ -159,8 +161,6 @@ fun HabitsScreen(
 }
 
 private sealed interface HabitDialog {
-    data object New : HabitDialog
-    data class Edit(val id: String) : HabitDialog
     data class Delete(val id: String) : HabitDialog
     data class SetAmount(val id: String, val date: LocalDate) : HabitDialog
 }
@@ -170,8 +170,8 @@ private sealed interface HabitDialog {
 internal fun HabitsContent(
     habits: List<HabitState>?,
     onMenuClick: () -> Unit,
-    onAdd: (String, HabitKind, String, Int, Int, LocalDate) -> Unit,
-    onEdit: (String, String, String, Int, Int, Boolean, LocalDate) -> Unit,
+    onNewHabit: () -> Unit,
+    onEditHabit: (habitId: String) -> Unit,
     onSetAmount: (String, LocalDate, Int) -> Unit,
     onDelete: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -180,7 +180,6 @@ internal fun HabitsContent(
     val locale = LocalConfiguration.current.locales[0]
     val firstDay = firstDayOfWeek(locale)
     val weekStart = weekStartOf(today, firstDay)
-    val nextWeekStart = weekStart.plusWeeks(1)
     var dialog by remember { mutableStateOf<HabitDialog?>(null) }
 
     Scaffold(
@@ -196,7 +195,7 @@ internal fun HabitsContent(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { dialog = HabitDialog.New }) {
+            FloatingActionButton(onClick = onNewHabit) {
                 Icon(painterResource(R.drawable.ic_add), stringResource(R.string.habit_new))
             }
         },
@@ -230,7 +229,7 @@ internal fun HabitsContent(
                         locale = locale,
                         onLog = { date, amount -> onSetAmount(state.habit.id, date, amount) },
                         onPickAmount = { date -> dialog = HabitDialog.SetAmount(state.habit.id, date) },
-                        onEdit = { dialog = HabitDialog.Edit(state.habit.id) },
+                        onEdit = { onEditHabit(state.habit.id) },
                         onDelete = { dialog = HabitDialog.Delete(state.habit.id) },
                     )
                 }
@@ -240,30 +239,6 @@ internal fun HabitsContent(
 
     when (val open = dialog) {
         null -> Unit
-
-        HabitDialog.New -> HabitEditDialog(
-            existing = null,
-            weekStart = weekStart,
-            onSave = { name, kind, unit, target, daily ->
-                onAdd(name, kind, unit, target, daily, weekStart)
-                dialog = null
-            },
-            onDismiss = { dialog = null },
-        )
-
-        is HabitDialog.Edit -> habits?.firstOrNull { it.habit.id == open.id }?.let { state ->
-            HabitEditDialog(
-                existing = state,
-                weekStart = weekStart,
-                onSave = { name, _, unit, target, daily ->
-                    val shown = state.goals.queuedAfter(weekStart) ?: state.goals.forWeek(weekStart)
-                    val changed = shown == null || shown.target != target || shown.dailyTarget != daily
-                    onEdit(state.habit.id, name, unit, target, daily, changed, nextWeekStart)
-                    dialog = null
-                },
-                onDismiss = { dialog = null },
-            )
-        }
 
         is HabitDialog.Delete -> habits?.firstOrNull { it.habit.id == open.id }?.let { state ->
             ConfirmDialog(
@@ -500,119 +475,4 @@ private fun AmountDialog(title: String, initial: Int, onSet: (Int) -> Unit, onDi
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
-}
-
-/**
- * Making a habit, or editing one. The kind is chosen once. When editing, the name and the unit
- * change at once; a new goal waits for the start of next week, and the dialog says so.
- */
-@Composable
-private fun HabitEditDialog(
-    existing: HabitState?,
-    weekStart: LocalDate,
-    onSave: (name: String, kind: HabitKind, unit: String, target: Int, dailyTarget: Int) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val shownGoal = existing?.let { it.goals.queuedAfter(weekStart) ?: it.goals.forWeek(weekStart) }
-    var name by rememberSaveable { mutableStateOf(existing?.habit?.name.orEmpty()) }
-    var kind by rememberSaveable { mutableStateOf(existing?.habit?.kind ?: HabitKind.DAYS) }
-    var unit by rememberSaveable { mutableStateOf(existing?.habit?.unit.orEmpty()) }
-    var target by rememberSaveable { mutableStateOf(shownGoal?.target?.toString() ?: if (kind == HabitKind.DAYS) "3" else "20") }
-    var daily by rememberSaveable { mutableStateOf(shownGoal?.dailyTarget?.toString() ?: "1") }
-
-    val targetValue = target.toIntOrNull()
-    val dailyValue = daily.toIntOrNull() ?: 1
-    val maxTarget = if (kind == HabitKind.DAYS) DAYS_IN_WEEK else MAX_HABIT_TARGET
-    val valid = name.isNotBlank() && targetValue != null && targetValue in 1..maxTarget && dailyValue in 1..MAX_DAILY_TARGET
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(if (existing == null) R.string.habit_new else R.string.habit_edit)) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.x2)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.habit_name)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (existing == null) {
-                    Column(Modifier.selectableGroup()) {
-                        KindChoice(R.string.habit_kind_days, kind == HabitKind.DAYS) {
-                            kind = HabitKind.DAYS
-                            if ((target.toIntOrNull() ?: 0) > DAYS_IN_WEEK) target = "3"
-                        }
-                        KindChoice(R.string.habit_kind_amount, kind == HabitKind.AMOUNT) { kind = HabitKind.AMOUNT }
-                    }
-                    // an example of what the chosen kind looks like
-                    Text(
-                        text = stringResource(if (kind == HabitKind.DAYS) R.string.habit_example_days else R.string.habit_example_amount),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                OutlinedTextField(
-                    value = target,
-                    onValueChange = { target = it.filter(Char::isDigit).trimStart('0').take(4) },
-                    label = {
-                        Text(stringResource(if (kind == HabitKind.DAYS) R.string.habit_target_days else R.string.habit_target_amount))
-                    },
-                    isError = targetValue == null || targetValue !in 1..maxTarget,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (kind == HabitKind.DAYS) {
-                    OutlinedTextField(
-                        value = daily,
-                        onValueChange = { daily = it.filter(Char::isDigit).trimStart('0').take(4) },
-                        label = { Text(stringResource(R.string.habit_daily_target)) },
-                        supportingText = { Text(stringResource(R.string.habit_daily_target_hint)) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else {
-                    OutlinedTextField(
-                        value = unit,
-                        onValueChange = { unit = it.take(20) },
-                        label = { Text(stringResource(R.string.habit_unit)) },
-                        supportingText = { Text(stringResource(R.string.habit_unit_hint)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                if (existing != null) {
-                    Text(
-                        text = stringResource(R.string.habit_goal_next_week),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { if (valid) onSave(name, kind, unit, targetValue ?: 1, dailyValue) },
-                enabled = valid,
-            ) { Text(stringResource(R.string.action_save)) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
-    )
-}
-
-@Composable
-private fun KindChoice(label: Int, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
-            .padding(vertical = Space.x2),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = selected, onClick = null)
-        Text(text = stringResource(label), modifier = Modifier.padding(start = Space.x3), textAlign = TextAlign.Start)
-    }
 }

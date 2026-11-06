@@ -117,6 +117,9 @@ fun FeatherNavHost(
         composable<NestRoute> {
             NestScreen(onBack = { navController.goBack() })
         }
+        composable<HabitEditRoute> {
+            HabitEditScreen(onBack = { navController.goBack() })
+        }
         composable<HabitOverviewRoute> {
             HabitOverviewScreen(
                 onBack = { navController.goBack() },
@@ -145,6 +148,8 @@ fun FeatherNavHost(
                 onOpenRhythm = { navController.navigate(RhythmRoute) { popUpTo<TaskListRoute>() } },
                 onOpenNest = { navController.navigate(NestRoute) { popUpTo<TaskListRoute>() } },
                 onOpenSettings = { navController.navigate(SettingsRoute) { popUpTo<TaskListRoute>() } },
+                onNewHabit = { navController.navigate(HabitEditRoute()) },
+                onEditHabit = { habitId -> navController.navigate(HabitEditRoute(habitId)) },
             )
         }
         composable<RhythmRoute> {

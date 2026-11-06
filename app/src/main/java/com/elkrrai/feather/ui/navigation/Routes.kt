@@ -29,6 +29,10 @@ data object ReliabilityRoute
 @Serializable
 data object HabitsRoute
 
+/** The form that makes a habit, or edits the one of [habitId]. */
+@Serializable
+data class HabitEditRoute(val habitId: String? = null)
+
 /** One habit looked back on, week by week. */
 @Serializable
 data class HabitDetailRoute(val habitId: String, val weekStart: String? = null)
