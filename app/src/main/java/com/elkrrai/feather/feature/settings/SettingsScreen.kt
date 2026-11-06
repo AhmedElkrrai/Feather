@@ -109,9 +109,6 @@ fun SettingsScreen(
     // The file the user picked to import, kept as text so it survives rotation while the dialog is open.
     var pendingImport by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json"),
-    ) { uri -> if (uri != null) backupViewModel.exportTo(uri) }
     val csvLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("text/csv"),
     ) { uri -> if (uri != null) backupViewModel.exportCsvTo(uri) }
@@ -173,7 +170,6 @@ fun SettingsScreen(
         onDailySummaryChange = viewModel::setDailySummaryEnabled,
         onDailySummaryTimeChange = viewModel::setDailySummaryTime,
         backup = BackupActions(
-            onExport = { exportLauncher.launch("feather-backup-${LocalDate.now()}.json") },
             onImport = { importLauncher.launch(arrayOf("*/*")) },
             onExportCsv = { csvLauncher.launch("feather-tasks-${LocalDate.now()}.csv") },
             onAutoBackupChange = { enable ->

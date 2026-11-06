@@ -333,8 +333,6 @@
 
     <!-- Backup and data -->
     <string name="settings_section_backup">Backup and restore</string>
-    <string name="backup_export">Export backup</string>
-    <string name="backup_export_summary">Save your tasks, habits and settings to a file you can keep or move to another phone.</string>
     <string name="backup_import">Import backup</string>
     <string name="backup_import_summary">Bring in tasks, habits and settings from a Feather backup file.</string>
     <string name="backup_import_settings">Also restore my settings</string>

@@ -393,8 +393,6 @@
 
     <!-- Backup and data -->
     <string name="settings_section_backup">النسخ الاحتياطي والاستعادة</string>
-    <string name="backup_export">تصدير نسخة احتياطية</string>
-    <string name="backup_export_summary">احفظ مهامك وعاداتك وإعداداتك في ملف يمكنك الاحتفاظ به أو نقله إلى هاتف آخر.</string>
     <string name="backup_import">استيراد نسخة احتياطية</string>
     <string name="backup_import_summary">استعد المهام والعادات والإعدادات من ملف نسخة احتياطية من Feather.</string>
     <string name="backup_import_settings">استعد إعداداتي أيضًا</string>

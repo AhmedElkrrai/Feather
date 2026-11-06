@@ -40,7 +40,6 @@ import java.util.Locale
 
 /** What the backup rows of the settings screen can ask for; the stateful screen supplies them. */
 class BackupActions(
-    val onExport: () -> Unit = {},
     val onImport: () -> Unit = {},
     val onExportCsv: () -> Unit = {},
     val onAutoBackupChange: (Boolean) -> Unit = {},
@@ -70,12 +69,6 @@ internal fun BackupRows(actions: BackupActions, settings: AppSettings, onPickSty
     SettingsGroup {
     SettingsRow(
         first = true,
-        title = stringResource(R.string.backup_export),
-        summary = null,
-        supporting = stringResource(R.string.backup_export_summary),
-        onClick = actions.onExport,
-    )
-    SettingsRow(
         title = stringResource(R.string.backup_import),
         summary = null,
         supporting = stringResource(R.string.backup_import_summary),
