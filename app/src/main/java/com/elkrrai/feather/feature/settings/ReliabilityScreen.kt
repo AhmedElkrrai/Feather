@@ -55,7 +55,6 @@ class ReliabilityActions(
     val onFixBattery: () -> Unit,
     val onOpenAppSettings: () -> Unit,
     val onOpenVendorGuide: () -> Unit,
-    val onSendTest: () -> Unit,
 )
 
 @Composable
@@ -67,8 +66,6 @@ fun ReliabilityScreen(
     val health by rememberReminderHealth()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-    val testScheduled = stringResource(R.string.reliability_test_scheduled)
 
     ReliabilityContent(
         health = health,
@@ -90,10 +87,6 @@ fun ReliabilityScreen(
             },
             onOpenAppSettings = { context.startActivitySafely(SettingsIntents.appDetails(context)) },
             onOpenVendorGuide = { context.startActivitySafely(SettingsIntents.vendorGuide(Build.MANUFACTURER)) },
-            onSendTest = {
-                viewModel.sendTestReminder()
-                scope.launch { snackbarHostState.showSnackbar(testScheduled) }
-            },
         ),
         modifier = modifier,
     )
@@ -192,25 +185,6 @@ fun ReliabilityContent(
                     onOpenAppSettings = actions.onOpenAppSettings,
                     onOpenGuide = actions.onOpenVendorGuide,
                 )
-            }
-
-            Card {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.reliability_test_title),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = stringResource(R.string.reliability_test_body),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Button(onClick = actions.onSendTest) {
-                        Text(stringResource(R.string.reliability_test_button))
-                    }
-                }
             }
         }
     }

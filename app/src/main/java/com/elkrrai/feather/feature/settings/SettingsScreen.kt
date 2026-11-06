@@ -158,7 +158,8 @@ fun SettingsScreen(
 
     SettingsContent(
         settings = settings,
-        remindersHealthy = health.canDeliverOnTime && health.batteryUnrestricted,
+        // the battery mark is for the case where every permission is granted and only battery saving may still hold a reminder back
+        batteryRestricted = health.canDeliverOnTime && !health.batteryUnrestricted,
         reminderWarning = when {
             !health.canNotify -> R.string.settings_home_warning_notifications
             !health.exactAlarmsAllowed -> R.string.settings_home_warning_alarms
@@ -243,7 +244,7 @@ fun SettingsScreen(
 @Composable
 fun SettingsContent(
     settings: AppSettings,
-    remindersHealthy: Boolean,
+    batteryRestricted: Boolean = false,
     /** What the warning on the Reminders page says when a permission is missing, or null when none is. Battery saving is not a permission and gets no warning. */
     @StringRes reminderWarning: Int? = null,
     onBack: () -> Unit,
@@ -348,11 +349,9 @@ fun SettingsContent(
                             onClick = { dialog = SettingsDialog.SummaryTime },
                         )
                         SettingsRow(
-                            leadingIcon = R.drawable.ic_battery,
+                            leadingIcon = if (batteryRestricted) R.drawable.ic_battery else null,
                             title = stringResource(R.string.settings_reliability),
-                            summary = stringResource(
-                                if (remindersHealthy) R.string.settings_reliability_ok else R.string.settings_reliability_attention
-                            ),
+                            summary = null,
                             supporting = null,
                             onClick = onOpenReliability,
                         )
@@ -620,7 +619,7 @@ private fun SettingsHome(
         CategoryRow(
             title = stringResource(SettingsPage.About.titleRes),
             summary = if (versionName.isNotBlank()) stringResource(R.string.settings_version, versionName) else null,
-            icon = R.drawable.ic_info,
+            icon = R.drawable.ic_feather,
             onClick = { onOpen(SettingsPage.About) },
         )
     }

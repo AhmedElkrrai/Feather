@@ -39,7 +39,6 @@ class ReliabilityContentTest {
                         onFixBattery = { calls += "battery" },
                         onOpenAppSettings = { calls += "app" },
                         onOpenVendorGuide = { calls += "guide" },
-                        onSendTest = { calls += "test" },
                     ),
                 )
             }
@@ -88,14 +87,5 @@ class ReliabilityContentTest {
         show(ReminderHealth(), manufacturer = "Google")
 
         rule.onAllNodesWithText(string(R.string.reliability_open_guide)).assertCountEquals(0)
-    }
-
-    @Test
-    fun theTestButtonReportsTheClick() {
-        show(ReminderHealth())
-
-        rule.onNodeWithText(string(R.string.reliability_test_button)).performClick()
-
-        assertEquals(listOf("test"), calls)
     }
 }

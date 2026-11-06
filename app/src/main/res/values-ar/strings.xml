@@ -171,7 +171,7 @@
     <!-- Reliability helper -->
     <string name="reliability_title">أذونات التذكير</string>
     <string name="reliability_intro">كثيرًا ما تؤخر الهواتف الإشعارات لتوفير البطارية. راجع هذه البنود لتصلك التذكيرات في وقتها.</string>
-    <string name="reliability_all_good">كل شيء يبدو جيدًا. أرسل تذكيرًا تجريبيًا أدناه للتأكد.</string>
+    <string name="reliability_all_good">كل شيء يبدو جيدًا.</string>
     <string name="reliability_status_ok">جيد</string>
     <string name="reliability_status_attention">يحتاج إلى انتباه</string>
     <string name="reliability_fix">إصلاح</string>
@@ -187,10 +187,6 @@
     <string name="reliability_vendor_body">كثيرًا ما تضع هواتف %1$s قيودها الخاصة على التشغيل التلقائي والعمل في الخلفية، ولا يمكن لأي تطبيق فحصها. افتح إعدادات التطبيق واسمح لـ Feather بالعمل في الخلفية وبالتشغيل التلقائي.</string>
     <string name="reliability_open_settings">إعدادات التطبيق</string>
     <string name="reliability_open_guide">دليل خطوة بخطوة</string>
-    <string name="reliability_test_title">جرّبها</string>
-    <string name="reliability_test_body">أرسل تذكيرًا تجريبيًا بعد 10 ثوانٍ. اقفل الشاشة أو اترك التطبيق لترى هل يصل.</string>
-    <string name="reliability_test_button">إرسال تذكير تجريبي</string>
-    <string name="reliability_test_scheduled">سيصل تذكير تجريبي بعد نحو 10 ثوانٍ.</string>
 
     <!-- Reminders in the editor -->
     <string name="field_reminders">التذكيرات</string>

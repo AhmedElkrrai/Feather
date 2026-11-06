@@ -32,7 +32,7 @@ class SettingsContentTest {
             FeatherTheme(dynamicColor = false) {
                 SettingsContent(
                     settings = settings,
-                    remindersHealthy = healthy,
+                    batteryRestricted = !healthy,
                     onBack = {},
                     onOpenReliability = { reliabilityOpened++ },
                     onDefaultTimeChange = {},
@@ -92,7 +92,6 @@ class SettingsContentTest {
             FeatherTheme(dynamicColor = false) {
                 SettingsContent(
                     settings = AppSettings(birdAnimations = true),
-                    remindersHealthy = true,
                     onBack = {},
                     onOpenReliability = {},
                     onDefaultTimeChange = {},
