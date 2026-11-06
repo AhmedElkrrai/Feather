@@ -251,24 +251,6 @@ fun WeekLeaf(
             }
             drawPath(midrib, leaf.copy(alpha = 0.6f), style = Stroke(width = (if (botanical) 3.5f else 2f).dp.toPx(), cap = StrokeCap.Round))
 
-            // a serrated leaf also has fine side veins between the day veins
-            if (serrated) {
-                for (k in 0 until 14) {
-                    val t = 0.10f + 0.80f * (k / 13f)
-                    val side = if (k % 2 == 0) -1f else 1f
-                    val tipT = (t + 0.08f).coerceAtMost(0.97f)
-                    val fine = Path().apply {
-                        moveTo(cx, base - height * t)
-                        quadraticTo(
-                            cx + side * half * width(t) * 0.45f, base - height * (t + 0.03f),
-                            // short of the deepest valley between two teeth (0.72), so a vein never grows out of the leaf
-                            cx + side * half * width(tipT) * 0.66f, base - height * tipT,
-                        )
-                    }
-                    drawPath(fine, leaf.copy(alpha = 0.30f), style = Stroke(width = 1.3.dp.toPx(), cap = StrokeCap.Round))
-                }
-            }
-
             // the botanical leaf: eleven pairs of parallel veins curving up to the edge, with fine cross veins between
             if (botanical) {
                 val pairs = 11
@@ -297,16 +279,11 @@ fun WeekLeaf(
                 }
             }
 
-            // a vein from the midrib up to each circle, and a little beyond it
+            // a straight, level vein from the midrib out to each circle: the day grows from it
             spots.forEach { spot ->
-                val fromT = (base - spot.veinFrom.toPx()) / height
-                val from = Offset(midX(fromT), spot.veinFrom.toPx())
-                val to = Offset(spot.x.toPx(), spot.y.toPx())
-                val path = Path().apply {
-                    moveTo(from.x, from.y)
-                    quadraticTo(from.x + (to.x - from.x) * 0.15f, to.y + (from.y - to.y) * 0.15f, to.x, to.y)
-                }
-                drawPath(path, leaf.copy(alpha = 0.55f), style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round))
+                val y = spot.y.toPx()
+                val t = (base - y) / height
+                drawLine(leaf.copy(alpha = 0.55f), Offset(midX(t), y), Offset(spot.x.toPx(), y), 1.6.dp.toPx(), StrokeCap.Round)
             }
         }
 
