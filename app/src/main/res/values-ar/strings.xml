@@ -408,7 +408,13 @@
 
     <!-- Automatic backup -->
     <string name="backup_auto">النسخ الاحتياطي التلقائي</string>
-    <string name="backup_auto_summary">مرة كل يوم، مع الاحتفاظ بآخر %1$d نسخ في المجلد الذي تختاره.</string>
+    <string name="backup_auto_summary_one">مرة كل يوم في المجلد الذي تختاره. ملف واحد يُستبدل في كل مرة.</string>
+    <string name="backup_auto_summary_week">مرة كل يوم في المجلد الذي تختاره، مع الاحتفاظ بآخر %1$d أيام.</string>
+    <string name="backup_auto_summary_older">مرة كل يوم في المجلد الذي تختاره. ملف واحد، ونسخة أقدم منه.</string>
+    <string name="backup_style">ملفات النسخ الاحتياطي</string>
+    <string name="backup_style_one">ملف واحد يُستبدل في كل مرة</string>
+    <string name="backup_style_week">ملف لكل يوم من آخر 7 أيام</string>
+    <string name="backup_style_older">ملف واحد ونسخة أقدم عمرها نحو أسبوع</string>
     <string name="backup_folder">مجلد النسخ الاحتياطي</string>
     <string name="backup_folder_none">لم يتم الاختيار</string>
     <string name="backup_now">نسخ احتياطي الآن</string>

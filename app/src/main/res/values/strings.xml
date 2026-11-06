@@ -344,7 +344,13 @@
 
     <!-- Automatic backup -->
     <string name="backup_auto">Automatic backup</string>
-    <string name="backup_auto_summary">Once a day, keeping the last %1$d copies in the folder you choose.</string>
+    <string name="backup_auto_summary_one">Once a day, in the folder you choose. One file, replaced each time.</string>
+    <string name="backup_auto_summary_week">Once a day, in the folder you choose, keeping the last %1$d days.</string>
+    <string name="backup_auto_summary_older">Once a day, in the folder you choose. One file, plus one older copy.</string>
+    <string name="backup_style">Backup files</string>
+    <string name="backup_style_one">One file, replaced each time</string>
+    <string name="backup_style_week">A file for each of the last 7 days</string>
+    <string name="backup_style_older">One file plus an older copy, about a week old</string>
     <string name="backup_folder">Backup folder</string>
     <string name="backup_folder_none">Not chosen</string>
     <string name="backup_now">Back up now</string>

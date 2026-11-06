@@ -31,4 +31,20 @@ class AutoBackupNamesTest {
         assertFalse(AutoBackup.isAutoBackupName("feather-auto-backup-2026-10-14 (1).json"))
         assertFalse(AutoBackup.isAutoBackupName("notes.json"))
     }
+
+    @Test
+    fun theFilesOfTheOneFileStylesAreNeverPrunedAsDatedBackups() {
+        assertFalse(AutoBackup.isAutoBackupName(AutoBackup.MAIN_NAME))
+        assertFalse(AutoBackup.isAutoBackupName(AutoBackup.PREVIOUS_NAME))
+    }
+
+    @Test
+    fun theOlderCopyIsRefreshedWhenMissingUnknownOrAWeekOld() {
+        val day = 24L * 60 * 60 * 1000
+        val now = 100 * day
+        assertTrue(AutoBackup.shouldRotate(null, now))
+        assertTrue(AutoBackup.shouldRotate(0L, now))
+        assertFalse(AutoBackup.shouldRotate(now - 6 * day, now))
+        assertTrue(AutoBackup.shouldRotate(now - 7 * day, now))
+    }
 }

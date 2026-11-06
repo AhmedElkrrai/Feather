@@ -2,6 +2,7 @@ package com.elkrrai.feather.feature.settings
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +31,7 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.data.backup.AutoBackup
 import com.elkrrai.feather.domain.backup.ImportMode
 import com.elkrrai.feather.domain.settings.AppSettings
+import com.elkrrai.feather.domain.settings.BackupStyle
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -43,12 +45,27 @@ class BackupActions(
     val onExportCsv: () -> Unit = {},
     val onAutoBackupChange: (Boolean) -> Unit = {},
     val onPickFolder: () -> Unit = {},
+    val onBackupStyleChange: (BackupStyle) -> Unit = {},
     val onBackupNow: () -> Unit = {},
 )
 
+@StringRes
+internal fun BackupStyle.labelRes(): Int = when (this) {
+    BackupStyle.ONE_FILE -> R.string.backup_style_one
+    BackupStyle.SEVEN_DAYS -> R.string.backup_style_week
+    BackupStyle.ONE_PLUS_OLDER -> R.string.backup_style_older
+}
+
+@StringRes
+private fun BackupStyle.summaryRes(): Int = when (this) {
+    BackupStyle.ONE_FILE -> R.string.backup_auto_summary_one
+    BackupStyle.SEVEN_DAYS -> R.string.backup_auto_summary_week
+    BackupStyle.ONE_PLUS_OLDER -> R.string.backup_auto_summary_older
+}
+
 /** The rows of the "Backup and data" section. */
 @Composable
-internal fun BackupRows(actions: BackupActions, settings: AppSettings) {
+internal fun BackupRows(actions: BackupActions, settings: AppSettings, onPickStyle: () -> Unit) {
     val locale = LocalConfiguration.current.locales[0]
     SectionTitle(stringResource(R.string.settings_section_backup))
     SettingsRow(
@@ -72,7 +89,7 @@ internal fun BackupRows(actions: BackupActions, settings: AppSettings) {
     SettingsRow(
         title = stringResource(R.string.backup_auto),
         summary = null,
-        supporting = stringResource(R.string.backup_auto_summary, AutoBackup.KEEP),
+        supporting = stringResource(settings.backupStyle.summaryRes(), AutoBackup.KEEP),
         onClick = { actions.onAutoBackupChange(!settings.autoBackupEnabled) },
         trailing = {
             Switch(checked = settings.autoBackupEnabled, onCheckedChange = actions.onAutoBackupChange)
@@ -83,6 +100,12 @@ internal fun BackupRows(actions: BackupActions, settings: AppSettings) {
         summary = settings.backupFolder?.let { folderName(it) } ?: stringResource(R.string.backup_folder_none),
         supporting = null,
         onClick = actions.onPickFolder,
+    )
+    SettingsRow(
+        title = stringResource(R.string.backup_style),
+        summary = stringResource(settings.backupStyle.labelRes()),
+        supporting = null,
+        onClick = onPickStyle,
     )
     SettingsRow(
         title = stringResource(R.string.backup_now),

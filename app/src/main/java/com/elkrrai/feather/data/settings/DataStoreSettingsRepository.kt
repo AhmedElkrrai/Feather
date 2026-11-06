@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.elkrrai.feather.domain.nest.NestOutfit
 import com.elkrrai.feather.domain.nest.NestStyle
 import com.elkrrai.feather.domain.settings.AppSettings
+import com.elkrrai.feather.domain.settings.BackupStyle
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
@@ -37,6 +38,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val pureBlack = booleanPreferencesKey("pure_black")
         val dynamicColor = booleanPreferencesKey("dynamic_color")
         val timeFormat = stringPreferencesKey("time_format")
+        val backupStyle = stringPreferencesKey("backup_style")
         val haptics = booleanPreferencesKey("haptics")
         val menuHints = booleanPreferencesKey("menu_hints")
         val welcomeSeen = booleanPreferencesKey("welcome_seen")
@@ -78,6 +80,7 @@ class DataStoreSettingsRepository @Inject constructor(
             pureBlack = prefs[Keys.pureBlack] ?: defaults.pureBlack,
             dynamicColor = prefs[Keys.dynamicColor] ?: defaults.dynamicColor,
             timeFormat = prefs.enumOf(Keys.timeFormat, defaults.timeFormat),
+            backupStyle = prefs.enumOf(Keys.backupStyle, defaults.backupStyle),
             haptics = prefs[Keys.haptics] ?: defaults.haptics,
             menuHints = prefs[Keys.menuHints] ?: defaults.menuHints,
             welcomeSeen = prefs[Keys.welcomeSeen] ?: defaults.welcomeSeen,
@@ -153,6 +156,10 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setTimeFormat(format: TimeFormat) {
         dataStore.edit { it[Keys.timeFormat] = format.name }
+    }
+
+    override suspend fun setBackupStyle(style: BackupStyle) {
+        dataStore.edit { it[Keys.backupStyle] = style.name }
     }
 
     override suspend fun setHaptics(enabled: Boolean) {

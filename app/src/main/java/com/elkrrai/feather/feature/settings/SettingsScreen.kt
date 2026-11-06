@@ -61,6 +61,7 @@ import com.elkrrai.feather.feature.habits.HabitsViewModel
 import com.elkrrai.feather.security.BiometricGate
 import com.elkrrai.feather.ui.firstDayOfWeek
 import com.elkrrai.feather.domain.settings.AppSettings
+import com.elkrrai.feather.domain.settings.BackupStyle
 import com.elkrrai.feather.reminders.startActivitySafely
 import com.elkrrai.feather.domain.settings.SNOOZE_MINUTE_OPTIONS
 import com.elkrrai.feather.domain.settings.ThemeMode
@@ -157,6 +158,7 @@ fun SettingsScreen(
                 }
             },
             onPickFolder = { folderLauncher.launch(null) },
+            onBackupStyleChange = viewModel::setBackupStyle,
             onBackupNow = backupViewModel::backupNow,
         ),
         backupBusy = backupState.busy,
@@ -333,7 +335,7 @@ fun SettingsContent(
                 },
             )
 
-            BackupRows(backup, settings)
+            BackupRows(backup, settings, onPickStyle = { dialog = SettingsDialog.BackupStyle })
 
             SectionTitle(stringResource(R.string.settings_section_general))
 
@@ -434,6 +436,17 @@ fun SettingsContent(
             onDismiss = { dialog = null },
         )
 
+        SettingsDialog.BackupStyle -> ChoiceDialog(
+            title = stringResource(R.string.backup_style),
+            options = BackupStyle.entries.map { it to stringResource(it.labelRes()) },
+            selected = settings.backupStyle,
+            onSelect = {
+                backup.onBackupStyleChange(it)
+                dialog = null
+            },
+            onDismiss = { dialog = null },
+        )
+
         SettingsDialog.TimeFormat -> ChoiceDialog(
             title = stringResource(R.string.settings_time_format),
             options = TimeFormat.entries.map { it to stringResource(it.labelRes()) },
@@ -455,7 +468,7 @@ private fun versionNameOf(context: Context): String = try {
 }
 
 /** Which settings dialog is open. An enum so it survives rotation with `rememberSaveable`. */
-private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Language, Theme, TimeFormat }
+private enum class SettingsDialog { DefaultTime, SnoozeLength, SummaryTime, Language, Theme, TimeFormat, BackupStyle }
 
 @Composable
 internal fun SectionTitle(text: String) {

@@ -3,6 +3,7 @@ package com.elkrrai.feather.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.elkrrai.feather.domain.settings.AppSettings
+import com.elkrrai.feather.domain.settings.BackupStyle
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
@@ -53,6 +54,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setTimeFormat(format: TimeFormat) {
         viewModelScope.launch { repository.setTimeFormat(format) }
+    }
+
+    fun setBackupStyle(style: BackupStyle) {
+        viewModelScope.launch { repository.setBackupStyle(style) }
     }
 
     fun setBirdAnimations(enabled: Boolean) {

@@ -12,6 +12,9 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 enum class TimeFormat { SYSTEM, H12, H24 }
 
+/** How the automatic backup names its files: one file replaced each time, a file for each of the last 7 days, or one file plus an older copy. */
+enum class BackupStyle { ONE_FILE, SEVEN_DAYS, ONE_PLUS_OLDER }
+
 /** User preferences. The language is handled separately, by AppCompat's per-app locales. */
 data class AppSettings(
     /** The due moment of a task that has a date but no time, for "before due" reminders. */
@@ -24,6 +27,8 @@ data class AppSettings(
     val autoBackupEnabled: Boolean = false,
     /** The folder (a document tree URI) chosen for automatic backups, or null. */
     val backupFolder: String? = null,
+    /** How many files the automatic backup keeps in [backupFolder]. One file by default. */
+    val backupStyle: BackupStyle = BackupStyle.ONE_FILE,
     /** When the last automatic backup finished, epoch millis, or null if there was none. */
     val lastBackupAt: Long? = null,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -101,6 +106,8 @@ interface SettingsRepository {
     suspend fun setDynamicColor(enabled: Boolean)
 
     suspend fun setTimeFormat(format: TimeFormat)
+
+    suspend fun setBackupStyle(style: BackupStyle)
 
     suspend fun setHaptics(enabled: Boolean)
 
