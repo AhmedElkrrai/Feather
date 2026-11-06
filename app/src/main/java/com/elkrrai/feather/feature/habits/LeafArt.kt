@@ -151,6 +151,9 @@ internal fun mapleArt(): LeafArt {
 
 private const val SPRIG_TOP = 0.74f
 
+/** Where along its length a sprig leaflet's blade starts: before that it is only a short stalk, so the blade never reaches across the stem. */
+private const val BLADE_FROM = 0.12f
+
 /** A sprig: a thin stem with six pointed leaflets alternating up it and a seventh at its tip, each marked with a midline and short dashes. */
 internal fun sprigArt(): LeafArt {
     fun stemX(t: Float) = MID + 8f * sin(PI.toFloat() * t * 1.4f)
@@ -185,8 +188,10 @@ internal fun sprigArt(): LeafArt {
         for (k in 0..18) {
             val u = k / 18f
             val half = width / 2f * sin(PI.toFloat() * u.pow(0.8f)).coerceAtLeast(0f).pow(0.85f)
-            val x = baseX + dx * length * u
-            val y = baseY + dy * length * u
+            // the blade, from where its stalk ends to the tip
+            val along = BLADE_FROM + (1f - BLADE_FROM) * u
+            val x = baseX + dx * length * along
+            val y = baseY + dy * length * along
             left += Offset(x + nx * half, y + ny * half)
             right += Offset(x - nx * half, y - ny * half)
         }
@@ -198,12 +203,13 @@ internal fun sprigArt(): LeafArt {
             val half = width / 2f * sin(PI.toFloat() * u.pow(0.8f)).coerceAtLeast(0f).pow(0.85f) * 0.82f
             val v = (random.nextFloat() * 2f - 1f) * half
             if (abs(v) >= 3f) {
-                val q = Offset(baseX + dx * length * u + nx * v, baseY + dy * length * u + ny * v)
+                val along = BLADE_FROM + (1f - BLADE_FROM) * u
+                val q = Offset(baseX + dx * length * along + nx * v, baseY + dy * length * along + ny * v)
                 dashes += q to Offset(q.x + dx * 5f, q.y + dy * 5f)
             }
         }
-        val middle = DaySpot(baseX + dx * length * 0.5f, baseY + dy * length * 0.5f, 17.5f)
-        spots += clearOfEdges(middle, blade, Offset(baseX + dx * length * 0.3f, baseY + dy * length * 0.3f), 3f)
+        val middle = DaySpot(baseX + dx * length * 0.56f, baseY + dy * length * 0.56f, 17.5f)
+        spots += clearOfEdges(middle, blade, Offset(baseX + dx * length * 0.4f, baseY + dy * length * 0.4f), 3f)
     }
 
     val outline = Path().apply { blades.forEach { addPath(polygon(it)) } }
@@ -212,12 +218,13 @@ internal fun sprigArt(): LeafArt {
         spots = spots,
         details = { leaf ->
             val line = leaf.copy(alpha = 0.75f)
+            // The stem is drawn by the same height as the leaflets' bases (t), from below the board's base up to where the last leaflet
+            // begins, so it ends exactly there.
             val stem = Path().apply {
-                moveTo(stemX(0f), BASE + STEM)
+                val bottom = -STEM / HEIGHT
                 for (k in 0..40) {
-                    // up to where the last leaflet begins: the stem never runs through it
-                    val u = k / 40f * SPRIG_TOP
-                    lineTo(stemX(u), BASE + STEM - (HEIGHT + STEM) * u)
+                    val tt = bottom + (SPRIG_TOP - bottom) * k / 40f
+                    if (k == 0) moveTo(stemX(tt), BASE - HEIGHT * tt) else lineTo(stemX(tt), BASE - HEIGHT * tt)
                 }
             }
             drawPath(stem, line, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f, cap = StrokeCap.Round))
