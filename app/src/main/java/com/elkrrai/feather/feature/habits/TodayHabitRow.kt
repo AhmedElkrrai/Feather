@@ -286,7 +286,7 @@ private fun HabitTodayRow(
                 },
             ) {
                 Row(
-                    Modifier.padding(horizontal = Space.x3, vertical = 11.dp),
+                    Modifier.padding(horizontal = Space.x3, vertical = 15.dp),
                     horizontalArrangement = Arrangement.spacedBy(Space.x3),
                 ) {
                     HoldRing(

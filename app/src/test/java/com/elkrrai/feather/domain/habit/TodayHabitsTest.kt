@@ -152,6 +152,14 @@ class TodayHabitsTest {
     }
 
     @Test
+    fun aHabitItIsTimeForNowComesBeforeTheRest() {
+        val early = HabitState(habit("early", time = DayTime(TimeMode.AT, 420)), listOf(HabitGoal(week, 3)), emptyMap())
+
+        // Dhuhr's window is open at 1 PM: the prayer row leads although the plain habit has an earlier time
+        assertEquals(listOf("pray", "early"), rows(early, pray(), hour = 13).map { it.id })
+    }
+
+    @Test
     fun aHabitFinishedTodayComesAfterTheOthers() {
         val early = HabitState(habit("early", time = DayTime(TimeMode.AT, 420)), listOf(HabitGoal(week, 3)), mapOf(today to 1))
         val open = HabitState(habit("open", time = DayTime(TimeMode.AT, 900)), listOf(HabitGoal(week, 3)), emptyMap())

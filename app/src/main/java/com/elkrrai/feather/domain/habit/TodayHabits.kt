@@ -36,8 +36,8 @@ data class TodayHabit(
 )
 
 /**
- * The habits that show in Today at [now], as rows in the order of their times (a habit without a time after those that have one, and a habit
- * finished today after the others).
+ * The habits that show in Today at [now], as rows: a habit it is time for right now first (the one with the "Now" badge), then the rest in the
+ * order of their times (a habit without a time after those that have one), and a habit finished today after the others.
  *
  * A habit shows when it is switched on for Today, has a goal this week, and its week is not already met by other days: when the goal is met
  * the habit rests until next week, except that a habit finished today is still listed (as done) so the row can say so before it leaves. A
@@ -46,7 +46,7 @@ data class TodayHabit(
 fun todayHabits(habits: List<HabitState>, today: LocalDate, now: LocalTime, weekStart: LocalDate): List<TodayHabit> {
     val minute = now.hour * 60 + now.minute
     return habits.mapNotNull { todayHabit(it, today, minute, weekStart) }
-        .sortedWith(compareBy<TodayHabit>({ it.doneToday }, { it.sortMinute ?: Int.MAX_VALUE }))
+        .sortedWith(compareBy<TodayHabit>({ it.doneToday }, { it.current?.state != StageState.NOW }, { it.sortMinute ?: Int.MAX_VALUE }))
 }
 
 private fun todayHabit(state: HabitState, today: LocalDate, minute: Int, weekStart: LocalDate): TodayHabit? {
