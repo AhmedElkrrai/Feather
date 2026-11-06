@@ -648,7 +648,6 @@
     <string name="habit_row_hint">«واحد في كل مرة» يعرض الوقت الحالي، والبقية شارات صغيرة للتأشير. «القائمة» تعرضها كلها.</string>
     <string name="habit_own_time">وقتها</string>
     <string name="habit_own_time_hint">اختياري. الفترة جزء من اليوم، مثل 12:00 إلى 2:00 ظهرًا. تظهر في الصف كشارة صغيرة.</string>
-    <string name="today_habits_label">العادات</string>
     <string name="habit_today_hold_hint">اضغط مطولًا على البطاقة لإنهاء عادة اليوم</string>
     <string name="habit_today_hold_tip">اضغط مطولًا للإنهاء</string>
     <string name="habit_today_done">تمّت لليوم</string>

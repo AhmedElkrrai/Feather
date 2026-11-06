@@ -131,13 +131,8 @@ fun TodayHabitsBlock(
 
     val locale = LocalConfiguration.current.locales[0]
     var amountFor by remember { mutableStateOf<String?>(null) }
-    Column(modifier.padding(horizontal = Space.gutter)) {
-        Text(
-            text = stringResource(R.string.today_habits_label),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(vertical = Space.x2).semantics { heading() },
-        )
+    // no heading: the tasks below have none, so a heading here would read as covering them too
+    Column(modifier.padding(start = Space.gutter, end = Space.gutter, top = Space.x2)) {
         visible.forEachIndexed { index, row ->
             // each row keeps its own hold and bloom when the rows change places
             key(row.id) {

@@ -572,7 +572,6 @@
     <string name="habit_row_hint">One at a time shows the time it is now, with the others as small chips to tick. Checklist lists them all.</string>
     <string name="habit_own_time">Its time</string>
     <string name="habit_own_time_hint">Optional. A window is a stretch of the day, like 12:00 to 2:00 PM. It shows on the row as a small chip.</string>
-    <string name="today_habits_label">Habits</string>
     <string name="habit_today_hold_hint">Hold the card to finish today</string>
     <string name="habit_today_hold_tip">Hold to finish</string>
     <string name="habit_today_done">Done for today</string>
