@@ -117,7 +117,8 @@ fun WeekLeaf(
             return halfMax * minOf(leafWidth(below), leafWidth(above)) - radius - 8.dp
         }
         val spots = (0 until DAYS).map { index ->
-            val t = 0.22f + 0.62f * (index / (DAYS - 1f))
+            // the last day stops well short of the tip, where the leaf is narrow and a circle would touch its edge
+            val t = 0.20f + 0.56f * (index / (DAYS - 1f))
             val y = baseY - leafHeight * t
             val side = if (index % 2 == 0) -1f else 1f
             // preferably well out on the vein, never past the edge, never on the midrib
