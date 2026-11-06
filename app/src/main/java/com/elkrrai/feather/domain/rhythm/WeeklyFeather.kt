@@ -5,8 +5,8 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /**
- * The week that just ended, as a feather made on the phone: each day has as many barbs as it had
- * finished tasks (up to [MAX_BARBS]), and a day of rest is a small notch.
+ * The week that just ended, and the feather it earned: one of eight, by how many of its days had a finished task ([activeDays], 0 to 7).
+ * A week with none is a quiet week and gets the quiet feather.
  */
 data class WeeklyFeather(
     /** The first day of the week the feather is for. */
@@ -16,16 +16,14 @@ data class WeeklyFeather(
 ) {
     val total: Int get() = days.sum()
     val restDays: Int get() = days.count { it == 0 }
+
+    /** On how many of the seven days something was finished: which of the eight feathers the week earned. */
+    val activeDays: Int get() = days.count { it > 0 }
 }
 
-const val MAX_BARBS = 4
-
-/** How many barbs a day of [count] finished tasks gets on the feather. */
-fun barbsFor(count: Int): Int = count.coerceIn(0, MAX_BARBS)
-
 /**
- * The feather for the week before the one that [today] is in, or null if nothing was finished that
- * week. Weeks start on [firstDay].
+ * The feather for the week before the one that [today] is in. A week with nothing finished still earns the quiet feather, as long as
+ * something was finished before this week: someone who has only just started has no last week to show. Weeks start on [firstDay].
  */
 fun weeklyFeather(
     records: List<CompletionRecord>,
@@ -39,7 +37,7 @@ fun weeklyFeather(
         val day = it.completedAt.atZone(zone).toLocalDate()
         !day.isBefore(lastWeek) && day.isBefore(thisWeek)
     }
-    if (inWeek.isEmpty()) return null
+    if (inWeek.isEmpty() && records.none { it.completedAt.atZone(zone).toLocalDate().isBefore(thisWeek) }) return null
     val days = (0L..6L).map { offset ->
         val day = lastWeek.plusDays(offset)
         inWeek.count { it.completedAt.atZone(zone).toLocalDate() == day }

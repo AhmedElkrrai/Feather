@@ -38,13 +38,28 @@ class WeeklyFeatherTest {
     }
 
     @Test
-    fun aWeekOfNothingMakesNoFeather() {
-        assertNull(weeklyFeather(listOf(done(monday)), monday, zone, DayOfWeek.MONDAY))
+    fun aQuietWeekAfterEarlierWorkEarnsTheQuietFeather() {
+        val records = listOf(done(lastMonday.minusWeeks(2)), done(monday))
+
+        val feather = weeklyFeather(records, monday, zone, DayOfWeek.MONDAY)!!
+
+        assertEquals(0, feather.activeDays)
+        assertEquals(0, feather.total)
     }
 
     @Test
-    fun aDayGetsOneBarbPerTaskUpToFour() {
-        assertEquals(listOf(0, 1, 3, 4, 4), listOf(0, 1, 3, 4, 9).map(::barbsFor))
+    fun someoneWhoOnlyJustStartedHasNoLastWeekToShow() {
+        // nothing was finished before this week: there is no feather, not even the quiet one
+        assertNull(weeklyFeather(listOf(done(monday)), monday, zone, DayOfWeek.MONDAY))
+        assertNull(weeklyFeather(emptyList(), monday, zone, DayOfWeek.MONDAY))
+    }
+
+    @Test
+    fun theFeatherIsByTheNumberOfDaysWithAFinishedTask() {
+        // two tasks on one day count once: it is days, not tasks
+        val records = listOf(done(lastMonday), done(lastMonday), done(lastMonday.plusDays(2)), done(lastMonday.plusDays(5)))
+
+        assertEquals(3, weeklyFeather(records, monday, zone, DayOfWeek.MONDAY)!!.activeDays)
     }
 
     @Test

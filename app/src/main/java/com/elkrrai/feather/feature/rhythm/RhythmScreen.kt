@@ -404,15 +404,18 @@ private fun DashedEgg(color: androidx.compose.ui.graphics.Color) {
 /** The feather of the week that just ended, with a sentence about it. */
 @Composable
 private fun WeeklyFeatherCard(feather: WeeklyFeather) {
-    val color = MaterialTheme.featherColors.amberFill
-    val body = stringResource(R.string.weekly_feather_body_plain, feather.total, feather.restDays)
+    val body = if (feather.total == 0) {
+        stringResource(R.string.weekly_feather_body_rest)
+    } else {
+        stringResource(R.string.weekly_feather_body_plain, feather.total, feather.restDays)
+    }
     SectionCard(title = stringResource(R.string.weekly_feather_title)) {
         Row(
             modifier = Modifier.padding(horizontal = Space.x4).semantics(mergeDescendants = true) { contentDescription = body },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.x4),
         ) {
-            WeeklyFeatherView(feather, color)
+            WeeklyFeatherView(feather)
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodyLarge,

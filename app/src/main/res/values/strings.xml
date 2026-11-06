@@ -810,5 +810,6 @@
     <string name="settings_weekly_feather">Weekly feather</string>
     <string name="settings_weekly_feather_summary">On the first day of the week, a feather made from last week, in Progress.</string>
     <string name="weekly_feather_title">Last week\'s feather</string>
+    <string name="weekly_feather_body_rest">A quiet week. Resting is fine too.</string>
     <string name="weekly_feather_body_plain">%1$d finished and %2$d days of rest.</string>
 </resources>

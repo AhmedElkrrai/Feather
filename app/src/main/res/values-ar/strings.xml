@@ -912,5 +912,6 @@
     <string name="settings_weekly_feather">ريشة الأسبوع</string>
     <string name="settings_weekly_feather_summary">في أول يوم من الأسبوع، ريشة مصنوعة من الأسبوع الماضي، في تقدّمك.</string>
     <string name="weekly_feather_title">ريشة الأسبوع الماضي</string>
+    <string name="weekly_feather_body_rest">أسبوع هادئ. الراحة جيدة أيضًا.</string>
     <string name="weekly_feather_body_plain">أُنجزت %1$d مهمة و%2$d أيام راحة.</string>
 </resources>
