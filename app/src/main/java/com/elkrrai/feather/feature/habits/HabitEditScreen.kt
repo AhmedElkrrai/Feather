@@ -209,19 +209,17 @@ internal fun HabitEditContent(
             }
 
             if (days) {
-                // with named times the count of a day is how many of them, so the plain number is not asked
-                if (!state.staged) {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        OutlinedTextField(
-                            value = state.daily,
-                            onValueChange = actions.onDailyChange,
-                            label = { Text(stringResource(R.string.habit_daily_target)) },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        FormHint(stringResource(R.string.habit_daily_target_hint))
-                    }
+                // with named parts this number is how many parts there are: it follows the list, and typing it changes the list
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    OutlinedTextField(
+                        value = state.daily,
+                        onValueChange = actions.onDailyChange,
+                        label = { Text(stringResource(R.string.habit_daily_target)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    FormHint(stringResource(R.string.habit_daily_target_hint))
                 }
 
                 SwitchRow(

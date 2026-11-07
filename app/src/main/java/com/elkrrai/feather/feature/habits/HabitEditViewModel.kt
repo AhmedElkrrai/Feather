@@ -125,7 +125,8 @@ class HabitEditViewModel @Inject constructor(
                     kind = draft.kind,
                     unit = draft.unit,
                     target = draft.target.toString(),
-                    daily = draft.dailyTarget.toString(),
+                    // with named parts the field counts them, whatever number of them a day needs
+                    daily = (draft.stages.size.takeIf { it > 0 } ?: draft.dailyTarget).toString(),
                     named = draft.stages.isNotEmpty(),
                     stages = draft.stages.map { StageUi(nextKey++, it.id, it.name, it.time) },
                     needed = draft.dailyTarget.takeIf { draft.stages.isNotEmpty() && it != draft.stages.size }?.toString(),
@@ -151,17 +152,33 @@ class HabitEditViewModel @Inject constructor(
 
     fun onTargetChange(text: String) = _uiState.update { it.copy(target = text.filter(Char::isDigit).trimStart('0').take(4)) }
 
-    fun onDailyChange(text: String) = _uiState.update { it.copy(daily = text.filter(Char::isDigit).trimStart('0').take(4)) }
+    /** With named parts the number is the number of parts: typing it adds blank parts or takes the last ones off. */
+    fun onDailyChange(text: String) = _uiState.update { state ->
+        val daily = text.filter(Char::isDigit).trimStart('0').take(4)
+        val count = daily.toIntOrNull()?.coerceAtMost(MAX_STAGES)
+        if (!state.staged || count == null) {
+            state.copy(daily = daily)
+        } else {
+            val stages = if (count <= state.stages.size) {
+                state.stages.take(count)
+            } else {
+                state.stages + List(count - state.stages.size) { StageUi(nextKey++, null, "") }
+            }
+            state.copy(stages = stages, daily = count.toString())
+        }
+    }
 
     fun onUnitChange(text: String) = _uiState.update { it.copy(unit = text.take(20)) }
 
-    /** Turning the names on starts a list of as many blank times as the habit counts a day (at least two). */
+    /** Turning the names on starts a list of as many blank parts as the habit counts a day; parts it already had come back as they were. */
     fun onNamedChange(on: Boolean) = _uiState.update { state ->
         if (on && state.stages.isEmpty()) {
-            val count = state.dailyValue.coerceIn(2, MAX_STAGES)
-            state.copy(named = true, stages = List(count) { StageUi(nextKey++, null, "") })
+            val count = state.dailyValue.coerceIn(1, MAX_STAGES)
+            state.copy(named = true, daily = count.toString(), stages = List(count) { StageUi(nextKey++, null, "") })
+        } else if (on) {
+            state.copy(named = true, daily = state.stages.size.toString())
         } else {
-            state.copy(named = on)
+            state.copy(named = false)
         }
     }
 
@@ -173,7 +190,7 @@ class HabitEditViewModel @Inject constructor(
     fun addStage(): Long? {
         if (_uiState.value.stages.size >= MAX_STAGES) return null
         val key = nextKey++
-        _uiState.update { it.copy(stages = it.stages + StageUi(key, null, "")) }
+        _uiState.update { it.copy(stages = it.stages + StageUi(key, null, ""), daily = (it.stages.size + 1).toString()) }
         return key
     }
 
@@ -188,7 +205,10 @@ class HabitEditViewModel @Inject constructor(
         }
     }
 
-    fun removeStage(key: Long) = _uiState.update { it.copy(stages = it.stages.filterNot { stage -> stage.key == key }) }
+    fun removeStage(key: Long) = _uiState.update { state ->
+        val stages = state.stages.filterNot { stage -> stage.key == key }
+        state.copy(stages = stages, daily = stages.size.coerceAtLeast(1).toString())
+    }
 
     fun onNeededChange(text: String) = _uiState.update {
         it.copy(needed = text.filter(Char::isDigit).trimStart('0').take(2).ifEmpty { null })
