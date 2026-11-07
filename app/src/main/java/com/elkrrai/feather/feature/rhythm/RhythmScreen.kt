@@ -3,7 +3,6 @@ package com.elkrrai.feather.feature.rhythm
 import android.text.format.DateFormat
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,11 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -338,8 +333,7 @@ private fun SectionCard(title: String?, modifier: Modifier = Modifier, content: 
 
 /**
  * The top of the screen: how many tasks were finished in the last seven days, one kind sentence
- * and the bird, on a sky that follows the time of day. For someone new, a dashed egg waits where
- * the numbers will be.
+ * and the bird, on a sky that follows the time of day.
  */
 @Composable
 private fun RhythmHero(stats: RhythmStats, entry: Animatable<Float, AnimationVector1D>) {
@@ -385,25 +379,8 @@ private fun RhythmHero(stats: RhythmStats, entry: Animatable<Float, AnimationVec
                 )
             }
             Spacer(Modifier.width(Space.x3))
-            if (stats.isNew) {
-                DashedEgg(ink.copy(alpha = 0.6f))
-            } else {
-                BirdIllustration(Modifier.size(92.dp), mood = BirdMood.IDLE)
-            }
+            BirdIllustration(Modifier.size(92.dp), mood = BirdMood.IDLE)
         }
-    }
-}
-
-/** An egg drawn with a dashed line: the place where the first one will appear. */
-@Composable
-private fun DashedEgg(color: androidx.compose.ui.graphics.Color) {
-    Canvas(Modifier.size(56.dp, 72.dp).semantics { }) {
-        drawOval(
-            color = color,
-            topLeft = Offset(2.dp.toPx(), 2.dp.toPx()),
-            size = Size(size.width - 4.dp.toPx(), size.height - 4.dp.toPx()),
-            style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(7.dp.toPx(), 5.dp.toPx()))),
-        )
     }
 }
 
