@@ -148,9 +148,9 @@ private val Pots = intArrayOf(
 
 // Each pot picture is 320 by 500, the pot standing on its bottom edge.
 private const val POT_ASPECT = 320f / 500f
-private const val POT_HEIGHT = 46f
-private const val POT_X = 162f
-private const val POT_BOTTOM = 174f
+private const val POT_HEIGHT = 50f
+private const val POT_X = 166f
+private const val POT_BOTTOM = 192f
 
 /** The nest's pictures, and where in them the bird's feet land (a share of the picture's height). */
 internal class NestArt(
