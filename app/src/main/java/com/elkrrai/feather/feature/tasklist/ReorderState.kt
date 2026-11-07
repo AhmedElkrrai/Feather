@@ -69,16 +69,28 @@ class ReorderState<T>(
             offset += SCROLL_STEP_PX
         }
 
+        // Rows can differ in height, so a row is passed when the dragged row's leading edge crosses the middle of it,
+        // not when the center is anywhere inside it: that way a tall neighbor never swaps back and forth.
+        val top = current.offset + offset
+        val bottom = top + current.size
         val target = info.visibleItemsInfo.firstOrNull {
-            it.key != id && center >= it.offset && center <= it.offset + it.size
+            if (it.key == id) {
+                false
+            } else if (it.offset > current.offset) {
+                bottom > it.offset + it.size / 2f
+            } else {
+                top < it.offset + it.size / 2f
+            }
         } ?: return
         val from = order.indexOfFirst { idOf(it) == id }
         val to = order.indexOfFirst { idOf(it) == target.key }
         if (from < 0 || to < 0) return
 
         order.add(to, order.removeAt(from))
-        // The dragged row now sits where the neighbor was; keep it under the finger.
-        offset += current.offset - target.offset
+        // The dragged row now sits somewhere else in the list; keep it under the finger. Going down it lands after the
+        // neighbor, which is as tall as the neighbor and not as the dragged row.
+        val landed = if (target.offset > current.offset) target.offset + target.size - current.size else target.offset
+        offset += current.offset - landed
         haptics.tick()
     }
 

@@ -7,6 +7,9 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.activity.compose.BackHandler
@@ -232,10 +235,17 @@ internal fun HabitsContent(
                 // and the new order of ids goes to the saved habits when the finger lifts.
                 val listState = rememberLazyListState()
                 val haptics = rememberHaptics()
-                val order = remember(habits) { mutableStateListOf<HabitState>().apply { addAll(habits) } }
+                // The copy outlives a new saved list, so a log or an edit that arrives mid-drag does not cancel the drag.
+                val order = remember { mutableStateListOf<HabitState>().apply { addAll(habits) } }
                 val currentOnReorder by rememberUpdatedState(onReorder)
                 val reorder = remember(listState, order, haptics) {
                     ReorderState(listState, order, { it.habit.id }, haptics) { ids -> currentOnReorder(ids) }
+                }
+                // a new saved list replaces the copy, but not while a card is held
+                LaunchedEffect(habits) {
+                    snapshotFlow { reorder.draggingId }.first { it == null }
+                    order.clear()
+                    order.addAll(habits)
                 }
                 // one card has nothing to be put before or after
                 val canReorder = order.size > 1
