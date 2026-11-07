@@ -1,6 +1,5 @@
 package com.elkrrai.feather.feature.rhythm
 
-import android.text.format.DateFormat
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.background
@@ -13,45 +12,38 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import com.elkrrai.feather.ui.components.SegmentedSwitch
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,11 +69,9 @@ import com.elkrrai.feather.ui.theme.Space
 import com.elkrrai.feather.ui.theme.featherColors
 import com.elkrrai.feather.ui.today.dayPhaseFor
 import java.text.NumberFormat
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -303,9 +293,6 @@ fun RhythmContent(
     }
 }
 
-private fun monthTitle(month: java.time.YearMonth, locale: Locale): String =
-    DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "LLLLyyyy"), locale).format(month)
-
 /** A rounded card on the paper with a title, the way every chart on this screen sits. */
 @Composable
 private fun SectionCard(title: String?, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
@@ -410,45 +397,6 @@ private fun WeeklyFeatherCard(feather: WeeklyFeather) {
 }
 
 @Composable
-private fun MonthSection(
-    stats: RhythmStats,
-    entry: Animatable<Float, AnimationVector1D>,
-    locale: Locale,
-    firstDay: DayOfWeek,
-    onDay: (LocalDate) -> Unit,
-) {
-    val grid = stats.month
-    val monthName = monthTitle(grid.month, locale)
-    val daysWithTasks = grid.cells.count { it.count > 0 }
-    val finished = grid.cells.sumOf { it.count }
-    val summary = stringResource(R.string.rhythm_month_summary, monthName, daysWithTasks, finished)
-    val resources = LocalContext.current.resources
-    val dayLabel = remember(locale) { DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "MMMMd"), locale) }
-    val actions = grid.cells.filter { it.count > 0 && !it.isFuture }.map { cell ->
-        val text = dayLabel.format(cell.date) + ", " +
-            resources.getQuantityString(R.plurals.rhythm_finished_on_day, cell.count, cell.count)
-        CustomAccessibilityAction(text) {
-            onDay(cell.date)
-            true
-        }
-    }
-    val labels = (0 until 7).map { offset ->
-        DayOfWeek.of((firstDay.value - 1 + offset) % 7 + 1).getDisplayName(TextStyle.NARROW, locale)
-    }
-    Column(
-        Modifier
-            .padding(horizontal = Space.x2)
-            .semantics {
-                contentDescription = summary
-                customActions = actions
-            },
-    ) {
-        WeekdayLabels(labels)
-        MonthNest(grid, entry, onDay)
-    }
-}
-
-@Composable
 private fun WhenSection(stats: RhythmStats, entry: Animatable<Float, AnimationVector1D>, locale: Locale) {
     val labels = listOf(
         stringResource(R.string.rhythm_time_morning),
@@ -493,49 +441,6 @@ private fun SteadyRow(task: SteadyTask) {
             modifier = Modifier.weight(1f),
         )
         LeafDays(task.lastSeven, Modifier.width(124.dp))
-    }
-}
-
-/** What was finished on one day of the month, in a sheet from the bottom. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DaySheet(day: LocalDate, stats: RhythmStats, locale: Locale, onDismiss: () -> Unit) {
-    val records = stats.byDay[day].orEmpty()
-    val title = remember(day, locale) {
-        DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "EEEEMMMMd"), locale).format(day)
-    }
-    val resources = LocalContext.current.resources
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(start = Space.gutter, end = Space.gutter, bottom = Space.x6),
-            verticalArrangement = Arrangement.spacedBy(Space.x2),
-        ) {
-            Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-            if (records.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.rhythm_day_sheet_empty),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else {
-                Text(
-                    text = resources.getQuantityString(R.plurals.rhythm_finished_on_day, records.size, records.size),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-                records.forEach { record ->
-                    Text(
-                        text = record.title,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(vertical = Space.x1),
-                    )
-                }
-            }
-        }
     }
 }
 

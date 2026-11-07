@@ -18,7 +18,6 @@
     <!-- Task list -->
     <string name="action_add_task">إضافة مهمة</string>
     <string name="task_deleted">تم حذف المهمة</string>
-    <string name="task_list_empty_body">اضغط + لإضافة أول مهمة لك.</string>
     <string name="quick_add_hint">ما الذي تريد إنجازه؟</string>
 
     <!-- Due dates -->
@@ -46,7 +45,6 @@
     <string name="set_time">تحديد الوقت</string>
 
     <!-- Language setting -->
-    <string name="language_dialog_title">اختر اللغة</string>
     <string name="language_system">لغة النظام</string>
 
     <!-- Views and drawer -->
@@ -83,7 +81,6 @@
     <string name="tab_back_to">› %1$s</string>
     <string name="tab_all_in">كل %1$s</string>
     <string name="tab_no_tag">بلا وسم</string>
-    <string name="tags_row_summary">أعد تسمية وسومك أو احذفها أو رتّبها. يمكن وضع وسم تحت وسم آخر.</string>
     <string name="tags_empty_title">لا توجد وسوم بعد</string>
     <string name="tags_empty_body">أضف وسمًا إلى مهمة بالرمز #، مثل #عمل. أو أنشئ واحدًا هنا.</string>
     <string name="tag_move_under">ضعه تحت وسم آخر</string>
@@ -113,8 +110,6 @@
     <string name="channel_summary_description">نظرة صباحية على مهامك</string>
     <string name="reminder_due">موعدها %1$s</string>
     <string name="reminder_generic">تذكير بمهمة</string>
-    <string name="test_notification_title">تذكير تجريبي</string>
-    <string name="test_notification_text">يمكن للتذكيرات الوصول إليك على هذا الهاتف.</string>
     <string name="summary_title">يومك</string>
     <plurals name="summary_due_today">
         <item quantity="zero">%d مهمة مستحقة اليوم</item>
@@ -157,7 +152,6 @@
     <string name="settings_daily_summary_summary">إشعار صباحي بما يستحق اليوم.</string>
     <string name="settings_daily_summary_time">وقت الملخص</string>
     <string name="settings_reliability">أذونات التذكير</string>
-    <string name="settings_reliability_ok">كل شيء يبدو جيدًا</string>
     <string name="settings_reliability_attention">يحتاج إلى انتباه</string>
     <string name="settings_language">اللغة</string>
     <plurals name="duration_minutes">
@@ -463,7 +457,6 @@
     <string name="format_system">اتباع النظام</string>
     <string name="time_format_12">12 ساعة</string>
     <string name="time_format_24">24 ساعة</string>
-    <string name="settings_week_start">أول أيام الأسبوع</string>
     <string name="settings_haptics">الاستجابة اللمسية</string>
     <string name="settings_haptics_summary">اهتزاز خفيف عند إنجاز مهمة أو تحديدها أو نقلها.</string>
 
@@ -617,8 +610,6 @@
     <string name="habit_name">العادة</string>
     <string name="habit_kind_days">أيام في الأسبوع</string>
     <string name="habit_kind_amount">مجموع للأسبوع</string>
-    <string name="habit_example_days">مثال: صلاة 7 أيام في الأسبوع 5 مرات في اليوم</string>
-    <string name="habit_example_amount">مثال: قراءة 20 صفحة في الأسبوع</string>
     <string name="habit_target_days">أيام في الأسبوع</string>
     <string name="habit_target_amount">هدف الأسبوع</string>
     <string name="habit_daily_target">أجزاء في اليوم</string>
@@ -680,8 +671,6 @@
     <string name="habit_remind_label">ذكّرني</string>
     <string name="habit_remind_hint">إشعار عند بدء كل جزء، مع زر «تم».</string>
     <string name="habit_remind_needs_time">حدِّد وقتًا أولًا: يأتي التذكير عند بداية وقت اليوم أو الفترة.</string>
-    <string name="habit_unit">ما الذي تعدّه</string>
-    <string name="habit_unit_hint">صفحات، كم، دقائق</string>
     <string name="habit_goal_next_week">الهدف الجديد يبدأ الأسبوع القادم. هذا الأسبوع يبقى بهدفه الأول.</string>
     <string name="habit_progress_days">%1$d من %2$d أيام</string>
     <string name="habit_progress_amount">%1$d / %2$d %3$s</string>
@@ -729,7 +718,6 @@
     <string name="welcome_go">هيا بنا</string>
     <string name="settings_menu_hints">تلميحات القائمة</string>
     <string name="settings_menu_hints_summary">سطر خافت تحت كل عنصر يقول ما بداخله.</string>
-    <string name="habit_open_history">عرض %1$s أسبوعًا بأسبوع</string>
     <string name="habit_btn_this_week">هذا الأسبوع</string>
     <string name="habit_btn_all_time">كل الوقت</string>
     <plurals name="habit_tree_met">
@@ -789,9 +777,6 @@
     <string name="rhythm_hero_busy">أسبوع مزدحم ومشرق.</string>
     <string name="rhythm_last_seven_summary">آخر 7 أيام: %1$s</string>
     <string name="rhythm_day_count">%1$s %2$d</string>
-    <string name="rhythm_dots_title">حضورك</string>
-    <string name="rhythm_dots_headline">%1$d من آخر %2$d يومًا</string>
-    <string name="rhythm_dots_hint">النقطة المملوءة يوم أنجزت فيه شيئًا. والحلقة يوم راحة.</string>
     <string name="rhythm_pause">إيقاف العدّ مؤقتًا</string>
     <string name="rhythm_resume">استئناف العدّ</string>
     <string name="rhythm_pause_note">الأيام الموقوفة لا تُحسب، ولا تظهر كفراغ.</string>
@@ -799,8 +784,6 @@
     <string name="rhythm_pause_today">اليوم فقط</string>
     <string name="rhythm_pause_three">3 أيام</string>
     <string name="rhythm_pause_week">أسبوع</string>
-    <string name="rhythm_month_summary">%1$s: %2$d أيام فيها مهام منجزة، و%3$d منجزة في المجموع</string>
-    <string name="rhythm_day_sheet_empty">لم تُنهَ مهمة في ذلك اليوم. الراحة تُحسب أيضًا.</string>
     <string name="rhythm_busiest">%1$s هو عادةً يومك الأكثر ازدحامًا.</string>
     <string name="rhythm_when_title">متى تُنجز مهامك</string>
     <string name="rhythm_time_morning">الصباح</string>
@@ -810,14 +793,6 @@
     <string name="rhythm_best_time">معظم ذلك يحدث في %1$s.</string>
     <string name="rhythm_steady_title">تسير على ما يرام</string>
     <string name="rhythm_steady_hint">مهام متكررة تعود إليها باستمرار.</string>
-    <plurals name="rhythm_finished_on_day">
-        <item quantity="zero">لا مهام منجزة</item>
-        <item quantity="one">مهمة واحدة منجزة</item>
-        <item quantity="two">مهمتان منجزتان</item>
-        <item quantity="few">%d مهام منجزة</item>
-        <item quantity="many">%d مهمة منجزة</item>
-        <item quantity="other">%d مهمة منجزة</item>
-    </plurals>
     <!-- M9 step 7: widgets -->
     <string name="widget_mark_done">علّم «%1$s» كمنجزة</string>
     <!-- M9 step 8: day cards -->

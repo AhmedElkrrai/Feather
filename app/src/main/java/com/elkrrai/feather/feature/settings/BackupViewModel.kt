@@ -54,10 +54,6 @@ class BackupViewModel @Inject constructor(
     private val _state = MutableStateFlow(BackupUiState())
     val state: StateFlow<BackupUiState> = _state.asStateFlow()
 
-    fun exportTo(uri: Uri) = launchWrite(BackupResult.Exported) {
-        files.write(uri, backup.exportJson())
-    }
-
     /** Writes the backup to a temporary file and hands its link to the screen, which opens the share sheet. */
     fun shareBackup() {
         if (_state.value.busy) return

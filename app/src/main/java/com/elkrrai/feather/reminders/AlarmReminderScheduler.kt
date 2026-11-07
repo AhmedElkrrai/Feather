@@ -130,11 +130,6 @@ class AlarmReminderScheduler @Inject constructor(
         setAlarm(next.toEpochMilli(), intent)
     }
 
-    override fun scheduleTest(delayMillis: Long) {
-        val at = clock.millis() + delayMillis
-        setAlarm(at, alarmIntent(ReminderReceiver.ACTION_TEST, REQUEST_TEST))
-    }
-
     override fun canScheduleExactAlarms(): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
 
@@ -166,7 +161,6 @@ class AlarmReminderScheduler @Inject constructor(
 
     private companion object {
         const val REQUEST_ALARM = 1
-        const val REQUEST_TEST = 2
         const val REQUEST_SUMMARY = 3
     }
 }

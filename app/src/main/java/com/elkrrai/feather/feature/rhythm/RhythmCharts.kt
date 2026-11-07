@@ -6,8 +6,6 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,12 +20,10 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -38,15 +34,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.domain.rhythm.DayCount
-import com.elkrrai.feather.domain.rhythm.MonthGrid
-import com.elkrrai.feather.domain.rhythm.RhythmDot
 import com.elkrrai.feather.domain.rhythm.TimeOfDay
 import com.elkrrai.feather.ui.components.leafShape
 import com.elkrrai.feather.ui.rememberReduceMotion
 import com.elkrrai.feather.ui.theme.Ease
 import com.elkrrai.feather.ui.theme.featherColors
 import java.text.NumberFormat
-import java.time.LocalDate
 import kotlin.math.max
 import kotlin.math.min
 
@@ -180,135 +173,6 @@ internal fun WeekdayLabels(labels: List<String>, modifier: Modifier = Modifier) 
         }
     }
 }
-
-private val DotRowHeight = 30.dp
-
-/**
- * Fourteen dots in two rows of seven, oldest first: filled amber for a day something was finished,
- * a ring for a day of rest. They pop in one after another.
- */
-@Composable
-internal fun RhythmDots(
-    dots: List<RhythmDot>,
-    entry: Animatable<Float, AnimationVector1D>,
-    modifier: Modifier = Modifier,
-) {
-    val feather = MaterialTheme.featherColors
-    val scheme = MaterialTheme.colorScheme
-    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    Canvas(modifier.fillMaxWidth().height(DotRowHeight * 2).clearAndSetSemantics { }) {
-        val slot = size.width / 7f
-        val radius = 9.dp.toPx()
-        dots.forEachIndexed { index, dot ->
-            val row = index / 7
-            val raw = index % 7
-            val column = if (rtl) 6 - raw else raw
-            val center = Offset(slot * column + slot / 2f, DotRowHeight.toPx() * row + DotRowHeight.toPx() / 2f)
-            val t = segment(entry.value, 200f + index * 20f, 160f)
-            if (t <= 0f) return@forEachIndexed
-            val pop = PopEasing.transform(t)
-            if (dot.showedUp) {
-                drawCircle(feather.amberFill, radius = radius * pop, center = center)
-            } else {
-                drawCircle(
-                    color = scheme.outline.copy(alpha = t),
-                    radius = (radius - 1.dp.toPx()) * pop,
-                    center = center,
-                    style = Stroke(1.8.dp.toPx()),
-                )
-            }
-        }
-    }
-}
-
-/**
- * The month as a nest of straw: a square for each day, in four tones of amber for how much was
- * finished, today ringed, days to come dashed. Tapping a day that has happened calls [onDay]. The
- * rows fade and grow in one after another.
- */
-@Composable
-internal fun MonthNest(
-    grid: MonthGrid,
-    entry: Animatable<Float, AnimationVector1D>,
-    onDay: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val feather = MaterialTheme.featherColors
-    val scheme = MaterialTheme.colorScheme
-    val measurer = rememberTextMeasurer()
-    val numberStyle = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum")
-    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val locale = LocalConfiguration.current.locales[0]
-    val numbers = remember(locale) { NumberFormat.getIntegerInstance(locale) }
-
-    BoxWithConstraints(modifier.fillMaxWidth()) {
-        val cell = maxWidth / 7
-        val rows = (grid.leadingBlanks + grid.cells.size + 6) / 7
-        Canvas(
-            Modifier
-                .fillMaxWidth()
-                .height(cell * rows)
-                .pointerInput(grid, rtl) {
-                    detectTapGestures { offset ->
-                        val side = size.width / 7f
-                        val raw = (offset.x / side).toInt().coerceIn(0, 6)
-                        val column = if (rtl) 6 - raw else raw
-                        val row = (offset.y / side).toInt()
-                        val index = row * 7 + column - grid.leadingBlanks
-                        grid.cells.getOrNull(index)?.takeIf { !it.isFuture }?.let { onDay(it.date) }
-                    }
-                }
-                .clearAndSetSemantics { },
-        ) {
-            val side = size.width / 7f
-            val inset = 3.dp.toPx()
-            val box = side - 2 * inset
-            val corner = CornerRadius(min(13.dp.toPx(), box / 2f))
-            val dash = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 3.dp.toPx()))
-            grid.cells.forEachIndexed { index, day ->
-                val slot = grid.leadingBlanks + index
-                val row = slot / 7
-                val raw = slot % 7
-                val column = if (rtl) 6 - raw else raw
-                val progress = Ease.Settle.transform(segment(entry.value, 300f + row * 30f, 220f))
-                val topLeft = Offset(column * side + inset, row * side + inset)
-                val center = Offset(topLeft.x + box / 2f, topLeft.y + box / 2f)
-                withTransform({ scale(0.85f + 0.15f * progress, 0.85f + 0.15f * progress, pivot = center) }) {
-                    val textColor: Color
-                    when {
-                        day.isFuture -> {
-                            drawRoundRect(
-                                color = scheme.outline.copy(alpha = 0.6f * progress),
-                                topLeft = topLeft, size = Size(box, box), cornerRadius = corner,
-                                style = Stroke(1.2.dp.toPx(), pathEffect = dash),
-                            )
-                            textColor = scheme.onSurfaceVariant.copy(alpha = 0.6f * progress)
-                        }
-
-                        day.level == 0 -> {
-                            drawRoundRect(scheme.surfaceContainer.copy(alpha = progress), topLeft, Size(box, box), corner)
-                            textColor = scheme.onSurfaceVariant.copy(alpha = progress)
-                        }
-
-                        else -> {
-                            drawRoundRect(feather.heat[day.level - 1].copy(alpha = progress), topLeft, Size(box, box), corner)
-                            textColor = feather.heatText[day.level - 1].copy(alpha = progress)
-                        }
-                    }
-                    if (day.isToday) {
-                        drawRoundRect(scheme.primary, topLeft, Size(box, box), corner, style = Stroke(2.5.dp.toPx()))
-                    }
-                    val label = measurer.measure(numbers.format(day.date.dayOfMonth), numberStyle.copy(color = textColor))
-                    drawText(label, topLeft = Offset(center.x - label.size.width / 2f, center.y - label.size.height / 2f))
-                }
-            }
-        }
-    }
-}
-
-/** Seven narrow weekday letters over the month, starting from the first day of the week. */
-@Composable
-internal fun MonthHeader(labels: List<String>, modifier: Modifier = Modifier) = WeekdayLabels(labels, modifier)
 
 private val TimeBarsHeight = 76.dp
 

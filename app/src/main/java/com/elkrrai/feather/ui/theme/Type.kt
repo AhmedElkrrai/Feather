@@ -97,13 +97,3 @@ fun featherTypography(arabic: Boolean): Typography = if (arabic) {
         labelSmall = style(Nunito, 800, 11, 16, 0.2.sp),
     )
 }
-
-/**
- * The large number on the progress screen: tabular, lining figures so digits do not jump as they
- * count up.
- */
-fun statNumeralStyle(arabic: Boolean): TextStyle = if (arabic) {
-    style(NotoNaskh, 700, 52, 52).copy(fontFeatureSettings = "tnum, lnum")
-} else {
-    style(YoungSerif, 400, 48, 48).copy(fontFeatureSettings = "tnum, lnum")
-}

@@ -29,12 +29,3 @@ fun Priority.ringColor(): Color {
         Priority.HIGH -> colors.prioHigh
     }
 }
-
-/** Marker color for a priority, or null when there is nothing to show. */
-@Composable
-fun Priority.markerColor(): Color? = when (this) {
-    Priority.NONE -> null
-    Priority.LOW -> MaterialTheme.colorScheme.secondary
-    Priority.MEDIUM -> MaterialTheme.colorScheme.tertiary
-    Priority.HIGH -> MaterialTheme.colorScheme.error
-}

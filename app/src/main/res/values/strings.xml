@@ -19,7 +19,6 @@
     <!-- Task list -->
     <string name="action_add_task">Add task</string>
     <string name="task_deleted">Task deleted</string>
-    <string name="task_list_empty_body">Tap + to add your first task.</string>
     <string name="quick_add_hint">What needs doing?</string>
 
     <!-- Due dates -->
@@ -47,7 +46,6 @@
     <string name="set_time">Set time</string>
 
     <!-- Language setting -->
-    <string name="language_dialog_title">Choose language</string>
     <string name="language_system">System default</string>
     <!-- Language names are always shown in their own language. -->
     <string name="language_english" translatable="false">English</string>
@@ -87,7 +85,6 @@
     <string name="tab_back_to">‹ %1$s</string>
     <string name="tab_all_in">All %1$s</string>
     <string name="tab_no_tag">No tag</string>
-    <string name="tags_row_summary">Rename, delete and arrange your tags. A tag can sit under another.</string>
     <string name="tags_empty_title">No tags yet</string>
     <string name="tags_empty_body">Add a tag to a task with #, for example #work. Or make one here.</string>
     <string name="tag_move_under">Put under another tag</string>
@@ -113,8 +110,6 @@
     <string name="channel_summary_description">A morning overview of your tasks</string>
     <string name="reminder_due">Due %1$s</string>
     <string name="reminder_generic">Task reminder</string>
-    <string name="test_notification_title">Test reminder</string>
-    <string name="test_notification_text">Reminders can reach you on this phone.</string>
     <string name="summary_title">Your day</string>
     <plurals name="summary_due_today">
         <item quantity="one">%d task due today</item>
@@ -149,7 +144,6 @@
     <string name="settings_daily_summary_summary">A morning notification with what is due today.</string>
     <string name="settings_daily_summary_time">Summary time</string>
     <string name="settings_reliability">Reminder permissions</string>
-    <string name="settings_reliability_ok">Everything looks good</string>
     <string name="settings_reliability_attention">Needs attention</string>
     <string name="settings_language">Language</string>
     <plurals name="duration_minutes">
@@ -399,7 +393,6 @@
     <string name="format_system">Follow system</string>
     <string name="time_format_12">12-hour</string>
     <string name="time_format_24">24-hour</string>
-    <string name="settings_week_start">First day of the week</string>
     <string name="settings_haptics">Haptic feedback</string>
     <string name="settings_haptics_summary">A light vibration when you finish, select or move a task.</string>
 
@@ -541,8 +534,6 @@
     <string name="habit_name">Habit</string>
     <string name="habit_kind_days">Days in a week</string>
     <string name="habit_kind_amount">A total for the week</string>
-    <string name="habit_example_days">Example: Pray 7 Days a week 5 Times a day</string>
-    <string name="habit_example_amount">Example: Read 20 pages a week</string>
     <string name="habit_target_days">Days a week</string>
     <string name="habit_target_amount">Goal for the week</string>
     <string name="habit_daily_target">Parts a day</string>
@@ -604,8 +595,6 @@
     <string name="habit_remind_label">Remind me</string>
     <string name="habit_remind_hint">A notification when each part starts, with a Done button.</string>
     <string name="habit_remind_needs_time">Set a time first: a reminder comes at the start of a time of day or a window.</string>
-    <string name="habit_unit">What you count</string>
-    <string name="habit_unit_hint">Pages, km, minutes</string>
     <string name="habit_goal_next_week">A new goal starts next week. This week keeps the goal it began with.</string>
     <string name="habit_progress_days">%1$d of %2$d days</string>
     <string name="habit_progress_amount">%1$d / %2$d %3$s</string>
@@ -653,7 +642,6 @@
     <string name="welcome_go">Let\u2019s go</string>
     <string name="settings_menu_hints">Hints in the menu</string>
     <string name="settings_menu_hints_summary">A dim line under each view saying what is in it.</string>
-    <string name="habit_open_history">See %1$s week by week</string>
     <string name="habit_btn_this_week">This week</string>
     <string name="habit_btn_all_time">All time</string>
     <plurals name="habit_tree_met">
@@ -717,9 +705,6 @@
     <string name="rhythm_hero_busy">A busy, bright week.</string>
     <string name="rhythm_last_seven_summary">Last 7 days: %1$s</string>
     <string name="rhythm_day_count">%1$s %2$d</string>
-    <string name="rhythm_dots_title">Showing up</string>
-    <string name="rhythm_dots_headline">%1$d of the last %2$d days</string>
-    <string name="rhythm_dots_hint">A filled dot is a day you finished something. A ring is a day of rest.</string>
     <string name="rhythm_pause">Pause counting</string>
     <string name="rhythm_resume">Resume counting</string>
     <string name="rhythm_pause_note">Paused days are left out. They never count as gaps.</string>
@@ -727,8 +712,6 @@
     <string name="rhythm_pause_today">Today only</string>
     <string name="rhythm_pause_three">3 days</string>
     <string name="rhythm_pause_week">A week</string>
-    <string name="rhythm_month_summary">%1$s: %2$d days with something finished, %3$d finished in all</string>
-    <string name="rhythm_day_sheet_empty">Nothing finished that day. Rest counts too.</string>
     <string name="rhythm_busiest">%1$s tends to be your busiest day.</string>
     <string name="rhythm_when_title">When you finish things</string>
     <string name="rhythm_time_morning">Morning</string>
@@ -738,10 +721,6 @@
     <string name="rhythm_best_time">Most of it happens in the %1$s.</string>
     <string name="rhythm_steady_title">Going well</string>
     <string name="rhythm_steady_hint">Repeating tasks you keep coming back to.</string>
-    <plurals name="rhythm_finished_on_day">
-        <item quantity="one">%d finished</item>
-        <item quantity="other">%d finished</item>
-    </plurals>
     <!-- M9 step 7: widgets -->
     <string name="widget_mark_done">Mark %1$s as done</string>
     <!-- M9 step 8: day cards -->

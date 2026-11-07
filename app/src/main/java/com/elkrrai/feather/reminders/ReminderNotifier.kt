@@ -155,23 +155,6 @@ class ReminderNotifier @Inject constructor(
         )
     }
 
-    /** A notification the reliability helper uses to prove that reminders can reach the user. */
-    @SuppressLint("MissingPermission") // guarded by areNotificationsEnabled()
-    fun showTest() {
-        if (!manager.areNotificationsEnabled()) return
-        val context = appContext.withAppLocale()
-        ReminderChannels.ensure(context)
-        val notification = NotificationCompat.Builder(context, ReminderChannels.REMINDERS)
-            .setSmallIcon(R.drawable.ic_stat_feather)
-            .setContentTitle(context.getString(R.string.test_notification_title))
-            .setContentText(context.getString(R.string.test_notification_text))
-            .setCategory(NotificationCompat.CATEGORY_REMINDER)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .build()
-        manager.notify(TEST_TAG, NOTIFICATION_ID, notification)
-    }
-
     /**
      * The morning overview. Says nothing when no task is due today or overdue, and does nothing
      * if notifications are turned off.
@@ -215,7 +198,7 @@ class ReminderNotifier @Inject constructor(
     fun cancelStale(openTaskIds: Set<String>) {
         for (posted in manager.activeNotifications) {
             val tag = posted.tag ?: continue
-            val isTaskReminder = tag != TEST_TAG && tag != SUMMARY_TAG && !tag.startsWith(HABIT_TAG_PREFIX)
+            val isTaskReminder = tag != SUMMARY_TAG && !tag.startsWith(HABIT_TAG_PREFIX)
             if (posted.id == NOTIFICATION_ID && isTaskReminder && tag !in openTaskIds) {
                 manager.cancel(tag, NOTIFICATION_ID)
             }
@@ -262,7 +245,6 @@ class ReminderNotifier @Inject constructor(
     companion object {
         /** All reminder notifications share this id and differ by tag (the task id). */
         const val NOTIFICATION_ID = 1001
-        private const val TEST_TAG = "test"
         private const val SUMMARY_TAG = "summary"
 
         /** Habit notifications are tagged with this and the habit id, so they are never taken for the notification of a task. */

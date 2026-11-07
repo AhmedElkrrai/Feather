@@ -27,7 +27,7 @@ internal fun BroadcastReceiver.runAsync(block: suspend () -> Unit) {
 /**
  * Entry point for everything that should make reminders re-evaluate: our own alarm, a reboot, an
  * app update (which clears alarms), a clock or time zone change, and the exact-alarm permission
- * being granted or revoked. A test alarm from the reliability helper also lands here.
+ * being granted or revoked.
  */
 class ReminderReceiver : BroadcastReceiver() {
 
@@ -37,7 +37,6 @@ class ReminderReceiver : BroadcastReceiver() {
             ReminderEntryPoint::class.java,
         )
         when (intent.action) {
-            ACTION_TEST -> entry.notifier().showTest()
             ACTION_SUMMARY -> runAsync {
                 entry.scheduler().showDailySummary()
                 // Arms tomorrow's summary (and re-checks reminders while we are awake anyway).
@@ -49,7 +48,6 @@ class ReminderReceiver : BroadcastReceiver() {
 
     companion object {
         const val ACTION_ALARM = "com.elkrrai.feather.action.REMINDER_ALARM"
-        const val ACTION_TEST = "com.elkrrai.feather.action.REMINDER_TEST"
         const val ACTION_SUMMARY = "com.elkrrai.feather.action.DAILY_SUMMARY"
     }
 }

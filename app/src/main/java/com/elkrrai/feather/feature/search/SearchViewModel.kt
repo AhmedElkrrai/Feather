@@ -31,24 +31,7 @@ data class SearchUiState(
     /** Something is being searched for: text, a picked tag, or both. */
     val isSearching: Boolean get() = query.isNotBlank() || selectedTagId != null
 
-    /** The picked tag has tags under it, so the screen can say they are included. */
-    val selectedTagHasChildren: Boolean
-        get() = selectedTagId != null && tags.any { it.tag.parentId == selectedTagId }
-
     val selectedTag: Tag? get() = tags.firstOrNull { it.tag.id == selectedTagId }?.tag
-
-    /** The picked tag and the tags above it, from the top-level one down; empty when no tag is picked. */
-    val selectedPath: List<Tag>
-        get() {
-            val byId = tags.associate { it.tag.id to it.tag }
-            val path = ArrayList<Tag>()
-            var current = selectedTagId?.let { byId[it] }
-            while (current != null && path.size <= byId.size) {
-                path.add(0, current)
-                current = current.parentId?.let { byId[it] }
-            }
-            return path
-        }
 }
 
 @HiltViewModel

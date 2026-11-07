@@ -28,10 +28,9 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,7 +38,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.elkrrai.feather.R
 import com.elkrrai.feather.reminders.ReminderHealth
 import com.elkrrai.feather.reminders.SettingsIntents
@@ -65,7 +63,6 @@ class ReliabilityActions(
 fun ReliabilityScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ReliabilityViewModel = hiltViewModel(),
 ) {
     val health by rememberReminderHealth()
     val context = LocalContext.current
