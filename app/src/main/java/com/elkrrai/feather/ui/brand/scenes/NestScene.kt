@@ -60,8 +60,6 @@ fun NestScene(
             if (NestItem.LANTERN in items) drawLantern(p.weave, p.amber, p.bowl)
             drawGround(p, y = 176f, halfWidth = 70f)
         }
-        // the moss sits on the ground behind the nest
-        if (NestItem.MOSS in items) MossPicture(outfit.moss)
         NestLayer(art.back, nestTop, nestHeight)
         // what the bird wears: each garment shows once earned, in the choice made for it
         val dress = OwlDress(
@@ -85,6 +83,8 @@ fun NestScene(
         // the front of the nest, over the bird's feet
         NestLayer(art.front, nestTop, nestHeight)
         if (NestItem.FLOWER_POT in items) PotPicture(outfit.pot)
+        // the moss is on the ground in front, at the far left: nearer to the person than the nest
+        if (NestItem.MOSS in items) MossPicture(outfit.moss)
     }
 
 /** One picture of the nest: the whole of it for the back layer, only its front for the front layer. */
@@ -124,9 +124,9 @@ private val Mosses = intArrayOf(R.drawable.nest_moss_0, R.drawable.nest_moss_1)
 
 // Each moss picture is 400 by 200, the moss standing on its bottom edge.
 private const val MOSS_ASPECT = 200f / 400f
-private const val MOSS_WIDTH = 56f
-private const val MOSS_X = 12f
-private const val MOSS_BOTTOM = 180f
+private const val MOSS_WIDTH = 68f
+private const val MOSS_X = 2f
+private const val MOSS_BOTTOM = 193f
 
 /** The flower pot beside the nest: the choice made for it, standing on the ground. */
 @Composable
