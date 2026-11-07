@@ -119,7 +119,9 @@ private fun SceneScope.PotPicture(choice: Int) {
     )
 }
 
-private val Pots = intArrayOf(R.drawable.nest_pot_0, R.drawable.nest_pot_1, R.drawable.nest_pot_2, R.drawable.nest_pot_3)
+private val Pots = intArrayOf(
+    R.drawable.nest_pot_0, R.drawable.nest_pot_1, R.drawable.nest_pot_2, R.drawable.nest_pot_3, R.drawable.nest_pot_4, R.drawable.nest_pot_5,
+)
 
 // Each pot picture is 320 by 500, the pot standing on its bottom edge.
 private const val POT_ASPECT = 320f / 500f

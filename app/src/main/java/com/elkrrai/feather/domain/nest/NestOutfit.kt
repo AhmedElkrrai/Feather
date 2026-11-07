@@ -18,6 +18,6 @@ data class NestOutfit(
         const val SCARVES = 6
         const val GLASSES = 2
         const val HATS = 4
-        const val POTS = 4
+        const val POTS = 6
     }
 }

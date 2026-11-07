@@ -238,6 +238,7 @@ private val Wardrobe = listOf(
         NestItem.FLOWER_POT,
         intArrayOf(
             R.drawable.dress_thumb_pot_0, R.drawable.dress_thumb_pot_1, R.drawable.dress_thumb_pot_2, R.drawable.dress_thumb_pot_3,
+            R.drawable.dress_thumb_pot_4, R.drawable.dress_thumb_pot_5,
         ),
         { it.pot },
         { outfit, choice -> outfit.copy(pot = choice) },
