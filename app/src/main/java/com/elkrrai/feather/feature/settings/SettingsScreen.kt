@@ -219,7 +219,10 @@ fun SettingsScreen(
         ),
         backupBusy = backupState.busy,
         onAddTreeStages = if (debuggable) {
-            { habitsViewModel.addTreeStages(LocalDate.now(), firstDayOfWeek(sampleLocale)) }
+            {
+                habitsViewModel.addTreeStages(LocalDate.now(), firstDayOfWeek(sampleLocale))
+                snackScope.launch { snackbarHostState.showFeather(context.getString(R.string.debug_tree_stages_added), SnackKind.Done) }
+            }
         } else {
             null
         },
@@ -301,6 +304,8 @@ fun SettingsContent(
     var dialog by rememberSaveable { mutableStateOf<SettingsDialog?>(null) }
 
     var page by rememberSaveable { mutableStateOf(SettingsPage.Home) }
+    // debug builds: the sample habits are made once; the row is off after its first tap
+    var treeStagesAdded by rememberSaveable { mutableStateOf(false) }
     // Back from a category goes to the list first; from the list it leaves Settings.
     BackHandler(enabled = page != SettingsPage.Home) { page = SettingsPage.Home }
 
@@ -338,7 +343,8 @@ fun SettingsContent(
                         versionName = versionName,
                         onOpen = { page = it },
                         onOpenDialog = { dialog = it },
-                        onAddTreeStages = onAddTreeStages,
+                        onAddTreeStages = onAddTreeStages?.let { add -> { treeStagesAdded = true; add() } },
+                        treeStagesAdded = treeStagesAdded,
                         onOpenTags = onOpenTags,
                     )
 
@@ -615,6 +621,7 @@ private fun SettingsHome(
     onOpen: (SettingsPage) -> Unit,
     onOpenDialog: (SettingsDialog) -> Unit,
     onAddTreeStages: (() -> Unit)?,
+    treeStagesAdded: Boolean,
     onOpenTags: () -> Unit,
 ) {
     val locale = LocalConfiguration.current.locales[0]
@@ -707,6 +714,7 @@ private fun SettingsHome(
                 title = stringResource(R.string.debug_add_tree_stages),
                 summary = null,
                 supporting = stringResource(R.string.debug_add_tree_stages_summary),
+                enabled = !treeStagesAdded,
                 onClick = onAddTreeStages,
             )
             SettingsRow(
