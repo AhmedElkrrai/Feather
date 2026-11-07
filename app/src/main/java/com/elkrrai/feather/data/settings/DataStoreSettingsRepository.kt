@@ -59,6 +59,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val nestGlasses = intPreferencesKey("nest_glasses")
         val nestHat = intPreferencesKey("nest_hat")
         val nestPot = intPreferencesKey("nest_pot")
+        val nestMoss = intPreferencesKey("nest_moss")
         val voiceUsed = booleanPreferencesKey("voice_used")
         val backedUp = booleanPreferencesKey("backed_up")
         val morningCard = booleanPreferencesKey("morning_card")
@@ -108,6 +109,7 @@ class DataStoreSettingsRepository @Inject constructor(
                 glasses = (prefs[Keys.nestGlasses] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.GLASSES - 1),
                 hat = (prefs[Keys.nestHat] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.HATS - 1),
                 pot = (prefs[Keys.nestPot] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.POTS - 1),
+                moss = (prefs[Keys.nestMoss] ?: 0).coerceIn(NestOutfit.NONE, NestOutfit.MOSSES - 1),
             ),
             voiceUsed = prefs[Keys.voiceUsed] ?: defaults.voiceUsed,
             backedUp = prefs[Keys.backedUp] ?: defaults.backedUp,
@@ -235,6 +237,7 @@ class DataStoreSettingsRepository @Inject constructor(
             it[Keys.nestGlasses] = outfit.glasses
             it[Keys.nestHat] = outfit.hat
             it[Keys.nestPot] = outfit.pot
+            it[Keys.nestMoss] = outfit.moss
         }
     }
 
@@ -334,7 +337,7 @@ class DataStoreSettingsRepository @Inject constructor(
         )
         private val intKeys = listOf(
             Keys.defaultReminderMinute, Keys.snoozeMinutes, Keys.dailySummaryMinute, Keys.habitSwipeHintsShown,
-            Keys.nestScarf, Keys.nestGlasses, Keys.nestHat, Keys.nestPot, Keys.habitHoldHintShown,
+            Keys.nestScarf, Keys.nestGlasses, Keys.nestHat, Keys.nestPot, Keys.nestMoss, Keys.habitHoldHintShown,
         )
         private val stringKeys = listOf(Keys.themeMode, Keys.timeFormat, Keys.backupStyle, Keys.habitSwipeHintWeek, Keys.nestStyle)
         private val setKeys = listOf(Keys.habitTreesSeen, Keys.rhythmPausedDays, Keys.nestUnlocked, Keys.nestSeen)

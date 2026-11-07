@@ -59,8 +59,9 @@ fun NestScene(
             if (NestItem.FAIRY_LIGHTS in items) drawFairyLights(p.weave, listOf(p.amber, p.coral, p.sky, p.cream))
             if (NestItem.LANTERN in items) drawLantern(p.weave, p.amber, p.bowl)
             drawGround(p, y = 176f, halfWidth = 70f)
-            if (NestItem.MOSS in items) drawMoss(p.moss, p.leaf)
         }
+        // the moss sits on the ground behind the nest
+        if (NestItem.MOSS in items) MossPicture(outfit.moss)
         NestLayer(art.back, nestTop, nestHeight)
         // what the bird wears: each garment shows once earned, in the choice made for it
         val dress = OwlDress(
@@ -104,6 +105,28 @@ internal fun SceneScope.NestLayer(
             .size(unit * width, unit * height),
     )
 }
+
+/** The patch of moss on the ground beside the nest: the choice made for it. */
+@Composable
+private fun SceneScope.MossPicture(choice: Int) {
+    val picture = Mosses.getOrNull(choice) ?: return
+    Image(
+        painter = painterResource(picture),
+        contentDescription = null,
+        contentScale = ContentScale.FillBounds,
+        modifier = Modifier
+            .offset(x = unit * MOSS_X, y = unit * (MOSS_BOTTOM - MOSS_WIDTH * MOSS_ASPECT))
+            .size(unit * MOSS_WIDTH, unit * MOSS_WIDTH * MOSS_ASPECT),
+    )
+}
+
+private val Mosses = intArrayOf(R.drawable.nest_moss_0, R.drawable.nest_moss_1)
+
+// Each moss picture is 400 by 200, the moss standing on its bottom edge.
+private const val MOSS_ASPECT = 200f / 400f
+private const val MOSS_WIDTH = 56f
+private const val MOSS_X = 12f
+private const val MOSS_BOTTOM = 180f
 
 /** The flower pot beside the nest: the choice made for it, standing on the ground. */
 @Composable
@@ -226,13 +249,5 @@ private fun DrawScope.drawLantern(string: Color, glow: Color, frame: Color) {
     drawRoundRect(frame, topLeft = Offset(161f, 44f), size = Size(18f, 4f), cornerRadius = CornerRadius(2f))
     drawRoundRect(glow, topLeft = Offset(162f, 48f), size = Size(16f, 20f), cornerRadius = CornerRadius(5f))
     drawRoundRect(frame, topLeft = Offset(161f, 66f), size = Size(18f, 4f), cornerRadius = CornerRadius(2f))
-}
-
-/** A few cushions of moss on the ground beside the nest. */
-private fun DrawScope.drawMoss(moss: Color, light: Color) {
-    drawOval(moss, topLeft = Offset(20f, 168f), size = Size(42f, 14f))
-    drawOval(light, topLeft = Offset(28f, 165f), size = Size(24f, 11f))
-    drawOval(moss, topLeft = Offset(150f, 170f), size = Size(34f, 12f))
-    drawOval(light, topLeft = Offset(158f, 167f), size = Size(18f, 9f))
 }
 

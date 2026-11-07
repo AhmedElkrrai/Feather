@@ -244,6 +244,12 @@ private val Wardrobe = listOf(
         { outfit, choice -> outfit.copy(pot = choice) },
     ),
     Slot(
+        NestItem.MOSS,
+        intArrayOf(R.drawable.dress_thumb_moss_0, R.drawable.dress_thumb_moss_1),
+        { it.moss },
+        { outfit, choice -> outfit.copy(moss = choice) },
+    ),
+    Slot(
         NestItem.PARTY_HAT,
         intArrayOf(
             R.drawable.dress_thumb_hat_0, R.drawable.dress_thumb_hat_1, R.drawable.dress_thumb_hat_2, R.drawable.dress_thumb_hat_3,

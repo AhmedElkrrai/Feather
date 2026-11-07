@@ -10,6 +10,8 @@ data class NestOutfit(
     val hat: Int = 0,
     /** The flower pot beside the nest. */
     val pot: Int = 0,
+    /** The patch of moss on the ground. */
+    val moss: Int = 0,
 ) {
     companion object {
         const val NONE = -1
@@ -19,5 +21,6 @@ data class NestOutfit(
         const val GLASSES = 2
         const val HATS = 4
         const val POTS = 6
+        const val MOSSES = 2
     }
 }
