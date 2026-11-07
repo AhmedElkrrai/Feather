@@ -64,9 +64,11 @@ class ReorderState<T>(
         if (center < info.viewportStartOffset + EDGE_PX) {
             listState.dispatchRawDelta(-SCROLL_STEP_PX)
             offset -= SCROLL_STEP_PX
+            return
         } else if (center > info.viewportEndOffset - EDGE_PX) {
             listState.dispatchRawDelta(SCROLL_STEP_PX)
             offset += SCROLL_STEP_PX
+            return
         }
 
         // Rows can differ in height, so a row is passed when the dragged row's leading edge crosses the middle of it,
@@ -86,7 +88,12 @@ class ReorderState<T>(
         val to = order.indexOfFirst { idOf(it) == target.key }
         if (from < 0 || to < 0) return
 
+        // The list follows the first row it shows by its key, so when that row is the one being moved the whole view would slide
+        // with it. Pin the view to the same place instead.
+        val firstIndex = listState.firstVisibleItemIndex
+        val firstOffset = listState.firstVisibleItemScrollOffset
         order.add(to, order.removeAt(from))
+        listState.requestScrollToItem(firstIndex, firstOffset)
         // The dragged row now sits somewhere else in the list; keep it under the finger. Going down it lands after the
         // neighbor, which is as tall as the neighbor and not as the dragged row.
         val landed = if (target.offset > current.offset) target.offset + target.size - current.size else target.offset
