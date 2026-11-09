@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import com.elkrrai.feather.domain.nest.NestStyle
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.TimeFormat
+import com.elkrrai.feather.domain.settings.VoiceLanguage
 import com.elkrrai.feather.domain.time.FIRST_DAY_OF_WEEK
 import java.time.DayOfWeek
 import java.util.Locale
@@ -21,6 +22,9 @@ import java.util.Locale
  */
 object DisplayPrefs {
     var timeFormat by mutableStateOf(TimeFormat.SYSTEM)
+        private set
+    /** The language the microphone in quick add listens for. */
+    var voiceLanguage by mutableStateOf(VoiceLanguage.EN_US)
         private set
     var dynamicColor by mutableStateOf(false)
         private set
@@ -42,6 +46,7 @@ object DisplayPrefs {
 
     fun update(settings: AppSettings) {
         timeFormat = settings.timeFormat
+        voiceLanguage = settings.voiceLanguage
         dynamicColor = settings.dynamicColor
         pureBlack = settings.pureBlack
         haptics = settings.haptics

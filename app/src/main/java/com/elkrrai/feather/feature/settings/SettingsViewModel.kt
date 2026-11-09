@@ -7,6 +7,7 @@ import com.elkrrai.feather.domain.settings.BackupStyle
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
+import com.elkrrai.feather.domain.settings.VoiceLanguage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalTime
 import javax.inject.Inject
@@ -54,6 +55,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setTimeFormat(format: TimeFormat) {
         viewModelScope.launch { repository.setTimeFormat(format) }
+    }
+
+    fun setVoiceLanguage(language: VoiceLanguage) {
+        viewModelScope.launch { repository.setVoiceLanguage(language) }
     }
 
     fun setHabitsInToday(enabled: Boolean) {

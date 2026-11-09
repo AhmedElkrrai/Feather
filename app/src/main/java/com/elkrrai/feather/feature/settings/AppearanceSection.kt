@@ -26,6 +26,7 @@ import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
+import com.elkrrai.feather.domain.settings.VoiceLanguage
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import androidx.compose.foundation.background
@@ -43,6 +44,7 @@ class AppearanceActions(
     val onPureBlackChange: (Boolean) -> Unit = {},
     val onDynamicColorChange: (Boolean) -> Unit = {},
     val onTimeFormatChange: (TimeFormat) -> Unit = {},
+    val onVoiceLanguageChange: (VoiceLanguage) -> Unit = {},
     val onHapticsChange: (Boolean) -> Unit = {},
     val onMenuHintsChange: (Boolean) -> Unit = {},
     val onBirdAnimationsChange: (Boolean) -> Unit = {},

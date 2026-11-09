@@ -14,6 +14,7 @@ import com.elkrrai.feather.domain.settings.BackupStyle
 import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
+import com.elkrrai.feather.domain.settings.VoiceLanguage
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -39,6 +40,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val pureBlack = booleanPreferencesKey("pure_black")
         val dynamicColor = booleanPreferencesKey("dynamic_color")
         val timeFormat = stringPreferencesKey("time_format")
+        val voiceLanguage = stringPreferencesKey("voice_language")
         val backupStyle = stringPreferencesKey("backup_style")
         val haptics = booleanPreferencesKey("haptics")
         val menuHints = booleanPreferencesKey("menu_hints")
@@ -86,6 +88,7 @@ class DataStoreSettingsRepository @Inject constructor(
             pureBlack = prefs[Keys.pureBlack] ?: defaults.pureBlack,
             dynamicColor = prefs[Keys.dynamicColor] ?: defaults.dynamicColor,
             timeFormat = prefs.enumOf(Keys.timeFormat, defaults.timeFormat),
+            voiceLanguage = prefs.enumOf(Keys.voiceLanguage, defaults.voiceLanguage),
             backupStyle = prefs.enumOf(Keys.backupStyle, defaults.backupStyle),
             haptics = prefs[Keys.haptics] ?: defaults.haptics,
             menuHints = prefs[Keys.menuHints] ?: defaults.menuHints,
@@ -167,6 +170,10 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setTimeFormat(format: TimeFormat) {
         dataStore.edit { it[Keys.timeFormat] = format.name }
+    }
+
+    override suspend fun setVoiceLanguage(language: VoiceLanguage) {
+        dataStore.edit { it[Keys.voiceLanguage] = language.name }
     }
 
     override suspend fun setBackupStyle(style: BackupStyle) {
@@ -339,7 +346,7 @@ class DataStoreSettingsRepository @Inject constructor(
             Keys.defaultReminderMinute, Keys.snoozeMinutes, Keys.dailySummaryMinute, Keys.habitSwipeHintsShown,
             Keys.nestScarf, Keys.nestGlasses, Keys.nestHat, Keys.nestPot, Keys.nestMoss, Keys.habitHoldHintShown,
         )
-        private val stringKeys = listOf(Keys.themeMode, Keys.timeFormat, Keys.backupStyle, Keys.habitSwipeHintWeek, Keys.nestStyle)
+        private val stringKeys = listOf(Keys.themeMode, Keys.timeFormat, Keys.voiceLanguage, Keys.backupStyle, Keys.habitSwipeHintWeek, Keys.nestStyle)
         private val setKeys = listOf(Keys.habitTreesSeen, Keys.rhythmPausedDays, Keys.nestUnlocked, Keys.nestSeen)
 
         /** Left out of a backup on purpose: they only make sense on this phone (a folder permission, the lock, today's dismissed cards). */

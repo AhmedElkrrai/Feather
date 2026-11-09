@@ -154,6 +154,10 @@
     <string name="settings_reliability">أذونات التذكير</string>
     <string name="settings_reliability_attention">يحتاج إلى انتباه</string>
     <string name="settings_language">اللغة</string>
+    <string name="settings_voice_input">الإدخال الصوتي</string>
+    <string name="settings_voice_input_hint">اللغة التي تتحدث بها عند الضغط على الميكروفون في الإضافة السريعة.</string>
+    <string name="voice_language_en_us">الإنجليزية (الولايات المتحدة)</string>
+    <string name="voice_language_ar_eg">العربية (مصر)</string>
     <plurals name="duration_minutes">
         <item quantity="zero">%d دقيقة</item>
         <item quantity="one">دقيقة واحدة</item>

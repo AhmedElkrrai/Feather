@@ -2,12 +2,10 @@ package com.elkrrai.feather.feature.tasklist
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.speech.RecognizerIntent
 import android.widget.Toast
-import java.util.Locale
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +55,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
+import com.elkrrai.feather.ui.DisplayPrefs
 import com.elkrrai.feather.R
 import com.elkrrai.feather.domain.quickadd.ParsedQuickAdd
 import com.elkrrai.feather.domain.quickadd.QuickAddEdits
@@ -154,23 +153,16 @@ fun QuickAddSheet(
     }
 
     fun startVoice() {
-        // No "prefer offline": the offline recognizer has packs for a few regions only (en-US, en-GB...), and for a phone in English as spoken in
-        // Tunisia ("en-TN") it said that voice search is not available. Online it understands the language. The recognizer is also asked which
-        // languages it has, and the closest one to the phone's is used.
-        // English is asked for as plain English, never as the phone's region (a phone in English as spoken in Tunisia is not a language anyone speaks to).
-        val ask: ((String) -> Unit) -> Unit = { next ->
-            if (locale.language == "en") next("en-US") else pickVoiceLanguage(context, locale, next)
-        }
-        ask { language ->
-            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, language)
-                .putExtra(RecognizerIntent.EXTRA_PROMPT, voicePrompt)
-            try {
-                voiceLauncher.launch(intent)
-            } catch (e: ActivityNotFoundException) {
-                Toast.makeText(context, voiceUnavailable, Toast.LENGTH_SHORT).show()
-            }
+        // The language is the one chosen in Settings, never the phone's region: a phone in English as spoken in Tunisia ("en-TN") made the
+        // recognizer say that voice search is not available.
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, DisplayPrefs.voiceLanguage.tag)
+            .putExtra(RecognizerIntent.EXTRA_PROMPT, voicePrompt)
+        try {
+            voiceLauncher.launch(intent)
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(context, voiceUnavailable, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -535,52 +527,4 @@ private fun ParsedQuickAdd.withTools(
         )
     }
     return result
-}
-
-/**
- * The language to ask the speech recognizer for: [locale] itself when it has it, else the same language in the region that suits best (the
- * region of [locale], then the language's own, then the first it has), else just the language. [done] is called once, on the main thread.
- */
-private fun pickVoiceLanguage(context: Context, locale: Locale, done: (String) -> Unit) {
-    // just the language leaves the region to the phone (en-TN again): the language's usual region is better, such as en-US
-    val usualRegion = android.icu.util.ULocale.addLikelySubtags(android.icu.util.ULocale(locale.language)).country
-    val fallback = if (usualRegion.isEmpty()) locale.language else locale.language + "-" + usualRegion
-    val details = RecognizerIntent.getVoiceDetailsIntent(context)
-    if (details == null) {
-        done(locale.toLanguageTag())
-        return
-    }
-    var called = false
-    fun finish(tag: String) {
-        if (!called) {
-            called = true
-            done(tag)
-        }
-    }
-    try {
-        context.sendOrderedBroadcast(
-            details, null,
-            object : BroadcastReceiver() {
-                override fun onReceive(c: Context, result: Intent) {
-                    val supported = getResultExtras(true)
-                        ?.getStringArrayList(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES)
-                        .orEmpty()
-                        .map { it.replace('_', '-') }
-                    val wanted = locale.toLanguageTag()
-                    val sameLanguage = supported.filter { it.substringBefore('-').equals(locale.language, ignoreCase = true) }
-                    finish(
-                        supported.firstOrNull { it.equals(wanted, ignoreCase = true) }
-                            ?: sameLanguage.firstOrNull { it.substringAfter('-', "").equals(locale.country, ignoreCase = true) }
-                            ?: sameLanguage.firstOrNull { it.substringAfter('-', "").equals(locale.language, ignoreCase = true) }
-                            ?: sameLanguage.firstOrNull { it.equals("en-US", ignoreCase = true) }
-                            ?: sameLanguage.firstOrNull()
-                            ?: fallback,
-                    )
-                }
-            },
-            null, Activity.RESULT_OK, null, null,
-        )
-    } catch (e: Exception) {
-        finish(fallback)
-    }
 }

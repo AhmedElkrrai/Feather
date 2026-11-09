@@ -13,6 +13,9 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 enum class TimeFormat { SYSTEM, H12, H24 }
 
+/** The language the microphone in quick add listens for: English (US) or Arabic (Egypt), [tag] being what the speech recognizer is asked for. */
+enum class VoiceLanguage(val tag: String) { EN_US("en-US"), AR_EG("ar-EG") }
+
 /** How the automatic backup names its files: one file replaced each time, a file for each of the last 7 days, or one file plus an older copy. */
 enum class BackupStyle { ONE_FILE, SEVEN_DAYS, ONE_PLUS_OLDER }
 
@@ -38,6 +41,7 @@ data class AppSettings(
     /** Material You colors from the wallpaper (Android 12 and up); off by default, the app has its own colors. */
     val dynamicColor: Boolean = false,
     val timeFormat: TimeFormat = TimeFormat.SYSTEM,
+    val voiceLanguage: VoiceLanguage = VoiceLanguage.EN_US,
     val haptics: Boolean = true,
     /** The grey line under each item of the menu that says what is in it. */
     val menuHints: Boolean = true,
@@ -114,6 +118,8 @@ interface SettingsRepository : BackupPreferences {
     suspend fun setDynamicColor(enabled: Boolean)
 
     suspend fun setTimeFormat(format: TimeFormat)
+
+    suspend fun setVoiceLanguage(language: VoiceLanguage)
 
     suspend fun setBackupStyle(style: BackupStyle)
 

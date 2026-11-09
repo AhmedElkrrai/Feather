@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.elkrrai.feather.domain.settings.TimeFormat
+import com.elkrrai.feather.domain.settings.VoiceLanguage
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
@@ -61,11 +62,13 @@ enum class AppLanguage(val tag: String, @StringRes val labelRes: Int) {
     }
 }
 
-/** Language and time format in one dialog: two groups of radio buttons that apply as soon as one is picked. */
+/** Language, time format and the language of the microphone in one dialog: groups of radio buttons that apply as soon as one is picked. */
 @Composable
 fun LanguageTimeDialog(
     timeFormat: TimeFormat,
     onTimeFormatChange: (TimeFormat) -> Unit,
+    voiceLanguage: VoiceLanguage,
+    onVoiceLanguageChange: (VoiceLanguage) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var language by remember { mutableStateOf(AppLanguage.current()) }
@@ -101,6 +104,22 @@ fun LanguageTimeDialog(
                         )
                     }
                 }
+                DialogSection(stringResource(R.string.settings_voice_input))
+                Column(Modifier.selectableGroup()) {
+                    VoiceLanguage.entries.forEach { option ->
+                        RadioLine(
+                            label = stringResource(option.labelRes()),
+                            selected = option == voiceLanguage,
+                            onClick = { onVoiceLanguageChange(option) },
+                        )
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.settings_voice_input_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 40.dp, bottom = 4.dp),
+                )
             }
         },
         confirmButton = {
@@ -134,4 +153,10 @@ private fun RadioLine(label: String, selected: Boolean, onClick: () -> Unit) {
         Spacer(Modifier.width(16.dp))
         Text(label)
     }
+}
+
+@StringRes
+private fun VoiceLanguage.labelRes(): Int = when (this) {
+    VoiceLanguage.EN_US -> R.string.voice_language_en_us
+    VoiceLanguage.AR_EG -> R.string.voice_language_ar_eg
 }
