@@ -103,7 +103,9 @@ fun TodayHabitsBlock(
     ui: TodayHabitsUi,
     onFinish: (TodayHabit) -> Unit,
     onToggleStage: (TodayHabit, String) -> Unit,
-    onSetAmount: (TodayHabit, Int) -> Unit,
+    onAddLog: (TodayHabit, Int) -> Unit,
+    onChangeLog: (TodayHabit, logId: String, Int) -> Unit,
+    onDeleteLog: (TodayHabit, logId: String) -> Unit,
     modifier: Modifier = Modifier,
     /** A day was finished (by holding, by the last tick, or by an amount that reaches the goal): where on the screen the ring is. */
     onCelebrate: (origin: Offset) -> Unit = {},
@@ -149,17 +151,18 @@ fun TodayHabitsBlock(
         }
     }
     visible.firstOrNull { it.id == amountFor }?.let { row ->
-        AmountDialog(
-            title = stringResource(
-                R.string.habit_amount_title,
-                row.unit.ifBlank { row.name },
-                today.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
-            ),
-            initial = row.todayAmount,
-            onSet = { amount ->
-                onSetAmount(row, amount)
-                amountFor = null
-            },
+        HabitLogDialog(
+            title = row.name,
+            weekday = today.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
+            isToday = true,
+            dayTotal = row.todayAmount,
+            weekTotal = row.weekTotal,
+            weekTarget = row.weekTarget,
+            logs = row.todayLogs,
+            usual = row.usualAmounts,
+            onAdd = { onAddLog(row, it) },
+            onChange = { id, amount -> onChangeLog(row, id, amount) },
+            onDelete = { onDeleteLog(row, it) },
             onDismiss = { amountFor = null },
         )
     }

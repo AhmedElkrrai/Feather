@@ -38,6 +38,18 @@ class HabitsViewModel @Inject constructor(
         viewModelScope.launch { repository.setAmount(id, date, amount) }
     }
 
+    fun addLog(id: String, date: LocalDate, amount: Int) {
+        viewModelScope.launch { repository.addLog(id, date, amount) }
+    }
+
+    fun changeLog(id: String, logId: String, amount: Int) {
+        viewModelScope.launch { repository.changeLog(id, logId, amount) }
+    }
+
+    fun deleteLog(id: String, logId: String) {
+        viewModelScope.launch { repository.deleteLog(id, logId) }
+    }
+
     fun setStageDone(habitId: String, date: LocalDate, stageId: String, done: Boolean) {
         viewModelScope.launch { repository.setStageDone(habitId, date, stageId, done) }
     }

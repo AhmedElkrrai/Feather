@@ -73,6 +73,12 @@ data class HabitState(
 /** One thing logged on a day. [loggedAt] is null for an amount from before logs were kept and for a log added to an earlier day. */
 data class HabitLog(val id: String, val amount: Int, val loggedAt: Instant?)
 
+/** The amounts this habit is logged in most often, the commonest first (up to three): quick choices for the next log. */
+fun HabitState.usualAmounts(): List<Int> = logs.values.flatten()
+    .groupingBy { it.amount }.eachCount().entries
+    .sortedWith(compareByDescending<Map.Entry<Int, Int>> { it.value }.thenByDescending { it.key })
+    .take(3).map { it.key }
+
 const val MAX_HABIT_TARGET = 9_999
 const val MAX_DAILY_TARGET = 1_000
 const val DAYS_IN_WEEK = 7

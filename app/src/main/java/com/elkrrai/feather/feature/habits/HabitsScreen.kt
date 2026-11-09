@@ -90,6 +90,7 @@ import com.elkrrai.feather.domain.habit.queuedAfter
 import com.elkrrai.feather.domain.habit.stagesDoneOn
 import com.elkrrai.feather.domain.habit.stagesFor
 import com.elkrrai.feather.domain.habit.week
+import com.elkrrai.feather.domain.habit.usualAmounts
 import com.elkrrai.feather.domain.habit.weekStartOf
 import com.elkrrai.feather.domain.habit.weeksMetInARow
 import com.elkrrai.feather.domain.view.TaskScope
@@ -170,6 +171,9 @@ fun HabitsScreen(
             onEditHabit = onEditHabit,
             onSetStageDone = viewModel::setStageDone,
             onSetAmount = viewModel::setAmount,
+            onAddLog = viewModel::addLog,
+            onChangeLog = viewModel::changeLog,
+            onDeleteLog = viewModel::deleteLog,
             onReorder = viewModel::reorder,
             onDelete = viewModel::delete,
         )
@@ -195,6 +199,9 @@ internal fun HabitsContent(
     modifier: Modifier = Modifier,
     onReorder: (List<String>) -> Unit = {},
     today: LocalDate = LocalDate.now(),
+    onAddLog: (habitId: String, date: LocalDate, amount: Int) -> Unit = { _, _, _ -> },
+    onChangeLog: (habitId: String, logId: String, amount: Int) -> Unit = { _, _, _ -> },
+    onDeleteLog: (habitId: String, logId: String) -> Unit = { _, _ -> },
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val firstDay = firstDayOfWeek(locale)
@@ -321,19 +328,37 @@ internal fun HabitsContent(
         }
 
         is HabitDialog.SetAmount -> habits?.firstOrNull { it.habit.id == open.id }?.let { state ->
-            AmountDialog(
-                title = stringResource(
-                    R.string.habit_amount_title,
-                    state.habit.unit.ifBlank { state.habit.name },
-                    open.date.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
-                ),
-                initial = state.entries[open.date] ?: 0,
-                onSet = { amount ->
-                    onSetAmount(state.habit.id, open.date, amount)
-                    dialog = null
-                },
-                onDismiss = { dialog = null },
-            )
+            if (state.habit.kind == HabitKind.AMOUNT) {
+                val progress = state.week(weekStart)
+                HabitLogDialog(
+                    title = state.habit.name,
+                    weekday = open.date.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
+                    isToday = open.date == today,
+                    dayTotal = state.entries[open.date] ?: 0,
+                    weekTotal = progress.total,
+                    weekTarget = progress.target,
+                    logs = state.logs[open.date].orEmpty(),
+                    usual = state.usualAmounts(),
+                    onAdd = { onAddLog(state.habit.id, open.date, it) },
+                    onChange = { logId, amount -> onChangeLog(state.habit.id, logId, amount) },
+                    onDelete = { onDeleteLog(state.habit.id, it) },
+                    onDismiss = { dialog = null },
+                )
+            } else {
+                AmountDialog(
+                    title = stringResource(
+                        R.string.habit_amount_title,
+                        state.habit.unit.ifBlank { state.habit.name },
+                        open.date.dayOfWeek.getDisplayName(TextStyle.FULL, locale),
+                    ),
+                    initial = state.entries[open.date] ?: 0,
+                    onSet = { amount ->
+                        onSetAmount(state.habit.id, open.date, amount)
+                        dialog = null
+                    },
+                    onDismiss = { dialog = null },
+                )
+            }
         }
     }
 }

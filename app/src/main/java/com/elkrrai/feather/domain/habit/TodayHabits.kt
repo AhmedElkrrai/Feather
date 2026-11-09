@@ -33,6 +33,9 @@ data class TodayHabit(
     val sortMinute: Int?,
     /** What was logged today (the amount for an amount habit). */
     val todayAmount: Int = 0,
+    /** For a habit that counts an amount: what was logged today, one entry per log, and the amounts it is usually logged in. */
+    val todayLogs: List<HabitLog> = emptyList(),
+    val usualAmounts: List<Int> = emptyList(),
 )
 
 /**
@@ -65,6 +68,8 @@ private fun todayHabit(state: HabitState, today: LocalDate, minute: Int, weekSta
             weekTotal = progress.total, weekTarget = progress.target,
             sortMinute = habit.time.start(),
             todayAmount = state.entries[today] ?: 0,
+            todayLogs = state.logs[today].orEmpty(),
+            usualAmounts = state.usualAmounts(),
         )
     }
 

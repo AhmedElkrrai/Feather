@@ -348,7 +348,9 @@ fun TaskListScreen(
                             }
                         },
                         onToggleStage = todayHabits::toggleStage,
-                        onSetAmount = todayHabits::setAmount,
+                        onAddLog = todayHabits::addLog,
+                        onChangeLog = todayHabits::changeLog,
+                        onDeleteLog = todayHabits::deleteLog,
                         onCelebrate = { origin ->
                             confetti.celebrate(origin, 1f)
                             celebration++

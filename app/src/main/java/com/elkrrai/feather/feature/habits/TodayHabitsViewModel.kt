@@ -92,7 +92,15 @@ class TodayHabitsViewModel @Inject constructor(
         viewModelScope.launch { habits.setStageDone(row.id, today(), stageId, !done) }
     }
 
-    fun setAmount(row: TodayHabit, amount: Int) {
-        viewModelScope.launch { habits.setAmount(row.id, today(), amount) }
+    fun addLog(row: TodayHabit, amount: Int) {
+        viewModelScope.launch { habits.addLog(row.id, today(), amount) }
+    }
+
+    fun changeLog(row: TodayHabit, logId: String, amount: Int) {
+        viewModelScope.launch { habits.changeLog(row.id, logId, amount) }
+    }
+
+    fun deleteLog(row: TodayHabit, logId: String) {
+        viewModelScope.launch { habits.deleteLog(row.id, logId) }
     }
 }
