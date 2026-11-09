@@ -6,12 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -74,7 +75,6 @@ import java.time.format.FormatStyle
  * is the sum of its logs, so changing 10 to 9 is one tap on the log and one on the minus. [usual] are the amounts the habit is most often
  * logged in (commonest first), offered as quick choices for a new log.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun HabitLogDialog(
     title: String,
@@ -169,19 +169,23 @@ internal fun HabitLogDialog(
             // the subtitle sits close under the title, then the pills, the logs and the add box
             Hint(
                 if (isToday) stringResource(R.string.habit_log_subtitle_today, weekday) else weekday,
-                modifier = Modifier.padding(bottom = 6.dp),
+                modifier = Modifier.padding(bottom = 10.dp),
             )
-            FlowRow(
-                modifier = Modifier.padding(bottom = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(Space.x2),
-                verticalArrangement = Arrangement.spacedBy(Space.x2),
+            Row(
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(bottom = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(13.dp),
             ) {
                 InfoPill(
                     if (isToday) stringResource(R.string.habit_log_today_total, dayTotal)
                     else stringResource(R.string.habit_log_day_total, dayTotal, weekday),
                     boldNumber = dayTotal,
+                    modifier = Modifier.weight(0.37f).fillMaxHeight(),
                 )
-                InfoPill(stringResource(R.string.habit_log_week_total, weekTotal, weekTarget), boldNumber = weekTotal)
+                InfoPill(
+                    stringResource(R.string.habit_log_week_total, weekTotal, weekTarget),
+                    boldNumber = weekTotal,
+                    modifier = Modifier.weight(0.63f).fillMaxHeight(),
+                )
             }
             logs.forEach { log ->
                 LogRow(amount = log.amount, time = timeOf(log)) {
@@ -199,9 +203,9 @@ internal fun HabitLogDialog(
 }
 
 // The sizes of the dialog's text. A small sans, quiet: the title, the subtitle, the pills and the times are all the same few sizes.
-private val TitleText: TextStyle @Composable get() = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold)
-private val SubText: TextStyle @Composable get() = MaterialTheme.typography.bodyMedium.copy(fontSize = 17.sp, lineHeight = 23.sp)
-private val SmallText: TextStyle @Composable get() = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp, lineHeight = 20.sp)
+private val TitleText: TextStyle @Composable get() = MaterialTheme.typography.titleLarge.copy(fontSize = 30.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold)
+private val SubText: TextStyle @Composable get() = MaterialTheme.typography.bodyMedium.copy(fontSize = 23.sp, lineHeight = 30.sp)
+private val SmallText: TextStyle @Composable get() = MaterialTheme.typography.bodyMedium.copy(fontSize = 20.sp, lineHeight = 26.sp)
 
 /** The color of a row or a button circle in the dialog: a little darker and bluer than the dialog itself (the mockup's 23, 37, 48 on 31, 46, 54). */
 @Composable
@@ -221,19 +225,19 @@ private fun LogDialogFrame(
 ) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(32.dp),
             color = AlertDialogDefaults.containerColor,
             tonalElevation = AlertDialogDefaults.TonalElevation,
             modifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 560.dp).fillMaxWidth(),
         ) {
-            Column(Modifier.padding(start = 22.dp, end = 22.dp, top = 22.dp, bottom = 14.dp)) {
-                Text(text = title, style = TitleText, modifier = Modifier.padding(bottom = 2.dp))
+            Column(Modifier.padding(start = 28.dp, end = 28.dp, top = 26.dp, bottom = 18.dp)) {
+                Text(text = title, style = TitleText, modifier = Modifier.padding(bottom = 4.dp))
                 Column(
                     modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(Space.x2),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                     content = content,
                 )
-                Row(Modifier.fillMaxWidth().padding(top = Space.x3), horizontalArrangement = Arrangement.End, content = actions)
+                Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.End, content = actions)
             }
         }
     }
@@ -266,7 +270,7 @@ private fun MutedButton(label: String, onClick: () -> Unit) {
 
 /** A pill of information: the number in bold, the rest quiet. */
 @Composable
-private fun InfoPill(text: String, boldNumber: Int) {
+private fun InfoPill(text: String, boldNumber: Int, modifier: Modifier = Modifier) {
     val number = boldNumber.toString()
     val at = text.indexOf(number)
     val styled: AnnotatedString = if (at < 0) {
@@ -278,12 +282,12 @@ private fun InfoPill(text: String, boldNumber: Int) {
             append(text.substring(at + number.length))
         }
     }
-    Surface(shape = RoundedCornerShape(12.dp), color = pillColor()) {
+    Surface(shape = RoundedCornerShape(13.dp), color = pillColor(), modifier = modifier) {
         Text(
             text = styled,
             style = SubText,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+            modifier = Modifier.padding(horizontal = 13.dp, vertical = 8.dp),
         )
     }
 }
@@ -292,20 +296,20 @@ private fun InfoPill(text: String, boldNumber: Int) {
 @Composable
 private fun LogRow(amount: Int, time: String, onClick: () -> Unit) {
     Surface(
-        shape = RoundedCornerShape(17.dp),
+        shape = RoundedCornerShape(19.dp),
         color = insetColor(),
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
     ) {
         Row(
-            Modifier.heightIn(min = 52.dp).padding(horizontal = 15.dp, vertical = 10.dp),
+            Modifier.heightIn(min = 76.dp).padding(start = 19.dp, end = 23.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
                 text = amount.toString(),
-                style = SubText.copy(fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold),
+                style = SubText.copy(fontSize = 33.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.widthIn(min = 38.dp),
+                modifier = Modifier.widthIn(min = 44.dp),
             )
             Text(
                 text = time,
@@ -317,7 +321,7 @@ private fun LogRow(amount: Int, time: String, onClick: () -> Unit) {
                 painter = painterResource(R.drawable.ic_edit),
                 contentDescription = stringResource(R.string.habit_log_change_title),
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(19.dp),
+                modifier = Modifier.size(20.dp),
             )
         }
     }
@@ -330,11 +334,11 @@ private fun DashedButton(label: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
+            .heightIn(min = 70.dp)
             .drawBehind {
                 drawRoundRect(
                     color = color,
-                    cornerRadius = CornerRadius(17.dp.toPx()),
+                    cornerRadius = CornerRadius(19.dp.toPx()),
                     style = Stroke(1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))),
                 )
             }
