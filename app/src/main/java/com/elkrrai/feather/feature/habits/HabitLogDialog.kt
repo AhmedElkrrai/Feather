@@ -332,15 +332,15 @@ private fun AmountStepper(text: String, onText: (String) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        FilledIconButton(onClick = { onText((value - 1).coerceAtLeast(1).toString()) }, colors = buttons, modifier = Modifier.size(44.dp)) {
+        FilledIconButton(onClick = { onText((value - 1).coerceAtLeast(1).toString()) }, colors = buttons, modifier = Modifier.size(52.dp)) {
             Icon(painterResource(R.drawable.ic_remove), contentDescription = stringResource(R.string.habit_log_less))
         }
         BasicTextField(
             value = text,
             onValueChange = { onText(it.filter(Char::isDigit).trimStart('0').take(4)) },
             textStyle = MaterialTheme.typography.bodyLarge.copy(
-                fontSize = 34.sp,
-                lineHeight = 40.sp,
+                fontSize = 56.sp,
+                lineHeight = 64.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 color = scheme.onSurface,
@@ -348,12 +348,12 @@ private fun AmountStepper(text: String, onText: (String) -> Unit) {
             cursorBrush = SolidColor(scheme.primary),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.width(96.dp).padding(horizontal = Space.x2),
+            modifier = Modifier.width(144.dp).padding(horizontal = Space.x2),
         )
         FilledIconButton(
             onClick = { onText((value + 1).coerceAtMost(MAX_HABIT_TARGET).toString()) },
             colors = buttons,
-            modifier = Modifier.size(44.dp),
+            modifier = Modifier.size(52.dp),
         ) {
             Icon(painterResource(R.drawable.ic_add), contentDescription = stringResource(R.string.habit_log_more))
         }
