@@ -42,10 +42,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -199,13 +199,17 @@ internal fun HabitLogDialog(
 }
 
 // The sizes of the dialog's text. A small sans, quiet: the title, the subtitle, the pills and the times are all the same few sizes.
-private val TitleText: TextStyle @Composable get() = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, lineHeight = 28.sp)
+private val TitleText: TextStyle @Composable get() = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold)
 private val SubText: TextStyle @Composable get() = MaterialTheme.typography.bodyMedium.copy(fontSize = 17.sp, lineHeight = 23.sp)
 private val SmallText: TextStyle @Composable get() = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp, lineHeight = 20.sp)
 
-/** The color of a row, a pill or a button circle in the dialog: a little darker than the dialog itself. */
+/** The color of a row or a button circle in the dialog: a little darker and bluer than the dialog itself (the mockup's 23, 37, 48 on 31, 46, 54). */
 @Composable
-private fun insetColor() = lerp(AlertDialogDefaults.containerColor, MaterialTheme.colorScheme.background, 0.35f)
+private fun insetColor(): Color = AlertDialogDefaults.containerColor.let { Color(it.red * 0.74f, it.green * 0.80f, it.blue * 0.89f) }
+
+/** The color of a pill: a step darker than a row (the mockup's 20, 32, 42). */
+@Composable
+private fun pillColor(): Color = AlertDialogDefaults.containerColor.let { Color(it.red * 0.65f, it.green * 0.70f, it.blue * 0.78f) }
 
 /** A dialog with a title, content and a row of buttons at the end, tighter than the stock one. */
 @Composable
@@ -274,7 +278,7 @@ private fun InfoPill(text: String, boldNumber: Int) {
             append(text.substring(at + number.length))
         }
     }
-    Surface(shape = RoundedCornerShape(12.dp), color = insetColor()) {
+    Surface(shape = RoundedCornerShape(12.dp), color = pillColor()) {
         Text(
             text = styled,
             style = SubText,
@@ -322,7 +326,7 @@ private fun LogRow(amount: Int, time: String, onClick: () -> Unit) {
 /** A button with a faint dashed outline: the way to add another log. */
 @Composable
 private fun DashedButton(label: String, onClick: () -> Unit) {
-    val color = MaterialTheme.colorScheme.outlineVariant
+    val color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.25f)
     Row(
         modifier = Modifier
             .fillMaxWidth()
