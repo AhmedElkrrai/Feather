@@ -395,8 +395,8 @@
     <string name="voice_language_en_us">English (US)</string>
     <string name="voice_language_ar_eg">Arabic (Egypt)</string>
     <string name="settings_voice_region">Voice region</string>
-    <string name="voice_region_default">The language's usual region</string>
-    <string name="voice_region_device">This phone's region (%1$s)</string>
+    <string name="voice_region_default">The language\'s usual region</string>
+    <string name="voice_region_device">This phone\'s region (%1$s)</string>
     <string name="voice_region_none">not set</string>
     <string name="format_system">Follow system</string>
     <string name="time_format_12">12-hour</string>
