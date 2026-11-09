@@ -15,7 +15,6 @@ import com.elkrrai.feather.domain.settings.SettingsRepository
 import com.elkrrai.feather.domain.settings.ThemeMode
 import com.elkrrai.feather.domain.settings.TimeFormat
 import com.elkrrai.feather.domain.settings.VoiceLanguage
-import com.elkrrai.feather.domain.settings.VoiceRegion
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -91,7 +90,7 @@ class DataStoreSettingsRepository @Inject constructor(
             dynamicColor = prefs[Keys.dynamicColor] ?: defaults.dynamicColor,
             timeFormat = prefs.enumOf(Keys.timeFormat, defaults.timeFormat),
             voiceLanguage = prefs.enumOf(Keys.voiceLanguage, defaults.voiceLanguage),
-            voiceRegion = prefs.enumOf(Keys.voiceRegion, defaults.voiceRegion),
+            voiceRegion = prefs[Keys.voiceRegion] ?: defaults.voiceRegion,
             backupStyle = prefs.enumOf(Keys.backupStyle, defaults.backupStyle),
             haptics = prefs[Keys.haptics] ?: defaults.haptics,
             menuHints = prefs[Keys.menuHints] ?: defaults.menuHints,
@@ -179,8 +178,8 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit { it[Keys.voiceLanguage] = language.name }
     }
 
-    override suspend fun setVoiceRegion(region: VoiceRegion) {
-        dataStore.edit { it[Keys.voiceRegion] = region.name }
+    override suspend fun setVoiceRegion(region: String) {
+        dataStore.edit { it[Keys.voiceRegion] = region }
     }
 
     override suspend fun setBackupStyle(style: BackupStyle) {

@@ -14,17 +14,20 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 enum class TimeFormat { SYSTEM, H12, H24 }
 
 /** The language the microphone in quick add listens for: English (US) or Arabic (Egypt), [tag] being what the speech recognizer is asked for. */
-enum class VoiceLanguage(val tag: String) { EN_US("en-US"), AR_EG("ar-EG") }
-
-/** Which region of the voice language the recognizer is asked for: the language's usual one, or the region of the phone. */
-enum class VoiceRegion { DEFAULT, DEVICE }
+enum class VoiceLanguage(val tag: String, val regions: List<String>) {
+    // the first region of each list is the language's usual one, and what its tag asks for when no other is chosen
+    EN_US("en-US", listOf("US", "GB", "AU", "IN", "CA")),
+    AR_EG("ar-EG", listOf("EG", "SA", "AE")),
+}
 
 /**
- * The tag the speech recognizer is asked for. [deviceCountry] is the phone's own region ("TN"), empty when it has none; with
- * [VoiceRegion.DEVICE] it replaces the region of [language] ("en-TN"), and without one the language's usual region is used.
+ * The tag the speech recognizer is asked for: [language] in [region] (a country code such as "GB"), or in its usual region when
+ * [region] is empty or not one the recognizer is known to have for that language ("DE" has no "en-DE": that fails, as "en-TN" did).
  */
-fun speechTag(language: VoiceLanguage, region: VoiceRegion, deviceCountry: String): String =
-    if (region == VoiceRegion.DEVICE && deviceCountry.isNotEmpty()) "${language.tag.substringBefore('-')}-$deviceCountry" else language.tag
+fun speechTag(language: VoiceLanguage, region: String): String {
+    val country = if (region in language.regions) region else language.regions.first()
+    return "${language.tag.substringBefore('-')}-$country"
+}
 
 /** How the automatic backup names its files: one file replaced each time, a file for each of the last 7 days, or one file plus an older copy. */
 enum class BackupStyle { ONE_FILE, SEVEN_DAYS, ONE_PLUS_OLDER }
@@ -52,7 +55,7 @@ data class AppSettings(
     val dynamicColor: Boolean = false,
     val timeFormat: TimeFormat = TimeFormat.SYSTEM,
     val voiceLanguage: VoiceLanguage = VoiceLanguage.EN_US,
-    val voiceRegion: VoiceRegion = VoiceRegion.DEFAULT,
+    val voiceRegion: String = "",
     val haptics: Boolean = true,
     /** The grey line under each item of the menu that says what is in it. */
     val menuHints: Boolean = true,
@@ -132,7 +135,7 @@ interface SettingsRepository : BackupPreferences {
 
     suspend fun setVoiceLanguage(language: VoiceLanguage)
 
-    suspend fun setVoiceRegion(region: VoiceRegion)
+    suspend fun setVoiceRegion(region: String)
 
     suspend fun setBackupStyle(style: BackupStyle)
 

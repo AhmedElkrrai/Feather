@@ -1,7 +1,6 @@
 package com.elkrrai.feather.ui
 
 import android.content.Context
-import android.content.res.Resources
 import android.text.format.DateFormat
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,7 +9,6 @@ import com.elkrrai.feather.domain.nest.NestStyle
 import com.elkrrai.feather.domain.settings.AppSettings
 import com.elkrrai.feather.domain.settings.TimeFormat
 import com.elkrrai.feather.domain.settings.VoiceLanguage
-import com.elkrrai.feather.domain.settings.VoiceRegion
 import com.elkrrai.feather.domain.settings.speechTag
 import com.elkrrai.feather.domain.time.FIRST_DAY_OF_WEEK
 import java.time.DayOfWeek
@@ -29,11 +27,11 @@ object DisplayPrefs {
     /** The language the microphone in quick add listens for. */
     var voiceLanguage by mutableStateOf(VoiceLanguage.EN_US)
         private set
-    var voiceRegion by mutableStateOf(VoiceRegion.DEFAULT)
+    var voiceRegion by mutableStateOf("")
         private set
 
     /** What the speech recognizer is asked for: the voice language, in the region chosen in Settings. */
-    val voiceTag: String get() = speechTag(voiceLanguage, voiceRegion, deviceRegion())
+    val voiceTag: String get() = speechTag(voiceLanguage, voiceRegion)
     var dynamicColor by mutableStateOf(false)
         private set
     var pureBlack by mutableStateOf(true)
@@ -66,9 +64,6 @@ object DisplayPrefs {
         celebrations = settings.celebrations
     }
 }
-
-/** The region of the phone itself ("TN"), not of the app's language: empty when the phone has none. */
-fun deviceRegion(): String = Resources.getSystem().configuration.locales[0]?.country.orEmpty()
 
 /** Whether clocks show 24 hours: the user's choice, or the phone's own setting. */
 fun use24HourClock(context: Context): Boolean = when (DisplayPrefs.timeFormat) {

@@ -18,8 +18,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.elkrrai.feather.domain.settings.TimeFormat
 import com.elkrrai.feather.domain.settings.VoiceLanguage
-import com.elkrrai.feather.domain.settings.VoiceRegion
-import com.elkrrai.feather.ui.deviceRegion
 import java.util.Locale
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -72,8 +70,8 @@ fun LanguageTimeDialog(
     onTimeFormatChange: (TimeFormat) -> Unit,
     voiceLanguage: VoiceLanguage,
     onVoiceLanguageChange: (VoiceLanguage) -> Unit,
-    voiceRegion: VoiceRegion,
-    onVoiceRegionChange: (VoiceRegion) -> Unit,
+    voiceRegion: String,
+    onVoiceRegionChange: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var language by remember { mutableStateOf(AppLanguage.current()) }
@@ -127,16 +125,14 @@ fun LanguageTimeDialog(
                 )
                 DialogSection(stringResource(R.string.settings_voice_region))
                 Column(Modifier.selectableGroup()) {
-                    RadioLine(
-                        label = stringResource(R.string.voice_region_default, regionName(voiceLanguage.tag.substringAfter('-'))),
-                        selected = voiceRegion == VoiceRegion.DEFAULT,
-                        onClick = { onVoiceRegionChange(VoiceRegion.DEFAULT) },
-                    )
-                    RadioLine(
-                        label = stringResource(R.string.voice_region_device, deviceRegionName()),
-                        selected = voiceRegion == VoiceRegion.DEVICE,
-                        onClick = { onVoiceRegionChange(VoiceRegion.DEVICE) },
-                    )
+                    val chosen = if (voiceRegion in voiceLanguage.regions) voiceRegion else voiceLanguage.regions.first()
+                    voiceLanguage.regions.forEach { country ->
+                        RadioLine(
+                            label = regionName(country),
+                            selected = country == chosen,
+                            onClick = { onVoiceRegionChange(country) },
+                        )
+                    }
                 }
             }
         },
@@ -144,13 +140,6 @@ fun LanguageTimeDialog(
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) }
         },
     )
-}
-
-/** The name of the phone's own region ("Tunisia"), or a word saying it has none. */
-@Composable
-private fun deviceRegionName(): String {
-    val country = deviceRegion()
-    return if (country.isEmpty()) stringResource(R.string.voice_region_none) else regionName(country)
 }
 
 /** The name of a region in the app's language: "EG" is "Egypt". */
