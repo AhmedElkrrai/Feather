@@ -203,9 +203,9 @@ internal fun HabitLogDialog(
 }
 
 // The sizes of the dialog's text. A small sans, quiet: the title, the subtitle, the pills and the times are all the same few sizes.
-private val TitleText: TextStyle @Composable get() = MaterialTheme.typography.titleLarge.copy(fontSize = 30.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold)
-private val SubText: TextStyle @Composable get() = MaterialTheme.typography.bodyMedium.copy(fontSize = 23.sp, lineHeight = 30.sp)
-private val SmallText: TextStyle @Composable get() = MaterialTheme.typography.bodyMedium.copy(fontSize = 20.sp, lineHeight = 26.sp)
+private val TitleText: TextStyle @Composable get() = MaterialTheme.typography.titleLarge.copy(fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold)
+private val SubText: TextStyle @Composable get() = MaterialTheme.typography.bodyMedium.copy(fontSize = 20.sp, lineHeight = 27.sp)
+private val SmallText: TextStyle @Composable get() = MaterialTheme.typography.bodyMedium.copy(fontSize = 17.sp, lineHeight = 23.sp)
 
 /** The color of a row or a button circle in the dialog: a little darker and bluer than the dialog itself (the mockup's 23, 37, 48 on 31, 46, 54). */
 @Composable
@@ -307,7 +307,7 @@ private fun LogRow(amount: Int, time: String, onClick: () -> Unit) {
         ) {
             Text(
                 text = amount.toString(),
-                style = SubText.copy(fontSize = 33.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold),
+                style = SubText.copy(fontSize = 28.sp, lineHeight = 34.sp, fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.widthIn(min = 44.dp),
             )
