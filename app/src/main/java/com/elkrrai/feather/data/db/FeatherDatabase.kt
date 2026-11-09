@@ -16,6 +16,9 @@ import androidx.room.RoomDatabase
  *
  * Version 3 gives each habit the look of its weekly leaf (a column with a default: the habits of version 2 get theirs when the app first lists them).
  *
+ * Version 4 adds `habit_logs`, the single things logged for a habit that counts an amount (a new table; the amounts of version 3 become one log each when
+ * the app first lists the habits).
+ *
  * [ListEntity] stays: every task is kept in the Inbox list, see [INBOX_LIST_ID].
  */
 @Database(
@@ -32,10 +35,11 @@ import androidx.room.RoomDatabase
         HabitStageEntity::class,
         HabitGoalStageEntity::class,
         HabitStageLogEntity::class,
+        HabitLogEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)],
 )
 abstract class FeatherDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao

@@ -7,6 +7,7 @@ import com.elkrrai.feather.data.db.HabitEntity
 import com.elkrrai.feather.data.db.HabitEntryEntity
 import com.elkrrai.feather.data.db.HabitGoalEntity
 import com.elkrrai.feather.data.db.HabitGoalStageEntity
+import com.elkrrai.feather.data.db.HabitLogEntity
 import com.elkrrai.feather.data.db.HabitStageEntity
 import com.elkrrai.feather.data.db.HabitStageLogEntity
 import com.elkrrai.feather.data.db.TransactionRunner
@@ -16,6 +17,7 @@ import com.elkrrai.feather.domain.habit.Habit
 import com.elkrrai.feather.domain.habit.HabitDraft
 import com.elkrrai.feather.domain.habit.HabitGoal
 import com.elkrrai.feather.domain.habit.HabitKind
+import com.elkrrai.feather.domain.habit.HabitLog
 import com.elkrrai.feather.domain.habit.HabitStage
 import com.elkrrai.feather.domain.habit.HabitState
 import com.elkrrai.feather.domain.habit.MAX_DAILY_TARGET
@@ -29,6 +31,7 @@ import com.elkrrai.feather.domain.repository.HabitRepository
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -38,21 +41,23 @@ class HabitRepositoryImpl @Inject constructor(
     private val dao: HabitDao,
     private val tx: TransactionRunner,
     private val clock: Clock,
+    private val logs: HabitLogs,
 ) : HabitRepository {
 
     override fun observeHabits(): Flow<List<HabitState>> {
         val base = combine(dao.observeHabits(), dao.observeGoals(), dao.observeEntries()) { habits, goals, entries ->
             Triple(habits, goals, entries)
         }
-        val staging = combine(dao.observeStages(), dao.observeGoalStages(), dao.observeStageLog()) { stages, goalStages, log ->
-            Triple(stages, goalStages, log)
+        val staging = combine(dao.observeStages(), dao.observeGoalStages(), dao.observeStageLog(), dao.observeLogs()) { stages, goalStages, log, amounts ->
+            Staging(stages, goalStages, log, amounts)
         }
-        val states = combine(base, staging) { (habits, goals, entries), (stages, goalStages, log) ->
+        val states = combine(base, staging) { (habits, goals, entries), (stages, goalStages, log, amounts) ->
             val goalsByHabit = goals.groupBy { it.habitId }
             val entriesByHabit = entries.groupBy { it.habitId }
             val stagesByHabit = stages.groupBy { it.habitId }
             val stageIdsByGoal = goalStages.groupBy { it.habitId to it.effectiveFrom }
             val logByHabit = log.groupBy { it.habitId }
+            val amountsByHabit = amounts.groupBy { it.habitId }
             habits.map { habit ->
                 HabitState(
                     habit = habit.toDomain(),
@@ -65,12 +70,24 @@ class HabitRepositoryImpl @Inject constructor(
                     stageLog = logByHabit[habit.id].orEmpty()
                         .groupBy({ LocalDate.parse(it.date) }, { it.stageId })
                         .mapValues { it.value.toSet() },
+                    logs = amountsByHabit[habit.id].orEmpty()
+                        .groupBy({ LocalDate.parse(it.date) }, { HabitLog(it.id, it.amount, it.loggedAt?.let(Instant::ofEpochMilli)) }),
                 )
             }
         }
         // the habits of an older version have no leaf look yet: they are dealt theirs, in the order they were made
-        return states.onStart { assignMissingLeaves() }
+        return states.onStart {
+            assignMissingLeaves()
+            logs.reconcile()
+        }
     }
+
+    private data class Staging(
+        val stages: List<HabitStageEntity>,
+        val goalStages: List<HabitGoalStageEntity>,
+        val stageLog: List<HabitStageLogEntity>,
+        val logs: List<HabitLogEntity>,
+    )
 
     private suspend fun assignMissingLeaves() {
         tx.run {
@@ -180,8 +197,76 @@ class HabitRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setAmount(id: String, date: LocalDate, amount: Int) {
-        if (dao.getHabit(id) == null) return
-        dao.upsertEntry(HabitEntryEntity(id, date.toString(), amount.coerceIn(0, MAX_HABIT_TARGET), clock.millis()))
+        val habit = dao.getHabit(id) ?: return
+        val wanted = amount.coerceIn(0, MAX_HABIT_TARGET)
+        if (habit.kind != HabitKind.AMOUNT.code) {
+            dao.upsertEntry(HabitEntryEntity(id, date.toString(), wanted, clock.millis()))
+            return
+        }
+        val day = date.toString()
+        tx.run {
+            logs.ensureLogs(id, day)
+            var total = dao.logTotal(id, day)
+            if (wanted > total) {
+                insertLog(id, date, wanted - total)
+            } else {
+                // cut the newest logs down until the day fits
+                for (log in dao.logsOn(id, day).asReversed()) {
+                    if (total <= wanted) break
+                    val excess = total - wanted
+                    if (log.amount <= excess) {
+                        dao.deleteLog(log.id)
+                        total -= log.amount
+                    } else {
+                        dao.upsertLog(log.copy(amount = log.amount - excess, updatedAt = clock.millis()))
+                        total -= excess
+                    }
+                }
+            }
+            syncDay(id, day)
+        }
+    }
+
+    override suspend fun addLog(habitId: String, date: LocalDate, amount: Int) {
+        if (dao.getHabit(habitId)?.kind != HabitKind.AMOUNT.code) return
+        val day = date.toString()
+        tx.run {
+            logs.ensureLogs(habitId, day)
+            insertLog(habitId, date, amount.coerceIn(1, MAX_HABIT_TARGET))
+            syncDay(habitId, day)
+        }
+    }
+
+    override suspend fun changeLog(habitId: String, logId: String, amount: Int) {
+        tx.run {
+            val log = dao.getLog(habitId, logId) ?: return@run
+            if (amount <= 0) {
+                dao.deleteLog(log.id)
+            } else {
+                dao.upsertLog(log.copy(amount = amount.coerceAtMost(MAX_HABIT_TARGET), updatedAt = clock.millis()))
+            }
+            syncDay(habitId, log.date)
+        }
+    }
+
+    override suspend fun deleteLog(habitId: String, logId: String) {
+        tx.run {
+            val log = dao.getLog(habitId, logId) ?: return@run
+            dao.deleteLog(log.id)
+            syncDay(habitId, log.date)
+        }
+    }
+
+    /** A log made now. One for an earlier day has no time: it was not logged then. */
+    private suspend fun insertLog(habitId: String, date: LocalDate, amount: Int) {
+        val now = clock.millis()
+        val today = LocalDate.now(clock.withZone(ZoneId.systemDefault()))
+        dao.upsertLog(HabitLogEntity(UUID.randomUUID().toString(), habitId, date.toString(), amount, now.takeIf { date == today }, now))
+    }
+
+    /** The day's amount is the sum of its logs (capped), which is what the week, the tree and the rhythm read. */
+    private suspend fun syncDay(habitId: String, day: String) {
+        dao.upsertEntry(HabitEntryEntity(habitId, day, dao.logTotal(habitId, day).coerceIn(0, MAX_HABIT_TARGET), clock.millis()))
     }
 
     override suspend fun setStageDone(habitId: String, date: LocalDate, stageId: String, done: Boolean) {

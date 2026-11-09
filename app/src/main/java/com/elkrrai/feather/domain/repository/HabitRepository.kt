@@ -22,8 +22,20 @@ interface HabitRepository {
      */
     suspend fun saveHabit(id: String?, draft: HabitDraft, thisWeekStart: LocalDate): Habit
 
-    /** Sets how much was logged on [date] (0 clears the day). */
+    /**
+     * Sets how much was logged on [date] (0 clears the day). For a habit that counts an amount the difference becomes a new log, or the newest
+     * logs are cut down to fit; for any other habit the day's count is replaced.
+     */
     suspend fun setAmount(id: String, date: LocalDate, amount: Int)
+
+    /** Adds a log of [amount] (1 or more) to [date] of a habit that counts an amount; the day's total goes up by it. */
+    suspend fun addLog(habitId: String, date: LocalDate, amount: Int)
+
+    /** Changes the amount of one log; 0 deletes it. The day's total follows. */
+    suspend fun changeLog(habitId: String, logId: String, amount: Int)
+
+    /** Deletes one log; the day's total follows. */
+    suspend fun deleteLog(habitId: String, logId: String)
 
     /**
      * Marks a stage of a habit done, or not done, on [date]. The day's amount becomes the number of stages done that day, so the

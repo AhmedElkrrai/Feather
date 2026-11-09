@@ -66,7 +66,12 @@ data class HabitState(
     val entries: Map<LocalDate, Int>,
     val stages: Map<String, HabitStage> = emptyMap(),
     val stageLog: Map<LocalDate, Set<String>> = emptyMap(),
+    /** For a habit that counts an amount: what was logged on each day, oldest first. The day's amount in [entries] is their sum. */
+    val logs: Map<LocalDate, List<HabitLog>> = emptyMap(),
 )
+
+/** One thing logged on a day. [loggedAt] is null for an amount from before logs were kept and for a log added to an earlier day. */
+data class HabitLog(val id: String, val amount: Int, val loggedAt: Instant?)
 
 const val MAX_HABIT_TARGET = 9_999
 const val MAX_DAILY_TARGET = 1_000

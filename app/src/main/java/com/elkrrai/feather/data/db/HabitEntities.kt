@@ -156,3 +156,32 @@ data class HabitStageLogEntity(
     val done: Boolean,
     val updatedAt: Long,
 )
+
+/**
+ * One thing logged for a habit that counts an amount: "10 pull ups at 9:41". The day's total, which the week and the tree go by, is still
+ * `habit_entries.amount`; it is kept equal to the sum of the day's logs. [loggedAt] is null for an amount from before logs existed and for a log
+ * added to an earlier day.
+ */
+@Entity(
+    tableName = "habit_logs",
+    foreignKeys = [
+        ForeignKey(
+            entity = HabitEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["habitId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index("habitId", "date")],
+)
+data class HabitLogEntity(
+    @PrimaryKey val id: String,
+    val habitId: String,
+    val date: String,
+    val amount: Int,
+    val loggedAt: Long?,
+    val updatedAt: Long,
+)
+
+/** The sum of the logs of one day. */
+data class HabitDayTotal(val habitId: String, val date: String, val total: Int)

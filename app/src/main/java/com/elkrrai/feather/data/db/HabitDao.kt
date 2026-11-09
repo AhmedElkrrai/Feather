@@ -25,8 +25,33 @@ interface HabitDao {
     @Query("SELECT * FROM habit_stage_log WHERE done = 1")
     fun observeStageLog(): Flow<List<HabitStageLogEntity>>
 
+    @Query("SELECT * FROM habit_logs ORDER BY loggedAt, id")
+    fun observeLogs(): Flow<List<HabitLogEntity>>
+
     @Query("SELECT * FROM habits WHERE id = :id")
     suspend fun getHabit(id: String): HabitEntity?
+
+    @Query("SELECT * FROM habit_logs WHERE habitId = :habitId AND date = :date ORDER BY loggedAt, id")
+    suspend fun logsOn(habitId: String, date: String): List<HabitLogEntity>
+
+    @Query("SELECT * FROM habit_logs WHERE id = :id AND habitId = :habitId")
+    suspend fun getLog(habitId: String, id: String): HabitLogEntity?
+
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM habit_logs WHERE habitId = :habitId AND date = :date")
+    suspend fun logTotal(habitId: String, date: String): Int
+
+    @Query("SELECT habitId, date, SUM(amount) AS total FROM habit_logs GROUP BY habitId, date")
+    suspend fun logTotals(): List<HabitDayTotal>
+
+    @Query("SELECT * FROM habit_entries WHERE habitId = :habitId AND date = :date")
+    suspend fun getEntry(habitId: String, date: String): HabitEntryEntity?
+
+    /** The days of habits that count an amount (kind 1) that have an amount but no log: what was logged before logs existed. */
+    @Query(
+        "SELECT e.* FROM habit_entries e JOIN habits h ON h.id = e.habitId WHERE h.kind = 1 AND e.amount > 0 AND NOT EXISTS " +
+            "(SELECT 1 FROM habit_logs l WHERE l.habitId = e.habitId AND l.date = e.date)",
+    )
+    suspend fun amountsWithoutLogs(): List<HabitEntryEntity>
 
     @Query("SELECT * FROM habit_goals WHERE habitId = :habitId ORDER BY effectiveFrom")
     suspend fun goalsOf(habitId: String): List<HabitGoalEntity>
@@ -69,6 +94,12 @@ interface HabitDao {
 
     @Upsert
     suspend fun upsertEntry(entry: HabitEntryEntity)
+
+    @Upsert
+    suspend fun upsertLog(row: HabitLogEntity)
+
+    @Query("DELETE FROM habit_logs WHERE id = :id")
+    suspend fun deleteLog(id: String)
 
     @Upsert
     suspend fun upsertStages(rows: List<HabitStageEntity>)
