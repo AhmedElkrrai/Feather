@@ -2,10 +2,12 @@ package com.elkrrai.feather.feature.tasklist
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.speech.RecognizerIntent
 import android.widget.Toast
+import java.util.Locale
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -152,15 +154,19 @@ fun QuickAddSheet(
     }
 
     fun startVoice() {
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale.toLanguageTag())
-            .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-            .putExtra(RecognizerIntent.EXTRA_PROMPT, voicePrompt)
-        try {
-            voiceLauncher.launch(intent)
-        } catch (e: ActivityNotFoundException) {
-            Toast.makeText(context, voiceUnavailable, Toast.LENGTH_SHORT).show()
+        // The phone's language can be one the recognizer has no voice for (English as spoken in Tunisia, "en-TN"): it then says that voice search
+        // is not available. So the recognizer is asked which languages it has, and the closest one is used.
+        pickVoiceLanguage(context, locale) { language ->
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, language)
+                .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+                .putExtra(RecognizerIntent.EXTRA_PROMPT, voicePrompt)
+            try {
+                voiceLauncher.launch(intent)
+            } catch (e: ActivityNotFoundException) {
+                Toast.makeText(context, voiceUnavailable, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -525,4 +531,50 @@ private fun ParsedQuickAdd.withTools(
         )
     }
     return result
+}
+
+/**
+ * The language to ask the speech recognizer for: [locale] itself when it has it, else the same language in the region that suits best (the
+ * region of [locale], then the language's own, then the first it has), else just the language. [done] is called once, on the main thread.
+ */
+private fun pickVoiceLanguage(context: Context, locale: Locale, done: (String) -> Unit) {
+    val fallback = locale.language
+    val details = RecognizerIntent.getVoiceDetailsIntent(context)
+    if (details == null) {
+        done(locale.toLanguageTag())
+        return
+    }
+    var called = false
+    fun finish(tag: String) {
+        if (!called) {
+            called = true
+            done(tag)
+        }
+    }
+    try {
+        context.sendOrderedBroadcast(
+            details, null,
+            object : BroadcastReceiver() {
+                override fun onReceive(c: Context, result: Intent) {
+                    val supported = getResultExtras(true)
+                        ?.getStringArrayList(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES)
+                        .orEmpty()
+                        .map { it.replace('_', '-') }
+                    val wanted = locale.toLanguageTag()
+                    val sameLanguage = supported.filter { it.substringBefore('-').equals(locale.language, ignoreCase = true) }
+                    finish(
+                        supported.firstOrNull { it.equals(wanted, ignoreCase = true) }
+                            ?: sameLanguage.firstOrNull { it.substringAfter('-', "").equals(locale.country, ignoreCase = true) }
+                            ?: sameLanguage.firstOrNull { it.substringAfter('-', "").equals(locale.language, ignoreCase = true) }
+                            ?: sameLanguage.firstOrNull { it.equals("en-US", ignoreCase = true) }
+                            ?: sameLanguage.firstOrNull()
+                            ?: fallback,
+                    )
+                }
+            },
+            null, Activity.RESULT_OK, null, null,
+        )
+    } catch (e: Exception) {
+        finish(fallback)
+    }
 }
