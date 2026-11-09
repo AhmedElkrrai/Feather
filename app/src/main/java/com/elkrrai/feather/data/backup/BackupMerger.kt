@@ -22,6 +22,7 @@ data class MergePlan(
     /** The goal weeks (habit id, first day) whose stage list of the phone is replaced whole by [habitGoalStages]; clear them first. */
     val rewrittenGoalStageWeeks: Set<Pair<String, String>> = emptySet(),
     val habitStageLog: List<HabitStageLogRecord> = emptyList(),
+    val habitLogs: List<HabitLogRecord> = emptyList(),
 )
 
 /**
@@ -111,6 +112,14 @@ object BackupMerger {
             { it.updatedAt },
         )
 
+        // two phones that logged on the same day each keep their logs: they add up (the day's amount is made to match afterwards)
+        val habitLogs = newer(
+            local.habitLogs,
+            incoming.habitLogs.filter { it.habitId in knownHabits },
+            { it.id },
+            { it.updatedAt },
+        )
+
         return MergePlan(
             tags = tags,
             tasks = tasks,
@@ -125,6 +134,7 @@ object BackupMerger {
             habitGoalStages = habitGoalStages,
             rewrittenGoalStageWeeks = takenWeeks.keys.filter { it in localWeeks }.toSet(),
             habitStageLog = habitStageLog,
+            habitLogs = habitLogs,
         )
     }
 

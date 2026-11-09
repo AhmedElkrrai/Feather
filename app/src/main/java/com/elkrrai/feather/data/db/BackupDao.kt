@@ -46,6 +46,12 @@ interface BackupDao {
     @Query("SELECT * FROM habit_stage_log")
     suspend fun habitStageLog(): List<HabitStageLogEntity>
 
+    @Query("SELECT * FROM habit_logs")
+    suspend fun habitLogs(): List<HabitLogEntity>
+
+    @Upsert
+    suspend fun upsertHabitLogs(rows: List<HabitLogEntity>)
+
     @Upsert
     suspend fun upsertHabits(rows: List<HabitEntity>)
 

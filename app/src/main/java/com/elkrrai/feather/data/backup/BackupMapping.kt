@@ -3,6 +3,7 @@ package com.elkrrai.feather.data.backup
 import com.elkrrai.feather.data.db.CompletionEntity
 import com.elkrrai.feather.data.db.HabitEntity
 import com.elkrrai.feather.data.db.HabitEntryEntity
+import com.elkrrai.feather.data.db.HabitLogEntity
 import com.elkrrai.feather.data.db.HabitGoalEntity
 import com.elkrrai.feather.data.db.HabitGoalStageEntity
 import com.elkrrai.feather.data.db.HabitStageEntity
@@ -116,6 +117,10 @@ fun HabitGoalRecord.toEntity() = HabitGoalEntity(habitId, effectiveFrom, target,
 fun HabitEntryEntity.toRecord() = HabitEntryRecord(habitId, date, amount, updatedAt)
 
 fun HabitEntryRecord.toEntity() = HabitEntryEntity(habitId, date, amount, updatedAt)
+
+fun HabitLogEntity.toRecord() = HabitLogRecord(id, habitId, date, amount, loggedAt, updatedAt)
+
+fun HabitLogRecord.toEntity() = HabitLogEntity(id, habitId, date, amount, loggedAt, updatedAt)
 
 fun HabitStageEntity.toRecord() = HabitStageRecord(id, habitId, name, timeMode, startMinute, endMinute, updatedAt)
 

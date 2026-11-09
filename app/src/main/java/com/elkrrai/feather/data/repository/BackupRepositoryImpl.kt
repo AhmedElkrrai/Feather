@@ -26,6 +26,7 @@ class BackupRepositoryImpl @Inject constructor(
     private val taskRepository: TaskRepository,
     private val inboxRepository: InboxRepository,
     private val preferences: BackupPreferences,
+    private val habitLogs: HabitLogs,
 ) : BackupRepository {
 
     override suspend fun exportJson(): String = BackupCodec.encode(tx.run { readAll() })
@@ -46,6 +47,8 @@ class BackupRepositoryImpl @Inject constructor(
             }
             apply(BackupMerger.plan(local, incoming))
         }
+        // a file from before logs has only the day's amount; one with logs from two phones has to add up
+        habitLogs.reconcile()
         val restored = restoreSettings && incoming.settings.isNotEmpty()
         if (restored) preferences.restoreBackedUpPreferences(incoming.settings)
         return ImportSummary(
@@ -69,6 +72,7 @@ class BackupRepositoryImpl @Inject constructor(
         habitStages = dao.habitStages().map { it.toRecord() },
         habitGoalStages = dao.habitGoalStages().map { it.toRecord() },
         habitStageLog = dao.habitStageLog().map { it.toRecord() },
+        habitLogs = dao.habitLogs().map { it.toRecord() },
         settings = preferences.backedUpPreferences(),
         language = AppCompatDelegate.getApplicationLocales().toLanguageTags(),
     )
@@ -96,6 +100,7 @@ class BackupRepositoryImpl @Inject constructor(
         dao.upsertHabitGoalStages(plan.habitGoalStages.map { it.toEntity() })
         dao.upsertHabitEntries(plan.habitEntries.map { it.toEntity() })
         dao.upsertHabitStageLog(plan.habitStageLog.map { it.toEntity() })
+        dao.upsertHabitLogs(plan.habitLogs.map { it.toEntity() })
     }
 
     private companion object {

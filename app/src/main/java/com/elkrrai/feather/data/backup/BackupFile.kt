@@ -32,6 +32,8 @@ data class BackupFile(
     val habitStages: List<HabitStageRecord> = emptyList(),
     val habitGoalStages: List<HabitGoalStageRecord> = emptyList(),
     val habitStageLog: List<HabitStageLogRecord> = emptyList(),
+    /** What was logged for habits that count an amount, one record per log; absent before version 3 (the day's amount in [habitEntries] then stands for one log). */
+    val habitLogs: List<HabitLogRecord> = emptyList(),
     /** The preferences, as text by name (see `BackupPreferences`); absent in older files. */
     val settings: Map<String, String> = emptyMap(),
     /** The app language as a language tag, empty for the phone's own; null in older files. */
@@ -40,8 +42,11 @@ data class BackupFile(
     companion object {
         const val FORMAT = "feather-backup"
 
-        /** The newest file version this app can read. Version 2 added the stages of habits: an app that knows only 1 refuses such a file rather than drop them. */
-        const val VERSION = 2
+        /**
+         * The newest file version this app can read. Version 2 added the stages of habits and version 3 the logs of amount habits: an app that
+         * knows only an older one refuses such a file rather than drop them.
+         */
+        const val VERSION = 3
     }
 }
 
@@ -146,6 +151,16 @@ data class HabitEntryRecord(
     val habitId: String,
     val date: String,
     val amount: Int,
+    val updatedAt: Long = 0,
+)
+
+@Serializable
+data class HabitLogRecord(
+    val id: String,
+    val habitId: String,
+    val date: String,
+    val amount: Int,
+    val loggedAt: Long? = null,
     val updatedAt: Long = 0,
 )
 
