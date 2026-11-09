@@ -157,7 +157,7 @@ fun QuickAddSheet(
         // recognizer say that voice search is not available.
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, DisplayPrefs.voiceLanguage.tag)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, DisplayPrefs.voiceTag)
             .putExtra(RecognizerIntent.EXTRA_PROMPT, voicePrompt)
         try {
             voiceLauncher.launch(intent)

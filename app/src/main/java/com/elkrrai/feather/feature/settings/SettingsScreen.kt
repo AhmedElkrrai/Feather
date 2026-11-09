@@ -247,6 +247,7 @@ fun SettingsScreen(
             onDynamicColorChange = viewModel::setDynamicColor,
             onTimeFormatChange = viewModel::setTimeFormat,
             onVoiceLanguageChange = viewModel::setVoiceLanguage,
+            onVoiceRegionChange = viewModel::setVoiceRegion,
             onHapticsChange = viewModel::setHaptics,
             onMenuHintsChange = viewModel::setMenuHints,
             onBirdAnimationsChange = viewModel::setBirdAnimations,
@@ -469,6 +470,8 @@ fun SettingsContent(
             onTimeFormatChange = appearance.onTimeFormatChange,
             voiceLanguage = settings.voiceLanguage,
             onVoiceLanguageChange = appearance.onVoiceLanguageChange,
+            voiceRegion = settings.voiceRegion,
+            onVoiceRegionChange = appearance.onVoiceRegionChange,
             onDismiss = { dialog = null },
         )
 

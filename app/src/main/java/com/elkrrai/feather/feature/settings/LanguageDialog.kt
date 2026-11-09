@@ -18,6 +18,9 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.elkrrai.feather.domain.settings.TimeFormat
 import com.elkrrai.feather.domain.settings.VoiceLanguage
+import com.elkrrai.feather.domain.settings.VoiceRegion
+import com.elkrrai.feather.ui.deviceRegion
+import java.util.Locale
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.AlertDialog
@@ -69,6 +72,8 @@ fun LanguageTimeDialog(
     onTimeFormatChange: (TimeFormat) -> Unit,
     voiceLanguage: VoiceLanguage,
     onVoiceLanguageChange: (VoiceLanguage) -> Unit,
+    voiceRegion: VoiceRegion,
+    onVoiceRegionChange: (VoiceRegion) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var language by remember { mutableStateOf(AppLanguage.current()) }
@@ -114,6 +119,19 @@ fun LanguageTimeDialog(
                         )
                     }
                 }
+                DialogSection(stringResource(R.string.settings_voice_region))
+                Column(Modifier.selectableGroup()) {
+                    RadioLine(
+                        label = stringResource(R.string.voice_region_default),
+                        selected = voiceRegion == VoiceRegion.DEFAULT,
+                        onClick = { onVoiceRegionChange(VoiceRegion.DEFAULT) },
+                    )
+                    RadioLine(
+                        label = stringResource(R.string.voice_region_device, deviceRegionName()),
+                        selected = voiceRegion == VoiceRegion.DEVICE,
+                        onClick = { onVoiceRegionChange(VoiceRegion.DEVICE) },
+                    )
+                }
                 Text(
                     text = stringResource(R.string.settings_voice_input_hint),
                     style = MaterialTheme.typography.bodySmall,
@@ -126,6 +144,14 @@ fun LanguageTimeDialog(
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) }
         },
     )
+}
+
+/** The name of the phone's own region ("Tunisia"), or a word saying it has none. */
+@Composable
+private fun deviceRegionName(): String {
+    val country = deviceRegion()
+    return if (country.isEmpty()) stringResource(R.string.voice_region_none)
+    else Locale("", country).getDisplayCountry(Locale.getDefault()).ifEmpty { country }
 }
 
 @Composable

@@ -158,6 +158,10 @@
     <string name="settings_voice_input_hint">اللغة التي تتحدث بها عند الضغط على الميكروفون في الإضافة السريعة.</string>
     <string name="voice_language_en_us">الإنجليزية (الولايات المتحدة)</string>
     <string name="voice_language_ar_eg">العربية (مصر)</string>
+    <string name="settings_voice_region">منطقة الصوت</string>
+    <string name="voice_region_default">المنطقة المعتادة للغة</string>
+    <string name="voice_region_device">منطقة هذا الهاتف (%1$s)</string>
+    <string name="voice_region_none">غير محددة</string>
     <plurals name="duration_minutes">
         <item quantity="zero">%d دقيقة</item>
         <item quantity="one">دقيقة واحدة</item>
