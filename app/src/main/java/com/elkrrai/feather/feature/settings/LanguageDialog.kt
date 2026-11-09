@@ -119,10 +119,16 @@ fun LanguageTimeDialog(
                         )
                     }
                 }
+                Text(
+                    text = stringResource(R.string.settings_voice_input_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 40.dp, bottom = 4.dp),
+                )
                 DialogSection(stringResource(R.string.settings_voice_region))
                 Column(Modifier.selectableGroup()) {
                     RadioLine(
-                        label = stringResource(R.string.voice_region_default),
+                        label = stringResource(R.string.voice_region_default, regionName(voiceLanguage.tag.substringAfter('-'))),
                         selected = voiceRegion == VoiceRegion.DEFAULT,
                         onClick = { onVoiceRegionChange(VoiceRegion.DEFAULT) },
                     )
@@ -132,12 +138,6 @@ fun LanguageTimeDialog(
                         onClick = { onVoiceRegionChange(VoiceRegion.DEVICE) },
                     )
                 }
-                Text(
-                    text = stringResource(R.string.settings_voice_input_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 40.dp, bottom = 4.dp),
-                )
             }
         },
         confirmButton = {
@@ -150,9 +150,11 @@ fun LanguageTimeDialog(
 @Composable
 private fun deviceRegionName(): String {
     val country = deviceRegion()
-    return if (country.isEmpty()) stringResource(R.string.voice_region_none)
-    else Locale("", country).getDisplayCountry(Locale.getDefault()).ifEmpty { country }
+    return if (country.isEmpty()) stringResource(R.string.voice_region_none) else regionName(country)
 }
+
+/** The name of a region in the app's language: "EG" is "Egypt". */
+private fun regionName(country: String): String = Locale("", country).getDisplayCountry(Locale.getDefault()).ifEmpty { country }
 
 @Composable
 private fun DialogSection(text: String) {
