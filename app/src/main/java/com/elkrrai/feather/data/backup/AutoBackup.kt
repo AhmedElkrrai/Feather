@@ -74,18 +74,55 @@ class AutoBackup @Inject constructor(
         }
     }
 
-    /** Writes [text] as [name] in [folder]; a file of that name is replaced only once the new one is complete. */
+    /**
+     * Writes [text] as [name] in [folder]; a file of that name is replaced only once the new one is complete. A folder such as Downloads does not
+     * let an app delete a file an earlier install made, and renaming the new file onto that name then makes "name (1).json" and a copy every day.
+     * So when the old file is there, the complete text is written over it in place; the numbered copies an earlier run made are removed.
+     */
     private suspend fun replace(folder: DocumentFile, name: String, text: String): Boolean {
         folder.findFile(TEMP_NAME)?.delete() // left by a backup that was interrupted
         val temp = folder.createFile(MIME_TYPE, TEMP_NAME) ?: return false
         files.write(temp.uri, text)
-        folder.findFile(name)?.delete()
+        val existing = folder.findFile(name)
+        val done = if (existing == null) {
+            takeName(folder, temp, name, text)
+        } else if (writeInPlace(existing, text)) {
+            temp.delete()
+            true
+        } else {
+            existing.delete() && takeName(folder, temp, name, text)
+        }
+        if (done) removeNumberedCopies(folder, name)
+        return done
+    }
+
+    private suspend fun writeInPlace(file: DocumentFile, text: String): Boolean =
+        try {
+            files.write(file.uri, text)
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            false
+        }
+
+    /** Gives the finished temporary file its real name, or writes the text under that name in a folder that cannot rename. */
+    private suspend fun takeName(folder: DocumentFile, temp: DocumentFile, name: String, text: String): Boolean {
         if (temp.renameTo(name)) return true
-        // A folder that cannot rename a file: write it under its own name instead.
         val target = folder.createFile(MIME_TYPE, name) ?: return false
         files.write(target.uri, text)
         temp.delete()
         return true
+    }
+
+    /** Removes "name (1).json", "name (2).json" and so on: the copies that older runs left when the old file could not be replaced. */
+    private fun removeNumberedCopies(folder: DocumentFile, name: String) {
+        val base = name.substringBeforeLast('.')
+        val extension = name.substringAfterLast('.')
+        val numbered = Regex("^${Regex.escape(base)} \\(\\d+\\)\\.${Regex.escape(extension)}$")
+        folder.listFiles()
+            .filter { file -> file.name?.let { numbered.matches(it) } == true }
+            .forEach { it.delete() }
     }
 
     /** Before the file is replaced, copies it to the older-copy file when that one is missing or about a week old. */
