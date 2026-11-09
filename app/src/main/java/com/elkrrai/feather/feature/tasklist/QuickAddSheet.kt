@@ -154,13 +154,17 @@ fun QuickAddSheet(
     }
 
     fun startVoice() {
-        // The phone's language can be one the recognizer has no voice for (English as spoken in Tunisia, "en-TN"): it then says that voice search
-        // is not available. So the recognizer is asked which languages it has, and the closest one is used.
-        pickVoiceLanguage(context, locale) { language ->
+        // No "prefer offline": the offline recognizer has packs for a few regions only (en-US, en-GB...), and for a phone in English as spoken in
+        // Tunisia ("en-TN") it said that voice search is not available. Online it understands the language. The recognizer is also asked which
+        // languages it has, and the closest one to the phone's is used.
+        // English is asked for as plain English, never as the phone's region (a phone in English as spoken in Tunisia is not a language anyone speaks to).
+        val ask: ((String) -> Unit) -> Unit = { next ->
+            if (locale.language == "en") next("en-US") else pickVoiceLanguage(context, locale, next)
+        }
+        ask { language ->
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE, language)
-                .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
                 .putExtra(RecognizerIntent.EXTRA_PROMPT, voicePrompt)
             try {
                 voiceLauncher.launch(intent)
@@ -538,7 +542,9 @@ private fun ParsedQuickAdd.withTools(
  * region of [locale], then the language's own, then the first it has), else just the language. [done] is called once, on the main thread.
  */
 private fun pickVoiceLanguage(context: Context, locale: Locale, done: (String) -> Unit) {
-    val fallback = locale.language
+    // just the language leaves the region to the phone (en-TN again): the language's usual region is better, such as en-US
+    val usualRegion = android.icu.util.ULocale.addLikelySubtags(android.icu.util.ULocale(locale.language)).country
+    val fallback = if (usualRegion.isEmpty()) locale.language else locale.language + "-" + usualRegion
     val details = RecognizerIntent.getVoiceDetailsIntent(context)
     if (details == null) {
         done(locale.toLanguageTag())
