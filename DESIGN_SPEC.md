@@ -23,15 +23,15 @@ Visual reference: the Design canvas "Feather — Cozy Nest" (17 boards). This fi
 ## 2. Typography (all SIL OFL)
 | Role | Latin | Arabic | Size/line (sp) |
 |---|---|---|---|
-| Display (greeting) | Young Serif 400 | PingAR+LT Bold | 36/42 · AR 36/56 |
-| Headline | Young Serif 400 | PingAR+LT Bold | 26/32 · AR 26/39 |
-| Title L | Nunito 800 | PingAR+LT Bold | 20/26 · AR 20/30 |
-| Title M (task title) | Nunito 700 | PingAR+LT Medium | 16/22 · AR 16/26 |
-| Body | Nunito 400 | PingAR+LT Regular | 14/20 · AR 14/23 |
-| Label (chips) | Nunito 800, +0.2sp | PingAR+LT Medium, no tracking | 12/16 · AR 12/18 |
-| Stat numeral | Young Serif 48 (tnum, lnum) | PingAR+LT Bold 52 | 48/48 |
+| Display (greeting) | Young Serif 400 | Noto Naskh Arabic 700 | 36/42 · AR 36/56 |
+| Headline | Young Serif 400 | Naskh 700 | 26/32 · AR 26/39 |
+| Title L | Nunito 800 | Readex Pro 600 | 20/26 · AR 20/30 |
+| Title M (task title) | Nunito 700 | Readex Pro 500 | 16/22 · AR 16/26 |
+| Body | Nunito 400 | Readex Pro 400 | 14/20 · AR 14/23 |
+| Label (chips) | Nunito 800, +0.2sp | Readex Pro 500, no tracking | 12/16 · AR 12/18 |
+| Stat numeral | Young Serif 48 (tnum, lnum) | Naskh 700 52 | 48/48 |
 - Arabic: no letter-spacing, no italics, no caps. Line height x1.5-1.65.
-- Fallbacks: Young Serif -> Nunito 800; PingAR+LT -> system Arabic. Subset Latin+Arabic, static weights, lazy-load display faces.
+- Fallbacks: Young Serif -> Nunito 800; Readex -> Noto Sans Arabic; Naskh -> Noto Naskh -> system. Subset Latin+Arabic, static weights, lazy-load display faces.
 - Numerals setting: Follow language (default) / Western / Eastern Arabic. Use `NumberFormat` with `ar-u-nu-arab` / `ar-u-nu-latn`; never string-replace digits. One `formatCount(n)` for chart labels and a11y text.
 
 ## 3. Colour
@@ -78,7 +78,7 @@ One illustration, one sentence, at most one action.
 
 ## 6. Your rhythm (Insights; board 14, component 14b)
 Gentle journal tone: no percentages vs last week, no red, no "you missed".
-- Hero: big numeral (Young Serif / PingAR+LT 60) = completions in the last 7 days, one kind sentence, happy bird, sky wash.
+- Hero: big numeral (Young Serif / Naskh 60) = completions in the last 7 days, one kind sentence, happy bird, sky wash.
 - Last 7 days bars (rolling, ending today): 28dp wide, radius 10 top / 5 base, amber, max height 92dp, scale = max(5, week max), no gridlines/axis, value above each bar (tabular nums). Rest day (0) = 16dp curled leaf at 55% opacity, not a bar. Today's bar has a dashed outline. Week order follows reading direction; week start follows locale (Saturday in Egypt).
 - Rhythm: 14 dots (7x2): filled amber = showed up, hollow ring = rest day; headline "N of the last 14 days". Paused days are removed from the 14 before counting. No streak number that can reset. "Pause my rhythm" 48dp button.
 - Month nest: 7-column grid, square cells >=44dp, radius 13, date inside, 4 straw tones; today ring; future dashed; tap -> bottom sheet with that day's completed tasks. Semantics: "October 12, 4 finished".

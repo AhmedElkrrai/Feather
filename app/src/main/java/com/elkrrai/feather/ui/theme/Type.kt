@@ -12,8 +12,9 @@ import androidx.compose.ui.unit.sp
 import com.elkrrai.feather.R
 
 // Latin: Young Serif for the big, friendly lines and Nunito for everything else.
-// Arabic: PingAR+LT, in Bold for the big lines and Regular and Medium for everything else (third_party/fonts/PingAR-LT.txt).
-// Young Serif and Nunito are SIL OFL (third_party/fonts). Nunito is a variable font, so one file serves every weight.
+// Arabic: Noto Naskh for the big lines and Readex Pro for everything else.
+// All four are SIL OFL (third_party/fonts). Nunito, Readex Pro and Noto Naskh are variable fonts,
+// so one file serves every weight.
 
 @OptIn(ExperimentalTextApi::class)
 private fun variable(resId: Int, weight: Int) = Font(
@@ -30,10 +31,15 @@ private val Nunito = FontFamily(
     variable(R.font.nunito, 800),
 )
 
-private val PingAr = FontFamily(
-    Font(R.font.ping_ar_lt_regular, FontWeight.Normal),
-    Font(R.font.ping_ar_lt_medium, FontWeight.Medium),
-    Font(R.font.ping_ar_lt_bold, FontWeight.Bold),
+private val ReadexPro = FontFamily(
+    variable(R.font.readex_pro, 400),
+    variable(R.font.readex_pro, 500),
+    variable(R.font.readex_pro, 600),
+)
+
+private val NotoNaskh = FontFamily(
+    variable(R.font.noto_naskh_arabic, 400),
+    variable(R.font.noto_naskh_arabic, 700),
 )
 
 private fun style(
@@ -56,21 +62,21 @@ private fun style(
  */
 fun featherTypography(arabic: Boolean): Typography = if (arabic) {
     Typography(
-        displayLarge = style(PingAr, 700, 48, 72),
-        displayMedium = style(PingAr, 700, 40, 62),
-        displaySmall = style(PingAr, 700, 36, 56),
-        headlineLarge = style(PingAr, 700, 32, 50),
-        headlineMedium = style(PingAr, 700, 26, 39),
-        headlineSmall = style(PingAr, 700, 22, 34),
-        titleLarge = style(PingAr, 700, 20, 30),
-        titleMedium = style(PingAr, 500, 16, 26),
-        titleSmall = style(PingAr, 500, 14, 22),
-        bodyLarge = style(PingAr, 400, 16, 26),
-        bodyMedium = style(PingAr, 400, 14, 23),
-        bodySmall = style(PingAr, 400, 12, 19),
-        labelLarge = style(PingAr, 500, 14, 22),
-        labelMedium = style(PingAr, 500, 12, 18),
-        labelSmall = style(PingAr, 500, 11, 18),
+        displayLarge = style(NotoNaskh, 700, 48, 72),
+        displayMedium = style(NotoNaskh, 700, 40, 62),
+        displaySmall = style(NotoNaskh, 700, 36, 56),
+        headlineLarge = style(NotoNaskh, 700, 32, 50),
+        headlineMedium = style(NotoNaskh, 700, 26, 39),
+        headlineSmall = style(NotoNaskh, 700, 22, 34),
+        titleLarge = style(ReadexPro, 600, 20, 30),
+        titleMedium = style(ReadexPro, 500, 16, 26),
+        titleSmall = style(ReadexPro, 500, 14, 22),
+        bodyLarge = style(ReadexPro, 400, 16, 26),
+        bodyMedium = style(ReadexPro, 400, 14, 23),
+        bodySmall = style(ReadexPro, 400, 12, 19),
+        labelLarge = style(ReadexPro, 500, 14, 22),
+        labelMedium = style(ReadexPro, 500, 12, 18),
+        labelSmall = style(ReadexPro, 500, 11, 18),
     )
 } else {
     Typography(
