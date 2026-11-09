@@ -1,0 +1,6 @@
+PingAR+LT (Regular, Medium, Bold), used for Arabic text.
+
+Copyright (c) 2020 by TPTQ Arabic. All rights reserved. https://tptq-arabic.com
+
+The font files came without a license text. Before the app is published, confirm that the license that was bought or agreed covers embedding the
+font in an app, and put that license text here.
