@@ -60,6 +60,8 @@ import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.domain.habit.ChickState
 import com.elkrrai.feather.R
 import com.elkrrai.feather.ui.brand.BirdIllustration
+import com.elkrrai.feather.ui.brand.BirdMood
+import com.elkrrai.feather.ui.brand.periodMillis
 import com.elkrrai.feather.ui.brand.rememberBirdMotionAllowed
 import com.elkrrai.feather.ui.brand.rememberAmbientPhase
 import com.elkrrai.feather.ui.components.MenuAction
@@ -538,10 +540,13 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
         )
         // The chick for the habits stands on the branch at the owl's right, in front of the top twig: awake, or asleep with two small z.
         if (chick != ChickState.NONE) {
-            // An awake chick rocks while a habit is open, at the pace of the owlet in the nest screen. Still when motion is off.
-            val wiggle = rememberAmbientPhase(CHICK_WIGGLE_MILLIS, enabled = chick == ChickState.AWAKE && rememberBirdMotionAllowed())
+            // An awake chick rocks while a habit is open, at the pace of the owlet in the nest screen; an asleep one breathes slowly, as the sleeping
+            // owl does, and its z float up and fade. All still when bird animations are off or motion is reduced.
+            val moving = rememberBirdMotionAllowed()
+            val asleep = chick == ChickState.ASLEEP
+            val phase = rememberAmbientPhase(if (asleep) periodMillis(BirdMood.SLEEPING) else CHICK_WIGGLE_MILLIS, enabled = moving)
             Image(
-                painter = painterResource(if (chick == ChickState.AWAKE) R.drawable.chick_2 else R.drawable.chick_sleep),
+                painter = painterResource(if (asleep) R.drawable.chick_sleep else R.drawable.chick_2),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
@@ -549,20 +554,41 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
                     .offset(x = SceneWidth * CHICK_X / 150f, y = SceneWidth * CHICK_Y / 150f)
                     .graphicsLayer {
                         transformOrigin = TransformOrigin(0.5f, 1f)
-                        val turn = 2f * PI.toFloat() * (wiggle.value + CHICK_WIGGLE_START)
-                        rotationZ = CHICK_WIGGLE_DEGREES * sin(turn)
-                        // it rises a touch as it rocks past upright, as the owlet in the nest does
-                        val rise = sin(2f * turn)
-                        scaleY = 1f + CHICK_WIGGLE_STRETCH * rise
-                        scaleX = 1f - CHICK_WIGGLE_STRETCH * 0.5f * rise
+                        if (!moving) return@graphicsLayer
+                        if (asleep) {
+                            val breath = 0.5f - 0.5f * cos(2f * PI.toFloat() * phase.value)
+                            scaleX = 1f + CHICK_BREATH_X * breath
+                            scaleY = 1f + CHICK_BREATH_Y * breath
+                        } else {
+                            val turn = 2f * PI.toFloat() * (phase.value + CHICK_WIGGLE_START)
+                            rotationZ = CHICK_WIGGLE_DEGREES * sin(turn)
+                            // it rises a touch as it rocks past upright, as the owlet in the nest does
+                            val rise = sin(2f * turn)
+                            scaleY = 1f + CHICK_WIGGLE_STRETCH * rise
+                            scaleX = 1f - CHICK_WIGGLE_STRETCH * 0.5f * rise
+                        }
                     },
             )
-            if (chick == ChickState.ASLEEP) {
-                val zColor = LocalContentColor.current.copy(alpha = 0.75f)
+            if (asleep) {
+                val zColor = LocalContentColor.current
                 Canvas(Modifier.size(SceneWidth, SceneHeight)) {
                     scale(size.width / 150f, pivot = Offset.Zero) {
-                        drawZ(zColor, x = 133f, y = 43f, side = 5f)
-                        drawZ(zColor, x = 139f, y = 36f, side = 3.6f)
+                        if (!moving) {
+                            // at rest: two small z, standing
+                            drawZ(zColor.copy(alpha = 0.75f), x = 133f, y = 43f, side = 5f)
+                            drawZ(zColor.copy(alpha = 0.75f), x = 139f, y = 36f, side = 3.6f)
+                        } else {
+                            // two z, half a round apart, each drifting up and to the right while it grows, and fading in and out
+                            for (index in 0..1) {
+                                val t = (phase.value + index * 0.5f) % 1f
+                                drawZ(
+                                    color = zColor.copy(alpha = 0.8f * sin(PI.toFloat() * t)),
+                                    x = CHICK_Z_X + CHICK_Z_DRIFT * t,
+                                    y = CHICK_Z_Y - CHICK_Z_RISE * t,
+                                    side = CHICK_Z_SIZE + CHICK_Z_GROWTH * t,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -604,6 +630,16 @@ private const val CHICK_WIGGLE_MILLIS = 2_100
 private const val CHICK_WIGGLE_DEGREES = 5f
 private const val CHICK_WIGGLE_START = 0.3f
 private const val CHICK_WIGGLE_STRETCH = 0.012f
+
+/** The sleeping chick breathes like the sleeping owl, and its z float up from beside its head (units of the 150 by 110 board). */
+private const val CHICK_BREATH_X = 0.018f
+private const val CHICK_BREATH_Y = 0.04f
+private const val CHICK_Z_X = 131f
+private const val CHICK_Z_DRIFT = 8f
+private const val CHICK_Z_Y = 46f
+private const val CHICK_Z_RISE = 14f
+private const val CHICK_Z_SIZE = 3f
+private const val CHICK_Z_GROWTH = 3f
 
 /** Where the sun picture sits in the scene's 150 by 110 units, and how wide it is (rays included). */
 private const val SUN_CENTER_X = 128f
