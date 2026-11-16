@@ -80,7 +80,7 @@ class AutoBackup @Inject constructor(
      * So when the old file is there, the complete text is written over it in place; the numbered copies an earlier run made are removed.
      */
     private suspend fun replace(folder: DocumentFile, name: String, text: String): Boolean {
-        folder.findFile(TEMP_NAME)?.delete() // left by a backup that was interrupted, or by an earlier version that could not delete it
+        folder.findFile(TEMP_NAME)?.delete() // left by a backup that was interrupted
         val existing = folder.findFile(name)
         if (existing == null) {
             // Nothing to lose: the file is written under its own name, with no temporary file that Downloads might not let the app remove.
