@@ -559,6 +559,8 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
                             val breath = 0.5f - 0.5f * cos(2f * PI.toFloat() * phase.value)
                             scaleX = 1f + CHICK_BREATH_X * breath
                             scaleY = 1f + CHICK_BREATH_Y * breath
+                            // a slow nod on the same breath: a chick this small shows life by turning more than by swelling
+                            rotationZ = CHICK_NOD_DEGREES * sin(2f * PI.toFloat() * phase.value)
                         } else {
                             val turn = 2f * PI.toFloat() * (phase.value + CHICK_WIGGLE_START)
                             rotationZ = CHICK_WIGGLE_DEGREES * sin(turn)
@@ -631,9 +633,10 @@ private const val CHICK_WIGGLE_DEGREES = 5f
 private const val CHICK_WIGGLE_START = 0.3f
 private const val CHICK_WIGGLE_STRETCH = 0.012f
 
-/** The sleeping chick breathes like the sleeping owl, and its z float up from beside its head (units of the 150 by 110 board). */
-private const val CHICK_BREATH_X = 0.018f
-private const val CHICK_BREATH_Y = 0.04f
+/** The sleeping chick breathes on the sleeping owl's slow cycle, more deeply because it is so small, and its z float up from beside its head (units of the 150 by 110 board). */
+private const val CHICK_BREATH_X = 0.04f
+private const val CHICK_BREATH_Y = 0.09f
+private const val CHICK_NOD_DEGREES = 2f
 private const val CHICK_Z_X = 131f
 private const val CHICK_Z_DRIFT = 8f
 private const val CHICK_Z_Y = 46f
