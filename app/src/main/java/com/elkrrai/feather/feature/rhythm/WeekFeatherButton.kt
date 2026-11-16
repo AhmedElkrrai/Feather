@@ -5,7 +5,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import android.content.pm.ApplicationInfo
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -47,9 +49,13 @@ fun WeekFeatherButton(
 ) {
     val records by viewModel.records.collectAsStateWithLifecycle()
     val today = remember { LocalDate.now() }
-    val days = remember(records, today) {
+    val real = remember(records, today) {
         thisWeekActiveDays(records, today, ZoneId.systemDefault(), firstDayOfWeek(Locale.getDefault()))
     }
+    // debug builds can force the feather (see DebugFeather); a release build never has an override
+    val forced by DebugFeather.days.collectAsStateWithLifecycle()
+    val debuggable = LocalContext.current.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+    val days = forced?.takeIf { debuggable } ?: real
     FloatingActionButton(
         onClick = onClick,
         shape = CircleShape,
