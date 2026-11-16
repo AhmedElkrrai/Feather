@@ -538,7 +538,7 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
         )
         // The chick for the habits stands on the branch at the owl's right, in front of the top twig: awake, or asleep with two small z.
         if (chick != ChickState.NONE) {
-            // An awake chick wiggles while a habit is open: a rest, then a quick shake that dies away, over and over. Still when motion is off.
+            // An awake chick rocks while a habit is open, at the pace of the owlet in the nest screen. Still when motion is off.
             val wiggle = rememberAmbientPhase(CHICK_WIGGLE_MILLIS, enabled = chick == ChickState.AWAKE && rememberBirdMotionAllowed())
             Image(
                 painter = painterResource(if (chick == ChickState.AWAKE) R.drawable.chick_2 else R.drawable.chick_sleep),
@@ -549,9 +549,12 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
                     .offset(x = SceneWidth * CHICK_X / 150f, y = SceneWidth * CHICK_Y / 150f)
                     .graphicsLayer {
                         transformOrigin = TransformOrigin(0.5f, 1f)
-                        val shake = ((wiggle.value - CHICK_WIGGLE_REST) / (1f - CHICK_WIGGLE_REST)).coerceAtLeast(0f)
-                        val decay = 1f - shake
-                        rotationZ = CHICK_WIGGLE_DEGREES * decay * sin(shake * 2f * PI.toFloat() * CHICK_WIGGLE_SWINGS)
+                        val turn = 2f * PI.toFloat() * (wiggle.value + CHICK_WIGGLE_START)
+                        rotationZ = CHICK_WIGGLE_DEGREES * sin(turn)
+                        // it rises a touch as it rocks past upright, as the owlet in the nest does
+                        val rise = sin(2f * turn)
+                        scaleY = 1f + CHICK_WIGGLE_STRETCH * rise
+                        scaleX = 1f - CHICK_WIGGLE_STRETCH * 0.5f * rise
                     },
             )
             if (chick == ChickState.ASLEEP) {
@@ -596,11 +599,11 @@ private const val CHICK_Y = 52f
 private val ChickWidth = 26.dp
 private val ChickHeight = 33.dp
 
-/** The wiggle of an awake chick: one round lasts this long, the first part of it at rest, then a few swings that fade out. */
-private const val CHICK_WIGGLE_MILLIS = 2_800
-private const val CHICK_WIGGLE_REST = 0.45f
-private const val CHICK_WIGGLE_SWINGS = 3f
-private const val CHICK_WIGGLE_DEGREES = 8f
+/** The rocking of an awake chick: the same as the owlet in the nest screen (a swing every 2.1 seconds, 5 degrees to each side). */
+private const val CHICK_WIGGLE_MILLIS = 2_100
+private const val CHICK_WIGGLE_DEGREES = 5f
+private const val CHICK_WIGGLE_START = 0.3f
+private const val CHICK_WIGGLE_STRETCH = 0.012f
 
 /** Where the sun picture sits in the scene's 150 by 110 units, and how wide it is (rays included). */
 private const val SUN_CENTER_X = 128f
