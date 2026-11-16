@@ -484,7 +484,7 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
             // Everything below is drawn in dp units on a 150 by 110 board.
             scale(size.width / 150f, pivot = Offset.Zero) {
                 if (moonness > 0f) {
-                    translateAndScale(124f, 12f, 26f) { drawPath(moonPath, Nest.Cream.copy(alpha = moonness)) }
+                    translateAndScale(124f, 0f, 26f) { drawPath(moonPath, Nest.Cream.copy(alpha = moonness)) }
                 }
             }
         }
@@ -643,7 +643,7 @@ private const val CHICK_Z_GROWTH = 3f
 
 /** Where the sun picture sits in the scene's 150 by 110 units, and how wide it is (rays included). */
 private const val SUN_CENTER_X = 128f
-private const val SUN_CENTER_Y = 24f
+private const val SUN_CENTER_Y = 12f
 private const val SUN_UNITS = 40f
 
 /** The sky, the sun and the moon change over this long. */
