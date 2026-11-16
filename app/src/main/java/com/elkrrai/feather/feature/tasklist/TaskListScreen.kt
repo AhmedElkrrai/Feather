@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -84,6 +83,7 @@ import com.elkrrai.feather.feature.tip.findActivity
 import com.elkrrai.feather.domain.view.TaskSort
 import com.elkrrai.feather.ui.brand.BirdMood
 import com.elkrrai.feather.ui.brand.CompletionBird
+import com.elkrrai.feather.feature.rhythm.WeekFeatherButton
 import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.rememberHaptics
 import com.elkrrai.feather.ui.components.MenuAction
@@ -674,12 +674,7 @@ fun TaskListContent(
         floatingActionButton = {
             // Nothing is added to a view of late or finished tasks.
             if (state.scope != TaskScope.Completed && state.scope != TaskScope.Overdue && !selecting) {
-                FloatingActionButton(onClick = onAddClick) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_add),
-                        contentDescription = stringResource(R.string.action_add_task),
-                    )
-                }
+                WeekFeatherButton(description = stringResource(R.string.action_add_task), onClick = onAddClick)
             }
         },
     ) { scaffoldPadding ->

@@ -44,7 +44,6 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -99,6 +98,7 @@ import com.elkrrai.feather.feature.tasklist.DrawerActions
 import com.elkrrai.feather.feature.tasklist.TaskDrawerContent
 import com.elkrrai.feather.feature.tasklist.TaskListUiState
 import com.elkrrai.feather.ui.brand.BirdMood
+import com.elkrrai.feather.feature.rhythm.WeekFeatherButton
 import com.elkrrai.feather.ui.components.EmptyState
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
@@ -221,9 +221,7 @@ internal fun HabitsContent(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNewHabit) {
-                Icon(painterResource(R.drawable.ic_add), stringResource(R.string.habit_new))
-            }
+            WeekFeatherButton(description = stringResource(R.string.habit_new), onClick = onNewHabit)
         },
     ) { padding ->
         when {

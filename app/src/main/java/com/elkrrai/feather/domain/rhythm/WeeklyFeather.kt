@@ -45,6 +45,23 @@ fun weeklyFeather(
     return WeeklyFeather(lastWeek, days)
 }
 
+/**
+ * On how many days of the week that [today] is in, today included, something was finished (0 to 7): the feather the add button wears
+ * while the week is under way. Weeks start on [firstDay].
+ */
+fun thisWeekActiveDays(
+    records: List<CompletionRecord>,
+    today: LocalDate,
+    zone: ZoneId,
+    firstDay: DayOfWeek,
+): Int {
+    val thisWeek = today.minusDays(Math.floorMod(today.dayOfWeek.value - firstDay.value, 7).toLong())
+    return records.map { it.completedAt.atZone(zone).toLocalDate() }
+        .filter { !it.isBefore(thisWeek) && !it.isAfter(today) }
+        .distinct()
+        .size
+}
+
 /** Whether today is the first day of the week, which is when the feather is shown. */
 fun isFeatherDay(today: LocalDate, firstDay: DayOfWeek): Boolean = today.dayOfWeek == firstDay
 
