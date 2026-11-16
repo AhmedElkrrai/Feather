@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.elkrrai.feather.R
 import com.elkrrai.feather.feature.tasklist.QuickAddSheet
+import com.elkrrai.feather.ui.DisplayPrefs
 import com.elkrrai.feather.ui.theme.FeatherTheme
 import dagger.hilt.android.AndroidEntryPoint
 import java.time.LocalDate
@@ -49,7 +50,7 @@ class QuickAddActivity : AppCompatActivity() {
                             null
                         }
                         viewModel.add(parsed, fallbackDate) {
-                            Toast.makeText(this@QuickAddActivity, R.string.quick_add_done, Toast.LENGTH_SHORT).show()
+                            if (DisplayPrefs.messages) Toast.makeText(this@QuickAddActivity, R.string.quick_add_done, Toast.LENGTH_SHORT).show()
                             finish()
                         }
                     },

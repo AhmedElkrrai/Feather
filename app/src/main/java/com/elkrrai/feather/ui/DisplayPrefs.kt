@@ -46,6 +46,9 @@ object DisplayPrefs {
         private set
     var celebrations by mutableStateOf(true)
         private set
+    /** The small messages after an action; Undo for a deleted task and failures show whatever this says. */
+    var messages by mutableStateOf(false)
+        private set
     /** The nest the person chose, for the scenes that show it. */
     var nestStyle by mutableStateOf(NestStyle.BRAIDED)
         private set
@@ -62,6 +65,7 @@ object DisplayPrefs {
         reduceMotion = settings.reduceMotion
         nestStyle = settings.nestStyle
         celebrations = settings.celebrations
+        messages = settings.messages
     }
 }
 

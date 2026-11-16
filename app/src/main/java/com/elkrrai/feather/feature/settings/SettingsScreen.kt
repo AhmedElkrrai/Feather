@@ -253,6 +253,7 @@ fun SettingsScreen(
             onBirdAnimationsChange = viewModel::setBirdAnimations,
             onReduceMotionChange = viewModel::setReduceMotion,
             onCelebrationsChange = viewModel::setCelebrations,
+            onMessagesChange = viewModel::setMessages,
             onMorningCardChange = viewModel::setMorningCard,
             onEveningCardChange = viewModel::setEveningCard,
             onWeeklyFeatherChange = viewModel::setWeeklyFeather,

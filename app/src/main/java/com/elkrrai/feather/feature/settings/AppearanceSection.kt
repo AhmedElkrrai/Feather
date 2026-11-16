@@ -51,6 +51,7 @@ class AppearanceActions(
     val onBirdAnimationsChange: (Boolean) -> Unit = {},
     val onReduceMotionChange: (Boolean) -> Unit = {},
     val onCelebrationsChange: (Boolean) -> Unit = {},
+    val onMessagesChange: (Boolean) -> Unit = {},
     val onMorningCardChange: (Boolean) -> Unit = {},
     val onEveningCardChange: (Boolean) -> Unit = {},
     val onWeeklyFeatherChange: (Boolean) -> Unit = {},
@@ -135,6 +136,13 @@ internal fun AppearanceRows(
         supporting = stringResource(R.string.settings_celebrations_summary),
         onClick = { actions.onCelebrationsChange(!settings.celebrations) },
         trailing = { Switch(checked = settings.celebrations, onCheckedChange = actions.onCelebrationsChange) },
+    )
+    SettingsRow(
+        title = stringResource(R.string.settings_messages),
+        summary = null,
+        supporting = stringResource(R.string.settings_messages_summary),
+        onClick = { actions.onMessagesChange(!settings.messages) },
+        trailing = { Switch(checked = settings.messages, onCheckedChange = actions.onMessagesChange) },
     )
     SettingsRow(
         title = stringResource(R.string.settings_reduce_motion),

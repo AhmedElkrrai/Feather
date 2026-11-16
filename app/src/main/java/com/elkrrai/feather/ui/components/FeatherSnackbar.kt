@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.R
+import com.elkrrai.feather.ui.DisplayPrefs
 import com.elkrrai.feather.ui.rememberReduceMotion
 
 /** What a message is about: it picks the small icon, and whether the icon wears the amber of a warning or the blue of a plain message. */
@@ -56,13 +57,19 @@ class FeatherSnackbarVisuals(
     override val withDismissAction: Boolean = false
 }
 
-/** Shows a message in the app's own snackbar; returns how it ended (the action pressed, or not). */
+/**
+ * Shows a message in the app's own snackbar; returns how it ended (the action pressed, or not). With "Messages after actions" off in
+ * Settings only the Undo for a deleted task ([SnackKind.Trash]) and failures ([SnackKind.Alert]) show; the rest end at once, unanswered.
+ */
 suspend fun SnackbarHostState.showFeather(
     message: String,
     kind: SnackKind = SnackKind.Done,
     actionLabel: String? = null,
     duration: SnackbarDuration = SnackbarDuration.Short,
-): SnackbarResult = showSnackbar(FeatherSnackbarVisuals(message, actionLabel, duration, kind))
+): SnackbarResult {
+    if (!DisplayPrefs.messages && kind != SnackKind.Trash && kind != SnackKind.Alert) return SnackbarResult.Dismissed
+    return showSnackbar(FeatherSnackbarVisuals(message, actionLabel, duration, kind))
+}
 
 /** The place messages appear. Put it in the `snackbarHost` of a Scaffold, which lifts it above the add button. */
 @Composable

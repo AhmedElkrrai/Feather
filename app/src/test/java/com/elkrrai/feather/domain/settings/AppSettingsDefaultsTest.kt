@@ -27,6 +27,7 @@ class AppSettingsDefaultsTest {
 
         assertTrue(defaults.celebrations)
         assertFalse(defaults.reduceMotion)
+        assertFalse(defaults.messages)
     }
 
     @Test

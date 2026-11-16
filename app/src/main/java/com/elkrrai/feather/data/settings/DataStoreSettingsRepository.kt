@@ -53,6 +53,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val birdAnimations = booleanPreferencesKey("bird_animations")
         val reduceMotion = booleanPreferencesKey("reduce_motion")
         val celebrations = booleanPreferencesKey("celebrations")
+        val messages = booleanPreferencesKey("messages")
         val rhythmPausedDays = stringSetPreferencesKey("rhythm_paused_days")
         val weeklyFeather = booleanPreferencesKey("weekly_feather")
         val nestUnlocked = stringSetPreferencesKey("nest_unlocked")
@@ -105,6 +106,7 @@ class DataStoreSettingsRepository @Inject constructor(
             birdAnimations = prefs[Keys.birdAnimations] ?: defaults.birdAnimations,
             reduceMotion = prefs[Keys.reduceMotion] ?: defaults.reduceMotion,
             celebrations = prefs[Keys.celebrations] ?: defaults.celebrations,
+            messages = prefs[Keys.messages] ?: defaults.messages,
             weeklyFeather = prefs[Keys.weeklyFeather] ?: defaults.weeklyFeather,
             nestUnlocked = prefs[Keys.nestUnlocked].orEmpty(),
             nestSeen = prefs[Keys.nestSeen].orEmpty(),
@@ -228,6 +230,10 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit { it[Keys.celebrations] = enabled }
     }
 
+    override suspend fun setMessages(enabled: Boolean) {
+        dataStore.edit { it[Keys.messages] = enabled }
+    }
+
     override suspend fun setWeeklyFeather(enabled: Boolean) {
         dataStore.edit { it[Keys.weeklyFeather] = enabled }
     }
@@ -345,7 +351,7 @@ class DataStoreSettingsRepository @Inject constructor(
         // Every preference is in one of these lists, by the type of its value, or in [deviceOnly]. A test fails when a new key is in neither.
         private val booleanKeys = listOf(
             Keys.dailySummaryEnabled, Keys.pureBlack, Keys.dynamicColor, Keys.haptics, Keys.menuHints, Keys.welcomeSeen,
-            Keys.birdAnimations, Keys.reduceMotion, Keys.celebrations, Keys.weeklyFeather, Keys.voiceUsed, Keys.backedUp,
+            Keys.birdAnimations, Keys.reduceMotion, Keys.celebrations, Keys.messages, Keys.weeklyFeather, Keys.voiceUsed, Keys.backedUp,
             Keys.morningCard, Keys.eveningCard, Keys.habitsInToday, Keys.habitHoldLearned,
         )
         private val intKeys = listOf(

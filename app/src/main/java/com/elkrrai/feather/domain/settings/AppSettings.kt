@@ -74,6 +74,8 @@ data class AppSettings(
     val reduceMotion: Boolean = false,
     /** The feathers and the bird's hop when a task is finished. Independent of [reduceMotion]. */
     val celebrations: Boolean = true,
+    /** The small messages after an action (moved, finished, backed up). Undo for a deleted task and failures show whatever this says. */
+    val messages: Boolean = false,
     /** The "your day" card on Today in the morning, and the wind-down card in the evening. */
     val morningCard: Boolean = true,
     val eveningCard: Boolean = true,
@@ -156,6 +158,8 @@ interface SettingsRepository : BackupPreferences {
     suspend fun setReduceMotion(enabled: Boolean)
 
     suspend fun setCelebrations(enabled: Boolean)
+
+    suspend fun setMessages(enabled: Boolean)
 
     suspend fun setRhythmPausedDays(days: Set<LocalDate>)
 
