@@ -1,6 +1,7 @@
 package com.elkrrai.feather.feature.tasklist
 
 import androidx.activity.compose.BackHandler
+import com.elkrrai.feather.domain.habit.ChickState
 import com.elkrrai.feather.ui.format.formatDoneHeader
 import kotlin.math.abs
 import kotlinx.coroutines.CoroutineStart
@@ -360,6 +361,7 @@ fun TaskListScreen(
             } else {
                 null
             },
+            habitChick = habitsUi.chick,
             onDismissDayCard = dayCards::dismiss,
             onMoveToTomorrow = {
                 dayCards.moveToTomorrow { moved ->
@@ -492,6 +494,8 @@ fun TaskListContent(
     dayCard: DayCard? = null,
     /** The habits of Today as one block above the tasks, or null when there are none to show. */
     habitsBlock: (@Composable () -> Unit)? = null,
+    /** The chick beside the owl in the header: the habits, as the owl is the tasks. */
+    habitChick: ChickState = ChickState.NONE,
     onDismissDayCard: (DayCardKind) -> Unit = {},
     onMoveToTomorrow: () -> Unit = {},
     onTagFilterChange: (TagFilter) -> Unit = {},
@@ -873,6 +877,7 @@ fun TaskListContent(
                     sortActions = sortActions,
                     celebration = allDoneCelebration,
                     onWarmFeathers = onWarmFeathers,
+                    chick = habitChick,
                 )
                 tagTabs()
                 Box(Modifier.weight(1f)) {

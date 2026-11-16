@@ -57,6 +57,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.elkrrai.feather.domain.habit.ChickState
 import com.elkrrai.feather.R
 import com.elkrrai.feather.ui.brand.BirdIllustration
 import com.elkrrai.feather.ui.components.MenuAction
@@ -184,6 +185,8 @@ fun TodayHeader(
     celebration: Int = 0,
     /** Called with the bird's position (window pixels) when the celebration starts, to throw the warm feathers. */
     onWarmFeathers: (Offset) -> Unit = {},
+    /** The chick on the branch beside the owl: the habits (not there, awake while one is open, asleep when all are met). */
+    chick: ChickState = ChickState.NONE,
 ) {
     val feather = MaterialTheme.featherColors
     val phase = remember(time.hour) { dayPhaseFor(time) }
@@ -281,6 +284,7 @@ fun TodayHeader(
                 status = status,
                 phase = phase,
                 flightTrigger = fresh,
+                chick = chick,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .onGloballyPositioned {
@@ -442,7 +446,7 @@ private val EggBaseY = floatArrayOf(95.5f, 98.5f, 100f, 100.5f, 100f)
  * picture is not mirrored in right-to-left languages (only where it sits is). Decoration only.
  */
 @Composable
-private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int, modifier: Modifier = Modifier) {
+private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int, chick: ChickState, modifier: Modifier = Modifier) {
     val feather = MaterialTheme.featherColors
     val mood = todayBirdMood(status)
     val moon = showsMoon(phase)
@@ -530,7 +534,35 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
             mood = mood,
             flightTrigger = flightTrigger,
         )
+        // The chick for the habits stands on the branch at the owl's right, in front of the top twig: awake, or asleep with two small z.
+        if (chick != ChickState.NONE) {
+            Image(
+                painter = painterResource(if (chick == ChickState.AWAKE) R.drawable.chick_2 else R.drawable.chick_sleep),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .size(ChickWidth, ChickHeight)
+                    .offset(x = SceneWidth * CHICK_X / 150f, y = SceneWidth * CHICK_Y / 150f),
+            )
+            if (chick == ChickState.ASLEEP) {
+                val zColor = LocalContentColor.current.copy(alpha = 0.75f)
+                Canvas(Modifier.size(SceneWidth, SceneHeight)) {
+                    scale(size.width / 150f, pivot = Offset.Zero) {
+                        drawZ(zColor, x = 133f, y = 43f, side = 5f)
+                        drawZ(zColor, x = 139f, y = 36f, side = 3.6f)
+                    }
+                }
+            }
+        }
     }
+}
+
+/** A small z, drawn with three strokes: its top, its slant and its foot, [side] units wide. */
+private fun DrawScope.drawZ(color: Color, x: Float, y: Float, side: Float) {
+    val width = 0.9f
+    drawLine(color, Offset(x, y), Offset(x + side, y), width, StrokeCap.Round)
+    drawLine(color, Offset(x + side, y), Offset(x, y + side), width, StrokeCap.Round)
+    drawLine(color, Offset(x, y + side), Offset(x + side, y + side), width, StrokeCap.Round)
 }
 
 /** Draws with the origin moved to ([x], [y]) and a unit box scaled to [size]. */
@@ -547,6 +579,12 @@ private fun DrawScope.drawEgg(topLeft: Offset, alpha: Float = 1f) {
 }
 
 private const val EGGS = 5
+
+/** The chick's place on the 150 by 110 board (its top left), and its size in dp. */
+private const val CHICK_X = 112f
+private const val CHICK_Y = 52f
+private val ChickWidth = 26.dp
+private val ChickHeight = 33.dp
 
 /** Where the sun picture sits in the scene's 150 by 110 units, and how wide it is (rays included). */
 private const val SUN_CENTER_X = 128f

@@ -2,8 +2,10 @@ package com.elkrrai.feather.feature.habits
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.elkrrai.feather.domain.habit.ChickState
 import com.elkrrai.feather.domain.habit.StageState
 import com.elkrrai.feather.domain.habit.TodayHabit
+import com.elkrrai.feather.domain.habit.todayChick
 import com.elkrrai.feather.domain.habit.todayHabits
 import com.elkrrai.feather.domain.habit.weekStartOf
 import com.elkrrai.feather.domain.repository.HabitRepository
@@ -27,6 +29,8 @@ import kotlinx.coroutines.launch
 data class TodayHabitsUi(
     val rows: List<TodayHabit> = emptyList(),
     val showHoldHint: Boolean = false,
+    /** The chick in the header: asleep, awake, or not there. */
+    val chick: ChickState = ChickState.NONE,
 )
 
 /** How many times the "hold the card" line is shown before it is left out. */
@@ -58,12 +62,17 @@ class TodayHabitsViewModel @Inject constructor(
     val ui: StateFlow<TodayHabitsUi> = combine(habits.observeHabits(), settings.settings, minutes) { all, saved, at ->
         if (!saved.habitsInToday) return@combine TodayHabitsUi()
         val day = at.toLocalDate()
-        val rows = todayHabits(all, day, at.toLocalTime(), weekStartOf(day, FIRST_DAY_OF_WEEK))
+        val weekStart = weekStartOf(day, FIRST_DAY_OF_WEEK)
+        val rows = todayHabits(all, day, at.toLocalTime(), weekStart)
         if (hintForThisVisit == null && rows.isNotEmpty()) {
             hintForThisVisit = !saved.habitHoldLearned && saved.habitHoldHintShown < HOLD_HINT_TIMES
             if (hintForThisVisit == true) viewModelScope.launch { settings.setHabitHoldHintShown(saved.habitHoldHintShown + 1) }
         }
-        TodayHabitsUi(rows, showHoldHint = hintForThisVisit == true && !saved.habitHoldLearned && rows.any { !it.doneToday })
+        TodayHabitsUi(
+            rows,
+            showHoldHint = hintForThisVisit == true && !saved.habitHoldLearned && rows.any { !it.doneToday },
+            chick = todayChick(all, rows, weekStart),
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayHabitsUi())
 
     /**

@@ -8,6 +8,20 @@ enum class StageState { DONE, MISSED, NOW, NEXT }
 
 data class TodayStage(val stage: HabitStage, val state: StageState)
 
+/** The chick beside the owl in Today's header, for the habits: not there with no habits to show, awake while one is open, asleep when all are met. */
+enum class ChickState { NONE, AWAKE, ASLEEP }
+
+/**
+ * The chick for the habits of [habits] this week (starting [weekStart]) given the [rows] that show now. Any habit that is switched on for Today
+ * and has a goal this week counts, even one that already rests because its week is met: the chick is then asleep, not gone. It is awake while a
+ * row is still open today.
+ */
+fun todayChick(habits: List<HabitState>, rows: List<TodayHabit>, weekStart: LocalDate): ChickState = when {
+    habits.none { it.habit.showInToday && it.week(weekStart).goal != null } -> ChickState.NONE
+    rows.any { !it.doneToday } -> ChickState.AWAKE
+    else -> ChickState.ASLEEP
+}
+
 /** A habit as one row of Today. */
 data class TodayHabit(
     val id: String,
