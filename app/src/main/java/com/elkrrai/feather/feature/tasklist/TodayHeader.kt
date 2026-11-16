@@ -60,6 +60,8 @@ import androidx.compose.ui.unit.dp
 import com.elkrrai.feather.domain.habit.ChickState
 import com.elkrrai.feather.R
 import com.elkrrai.feather.ui.brand.BirdIllustration
+import com.elkrrai.feather.ui.brand.rememberBirdMotionAllowed
+import com.elkrrai.feather.ui.brand.rememberAmbientPhase
 import com.elkrrai.feather.ui.components.MenuAction
 import com.elkrrai.feather.ui.components.OverflowButton
 import com.elkrrai.feather.ui.components.drawLeaf
@@ -536,13 +538,21 @@ private fun TodayScene(status: TodayStatus, phase: DayPhase, flightTrigger: Int,
         )
         // The chick for the habits stands on the branch at the owl's right, in front of the top twig: awake, or asleep with two small z.
         if (chick != ChickState.NONE) {
+            // An awake chick wiggles while a habit is open: a rest, then a quick shake that dies away, over and over. Still when motion is off.
+            val wiggle = rememberAmbientPhase(CHICK_WIGGLE_MILLIS, enabled = chick == ChickState.AWAKE && rememberBirdMotionAllowed())
             Image(
                 painter = painterResource(if (chick == ChickState.AWAKE) R.drawable.chick_2 else R.drawable.chick_sleep),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .size(ChickWidth, ChickHeight)
-                    .offset(x = SceneWidth * CHICK_X / 150f, y = SceneWidth * CHICK_Y / 150f),
+                    .offset(x = SceneWidth * CHICK_X / 150f, y = SceneWidth * CHICK_Y / 150f)
+                    .graphicsLayer {
+                        transformOrigin = TransformOrigin(0.5f, 1f)
+                        val shake = ((wiggle.value - CHICK_WIGGLE_REST) / (1f - CHICK_WIGGLE_REST)).coerceAtLeast(0f)
+                        val decay = 1f - shake
+                        rotationZ = CHICK_WIGGLE_DEGREES * decay * sin(shake * 2f * PI.toFloat() * CHICK_WIGGLE_SWINGS)
+                    },
             )
             if (chick == ChickState.ASLEEP) {
                 val zColor = LocalContentColor.current.copy(alpha = 0.75f)
@@ -585,6 +595,12 @@ private const val CHICK_X = 112f
 private const val CHICK_Y = 52f
 private val ChickWidth = 26.dp
 private val ChickHeight = 33.dp
+
+/** The wiggle of an awake chick: one round lasts this long, the first part of it at rest, then a few swings that fade out. */
+private const val CHICK_WIGGLE_MILLIS = 2_800
+private const val CHICK_WIGGLE_REST = 0.45f
+private const val CHICK_WIGGLE_SWINGS = 3f
+private const val CHICK_WIGGLE_DEGREES = 8f
 
 /** Where the sun picture sits in the scene's 150 by 110 units, and how wide it is (rays included). */
 private const val SUN_CENTER_X = 128f
