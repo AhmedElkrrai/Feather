@@ -31,8 +31,8 @@ enum class AutoBackupResult {
 /**
  * Writes the automatic backup into the folder the user chose, in the way the user picked ([BackupStyle]): one
  * file that is replaced each time (the default), a file for each of the last [KEEP] days, or one file plus one
- * older copy. A file is first written under a temporary name and takes its real name only once it is complete,
- * so a backup that fails half-way never destroys the one before it. The files have their own name prefix, so
+ * older copy. An old file is written over in place (a complete text, written in one go); only when it cannot be, the
+ * new file is written under a temporary name and takes its real name once it is complete. The files have their own name prefix, so
  * manual exports saved in the same folder are never replaced or removed, and the files an earlier style made
  * are left where they are.
  */
@@ -80,18 +80,29 @@ class AutoBackup @Inject constructor(
      * So when the old file is there, the complete text is written over it in place; the numbered copies an earlier run made are removed.
      */
     private suspend fun replace(folder: DocumentFile, name: String, text: String): Boolean {
-        folder.findFile(TEMP_NAME)?.delete() // left by a backup that was interrupted
+        folder.findFile(TEMP_NAME)?.delete() // left by a backup that was interrupted, or by an earlier version that could not delete it
+        val existing = folder.findFile(name)
+        if (existing == null) {
+            // Nothing to lose: the file is written under its own name, with no temporary file that Downloads might not let the app remove.
+            val target = folder.createFile(MIME_TYPE, name) ?: return false
+            try {
+                files.write(target.uri, text)
+            } catch (e: Exception) {
+                target.delete()
+                throw e
+            }
+            return true
+        }
+        // An old file is written over in place, again with no temporary file: one that was written first stayed behind next to it
+        // ("feather-auto-backup-new.json") whenever the folder would not let the app delete it again.
+        if (writeInPlace(existing, text)) {
+            removeNumberedCopies(folder, name)
+            return true
+        }
+        // It cannot be written over: write a complete file under a temporary name, then swap it for the old one.
         val temp = folder.createFile(MIME_TYPE, TEMP_NAME) ?: return false
         files.write(temp.uri, text)
-        val existing = folder.findFile(name)
-        val done = if (existing == null) {
-            takeName(folder, temp, name, text)
-        } else if (writeInPlace(existing, text)) {
-            temp.delete()
-            true
-        } else {
-            existing.delete() && takeName(folder, temp, name, text)
-        }
+        val done = existing.delete() && takeName(folder, temp, name, text)
         if (done) removeNumberedCopies(folder, name)
         return done
     }
